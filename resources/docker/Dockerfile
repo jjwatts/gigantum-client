@@ -33,13 +33,16 @@ ENV SHELL=/bin/bash
 
 # Super instruction to install all dependencies
 RUN apt-get -y update && \
-    apt-get -y --no-install-recommends install git nginx supervisor wget openssl python3 python3-pip python3-distutils \
-    gcc g++ gosu redis-server libjpeg-dev git-lfs python3-setuptools python3-dev libdpkg-perl zip unzip && \
+    apt-get -y --no-install-recommends install git nginx supervisor wget openssl python3.7 python3-pip python3-distutils \
+    gcc g++ gosu redis-server libjpeg-dev git-lfs python3-setuptools python3.7-dev libdpkg-perl zip unzip && \
     git lfs install && \
     apt-get -y install curl gnupg gnupg1 gnupg2 && \
     curl -sL https://deb.nodesource.com/setup_8.x | bash && \
-    apt-get -y install nodejs && \
-    npm install -g configurable-http-proxy && \
+    apt-get -y install nodejs
+
+RUN rm -f /usr/bin/python3 && ln -s /usr/bin/python3.7 /usr/bin/python3
+
+RUN npm install -g configurable-http-proxy && \
     cd /opt/confhttpproxy && pip3 install . && \
     pip3 install wheel && \
     pip3 install -r /opt/gtmcore/requirements.txt && \
@@ -48,6 +51,7 @@ RUN apt-get -y update && \
     apt-get -qq -y remove gcc g++ python3-dev wget curl gnupg gnupg1 gnupg2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/log/dpkg.log
+
 
 # Arguments, defaulted to production values
 ARG CLIENT_CONFIG_FILE=build/client/labmanager-config.yaml
