@@ -1,5 +1,5 @@
 // vendor
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 // mutations
@@ -43,6 +43,7 @@ class ContainerStatus extends Component {
       labbookName,
       selectedDevTool: 'JupyterLab',
       showDevList: false,
+      showInitialMessage: false,
     };
 
     this.state = state;
@@ -70,6 +71,14 @@ class ContainerStatus extends Component {
   *  @return {string}
   */
   componentDidMount() {
+    this.props.auth.isAuthenticated().then((response) => {
+      const containerMessageShown = localStorage.getItem('containerMessageShown');
+      if (!containerMessageShown && response) {
+        this.setState({ showInitialMessage: true });
+        localStorage.setItem('containerMessageShown', true);
+      }
+    });
+
     const self = this;
     const intervalInSeconds = 3 * 1000;
 
@@ -144,6 +153,8 @@ class ContainerStatus extends Component {
     const containerMenuClicked = (evt.target.className.indexOf('ContainerStatus__container-state') > -1) ||
       (evt.target.className.indexOf('ContainerStatus__button-menu') > -1) ||
       (evt.target.className.indexOf('PackageDependencies__button') > -1) ||
+      (evt.target.className.indexOf('PackageDependencies__btn') > -1) ||
+      (evt.target.className.indexOf('LabbookHeader__name') > -1) ||
       (evt.target.className.indexOf('BranchMenu') > -1) ||
       (evt.target.className.indexOf('BranchMenu__sync-button') > -1) ||
       (evt.target.className.indexOf('BranchMenu__remote-button') > -1) ||
@@ -162,6 +173,9 @@ class ContainerStatus extends Component {
     if (!containerMenuClicked &&
     this.props.containerMenuOpen) {
       this.props.setContainerMenuVisibility(false);
+    }
+    if (this.state.showInitialMessage) {
+      this.setState({ showInitialMessage: false });
     }
 
     const pluginsMenuClicked = (evt.target.className.indexOf('ContainerStatus__plugins') > -1);
@@ -546,7 +560,10 @@ class ContainerStatus extends Component {
                 <li
                   key={developmentTool}
                   className="ContainerStatus__plugins-list-item jupyter-icon"
-                  onClick={() => this.setState({ selectedDevTool: developmentTool, showDevList: false })}
+                  onClick={() => {
+                    this.setState({ selectedDevTool: developmentTool, showDevList: false });
+                    this._openDevToolMuation(developmentTool, status);
+                  }}
                 >
                   {developmentTool}
                 </li>
@@ -556,6 +573,15 @@ class ContainerStatus extends Component {
 
 
         </div>
+        {
+          this.state.showInitialMessage &&
+          <Fragment>
+            <div className="ContainerStatus__initial-pointer" />
+            <div className="ContainerStatus__initial-menu">
+              This shows the current status of your project. To start a Project click on the status indicator or select the development tool that you wish to launch.
+            </div>
+          </Fragment>
+        }
 
         {
           this.props.containerMenuOpen &&

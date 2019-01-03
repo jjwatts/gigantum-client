@@ -234,6 +234,7 @@ class LabbookHeader extends Component {
 
                 <ContainerStatus
                   ref="ContainerStatus"
+                  auth={this.props.auth}
                   base={labbook.environment.base}
                   containerStatus={labbook.environment.containerStatus}
                   imageStatus={labbook.environment.imageStatus}
@@ -372,12 +373,12 @@ const NavItem = ({ self, item, index }) => {
     [`LabbookHeader__navItem LabbookHeader__navItem--${item.id}`]: !selectedPath !== item.id,
     [`LabbookHeader__navItem--${index}`]: true,
   });
-
   return (
     <li
       id={item.id}
       className={navItemCSS}
       onClick={() => self._setSelectedComponent(item.id)}
+      title={Config.navTitles[item.id]}
     >
 
       <Link

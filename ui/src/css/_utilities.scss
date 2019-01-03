@@ -230,3 +230,9 @@
       transform:  translate(0px,0px)  ;
   }
 }
+
+@keyframes delayed-fade-in{
+  0% { opacity:0; }
+  75% { opacity:0; }
+  100% { opacity:1; }
+}

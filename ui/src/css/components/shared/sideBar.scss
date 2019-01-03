@@ -36,6 +36,28 @@
 
 .SideBar__list-item {
   width: 100%;
+  position: relative;
+
+  &:hover:after{
+    animation: 1s ease 0s normal forwards 1 delayed-fade-in;
+    text-align: center;
+    content: attr(data-tooltip);
+    width: 100px;
+    position: absolute;
+    min-width: 100px;
+    font-weight: 100;
+    line-height: 1.3em;
+    font-size: 16px;
+    margin: 0;
+    background: $azure;
+    color: $white;
+    padding: 5px;
+    border-radius: 5px;
+    left: 21px;
+    bottom: -38px;
+    z-index: 1;
+    font-size: .7em;
+  }
 }
 
 .SideBar__list-item--selected {
@@ -86,7 +108,7 @@
   width: 60px;
   margin: 0 2px;
   align-items: center;
-
+  position: relative;
 }
 
 .SideBar__icon--datasets {

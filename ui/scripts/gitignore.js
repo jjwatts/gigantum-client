@@ -3,25 +3,10 @@ const fs = require('fs');
 
 const updateGitIgnore = function(resolve, reject) {
 
-  fs.readdir(__dirname + '/../../../', function(err, items) {
-    console.log(items);
-
-    for (var i=0; i<items.length; i++) {
-        console.log(items[i]);
-    }
-});
-console.log('asdasad')
-fs.readdir(__dirname + '/../../', function(err, items) {
-    console.log(items);
-
-    for (var i=0; i<items.length; i++) {
-        console.log(items[i]);
-    }
-});
-
+// TODO remove and fix for `gtm dev start`
 resolve(true);
 return;
-  console.log(__dirname)
+
   let filepath = __dirname.indexOf('opt') > -1 ? __dirname + '/../../../packages/gtmcore/gtmcore/labbook/gitignore.default' : __dirname + '/../../../packages/gtmcore/gtmcore/labbook/gitignore.default'
   let ignoreFiles = parse(fs.readFileSync(filepath));
   let filePath = './src/js/data/gitignore.json'

@@ -11,6 +11,14 @@ const CONFIG = {
     { id: 'outputData', name: 'Output Data' },
   ],
   defaultNavOrder: ['overview', 'activity', 'environment', 'code', 'inputData', 'outputData'],
+  navTitles: {
+    overview: 'A brief overview of the Project',
+    activity: 'Lists activity records for the Project',
+    environment: 'View and modify packages and docker instructions',
+    code: 'View and modify code files',
+    inputData: 'View and modify input data files',
+    outputData: 'View and modify output data files',
+  },
   modalNav: [
     { id: 'createLabook', description: 'Title & Description' },
     { id: 'selectBaseImage', description: 'Base Image' },

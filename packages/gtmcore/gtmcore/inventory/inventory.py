@@ -8,6 +8,7 @@ from pkg_resources import resource_filename
 
 from typing import Optional, Generator, List, Tuple, Dict
 
+from gtmcore.exceptions import GigantumException
 from gtmcore.labbook.schemas import CURRENT_SCHEMA as LABBOOK_CURRENT_SCHEMA
 from gtmcore.dataset.schemas import CURRENT_SCHEMA as DATASET_CURRENT_SCHEMA
 from gtmcore.gitlib import GitAuthor
@@ -21,7 +22,7 @@ from gtmcore.dataset.dataset import Dataset
 logger = LMLogger.get_logger()
 
 
-class InventoryException(Exception):
+class InventoryException(GigantumException):
     pass
 
 

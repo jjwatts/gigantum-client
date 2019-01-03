@@ -44,28 +44,42 @@ export default class SideBar extends Component {
       hidden: !(this.state.authenticated || this.state.authenticated === null),
       'is-demo': window.location.hostname === config.demoHostName,
     });
+    const projectsCSS = classNames({
+      SideBar__icon: true,
+      'SideBar__icon--labbooks-selected': isLabbooks,
+      'SideBar__icon SideBar__icon--labbooks': !isLabbooks,
+    });
     return (
       <div className={sidebarCSS}>
         <div className="SideBar__inner-container">
           <div className="SideBar__logo" />
           <ul className="SideBar__nav">
-            <li className={isLabbooks ? 'SideBar__list-item--selected' : 'SideBar__list-item'}>
+            <li
+              className={isLabbooks ? 'SideBar__list-item--selected' : 'SideBar__list-item'}
+              data-tooltip="Redirects to Project listing page"
+            >
               <Link
                 onClick={() => setCallbackRoute('/projects/local')}
                 className={isLabbooks ? 'SideBar__nav-item SideBar__nav-item--labbooks SideBar__nav-item--selected' : 'SideBar__nav-item SideBar__nav-item--labbooks'}
                 to={{ pathname: '/projects/local' }}
               >
-                <div className={isLabbooks ? 'SideBar__icon SideBar__icon--labbooks-selected' : 'SideBar__icon SideBar__icon--labbooks'} />
+                <div
+                  className={projectsCSS}
+                />
                 Projects
               </Link>
               <ToolTip section="labbookListing" />
             </li>
-            <li className={!isLabbooks ? 'SideBar__list-item--selected' : 'SideBar__list-item'}>
+            <li
+              className={!isLabbooks ? 'SideBar__list-item--selected' : 'SideBar__list-item'}
+              data-tooltip="Datasets is currently unavailable"
+            >
               <div
                 className={!isLabbooks ? 'SideBar__nav-item SideBar__nav-item--datasets SideBar__nav-item--selected' : 'SideBar__nav-item SideBar__nav-item--datasets'}
                 to={{ pathname: '/datasets' }}
               >
-                <div className={!isLabbooks ? 'SideBar__icon SideBar__icon--datasets-selected' : 'SideBar__icon SideBar__icon--datasets'} />
+                <div className={!isLabbooks ? 'SideBar__icon SideBar__icon--datasets-selected' : 'SideBar__icon SideBar__icon--datasets'}
+                />
                 Datasets
               </div>
               <ToolTip section="dataSets" />
