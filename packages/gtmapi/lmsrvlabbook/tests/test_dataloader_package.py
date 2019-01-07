@@ -57,7 +57,7 @@ class TestDataloaderPackage(object):
         version_list = promise1.get()
         assert len(version_list) == 3
         assert version_list[0] == "3.0.1"
-        assert version_list[1] == "0.13"
+        assert version_list[1] == "0.14"
         assert version_list[2] == "1.15.4"
 
     def test_load_many_conda(self, build_image_for_jupyterlab):

@@ -108,7 +108,7 @@ class Helper extends Component {
         <div className={menuCSS}>
           <div
             className="Helper__menu-feedback"
-            onClick={() => window.open('https://app.craft.io/share/C3174F4B2305843009657781316')}
+            onClick={() => window.open('https://feedback.gigantum.com')}
           >
             <h5>Feedback</h5>
             <div
