@@ -16,11 +16,11 @@ snapshots['TestAddComponentMutations.test_add_package 1'] = {
                     'cursor': 'MA==',
                     'node': {
                         'fromBase': False,
-                        'id': 'UGFja2FnZUNvbXBvbmVudDpjb25kYTMmcmVxdWVzdHMmMi4xOC40',
+                        'id': 'UGFja2FnZUNvbXBvbmVudDpjb25kYTMmcHl0aG9uLWNvdmVyYWxscyYyLjkuMQ==',
                         'manager': 'conda3',
-                        'package': 'requests',
+                        'package': 'python-coveralls',
                         'schema': 1,
-                        'version': '2.18.4'
+                        'version': '2.9.1'
                     }
                 }
             ]
@@ -37,22 +37,22 @@ snapshots['TestAddComponentMutations.test_add_multiple_packages 1'] = {
                     'cursor': 'MA==',
                     'node': {
                         'fromBase': False,
-                        'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAzJnJlcXVlc3RzJjIuMTguNA==',
+                        'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAzJmd0bXVuaXQxJjAuMTIuNA==',
                         'manager': 'pip3',
-                        'package': 'requests',
+                        'package': 'gtmunit1',
                         'schema': 1,
-                        'version': '2.18.4'
+                        'version': '0.12.4'
                     }
                 },
                 {
                     'cursor': 'MQ==',
                     'node': {
                         'fromBase': False,
-                        'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAzJnJlc3BvbnNlcyYxLjQ=',
+                        'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAzJmd0bXVuaXQyJjEuMTQuMQ==',
                         'manager': 'pip3',
-                        'package': 'responses',
+                        'package': 'gtmunit2',
                         'schema': 1,
-                        'version': '1.4'
+                        'version': '1.14.1'
                     }
                 }
             ]
@@ -67,12 +67,12 @@ snapshots['TestAddComponentMutations.test_remove_package 1'] = {
             'newPackageComponentEdges': [
                 {
                     'node': {
-                        'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAzJnJlcXVlc3RzJjIuMTguNA=='
+                        'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAzJmd0bXVuaXQxJjAuMTIuNA=='
                     }
                 },
                 {
                     'node': {
-                        'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAzJnJlc3BvbnNlcyYxLjQ='
+                        'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAzJmd0bXVuaXQyJjEuMTQuMQ=='
                     }
                 }
             ]

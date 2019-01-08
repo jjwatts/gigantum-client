@@ -80,7 +80,7 @@ class ImageBuilder(object):
 
         logger.info("Using {} as base image file for labbook at {}.".format(base_images[0], self.labbook.root_dir))
         with open(base_images[0]) as base_image_file:
-            fields = yaml.load(base_image_file)
+            fields = yaml.safe_load(base_image_file)
 
         return fields
 
@@ -116,7 +116,7 @@ class ImageBuilder(object):
             pkg_fields: Dict[str, Any] = {}
 
             with open(package) as package_content:
-                pkg_fields.update(yaml.load(package_content))
+                pkg_fields.update(yaml.safe_load(package_content))
 
             # Generate the appropriate docker command for the given package info
             pkg_info = {"name": str(pkg_fields['package']),
@@ -139,7 +139,7 @@ class ImageBuilder(object):
             return []
 
         for snippet_file in [f for f in os.listdir(root_dir) if '.yaml' in f]:
-            docker_data = yaml.load(open(os.path.join(root_dir, snippet_file)))
+            docker_data = yaml.safe_load(open(os.path.join(root_dir, snippet_file)))
             docker_lines.append(f'# Custom Docker: {docker_data["name"]} - {len(docker_data["content"])}'
                                 f'line(s) - (Created {docker_data["timestamp_utc"]})')
             docker_lines.extend(docker_data['content'])

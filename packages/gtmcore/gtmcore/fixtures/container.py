@@ -1,22 +1,3 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
 import shutil
 import docker.errors
@@ -32,14 +13,9 @@ from gtmcore.inventory.inventory  import InventoryManager
 from gtmcore.imagebuilder import ImageBuilder
 from gtmcore.fixtures.fixtures import mock_config_with_repo, ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
 
-# TODO: This should be update to the latest version of requests, and probably automated in the future
-REQUESTS_LATEST_VERSION = "2.21.0"
-
 
 @pytest.fixture(scope='function')
 def build_lb_image_for_jupyterlab(mock_config_with_repo):
-    # Create a labook
-
     with patch.object(Configuration, 'find_default_config', lambda self: mock_config_with_repo[0]):
         im = InventoryManager(mock_config_with_repo[0])
         lb = im.create_labbook('unittester', 'unittester', "containerunittestbook")
@@ -52,7 +28,6 @@ def build_lb_image_for_jupyterlab(mock_config_with_repo):
 
         ib = ImageBuilder(lb)
         docker_lines = ib.assemble_dockerfile(write=True)
-        pprint.pprint(docker_lines)
         assert 'RUN pip install requests==2.18.4' in docker_lines
         assert all(['==None' not in l for l in docker_lines.split()])
         assert all(['=None' not in l for l in docker_lines.split()])
@@ -135,8 +110,7 @@ def build_lb_image_for_env_conda(mock_config_with_repo):
                            description="Testing environment functions.")
     cm = ComponentManager(lb)
     cm.add_base(ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV)
-    cm.add_packages('conda3', [{'package': 'matplotlib', 'version': '2.0.0'},
-                               {'package': 'requests', 'version': REQUESTS_LATEST_VERSION}])
+    cm.add_packages('conda3', [{'package': 'python-coveralls', 'version': '2.7.0'}])
 
     ib = ImageBuilder(lb)
     ib.assemble_dockerfile(write=True)

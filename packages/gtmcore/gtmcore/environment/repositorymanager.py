@@ -198,7 +198,7 @@ class RepositoryManager(object):
         # Read YAML files and write data to dictionary
         for yf in yaml_files:
             with open(yf, 'rt') as yf_file:
-                yaml_data = yaml.load(yf_file)
+                yaml_data = yaml.safe_load(yf_file)
                 _, component_name, _ = yf.rsplit(os.path.sep, 2)
 
                 # Save the COMPONENT repository to aid in accessing components via API

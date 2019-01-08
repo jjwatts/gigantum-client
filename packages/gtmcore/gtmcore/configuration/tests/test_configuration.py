@@ -147,7 +147,7 @@ class TestConfiguration(object):
             override_config_path = os.path.join(tempdir, 'user-config.yaml')
             with open(override_config_path, 'w') as yf:
                 override_dict = {'container': {'memory': 99}}
-                yf.write(yaml.dump(override_dict, default_flow_style=False))
+                yf.write(yaml.safe_dump(override_dict, default_flow_style=False))
 
             with patch('gtmcore.configuration.Configuration.USER_LOCATION', new_callable=PropertyMock,
                        return_value=yf.name):

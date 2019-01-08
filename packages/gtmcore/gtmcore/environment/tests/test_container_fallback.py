@@ -56,7 +56,7 @@ class TestContainerFallback(object):
             assert len(result) == 2
 
             result = mrg.search("gigantum", lb, username)
-            assert len(result) == 1
+            assert len(result) == 4
             assert result[0] == "gigantum"
 
             # Delete image
@@ -68,7 +68,7 @@ class TestContainerFallback(object):
             assert len(result) == 2
 
             result = mrg.search("gigantum", lb, username)
-            assert len(result) == 1
+            assert len(result) == 4
             assert result[0] == "gigantum"
 
         finally:

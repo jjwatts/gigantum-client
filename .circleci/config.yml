@@ -100,9 +100,6 @@ jobs:
             redis-server &
             rqscheduler --interval=2 2> /dev/null &
             python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
-            pytest --cov=lmsrvlabbook --cov=lmsrvcore packages/gtmapi/lmsrvlabbook/tests/test_dataloader_package.py
-            codecov -F api
-            rm /home/circleci/repo/coverage.xml
             pytest --cov=gtmcore packages/gtmcore/gtmcore/environment/tests/test_conda.py
             codecov -F core
 

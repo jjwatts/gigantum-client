@@ -161,7 +161,7 @@ class Dataset(Repository):
             raise ValueError("No root directory assigned to Dataset. Failed to get root directory.")
 
         with open(os.path.join(self.root_dir, ".gigantum", "gigantum.yaml"), 'wt') as df:
-            df.write(yaml.dump(self._data, default_flow_style=False))
+            df.write(yaml.safe_dump(self._data, default_flow_style=False))
             df.flush()
 
     def _load_gigantum_data(self) -> None:
@@ -174,7 +174,7 @@ class Dataset(Repository):
             raise ValueError("No root directory assigned to Dataset. Failed to get root directory.")
 
         with open(os.path.join(self.root_dir, ".gigantum", "gigantum.yaml"), 'rt') as df:
-            self._data = yaml.load(df)
+            self._data = yaml.safe_load(df)
 
     def _validate_gigantum_data(self) -> None:
         """Method to validate the LabBook data file contents

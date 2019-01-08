@@ -33,39 +33,47 @@ class TestPipPackageManager(object):
         assert len(result) == 2
 
         result = mrg.search("gigantum", lb, username)
-        assert len(result) == 1
+        assert len(result) == 4
         assert result[0] == "gigantum"
+        assert result[3] == "gtmunit3"
 
     def test_list_versions(self, build_lb_image_for_env):
         """Test list_versions command"""
         mrg = PipPackageManager()
         lb = build_lb_image_for_env[0]
         username = build_lb_image_for_env[1]
-        result = mrg.list_versions("gigantum", lb, username)
+        result = mrg.list_versions("gtmunit1", lb, username)
 
-        assert len(result) > 3
-        assert "0.3" in result
-        assert "0.4" in result
-        assert "0.5" in result
+        assert len(result) == 5
+        assert result[0] == '0.12.4'
+        assert result[1] == '0.2.4'
+        assert result[2] == '0.2.1'
+        assert result[3] == '0.2.0'
+        assert result[4] == '0.1.0'
 
     def test_latest_version(self, build_lb_image_for_env):
         """Test latest_version command"""
         mrg = PipPackageManager()
         lb = build_lb_image_for_env[0]
         username = build_lb_image_for_env[1]
-        result = mrg.latest_version("gigantum", lb, username)
+        result = mrg.latest_version("gtmunit1", lb, username)
 
-        assert result == "0.14"
+        assert result == "0.12.4"
+
+        result = mrg.latest_version("gtmunit2", lb, username)
+
+        assert result == "12.2"
 
     def test_latest_versions(self, build_lb_image_for_env):
         """Test latest_version command"""
         mrg = PipPackageManager()
         lb = build_lb_image_for_env[0]
         username = build_lb_image_for_env[1]
-        gig_res, req_res = mrg.latest_versions(["gigantum", "requests"], lb, username)
+        gtm1, gtm2, gtm3 = mrg.latest_versions(["gtmunit1", "gtmunit2", "gtmunit3"], lb, username)
 
-        assert gig_res == "0.14"
-        assert req_res.startswith('2.')
+        assert gtm1 == "0.12.4"
+        assert gtm2 == "12.2"
+        assert gtm3 == "5.0"
 
     def test_list_installed_packages(self, build_lb_image_for_env):
         """Test list_installed_packages command
@@ -167,18 +175,18 @@ class TestPipPackageManager(object):
 
     def test_is_valid_good(self, build_lb_image_for_env):
         """Test valid packages command"""
-        pkgs = [{"manager": "pip", "package": "numpy", "version": "1.14.2"},
-                {"manager": "pip", "package": "plotly", "version": ""}]
+        pkgs = [{"manager": "pip", "package": "gtmunit3", "version": "4.15"},
+                {"manager": "pip", "package": "gtmunit2", "version": ""}]
 
         mrg = PipPackageManager()
         lb = build_lb_image_for_env[0]
         username = build_lb_image_for_env[1]
         result = mrg.validate_packages(pkgs, lb, username)
 
-        assert result[0].package == "numpy"
-        assert result[0].version == "1.14.2"
+        assert result[0].package == "gtmunit3"
+        assert result[0].version == "4.15"
         assert result[0].error is False
 
-        assert result[1].package == "plotly"
-        assert result[1].version == '3.4.2'
+        assert result[1].package == "gtmunit2"
+        assert result[1].version == "12.2"
         assert result[1].error is False

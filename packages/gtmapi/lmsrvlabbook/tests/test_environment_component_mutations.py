@@ -42,7 +42,7 @@ class TestAddComponentMutations(object):
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-tester",
-            packages: [{manager: "conda3", package: "requests", version: "2.18.4"}]           
+            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]           
             
           }) {
             clientMutationId
@@ -75,8 +75,8 @@ class TestAddComponentMutations(object):
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-tester-multi",
-            packages: [{manager: "pip3", package: "requests", version: "2.18.4"},
-                       {manager: "pip3", package: "responses", version: "1.4"}]           
+            packages: [{manager: "pip3", package: "gtmunit1", version: "0.12.4"},
+                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]           
             
           }) {
             clientMutationId
@@ -99,22 +99,22 @@ class TestAddComponentMutations(object):
         # Validate the LabBook .gigantum/env/ directory
         assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager')) is True
 
-        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_requests.yaml'))
-        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_responses.yaml'))
+        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_gtmunit1.yaml'))
+        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_gtmunit2.yaml'))
 
-        with open(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_requests.yaml')) as pkg_yaml:
-            package_info_dict = yaml.load(pkg_yaml)
-            assert package_info_dict['package'] == 'requests'
+        with open(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_gtmunit1.yaml')) as pkg_yaml:
+            package_info_dict = yaml.safe_load(pkg_yaml)
+            assert package_info_dict['package'] == 'gtmunit1'
             assert package_info_dict['manager'] == 'pip3'
-            assert package_info_dict['version'] == '2.18.4'
+            assert package_info_dict['version'] == '0.12.4'
             assert package_info_dict['schema'] == 1
             assert package_info_dict['from_base'] is False
 
-        with open(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_responses.yaml')) as pkg_yaml:
-            package_info_dict = yaml.load(pkg_yaml)
-            assert package_info_dict['package'] == 'responses'
+        with open(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_gtmunit2.yaml')) as pkg_yaml:
+            package_info_dict = yaml.safe_load(pkg_yaml)
+            assert package_info_dict['package'] == 'gtmunit2'
             assert package_info_dict['manager'] == 'pip3'
-            assert package_info_dict['version'] == '1.4'
+            assert package_info_dict['version'] == '1.14.1'
             assert package_info_dict['schema'] == 1
             assert package_info_dict['from_base'] is False
 
@@ -165,7 +165,7 @@ class TestAddComponentMutations(object):
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-no-version",
-            packages: [{manager: "pip3", package: "requests"}]           
+            packages: [{manager: "pip3", package: "gtmunit1"}]           
             
           }) {
             clientMutationId
@@ -200,8 +200,8 @@ class TestAddComponentMutations(object):
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-tester-remove",
-            packages: [{manager: "pip3", package: "requests", version: "2.18.4"},
-                       {manager: "pip3", package: "responses", version: "1.4"}]           
+            packages: [{manager: "pip3", package: "gtmunit1", version: "0.12.4"},
+                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]          
             
           }) {
             clientMutationId
@@ -216,8 +216,8 @@ class TestAddComponentMutations(object):
         snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(pkg_query))
 
         # Assert that the dependency was added
-        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_requests.yaml'))
-        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_responses.yaml'))
+        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_gtmunit1.yaml'))
+        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_gtmunit2.yaml'))
 
         # Remove a pip package
         pkg_query = """
@@ -225,7 +225,7 @@ class TestAddComponentMutations(object):
          removePackageComponents (input: {
            owner: "default",
            labbookName: "catbook-package-tester-remove",
-           packages: ["requests"],
+           packages: ["gtmunit2"],
            manager: "pip3"
          }) {
            clientMutationId
@@ -237,8 +237,8 @@ class TestAddComponentMutations(object):
 
         # Assert that the dependency is gone
         assert not os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env',
-                                               'package_manager', 'pip3_requests.yaml'))
-        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_responses.yaml'))
+                                               'package_manager', 'pip3_gtmunit2.yaml'))
+        assert os.path.exists(os.path.join(labbook_dir, '.gigantum', 'env', 'package_manager', 'pip3_gtmunit1.yaml'))
 
     def test_custom_docker_snippet_success(self, fixture_working_dir_env_repo_scoped):
         """Test adding a custom dependency"""

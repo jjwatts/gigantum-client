@@ -159,7 +159,7 @@ class LabBook(Repository):
             raise ValueError("No root directory assigned to lab book. Failed to get root directory.")
 
         with open(os.path.join(self.root_dir, ".gigantum", "labbook.yaml"), 'wt') as lbfile:
-            lbfile.write(yaml.dump(self._data, default_flow_style=False))
+            lbfile.write(yaml.safe_dump(self._data, default_flow_style=False))
             lbfile.flush()
 
     def _load_gigantum_data(self) -> None:
@@ -172,7 +172,7 @@ class LabBook(Repository):
             raise ValueError("No root directory assigned to lab book. Failed to get root directory.")
 
         with open(os.path.join(self.root_dir, ".gigantum", "labbook.yaml"), 'rt') as lbfile:
-            self._data = yaml.load(lbfile)
+            self._data = yaml.safe_load(lbfile)
 
     def _validate_gigantum_data(self) -> None:
         """Method to validate the LabBook data file contents

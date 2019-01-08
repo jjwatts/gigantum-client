@@ -45,7 +45,7 @@ class TestInventoryDatasets(object):
 
         # Validate dataset data file
         with open(os.path.join(dataset_dir, ".gigantum", "gigantum.yaml"), "rt") as data_file:
-            data = yaml.load(data_file)
+            data = yaml.safe_load(data_file)
 
         assert data["name"] == "dataset1"
         assert data["description"] == "my first dataset"

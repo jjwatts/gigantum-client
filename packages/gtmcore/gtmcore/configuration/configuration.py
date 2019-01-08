@@ -88,7 +88,7 @@ class Configuration(object):
         elif os.path.exists(self.USER_LOCATION):
             with open(self.USER_LOCATION) as user_conf_file:
                 # If the config file is empty or only comments, we create an empty dict to allow `update()` to work
-                user_conf_data = yaml.load(user_conf_file) or {}
+                user_conf_data = yaml.safe_load(user_conf_file) or {}
             return user_conf_data
         else:
             return {}
@@ -103,7 +103,7 @@ class Configuration(object):
             (dict)
         """
         with open(config_file, "rt") as cf:
-            data = yaml.load(cf)
+            data = yaml.safe_load(cf)
 
         # Check if there is a parent config file to inherit from
         if "from" in data.keys():
@@ -150,4 +150,4 @@ class Configuration(object):
 
         logger.info("Writing config file to {}".format(self.config_file))
         with open(config_file, "wt") as cf:
-            cf.write(yaml.dump(self.config, default_flow_style=False))
+            cf.write(yaml.safe_dump(self.config, default_flow_style=False))

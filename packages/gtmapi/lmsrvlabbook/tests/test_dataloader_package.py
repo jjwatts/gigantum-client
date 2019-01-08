@@ -26,17 +26,11 @@ from promise import Promise
 from lmsrvlabbook.dataloader.package import PackageLatestVersionLoader
 
 
-skip_clause = os.environ.get('CIRCLE_BRANCH') is not None \
-              and os.environ.get('SKIP_CONDA_TESTS') is not None
-skip_msg = "Skip long Conda tests on circleCI when not in `test-long-running-env` job"
-
-
-@pytest.mark.skipif(skip_clause, reason=skip_msg)
 class TestDataloaderPackage(object):
     def test_load_one_pip(self, build_image_for_jupyterlab):
         """Test loading 1 package"""
 
-        key = "pip&requests"
+        key = "pip&gtmunit1"
         lb, username = build_image_for_jupyterlab[0], build_image_for_jupyterlab[5]
 
         loader = PackageLatestVersionLoader([key], lb, username)
@@ -44,26 +38,26 @@ class TestDataloaderPackage(object):
         assert isinstance(promise1, Promise)
 
         pkg = promise1.get()
-        assert pkg == '2.21.0'
+        assert pkg == '0.12.4'
 
     def test_load_many_pip(self, build_image_for_jupyterlab):
         """Test loading many labbooks"""
         lb, username = build_image_for_jupyterlab[0], build_image_for_jupyterlab[5]
-        keys = ["pip&redis", "pip&gigantum", "pip&numpy"]
+        keys = ["pip&gtmunit1", "pip&gtmunit2", "pip&gtmunit3"]
         loader = PackageLatestVersionLoader(keys, lb, username)
         promise1 = loader.load_many(keys)
         assert isinstance(promise1, Promise)
 
         version_list = promise1.get()
         assert len(version_list) == 3
-        assert version_list[0] == "3.0.1"
-        assert version_list[1] == "0.14"
-        assert version_list[2] == "1.15.4"
+        assert version_list[0] == "0.12.4"
+        assert version_list[1] == "12.2"
+        assert version_list[2] == "5.0"
 
     def test_load_many_conda(self, build_image_for_jupyterlab):
         """Test loading many labbooks"""
         lb, username = build_image_for_jupyterlab[0], build_image_for_jupyterlab[5]
-        keys = ["conda3&redis", "conda3&scipy", "conda3&numpy"]
+        keys = ["conda3&cdutil", "conda3&python-coveralls", "conda3&nltk"]
         loader = PackageLatestVersionLoader(keys, lb, username)
         promise1 = loader.load_many(keys)
         assert isinstance(promise1, Promise)
@@ -71,37 +65,37 @@ class TestDataloaderPackage(object):
         version_list = promise1.get()
         assert len(version_list) == 3
 
-        assert version_list[0] == "5.0.0"
-        assert version_list[1] == "1.2.0"
-        assert version_list[2] == "1.15.4"
+        assert version_list[0] == "8.0"
+        assert version_list[1] == "2.9.1"
+        assert version_list[2] == "3.2.5"
 
     def test_load_many_conda2(self, build_image_for_jupyterlab):
         """Test loading many labbooks"""
         lb, username = build_image_for_jupyterlab[0], build_image_for_jupyterlab[5]
-        keys = ["conda2&redis", "conda2&scipy", "conda2&numpy"]
+        keys = ["conda3&cdutil", "conda3&python-coveralls", "conda3&nltk"]
         loader = PackageLatestVersionLoader(keys, lb, username)
         promise1 = loader.load_many(keys)
         assert isinstance(promise1, Promise)
 
         version_list = promise1.get()
         assert len(version_list) == 3
-        assert version_list[0] == "5.0.0"
-        assert version_list[1] == "1.2.0"
-        assert version_list[2] == "1.15.4"
+        assert version_list[0] == "8.0"
+        assert version_list[1] == "2.9.1"
+        assert version_list[2] == "3.2.5"
 
     def test_load_many_mixed(self, build_image_for_jupyterlab):
         """Test loading many labbooks"""
         lb, username = build_image_for_jupyterlab[0], build_image_for_jupyterlab[5]
-        keys = ["conda3&redis", "pip&scipy", "conda3&numpy"]
+        keys = ["conda3&cdutil", "pip&gtmunit1", "conda3&nltk"]
         loader = PackageLatestVersionLoader(keys, lb, username)
         promise1 = loader.load_many(keys)
         assert isinstance(promise1, Promise)
 
         version_list = promise1.get()
         assert len(version_list) == 3
-        assert version_list[0] == "5.0.0"
-        assert version_list[1] == "1.2.0"
-        assert version_list[2] == "1.15.4"
+        assert version_list[0] == "8.0"
+        assert version_list[1] == "0.12.4"
+        assert version_list[2] == "3.2.5"
 
     def test_load_invalid_package(self, build_image_for_jupyterlab):
         """Test loading many labbooks"""

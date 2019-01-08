@@ -88,7 +88,7 @@ class TestComponentManager(object):
         for file in package_files:
             full_path = os.path.join(package_path, file)
             with open(full_path) as package_yaml:
-                fields_dict = yaml.load(package_yaml.read())
+                fields_dict = yaml.safe_load(package_yaml.read())
                 for required_field in ['manager', 'package', 'from_base', 'version']:
                     assert required_field in fields_dict.keys()
 
@@ -129,7 +129,7 @@ class TestComponentManager(object):
         assert os.path.exists(package_file) is True
 
         with open(package_file, 'rt') as pf:
-            data = yaml.load(pf)
+            data = yaml.safe_load(pf)
             assert data['version'] == '2.18.2'
 
     def test_add_base(self, mock_config_with_repo):
@@ -154,7 +154,7 @@ class TestComponentManager(object):
                                       f"{gtmcore.fixtures.ENV_UNIT_TEST_BASE}.yaml")
         assert os.path.exists(component_file) is True
         with open(component_file, 'rt') as cf:
-            data = yaml.load(cf)
+            data = yaml.safe_load(cf)
 
         preinstalled_pkgs = os.listdir(os.path.join(labbook_dir, ".gigantum/env/package_manager"))
         pkg_yaml_files = [n for n in preinstalled_pkgs if '.yaml' in n]
@@ -352,7 +352,7 @@ class TestComponentManager(object):
         assert c1 != c2
 
         import yaml
-        d = yaml.load(open(os.path.join(lb.root_dir, '.gigantum', 'env', 'docker', 'unittest-docker.yaml')))
+        d = yaml.safe_load(open(os.path.join(lb.root_dir, '.gigantum', 'env', 'docker', 'unittest-docker.yaml')))
         print(d)
         assert d['description'] == "yada yada's, \n\n **I'm putting in lots of apostrophę's**."
         assert d['name'] == 'unittest-docker'

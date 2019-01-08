@@ -162,7 +162,7 @@ exec gosu giguser "$@"
         docker_dir = os.path.join(self.labbook.root_dir, '.gigantum', 'env', 'docker')
         docker_file = os.path.join(docker_dir, f'{name}.yaml')
         os.makedirs(docker_dir, exist_ok=True)
-        yaml_dump = yaml.dump(file_data, default_flow_style=False)
+        yaml_dump = yaml.safe_dump(file_data, default_flow_style=False)
         with open(docker_file, 'w') as df:
             df.write(yaml_dump)
 
@@ -318,7 +318,7 @@ exec gosu giguser "$@"
 
             # Check to make sure package isn't from the base. You cannot remove packages from the base yet.
             with open(package_yaml_path, 'rt') as cf:
-                package_data = yaml.load(cf)
+                package_data = yaml.safe_load(cf)
 
             if not package_data:
                 raise IOError("Failed to load package description")
@@ -376,7 +376,7 @@ exec gosu giguser "$@"
             raise ValueError("The base {} already exists in this project")
 
         with open(base_final_path, 'wt') as cf:
-            cf.write(yaml.dump(base_data, default_flow_style=False))
+            cf.write(yaml.safe_dump(base_data, default_flow_style=False))
 
         self.labbook.cuda_version = base_data.get('cuda_version')
         for manager in base_data['package_managers']:
@@ -440,7 +440,7 @@ exec gosu giguser "$@"
         # Read YAML files and write data to dictionary
         for yf in yaml_files:
             with open(yf, 'rt') as yf_file:
-                yaml_data = yaml.load(yf_file)
+                yaml_data = yaml.safe_load(yf_file)
                 data.append(yaml_data)
         return sorted(data, key=lambda elt: elt.get('id') or elt.get('manager'))
 
@@ -454,6 +454,6 @@ exec gosu giguser "$@"
 
         # If you got 1 base, load from disk
         with open(base_yaml_file[0], 'rt') as bf:
-            data = yaml.load(bf)
+            data = yaml.safe_load(bf)
 
         return data

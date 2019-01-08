@@ -371,7 +371,7 @@ class Repository(object):
             raise ValueError("No root directory assigned to repository. Failed to get root directory.")
 
         with open(os.path.join(self.root_dir, ".gigantum", "gigantum.yaml"), 'wt') as gf:
-            gf.write(yaml.dump(self._data, default_flow_style=False))
+            gf.write(yaml.safe_dump(self._data, default_flow_style=False))
             gf.flush()
 
     def _load_gigantum_data(self) -> None:
@@ -384,7 +384,7 @@ class Repository(object):
             raise ValueError("No root directory assigned to repository. Failed to get root directory.")
 
         with open(os.path.join(self.root_dir, ".gigantum", "gigantum.yaml"), 'rt') as gf:
-            self._data = yaml.load(gf)
+            self._data = yaml.safe_load(gf)
 
     def _validate_gigantum_data(self) -> None:
         """Method to validate the Repository metadata file contents

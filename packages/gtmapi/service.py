@@ -51,7 +51,7 @@ if os.path.exists(user_conf_path):
     logger.info(f"Using custom user configuration from {user_conf_path}")
     try:
         with open(user_conf_path) as user_file:
-            yaml.load(user_file)
+            yaml.safe_load(user_file)
         shutil.copyfile(user_conf_path, os.path.expanduser("~/user-config.yaml"))
     except Exception as e:
         logger.error("Error parsing user config, cannot proceed")
