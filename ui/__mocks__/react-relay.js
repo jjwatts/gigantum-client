@@ -22,14 +22,14 @@ const makeRelayWrapper = (Comp) => {
     constructor(props, context){
     	super(props);
 
-    	this.state = {};
+    	this.state = { ...props };
     }
 
     render(){
       return React.createElement(Comp, {
         ...this.props,
-        ...this.state.data,
-        relay: RelayPaginationProps
+        ...this.state,
+        relay: RelayPaginationProps,
       })
     }
   }
@@ -49,7 +49,6 @@ relay.graphql = graphql
 
 
 const loadMore = (props, value, ha) => {
-  console.log(props, value, ha)
   // let labbooks = json.data.labbookList.localLabbooks
   // labbooks.edges = labbooks.edges.slice(0, 5)
   return "labbooks"
@@ -68,7 +67,7 @@ class ReactRelayQueryRenderer extends React.Component<Props, State, Data> {
     let name = props.query().query.selections[0].name;
 
     let type = name.charAt(0).toLowerCase() + name.slice(1)
-    console.log(type)
+
     this.state = {
       readyState: {
         props: (type !== false) ? global.data[type] : global.data

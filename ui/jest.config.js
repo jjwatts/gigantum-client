@@ -6,7 +6,7 @@ module.exports = {
     "<rootDir>/__tests__/setupTests.js",
     "<rootDir>/config/polyfills.js",
     "<rootDir>/__tests__/slickTestSetup.js",
-    "<rootDir>/__tests__/localStorage.js"
+    "<rootDir>/__tests__/localStorage.js",
   ],
   "testMatch": [
     "<rootDir>/**/__tests__/**/*.test.js?(x)"

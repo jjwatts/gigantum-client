@@ -22,6 +22,10 @@
   box-shadow: 0 0px 12px 0 rgba(0,0,0,.10);
 }
 
+.box-shadow-50 {
+  box-shadow: 0 0px 12px 0 rgba(0,0,0,.50);
+}
+
 .flex {
   display: flex;
 }
@@ -47,11 +51,11 @@
 }
 
 .justify--left {
-    justify-content: left;
+    justify-content: flex-start;
 }
 
 .justify--right {
-    justify-content: left;
+    justify-content: flex-end;
 }
 
 .justify--space-around {
@@ -61,6 +65,7 @@
 .justify--space-between {
     justify-content: space-between;
 }
+
 
 /*
   flex: 0 0 auto, 1 0 auto, 0 1 auto, 1 1 auto

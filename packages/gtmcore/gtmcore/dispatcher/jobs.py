@@ -32,7 +32,10 @@ from gtmcore.activity.monitors.devenv import DevEnvMonitorManager
 from gtmcore.configuration import Configuration
 from gtmcore.configuration.utils import call_subprocess
 from gtmcore.labbook import LabBook
+
 from gtmcore.inventory.inventory  import InventoryManager
+from gtmcore.inventory  import Repository
+
 from gtmcore.logging import LMLogger
 from gtmcore.workflows import sync_locally, GitWorkflow, ZipExporter
 from gtmcore.container.core import (build_docker_image as build_image,
@@ -46,11 +49,11 @@ from gtmcore.container.core import (build_docker_image as build_image,
 # ANY use of globals will cause the following methods to fail.
 
 
-def publish_labbook(labbook_path: str, username: str, access_token: str,
-                    remote: Optional[str] = None, public: bool = False) -> None:
+def publish_repository(repository: Repository, username: str, access_token: str,
+                       remote: Optional[str] = None, public: bool = False, id_token: str = None) -> None:
     p = os.getpid()
     logger = LMLogger.get_logger()
-    logger.info(f"(Job {p}) Starting publish_labbook({labbook_path})")
+    logger.info(f"(Job {p}) Starting publish_repository({str(repository)})")
 
     def update_meta(msg):
         job = get_current_job()
@@ -63,22 +66,20 @@ def publish_labbook(labbook_path: str, username: str, access_token: str,
         job.save_meta()
 
     try:
-        labbook = InventoryManager().load_labbook_from_directory(labbook_path)
-
-        with labbook.lock():
-            wf = GitWorkflow(labbook)
+        with repository.lock():
+            wf = GitWorkflow(repository)
             wf.publish(username=username, access_token=access_token, remote=remote or "origin",
-                       public=public, feedback_callback=update_meta)
+                       public=public, feedback_callback=update_meta, id_token=id_token)
     except Exception as e:
-        logger.exception(f"(Job {p}) Error on publish_labbook: {e}")
+        logger.exception(f"(Job {p}) Error on publish_repository: {e}")
         raise
 
 
-def sync_labbook(labbook_path: str, username: str, remote: str = "origin",
-                 force: bool = False) -> int:
+def sync_repository(repository: Repository, username: str, remote: str = "origin",
+                 force: bool = False, access_token: str = None, id_token: str = None) -> int:
     p = os.getpid()
     logger = LMLogger.get_logger()
-    logger.info(f"(Job {p}) Starting sync_labbook({labbook_path})")
+    logger.info(f"(Job {p}) Starting sync_repository({str(repository)})")
 
     def update_meta(msg):
         job = get_current_job()
@@ -91,16 +92,14 @@ def sync_labbook(labbook_path: str, username: str, remote: str = "origin",
         job.save_meta()
 
     try:
-        labbook = InventoryManager().load_labbook_from_directory(labbook_path)
-
-        with labbook.lock():
-            wf = GitWorkflow(labbook)
+        with repository.lock():
+            wf = GitWorkflow(repository)
             cnt = wf.sync(username=username, remote=remote, force=force,
-                          feedback_callback=update_meta)
-        logger.info(f"(Job {p} Completed sync_labbook with cnt={cnt}")
+                          feedback_callback=update_meta, access_token=access_token, id_token=id_token)
+        logger.info(f"(Job {p} Completed sync_repository with cnt={cnt}")
         return cnt
     except Exception as e:
-        logger.exception(f"(Job {p}) Error on sync_labbook: {e}")
+        logger.exception(f"(Job {p}) Error on sync_repository: {e}")
         raise
 
 
@@ -113,10 +112,26 @@ def export_labbook_as_zip(labbook_path: str, lb_export_directory: str) -> str:
     try:
         lb = InventoryManager().load_labbook_from_directory(labbook_path)
         with lb.lock():
-            path = ZipExporter.export_zip(lb.root_dir, lb_export_directory)
+            path = ZipExporter.export_labbook(lb.root_dir, lb_export_directory)
         return path
     except Exception as e:
         logger.exception(f"(Job {p}) Error on export_labbook_as_zip: {e}")
+        raise
+
+
+def export_dataset_as_zip(dataset_path: str, ds_export_directory: str) -> str:
+    """Return path to archive file of exported dataset. """
+    p = os.getpid()
+    logger = LMLogger.get_logger()
+    logger.info(f"(Job {p}) Starting export_dataset_as_zip({dataset_path})")
+
+    try:
+        ds = InventoryManager().load_dataset_from_directory(dataset_path)
+        with ds.lock():
+            path = ZipExporter.export_dataset(ds.root_dir, ds_export_directory)
+        return path
+    except Exception as e:
+        logger.exception(f"(Job {p}) Error on export_dataset_as_zip: {e}")
         raise
 
 
@@ -147,12 +162,51 @@ def import_labboook_from_zip(archive_path: str, username: str, owner: str,
                 f"username={username}, owner={owner}, config_file={config_file})")
 
     try:
-        lb = ZipExporter.import_zip(archive_path, username, owner,
-                                    config_file=config_file,
-                                    update_meta=update_meta)
+        lb = ZipExporter.import_labbook(archive_path, username, owner,
+                                        config_file=config_file,
+                                        update_meta=update_meta)
         return lb.root_dir
     except Exception as e:
         logger.exception(f"(Job {p}) Error on import_labbook_from_zip({archive_path}): {e}")
+        raise
+    finally:
+        if os.path.exists(archive_path):
+            os.remove(archive_path)
+
+
+def import_dataset_from_zip(archive_path: str, username: str, owner: str,
+                            config_file: Optional[str] = None) -> str:
+    """Method to import a dataset from a zip file
+
+    Args:
+        archive_path(str): Path to the uploaded zip
+        username(str): Username
+        owner(str): Owner username
+        config_file(str): Optional path to a labmanager config file
+
+    Returns:
+        str: directory path of imported labbook
+    """
+
+    def update_meta(msg):
+        job = get_current_job()
+        if not job:
+            return
+        job.meta['feedback'] = msg
+        job.save_meta()
+
+    p = os.getpid()
+    logger = LMLogger.get_logger()
+    logger.info(f"(Job {p}) Starting import_dataset_from_zip(archive_path={archive_path},"
+                f"username={username}, owner={owner}, config_file={config_file})")
+
+    try:
+        lb = ZipExporter.import_dataset(archive_path, username, owner,
+                                        config_file=config_file,
+                                        update_meta=update_meta)
+        return lb.root_dir
+    except Exception as e:
+        logger.exception(f"(Job {p}) Error on import_dataset_from_zip({archive_path}): {e}")
         raise
     finally:
         if os.path.exists(archive_path):

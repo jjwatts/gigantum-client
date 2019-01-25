@@ -25,6 +25,8 @@
 
   background: url('../images/icons/close-white.svg') no-repeat center center;
   background-size: 16px;
+
+  z-index: 8;
 }
 
 .Footer__close:hover {

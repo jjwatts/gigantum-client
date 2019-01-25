@@ -51,7 +51,7 @@ class TestActivityStore:
     def test_create_activitystore(self, mock_config_with_activitystore):
         """Test to verify the ActivityStore is initialized properly"""
         assert type(mock_config_with_activitystore[0]) == ActivityStore
-        assert type(mock_config_with_activitystore[0].labbook) == LabBook
+        assert type(mock_config_with_activitystore[0].repository) == LabBook
 
         assert mock_config_with_activitystore[0].compress_details is True
         assert mock_config_with_activitystore[0].compress_min_bytes == 4000
@@ -265,17 +265,17 @@ class TestActivityStore:
         assert ar.show == stored_ar.show
         assert ar.tags == stored_ar.tags
         assert ar.type == stored_ar.type
-        assert len(ar.detail_objects) == len(stored_ar.detail_objects)
+        assert len(ar._detail_objects) == len(stored_ar._detail_objects)
 
-        assert ar.detail_objects[0][0] == stored_ar.detail_objects[0][0]
-        assert ar.detail_objects[0][1] == stored_ar.detail_objects[0][1]
-        assert ar.detail_objects[0][2] == stored_ar.detail_objects[0][2]
+        assert ar._detail_objects[0][0] == stored_ar._detail_objects[0][0]
+        assert ar._detail_objects[0][1] == stored_ar._detail_objects[0][1]
+        assert ar._detail_objects[0][2] == stored_ar._detail_objects[0][2]
 
-        assert ar.detail_objects[0][3].is_loaded is True
-        assert ar.detail_objects[1][3].is_loaded is True
+        assert ar._detail_objects[0][3].is_loaded is True
+        assert ar._detail_objects[1][3].is_loaded is True
 
-        assert stored_ar.detail_objects[0][3].is_loaded is False
-        assert stored_ar.detail_objects[1][3].is_loaded is False
+        assert stored_ar._detail_objects[0][3].is_loaded is False
+        assert stored_ar._detail_objects[1][3].is_loaded is False
 
         assert stored_ar.username == 'default'
         assert stored_ar.email == 'default@test.com'
@@ -316,18 +316,18 @@ class TestActivityStore:
         assert ar.show == stored_ar.show
         assert ar.tags == stored_ar.tags
         assert ar.type == stored_ar.type
-        assert len(ar.detail_objects) == len(stored_ar.detail_objects)
+        assert len(ar._detail_objects) == len(stored_ar._detail_objects)
         assert stored_ar.username == 'default'
         assert stored_ar.email == 'default@test.com'
         assert stored_ar.username == ar.username
         assert stored_ar.email == ar.email
 
-        assert ar.detail_objects[0][0] == stored_ar.detail_objects[0][0]
-        assert ar.detail_objects[0][1] == stored_ar.detail_objects[0][1]
-        assert ar.detail_objects[0][2] == stored_ar.detail_objects[0][2]
+        assert ar._detail_objects[0][0] == stored_ar._detail_objects[0][0]
+        assert ar._detail_objects[0][1] == stored_ar._detail_objects[0][1]
+        assert ar._detail_objects[0][2] == stored_ar._detail_objects[0][2]
 
-        assert ar.detail_objects[0][3].is_loaded is True
-        assert stored_ar.detail_objects[0][3].is_loaded is False
+        assert ar._detail_objects[0][3].is_loaded is True
+        assert stored_ar._detail_objects[0][3].is_loaded is False
 
     def test_get_activity_record_does_not_exist(self, mock_config_with_activitystore):
         """Test getting a note by a commit hash that does not exist"""

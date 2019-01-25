@@ -1,0 +1,158 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test LocalDatasets 1`] = `
+<div
+  className="Datasets__listing"
+>
+  <div
+    className="grid"
+  >
+    <div
+      className="ImportModule Card Card--line-50 Card--text-center Card--add Card--import column-4-span-3"
+    >
+      <div
+        className="Import__dataset-main"
+      >
+        <div
+          className="Import__dataset-header"
+        >
+          <div
+            className="Import__dataset-icon"
+          >
+            <div
+              className="Import__dataset-add-icon"
+            />
+          </div>
+          <div
+            className="Import__dataset-title"
+          >
+            <h4>
+              Add Dataset
+            </h4>
+          </div>
+        </div>
+        <div
+          className="btn--import"
+          onClick={[Function]}
+        >
+          Create New
+        </div>
+        <div
+          className="btn--import"
+          onClick={[Function]}
+        >
+          Import Existing
+        </div>
+        <div
+          className="hidden createLabbook"
+        >
+          <div
+            className="ToolTip__toggle createLabbook"
+            onClick={[Function]}
+          >
+            <div
+              className="ToolTip__glow-container"
+            >
+              <div
+                className="ToolTip__glow-ring-outer"
+              >
+                <div
+                  className="ToolTip__glow-ring-inner"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            className="hidden createLabbook"
+          />
+          <div
+            className="hidden createLabbook"
+          >
+            Clicking on the 'Create New' button will open the new Project window, letting you name and select a Base for the new Project.
+          </div>
+        </div>
+      </div>
+      <div
+        className="hidden"
+      />
+    </div>
+    <a
+      className="Card Card--text column-4-span-3 flex flex--column justify--space-between"
+      href="/datasets/uitest/ui-test-dataset"
+      onClick={[Function]}
+    >
+      <div
+        className="LocalDatasets__row--icons"
+      />
+      <div
+        className="LocalDatasets__row--text"
+      >
+        <div>
+          <h6
+            className="LocalDatasets__panel-title"
+            onClick={[Function]}
+          >
+            <span>
+              <span
+                className=""
+              >
+                ui-test-dataset
+              </span>
+            </span>
+          </h6>
+        </div>
+        <p
+          className="LocalDatasets__paragraph LocalDatasets__paragraph--owner "
+        >
+          uitest
+        </p>
+        <p
+          className="LocalDatasets__paragraph LocalDatasets__paragraph--owner"
+        >
+          Modified Fri Jan 11 2019
+        </p>
+        <p
+          className="LocalDatasets__paragraph LocalDatasets__paragraph--description"
+        >
+          <span>
+            <span
+              className=""
+            >
+              This is a testing dataset
+            </span>
+          </span>
+        </p>
+      </div>
+      <div
+        className="Tooltip LocalDatasetPanel__loading"
+        data-tooltip="loading"
+      />
+    </a>
+    <div
+      className="DatasetPaginationLoader--hidden"
+    >
+      <div />
+    </div>
+    <div
+      className="DatasetPaginationLoader--hidden"
+    >
+      <div />
+    </div>
+    <div
+      className="DatasetPaginationLoader--hidden"
+    >
+      <div />
+    </div>
+    <div
+      className="DatasetPaginationLoader--hidden"
+    >
+      <div />
+    </div>
+    <div
+      className="DatasetPaginationLoader--hidden"
+    >
+      <div />
+    </div>
+  </div>
+</div>
+`;

@@ -88,7 +88,7 @@ class RemoteLabbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRep
         # Get collaborators from remote service
         mgr = GitLabManager(default_remote, admin_service, token)
         try:
-            d = mgr.repo_details(namespace=self.owner, labbook_name=self.name)
+            d = mgr.repo_details(namespace=self.owner, repository_name=self.name)
             return d.get('visibility')
         except ValueError:
             return "unknown"

@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionsMenu Component Renders a snapshot 1`] = `
+<div
+  className="ActionsMenu"
+>
+  <div
+    className="ActionsMenu__item ActionsMenu__item--AddSubfolder visibility-hidden"
+    name="Add Folder"
+    onClick={[Function]}
+  />
+  <div
+    className="ActionsMenu__item ActionsMenu__item--delete"
+    name="Delete"
+    onClick={[Function]}
+  >
+    <div
+      className="ActionsMenu__popup hidden ToolTip__message"
+    >
+      <div
+        className="ToolTip__pointer"
+      />
+      <p>
+        Are you sure?
+      </p>
+      <div
+        className="flex justify--space-around"
+      >
+        <button
+          className="File__btn--round File__btn--cancel"
+          onClick={[Function]}
+        />
+        <button
+          className="File__btn--round File__btn--add"
+          onClick={[Function]}
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    className="ActionsMenu__item ActionsMenu__item--rename"
+    name="Rename"
+    onClick={[Function]}
+  />
+  <div
+    className="ActionsMenu__item ActionsMenu__item--favorite-off"
+    name="Favorite"
+    onClick={[Function]}
+  />
+</div>
+`;

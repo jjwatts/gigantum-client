@@ -23,7 +23,7 @@ from mock import patch
 
 from lmsrvcore.auth.identity import get_identity_manager_instance, AuthenticationError
 from lmsrvcore.middleware import AuthorizationMiddleware, error_middleware, time_all_resolvers_middleware, \
-    LabBookLoaderMiddleware
+    DataloaderMiddleware
 from lmsrvcore.tests.fixtures import fixture_working_dir_with_cached_user
 from gtmcore.configuration import Configuration
 

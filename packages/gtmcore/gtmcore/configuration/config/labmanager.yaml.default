@@ -51,6 +51,7 @@ git:
       remote_type: gitlab
       admin_service: usersrv.gigantum.io
       index_service: api.gigantum.com/read
+      object_service: api.gigantum.com/object-v1
 
 # Embedded Detail Object Database config
 detaildb:
@@ -91,3 +92,7 @@ proxy:
   apparent_proxy_port: 10000
   # All LabManager api traffic has this default prefix.
   labmanager_api_prefix: /api
+
+# Datasets configuration
+datasets:
+  cache_manager: "host"

@@ -4,7 +4,7 @@
       import {mount} from 'enzyme'
       import OutputBrowser from 'Components/labbook/filesShared/sectionBrowser/sectionBrowserContainers/OutputBrowser';
 
-      import relayTestingUtils from 'relay-testing-utils'
+      import relayTestingUtils from '@gigantum/relay-testing-utils'
 
       test('Test OutputBrowser', () => {
 

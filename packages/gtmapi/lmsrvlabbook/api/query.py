@@ -28,17 +28,21 @@ from gtmcore.dispatcher import Dispatcher
 from gtmcore.environment import BaseRepository
 from gtmcore.environment.utils import get_package_manager
 from gtmcore.labbook.schemas import CURRENT_SCHEMA
+from gtmcore.dataset.storage import get_storage_backend_descriptions
 
 from lmsrvcore.auth.user import get_logged_in_username
 from lmsrvcore.api.connections import ListBasedConnection
 
 from lmsrvlabbook.api.objects.labbook import Labbook
 from lmsrvlabbook.api.objects.labbooklist import LabbookList
+from lmsrvlabbook.api.objects.datasetlist import DatasetList
 from lmsrvlabbook.api.objects.basecomponent import BaseComponent
 from lmsrvlabbook.api.objects.packagecomponent import PackageComponent
 from lmsrvlabbook.api.objects.jobstatus import JobStatus
 from lmsrvlabbook.api.connections.environment import BaseComponentConnection
 from lmsrvlabbook.api.connections.jobstatus import JobStatusConnection
+from lmsrvlabbook.api.objects.datasettype import DatasetType
+from lmsrvlabbook.api.objects.dataset import Dataset
 
 from lmsrvcore.api.objects.user import UserIdentity
 
@@ -64,6 +68,8 @@ class LabbookQuery(graphene.ObjectType):
 
     labbook = graphene.Field(Labbook, owner=graphene.String(), name=graphene.String())
 
+    dataset = graphene.Field(Dataset, owner=graphene.String(), name=graphene.String())
+
     # This indicates the most-recent labbook schema version.
     # Nominal usage of this field is to see if any given labbook is behind this version.
     # Any new labbook will be created with this schema version.
@@ -79,8 +85,14 @@ class LabbookQuery(graphene.ObjectType):
     # A field to interact with listing labbooks locally and remote
     labbook_list = graphene.Field(LabbookList)
 
+    # A field to interact with listing datasets locally and remote
+    dataset_list = graphene.Field(DatasetList)
+
     # Base Image Repository Interface
     available_bases = graphene.relay.ConnectionField(BaseComponentConnection)
+
+    # List available types of datasets
+    available_datasets = graphene.List(DatasetType)
 
     # Currently not fully supported, but will be added in the future.
     # available_base_image_versions = graphene.relay.ConnectionField(BaseImageConnection, repository=graphene.String(),
@@ -112,20 +124,34 @@ class LabbookQuery(graphene.ObjectType):
             return True
 
     def resolve_labbook(self, info, owner: str, name: str):
-        """Method to return a graphene Labbok instance based on the name
+        """Method to return a graphene Labbook instance based on the name
 
         Uses the "currently logged in" user
 
         Args:
             owner(str): Username of the owner (aka namespace)
             name(str): Name of the LabBook
-            _dataloader: A dataloader instance
 
         Returns:
             Labbook
         """
         # Load the labbook data via a dataloader
         return Labbook(id="{}&{}".format(owner, name),
+                       name=name, owner=owner)
+
+    def resolve_dataset(self, info, owner: str, name: str):
+        """Method to return a graphene Dataset instance based on the name
+
+        Uses the "currently logged in" user
+
+        Args:
+            owner(str): Username of the owner (aka namespace)
+            name(str): Name of the Dataset
+
+        Returns:
+            Labbook
+        """
+        return Dataset(id="{}&{}".format(owner, name),
                        name=name, owner=owner)
 
     def resolve_current_labbook_schema_version(self, info):
@@ -135,6 +161,10 @@ class LabbookQuery(graphene.ObjectType):
     def resolve_labbook_list(self, info):
         """Return a labbook list object, which is just a container so the id is empty"""
         return LabbookList(id="")
+
+    def resolve_dataset_list(self, info):
+        """Return a dataset list object, which is just a container so the id is empty"""
+        return DatasetList(id="")
 
     def resolve_job_status(self, info, job_id: str):
         """Method to return a graphene Labbok instance based on the name
@@ -201,3 +231,23 @@ class LabbookQuery(graphene.ObjectType):
             UserIdentity
         """
         return UserIdentity()
+
+    def resolve_available_datasets(self, info):
+        """Method to resolve a list of available dataset types
+
+        Returns:
+            list
+        """
+        dataset_types = list()
+        for metadata in get_storage_backend_descriptions():
+            d = DatasetType()
+            d.id = metadata['storage_type']
+            d.storage_type = metadata['storage_type']
+            d.name = metadata['name']
+            d.description = metadata['description']
+            d.readme = metadata['readme']
+            d.tags = metadata['tags']
+            d.icon = metadata['icon']
+            d.url = metadata['url']
+            dataset_types.append(d)
+        return dataset_types

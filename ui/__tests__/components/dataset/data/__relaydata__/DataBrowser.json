@@ -1,0 +1,54 @@
+{
+ "data": {
+  "dataset": {
+   "id": "RGF0YXNldDp1aXRlc3QmdWktdGVzdC1kYXRhc2V0",
+   "description": "This is a testing dataset",
+   "allFiles": {
+    "edges": [
+     {
+      "node": {
+       "id": "RGF0YXNldEZpbGU6dWl0ZXN0JnVpLXRlc3QtZGF0YXNldCZueWNfdGF4aSAyLmNzdg==",
+       "isDir": false,
+       "isFavorite": false,
+       "modifiedAt": 1547226702,
+       "key": "nyc_taxi 2.csv",
+       "size": "1510609630",
+       "__typename": "DatasetFile"
+      },
+      "cursor": "MA=="
+     },
+     {
+      "node": {
+       "id": "RGF0YXNldEZpbGU6dWl0ZXN0JnVpLXRlc3QtZGF0YXNldCZjaGFybGVzLXByb3h5LTQuMS40LmRtZw==",
+       "isDir": false,
+       "isFavorite": false,
+       "modifiedAt": 1547226846,
+       "key": "charles-proxy-4.1.4.dmg",
+       "size": "58845833",
+       "__typename": "DatasetFile"
+      },
+      "cursor": "MQ=="
+     },
+     {
+      "node": {
+       "id": "RGF0YXNldEZpbGU6dWl0ZXN0JnVpLXRlc3QtZGF0YXNldCZEb2NrZXIgKDkpLmRtZw==",
+       "isDir": false,
+       "isFavorite": false,
+       "modifiedAt": 1547226910,
+       "key": "Docker (9).dmg",
+       "size": "370328537",
+       "__typename": "DatasetFile"
+      },
+      "cursor": "Mg=="
+     }
+    ],
+    "pageInfo": {
+     "hasNextPage": false,
+     "hasPreviousPage": false,
+     "startCursor": "MA==",
+     "endCursor": "Mg=="
+    }
+   }
+  }
+ }
+}

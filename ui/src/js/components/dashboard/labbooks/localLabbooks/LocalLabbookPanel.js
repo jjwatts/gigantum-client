@@ -219,15 +219,22 @@ export default class LocalLabbookPanel extends Component {
           <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
           >
-
-            <Highlighter
-              highlightClassName="LocalLabbooks__highlighted"
-              searchWords={[store.getState().labbookListing.filterText]}
-              autoEscape={false}
-              caseSensitive={false}
-              textToHighlight={edge.node.description}
-            />
-
+            {
+              edge.node.description && edge.node.description.length ?
+              <Highlighter
+                highlightClassName="LocalLabbooks__highlighted"
+                searchWords={[store.getState().labbookListing.filterText]}
+                autoEscape={false}
+                caseSensitive={false}
+                textToHighlight={edge.node.description}
+              />
+              :
+              <span
+                className="LocalLabbooks__description--blank"
+              >
+              No description provided
+              </span>
+            }
           </p>
 
         </div>

@@ -219,7 +219,7 @@ class TestDispatcher(object):
         erm.update_repositories()
         erm.index_repositories()
 
-        # Create a labook
+        # Create a labbook
         lb = InventoryManager(mock_config_file[0]).create_labbook('unittester', 'unittester',
                                                                   'unittest-start-stop-job',
                                                                   description="Testing docker building.")
@@ -240,7 +240,7 @@ class TestDispatcher(object):
 
         try:
             from gtmcore.container.utils import infer_docker_image_name
-            owner = InventoryManager().query_labbook_owner(lb)
+            owner = InventoryManager().query_owner(lb)
             client.images.remove(infer_docker_image_name(labbook_name=lb.name, owner=owner,
                                                          username='unittester'))
         except:

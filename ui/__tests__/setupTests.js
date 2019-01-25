@@ -2,19 +2,65 @@
 var fetch = require('isomorphic-fetch');
 var FormData = require('form-data');
 require('raf/polyfill');
+import Worker from 'jest-worker';
 
 var { configure } = require('enzyme');
 var Adapter = require('enzyme-adapter-react-16');
+var uuid = require('uuid/v4');
+
 
 configure({ adapter: new Adapter() });
 // need to add root to JSDOM for mounting react
+delete window.location;
+function getLocation(href) {
+    var match = href.match(/^(https?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/);
+    return match && {
+        href: href,
+        protocol: match[1],
+        host: match[2],
+        hostname: match[3],
+        port: match[4],
+        pathname: match[5],
+        search: match[6],
+        hash: match[7],
+    };
+}
 
+window.location = {}; // or stub/spy etc
+window.location.assign = (url) => {
+  let location = getLocation(url)
+  window.location = location;
+}
+window.location.href = 'https://localhost:10000';
 // set variables for the api
 window.location.hostname = 'localhost';
 window.location.protocol = 'https:';
 
-// window.location.assign.mockClear();
-// window.location.assign('https://localhost:10000');
+// class Worker {
+//   constructor(stringUrl) {
+//     this.url = stringUrl;
+//     this.onmessage = () => {};
+//   }
+//
+//   addEventListener(eventType, callback) {
+//     return window.addEventListener(eventType, callback);
+//   }
+//
+//   removeEventListener(eventType, callback) {
+//     return window.removeEventListener(eventType, callback);
+//   }
+//
+//   postMessage(msg) {
+//     this.onmessage(msg);
+//   }
+// }
+function noOp() {}
+if (typeof window.URL.createObjectURL === 'undefined') {
+  Object.defineProperty(window.URL, 'createObjectURL', { value: noOp });
+}
+
+window.Worker = Worker;
+
 var document = window.document;
 
 var newDiv = document.createElement('div');
@@ -33,6 +79,9 @@ global.window.resizeTo = function (width, height) {
   global.window.innerHeight = width || global.window.innerHeight;
   global.window.dispatchEvent(new Event('resize'));
 };
+
+
+global.Worker = Worker;
 
 // add node fetch for environment
 global.fetch = fetch;

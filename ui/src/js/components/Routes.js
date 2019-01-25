@@ -27,6 +27,11 @@ const LabbookQueryContainer = Loadable({
   loading: Loading,
 });
 
+const DatasetQueryContainer = Loadable({
+  loader: () => import('Components/dataset/DatasetQueryContainer'),
+  loading: Loading,
+});
+
 class Routes extends Component {
   constructor(props) {
     super(props);
@@ -96,13 +101,11 @@ class Routes extends Component {
   render() {
     if (!this.state.hasError) {
       const headerCSS = classNames({
-        Header: this.props.validSession,
-        hidden: !this.props.validSession,
+        Header: true,
         'is-demo': window.location.hostname === config.demoHostName,
       });
       const routesCSS = classNames({
-        Routes__main: this.props.validSession,
-        'Routes__main-no-auth': !this.props.validSession,
+        Routes__main: true,
       });
 
       const demoText = "You're using the Gigantum web demo. Data is wiped hourly. To continue using Gigantum ";
@@ -205,6 +208,23 @@ class Routes extends Component {
                     }
                     />
 
+
+                    <Route
+                      exact
+                      path="/datasets/:labbookSection"
+                      render={props =>
+
+
+                      (<Home
+                        loadingRenew={this.state.loadingRenew}
+                        history={history}
+                        auth={this.props.auth}
+                        {...props}
+                      />)
+                      }
+                    />
+
+
                     <Route
                       exact
                       path="/projects/:labbookSection"
@@ -217,6 +237,28 @@ class Routes extends Component {
                         auth={this.props.auth}
                         {...props}
                       />)
+                      }
+                    />
+
+                    <Route
+                      path="/datasets/:owner/:datasetName"
+                      auth={this.props.auth}
+                      render={(parentProps) => {
+                          if (this.state.forceLoginScreen) {
+                            return <Redirect to="/login" />;
+                          }
+
+                          return (
+                            <DatasetQueryContainer
+                              datasetName={parentProps.match.params.datasetName}
+                              owner={parentProps.match.params.owner}
+                              auth={this.props.auth}
+                              history={history}
+                              {...this.props}
+                              {...parentProps}
+                            />);
+                      }
+
                       }
                     />
 

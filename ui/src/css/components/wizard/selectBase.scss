@@ -33,12 +33,15 @@
 }
 
 .SelectBase__inner-container {
+  min-height: 320px;
   position: relative;
-  padding: 0 40px;
   @include flex(flex-start, row);
   flex-wrap: nowrap;
   transition: right 0.5s;
   right: 0%;
+  &--datasets {
+    @include flex(flex-start, column);
+  }
 }
 
 .SelectBase__inner-container--viewer {
@@ -48,6 +51,9 @@
 .SelectBase__select-container {
   min-width: 100%;
   flex-wrap: nowrap;
+  border-bottom: 1px solid $azure;
+  margin-bottom: 15px;
+  height: 340px;
 }
 
 .SelectBase__viewer-container {
@@ -87,9 +93,11 @@
   text-align: center;
 }
 .SelectBase__images {
-  padding: 10px;
   background: $white;
-  height: 300px;
+  max-height: 239px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 100px;
 }
 .SelectBase__images--hidden {
   overflow: hidden;
@@ -97,7 +105,6 @@
 
 
 .SelectBase__image-wrapper {
-  height: 240px;
   width: 100%;
 }
 
@@ -111,13 +118,14 @@
   justify-content: center;
 
   min-width: calc(50% - 10px);
-  margin: 5px;
-  height: 265px;
+  margin: 10px 0;
+  height: 100px;
 
   cursor: pointer;
-
-  background-color: $lightGrey;
-  border: 2px solid $lightGrey;
+  &--expanded {
+    height: auto !important;
+    padding-bottom: 20px;
+  }
 }
 
 .SelectBase__image--selected {
@@ -128,9 +136,12 @@
 .SelectBase__image-icon {
   width: 70px;
   padding: 10px;
+  align-self: center;
 }
 
 .SelectBase__image-text {
+  @include flex(center, column);
+  word-break: break-word;
   padding: 5px;
   flex: 1;
   h6 {
@@ -139,7 +150,10 @@
     font-size: 14px;
   }
   p {
+    align-self: flex-end;
     padding: 5px 0;
+    word-break: break-word;
+    max-width: 375px;
   }
   ul {
     margin: 0;
@@ -153,20 +167,29 @@
 }
 
 .SelectBase__image-actions {
+  position:absolute;
+  right: 10px;
+  bottom: 10px;
   @include flex(center, row);
-  margin: 10px;
-  width: 200px;
+  width: 25px;
+  height:25px;
+  background: url('~Images/icons/down-arrow-silver.svg') no-repeat right center;
+  background-size: 25px;
   .button--flat{
     padding: 0px 20px 0 0px;
+  }
+  &--expanded{
+    background: url('~Images/icons/up-arrow-silver.svg') no-repeat right center;
+    background-size: 25px;
   }
 }
 
 .SelectBase__image:hover {
-  background-color: $grey;
+  background-color: $lightGrey;
 }
 
 .SelectBase__image-description {
-  height: 70px;
+  align-self: center;
 }
 
 .SelectBase__image-info {
@@ -210,4 +233,44 @@
   .SelectBase__progress-button {
     visibility: hidden;
   }
+}
+.SelectBase__details{
+  padding: 20px 10px;
+  color: $slateBlue;
+  @include flex(space-around, column);
+  h6 {
+    font-size: 16px;
+  }
+
+}
+.SelectBase__type{
+  font-size: 12px !important;
+}
+.SelectBase__name{
+  color: $jet;
+  font-weight: 1000;
+}
+.BaseSlide__wrapper{
+  margin: 0 7px;
+}
+
+.BaseSlide__wrapper--recent{
+  border-bottom: 1px dashed $romanSilver;
+  border-top: 1px dashed $romanSilver;
+  margin: 10px 7px;
+  position: relative;
+}
+
+.BaseSlide__mostRecent{
+  position: absolute;
+  background: white;
+  margin-left: 45%;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 900;
+  top: -10px;
+}
+
+.SelectBase__readme{
+  @include flex(flex-end, column)
 }

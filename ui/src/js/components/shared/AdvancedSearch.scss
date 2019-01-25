@@ -1,0 +1,179 @@
+@import '~Styles/_imports.scss';
+
+
+.AdvancedSearch {
+    position: fixed;
+    margin-bottom: 200px;
+    width: 798px;
+    z-index: 1;
+}
+
+.AdvancedSearch__input {
+    margin-bottom: 0 !important;
+}
+
+.AdvancedSearch__filters{
+    @include flex(flex-start, row);
+    color: $slateBlue;
+    background: $background-color;
+    padding: 15px 0;
+}
+
+.AdvancedSearch__filter-section{
+    user-select: none;
+    margin: 0 20px;
+    cursor: pointer;
+    padding-right: 20px;
+    background: url('~Images/icons/down-arrow-silver.svg') no-repeat right center;
+    background-size: 15px;
+    &.selected {
+        background: url('~Images/icons/up-arrow-silver.svg') no-repeat right center;
+        background-size: 15px;
+    }
+}
+
+.AdvancedSearch__filter-container{
+    position: relative;
+}
+
+.AdvancedSearch__filter-list{
+    right: 20px;
+    top: 30px;
+    animation: slide-down-fade-in forwards .25s;
+    padding: 3px !important;
+    position: absolute;
+    z-index: index($elements, popup);
+    cursor: pointer;
+    text-align: left;
+
+    border: 1px solid $grey;
+    background: $white;
+    li {
+        height: 40px;
+        padding: 10px 5px !important;
+        padding-top: 2px;
+
+        user-select: none;
+
+        border-bottom: 1px solid $grey;
+
+        &:last-child{
+          border-bottom: none;
+        }
+
+        &:hover {
+          transition: background-color 0.25s ease-in-out;
+
+          background: $azure;
+          color: $white;
+        }
+    }
+}
+
+
+div.ReactTags__tags {
+    position: relative;
+    display:flex;
+    flex-direction: column-reverse;
+}
+.ReactTags__suggestions {
+    z-index: 1;
+}
+
+
+div.ReactTags__tagInput {
+    width: calc(100% - 2px);
+    border-radius: 2px;
+    display: inline-block;
+}
+div.ReactTags__tagInput input.ReactTags__tagInputField,
+div.ReactTags__tagInput input.ReactTags__tagInputField:focus {
+    width: calc(100% + 2px) !important;
+    height: 48px;
+    margin: 0;
+    font-size: 16px;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+div.ReactTags__selected span.ReactTags__tag {
+    border: 1px solid #ddd;
+    background: #eee;
+    font-size: 16px;
+    display: inline-block;
+    padding: 7px 5px;
+    margin: 5px 5px;
+    border-radius: 2px;
+    height: 37px;
+    color: $jet;
+    white-space: nowrap;
+}
+
+span.ReactTags__tag:first-child{
+    margin-left: 0px !important;
+}
+
+div.ReactTags__selected a.ReactTags__remove {
+    color: #aaa;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+div.ReactTags__suggestions {
+    position: absolute;
+}
+div.ReactTags__suggestions ul {
+    list-style-type: none;
+    box-shadow: .05em .01em .5em rgba(0,0,0,.2);
+    background: white;
+    width: 200px;
+}
+div.ReactTags__suggestions li {
+    border-bottom: 1px solid #ddd;
+    padding: 5px 10px;
+    margin: 0;
+}
+div.ReactTags__suggestions li mark {
+    text-decoration: underline;
+    background: none;
+    font-weight: 600;
+}
+div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
+    background: #b7cfe0;
+    cursor: pointer;
+}
+
+.ReactTags__selected {
+    display: flex;
+    height: auto;
+    top: 100px;
+    border: 1px solid $grey;
+    border-top: 1px solid $azure;
+    padding: 0 10px;
+  }
+
+.ReactTags__tag.Languages,
+.ReactTags__tag.Dataset.Type {
+    background: $azure !important;
+    color: $white !important;
+    a {
+        color: $white !important;
+    }
+}
+
+.ReactTags__tag.Development.Environments {
+    background: $slateBlue !important;
+    color: $white !important;
+    a {
+        color: $white !important;
+    }
+}
+
+.ReactTags__tag.Tags {
+    background: $lightblue !important;
+    color: $white !important;
+    a {
+        color: $white !important;
+    }
+}

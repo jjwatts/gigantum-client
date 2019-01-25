@@ -33,7 +33,7 @@ export default class FooterUploadBar extends Component {
         {
           this.props.parentState.uploadError && <div
             onClick={() => {
-                this.props._closeFooter();
+                this.props.closeFooter();
               }}
             className="Footer__close"
           />

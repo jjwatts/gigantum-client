@@ -38,7 +38,8 @@ export default class SideBar extends Component {
     this.props.auth.logout();
   }
   render() {
-    const isLabbooks = (window.location.href.indexOf('labbooks') > 0) || (window.location.href.indexOf('datsets') === -1);
+    const isLabbooks = (window.location.href.indexOf('projects') > 0) || (window.location.href.indexOf('datasets') === -1);
+
     const sidebarCSS = classNames({
       'SideBar col-sm-1': this.state.authenticated || this.state.authenticated === null,
       hidden: !(this.state.authenticated || this.state.authenticated === null),
@@ -70,18 +71,18 @@ export default class SideBar extends Component {
               </Link>
               <ToolTip section="labbookListing" />
             </li>
-            <li
-              className={!isLabbooks ? 'SideBar__list-item--selected' : 'SideBar__list-item'}
-              data-tooltip="Datasets is currently unavailable"
+            <li className={!isLabbooks ? 'SideBar__list-item--selected' : 'SideBar__list-item'}
+                data-tooltip="Redirects to the Dataset listing page"
             >
-              <div
+              <Link
+                onClick={() => setCallbackRoute('/datasets/local')}
                 className={!isLabbooks ? 'SideBar__nav-item SideBar__nav-item--datasets SideBar__nav-item--selected' : 'SideBar__nav-item SideBar__nav-item--datasets'}
-                to={{ pathname: '/datasets' }}
+                to={{ pathname: '/datasets/local' }}
               >
                 <div className={!isLabbooks ? 'SideBar__icon SideBar__icon--datasets-selected' : 'SideBar__icon SideBar__icon--datasets'}
                 />
                 Datasets
-              </div>
+              </Link>
               <ToolTip section="dataSets" />
             </li>
           </ul>

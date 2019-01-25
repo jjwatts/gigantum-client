@@ -6,7 +6,7 @@ import uuidv4 from 'uuid/v4';
 import JobStatus from 'JS/utils/JobStatus';
 import ChunkUploader from 'JS/utils/ChunkUploader';
 // components
-import LoginPrompt from 'Components/labbook/labbookHeader/branchMenu/modals/LoginPrompt';
+import LoginPrompt from 'Components/header/branchMenu/modals/LoginPrompt';
 import ToolTip from 'Components/shared/ToolTip';
 // store
 import store from 'JS/redux/store';
@@ -707,7 +707,7 @@ const ImportMain = ({ self }) => {
   </div>);
 };
 
-const ImportDropZone = ({ self }) => (<div id="dropZone" className={`Import__section--import ${dropZoneId}`}>
+const ImportDropZone = ({ self }) => (<div id={dropZoneId} className={`Import__section--import ${dropZoneId}`}>
 
   <div className={`btn--close ${dropZoneId}`} onClick={() => self._toggleImportScreen(false)} />
 

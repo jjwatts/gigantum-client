@@ -5,6 +5,10 @@ import routes from './reducers/routes';
 import helper from './reducers/helper';
 // labbook listing reducers
 import labbookListing from './reducers/labbookListing/labbookListing';
+// dataset listing reducers
+import datasetListing from './reducers/datasetListing/datasetListing';
+// dataset reducers
+import dataset from './reducers/dataset/dataset';
 // labbook reducers
 import labbook from './reducers/labbook/labbook';
 import detailView from './reducers/labbook/detail';
@@ -33,4 +37,6 @@ export default combineReducers({
   collaborators,
   helper,
   labbookListing,
+  datasetListing,
+  dataset,
 });

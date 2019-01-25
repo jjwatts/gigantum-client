@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Thu Jan 03 2019 14:00:12 GMT-0500 (Eastern Standard Time)
+# timestamp: Tue Jan 22 2019 10:22:37 GMT-0500 (Eastern Standard Time)
 
 schema {
   query: LabbookQuery
@@ -98,6 +98,37 @@ input AddCustomDockerInput {
 
 type AddCustomDockerPayload {
   updatedEnvironment: Environment
+  clientMutationId: String
+}
+
+input AddDatasetCollaboratorInput {
+  owner: String!
+  datasetName: String!
+  username: String!
+  clientMutationId: String
+}
+
+type AddDatasetCollaboratorPayload {
+  updatedDataset: Dataset
+  clientMutationId: String
+}
+
+input AddDatasetFileInput {
+  owner: String!
+  datasetName: String!
+  filePath: String!
+  chunkUploadParams: ChunkUploadInput!
+  transactionId: String!
+  clientMutationId: String
+}
+
+"""
+Mutation to add a file to a labbook. File should be sent in the
+`uploadFile` key as a multi-part/form upload.
+file_path is the relative path in the dataset.
+"""
+type AddDatasetFilePayload {
+  newDatasetFileEdge: DatasetFileEdge
   clientMutationId: String
 }
 
@@ -262,11 +293,38 @@ type CompleteBatchUploadTransactionPayload {
   clientMutationId: String
 }
 
+input CompleteDatasetUploadTransactionInput {
+  owner: String!
+  datasetName: String!
+  transactionId: String!
+  cancel: Boolean
+  rollback: Boolean
+  clientMutationId: String
+}
+
+type CompleteDatasetUploadTransactionPayload {
+  success: Boolean
+  clientMutationId: String
+}
+
 """An enumeration for container image status"""
 enum ContainerStatus {
   NOT_RUNNING
   STARTING
   RUNNING
+}
+
+input CreateDatasetInput {
+  name: String!
+  description: String!
+  storageType: String!
+  clientMutationId: String
+}
+
+"""Mutation for creation of a new Dataset on disk"""
+type CreateDatasetPayload {
+  dataset: Dataset
+  clientMutationId: String
 }
 
 input CreateExperimentalBranchInput {
@@ -302,7 +360,8 @@ type CreateLabbookPayload {
 
 input CreateUserNoteInput {
   owner: String!
-  labbookName: String!
+  labbookName: String
+  datasetName: String
   title: String!
   body: String
   tags: [String]
@@ -320,11 +379,133 @@ type CreateUserNotePayload {
 }
 
 """
+A type representing a Dataset and all of its contents
+
+Datasets are uniquely identified by both the "owner" and the "name" of the Dataset
+"""
+type Dataset implements Node & GitRepository {
+  """The ID of the object."""
+  id: ID!
+  owner: String!
+  name: String!
+  description: String
+  datasetType: DatasetType
+  schemaVersion: Int
+  createdOnUtc: DateTime
+  collaborators: [String]
+  canManageCollaborators: Boolean
+  modifiedOnUtc: DateTime
+  activityRecords(before: String, after: String, first: Int, last: Int): ActivityConnection
+  allFiles(before: String, after: String, first: Int, last: Int): DatasetFileConnection
+  detailRecord(key: String): ActivityDetailObject
+  detailRecords(keys: [String]): [ActivityDetailObject]
+  visibility: String
+  defaultRemote: String
+}
+
+"""A Connection for paging through datasets that exist locally. """
+type DatasetConnection {
+  pageInfo: PageInfo!
+  edges: [DatasetEdge]!
+}
+
+type DatasetEdge {
+  """The item at the end of the edge"""
+  node: Dataset
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""
+A type representing a file or directory inside the dataset file system.
+"""
+type DatasetFile implements Node & GitRepository {
+  """The ID of the object."""
+  id: ID!
+  owner: String!
+  name: String!
+  key: String!
+  isDir: Boolean
+  isFavorite: Boolean
+  isLocal: Boolean
+  modifiedAt: Int
+  size: String
+}
+
+"""A connection for paging through labbook files. """
+type DatasetFileConnection {
+  pageInfo: PageInfo!
+  edges: [DatasetFileEdge]!
+}
+
+type DatasetFileEdge {
+  """The item at the end of the edge"""
+  node: DatasetFile
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""
+A type simply used as a container to group local and remote Datasets for better relay support
+
+Dataset and RemoteDataset objects are uniquely identified by both the "owner" and the "name" of the Dataset
+
+NOTE: RemoteDatasets require all fields to be explicitly set as there is no current way to asynchronously retrieve
+      the data
+"""
+type DatasetList implements Node {
+  """The ID of the object."""
+  id: ID!
+  localById(ids: [String]): [Dataset]
+  localDatasets(orderBy: String = "name", sort: String = "asc", before: String, after: String, first: Int, last: Int): DatasetConnection
+}
+
+"""A type that represents a type of Dataset that can be created"""
+type DatasetType implements Node {
+  """The ID of the object."""
+  id: ID!
+  name: String
+  storageType: String
+  isManaged: Boolean
+  description: String
+  readme: String
+  tags: [String]
+  icon: String
+  url: String
+}
+
+"""
 The `DateTime` scalar type represents a DateTime
 value as specified by
 [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
 """
 scalar DateTime
+
+input DeleteDatasetCollaboratorInput {
+  owner: String!
+  datasetName: String!
+  username: String!
+  clientMutationId: String
+}
+
+type DeleteDatasetCollaboratorPayload {
+  updatedDataset: Dataset
+  clientMutationId: String
+}
+
+input DeleteDatasetFilesInput {
+  datasetOwner: String!
+  datasetName: String!
+  keys: [String]!
+  clientMutationId: String
+}
+
+type DeleteDatasetFilesPayload {
+  success: Boolean
+  clientMutationId: String
+}
 
 input DeleteExperimentalBranchInput {
   owner: String!
@@ -390,6 +571,22 @@ type DeleteRemoteLabbookPayload {
   clientMutationId: String
 }
 
+input DownloadDatasetFilesInput {
+  datasetOwner: String!
+  datasetName: String!
+  labbookOwner: String
+  labbookName: String
+  allKeys: Boolean
+  keys: [String]
+  clientMutationId: String
+}
+
+type DownloadDatasetFilesPayload {
+  updatedFileEdges: [DatasetFileEdge]
+  statusMessage: String
+  clientMutationId: String
+}
+
 """A type that represents the Environment for a LabBook"""
 type Environment implements Node & GitRepository {
   """The ID of the object."""
@@ -403,6 +600,17 @@ type Environment implements Node & GitRepository {
   dockerSnippet: String
 }
 
+input ExportDatasetInput {
+  owner: String!
+  datasetName: String!
+  clientMutationId: String
+}
+
+type ExportDatasetPayload {
+  jobKey: String
+  clientMutationId: String
+}
+
 input ExportLabbookInput {
   owner: String!
   labbookName: String!
@@ -411,6 +619,17 @@ input ExportLabbookInput {
 
 type ExportLabbookPayload {
   jobKey: String
+  clientMutationId: String
+}
+
+input FetchDatasetEdgeInput {
+  owner: String!
+  datasetName: String!
+  clientMutationId: String
+}
+
+type FetchDatasetEdgePayload {
+  newDatasetEdge: DatasetEdge
   clientMutationId: String
 }
 
@@ -456,6 +675,16 @@ enum ImageStatus {
   BUILD_FAILED
 }
 
+input ImportDatasetInput {
+  chunkUploadParams: ChunkUploadInput!
+  clientMutationId: String
+}
+
+type ImportDatasetPayload {
+  importJobKey: String
+  clientMutationId: String
+}
+
 input ImportLabbookInput {
   chunkUploadParams: ChunkUploadInput!
   clientMutationId: String
@@ -463,6 +692,18 @@ input ImportLabbookInput {
 
 type ImportLabbookPayload {
   importJobKey: String
+  clientMutationId: String
+}
+
+input ImportRemoteDatasetInput {
+  owner: String!
+  datasetName: String!
+  remoteUrl: String!
+  clientMutationId: String
+}
+
+type ImportRemoteDatasetPayload {
+  newDatasetEdge: DatasetEdge
   clientMutationId: String
 }
 
@@ -494,7 +735,7 @@ type JobStatus implements Node {
 }
 
 """
-A Connection for paging through all background jobs the system is aware of. 
+A Connection for paging through all background jobs the system is aware of.
 """
 type JobStatusConnection {
   pageInfo: PageInfo!
@@ -546,6 +787,7 @@ type Labbook implements Node & GitRepository {
   backgroundJobs: [JobStatus]
   packages(packageInput: [PackageComponentInput]): [PackageComponent]
   visibility: String
+  linkedDatasets: [Dataset]
 }
 
 """An object representing a commit to a LabBook"""
@@ -640,8 +882,6 @@ Labbook and RemoteLabbook objects are uniquely identified by both the "owner" an
 
 NOTE: RemoteLabbooks require all fields to be explicitly set as there is no current way to asynchronously retrieve
       the data
-
-NOTE: Currently all RemoteLabbook description fields will return empty strings
 """
 type LabbookList implements Node {
   """The ID of the object."""
@@ -655,12 +895,16 @@ type LabbookList implements Node {
 type LabbookMutations {
   importLabbook(input: ImportLabbookInput!): ImportLabbookPayload
   importRemoteLabbook(input: ImportRemoteLabbookInput!): ImportRemoteLabbookPayload
+  importRemoteDataset(input: ImportRemoteDatasetInput!): ImportRemoteDatasetPayload
+  importDataset(input: ImportDatasetInput!): ImportDatasetPayload
+  exportDataset(input: ExportDatasetInput!): ExportDatasetPayload
   exportLabbook(input: ExportLabbookInput!): ExportLabbookPayload
   createLabbook(input: CreateLabbookInput!): CreateLabbookPayload
   deleteLabbook(input: DeleteLabbookInput!): DeleteLabbookPayload
   deleteRemoteLabbook(input: DeleteRemoteLabbookInput!): DeleteRemoteLabbookPayload
   setLabbookDescription(input: SetLabbookDescriptionInput!): SetLabbookDescriptionPayload
   publishLabbook(input: PublishLabbookInput!): PublishLabbookPayload
+  publishDataset(input: PublishDatasetInput!): PublishDatasetPayload
   syncLabbook(input: SyncLabbookInput!): SyncLabbookPayload
   addLabbookRemote(input: AddLabbookRemoteInput!): AddLabbookRemotePayload
   buildImage(input: BuildImageInput!): BuildImagePayload
@@ -683,6 +927,8 @@ type LabbookMutations {
   removeFavorite(input: RemoveLabbookFavoriteInput!): RemoveLabbookFavoritePayload
   addCollaborator(input: AddLabbookCollaboratorInput!): AddLabbookCollaboratorPayload
   deleteCollaborator(input: DeleteLabbookCollaboratorInput!): DeleteLabbookCollaboratorPayload
+  addDatasetCollaborator(input: AddDatasetCollaboratorInput!): AddDatasetCollaboratorPayload
+  deleteDatasetCollaborator(input: DeleteDatasetCollaboratorInput!): DeleteDatasetCollaboratorPayload
   writeReadme(input: WriteReadmeInput!): WriteReadmePayload
   createExperimentalBranch(input: CreateExperimentalBranchInput!): CreateExperimentalBranchPayload
   deleteExperimentalBranch(input: DeleteExperimentalBranchInput!): DeleteExperimentalBranchPayload
@@ -690,6 +936,17 @@ type LabbookMutations {
   workonExperimentalBranch(input: WorkonBranchInput!): WorkonBranchPayload
   setVisibility(input: SetVisibilityInput!): SetVisibilityPayload
   fetchLabbookEdge(input: FetchLabbookEdgeInput!): FetchLabbookEdgePayload
+  createDataset(input: CreateDatasetInput!): CreateDatasetPayload
+  addDatasetFile(input: AddDatasetFileInput!): AddDatasetFilePayload
+  completeDatasetUploadTransaction(input: CompleteDatasetUploadTransactionInput!): CompleteDatasetUploadTransactionPayload
+  fetchDatasetEdge(input: FetchDatasetEdgeInput!): FetchDatasetEdgePayload
+  setDatasetVisibility(input: SetDatasetVisibilityInput!): SetDatasetVisibilityPayload
+  syncDataset(input: SyncDatasetInput!): SyncDatasetPayload
+  downloadDatasetFiles(input: DownloadDatasetFilesInput!): DownloadDatasetFilesPayload
+  modifyDatasetLink(input: ModifyDatasetLinkInput!): ModifyDatasetLinkPayload
+  deleteDatasetFiles(input: DeleteDatasetFilesInput!): DeleteDatasetFilesPayload
+  moveDatasetFile(input: MoveDatasetFileInput!): MoveDatasetFilePayload
+  makeDatasetDirectory(input: MakeDatasetDirectoryInput!): MakeDatasetDirectoryPayload
 }
 
 """
@@ -718,11 +975,14 @@ type LabbookQuery {
   buildInfo: String
   cudaAvailable: Boolean
   labbook(owner: String, name: String): Labbook
+  dataset(owner: String, name: String): Dataset
   currentLabbookSchemaVersion: Int
   jobStatus(jobId: String): JobStatus
   backgroundJobs(before: String, after: String, first: Int, last: Int): JobStatusConnection
   labbookList: LabbookList
+  datasetList: DatasetList
   availableBases(before: String, after: String, first: Int, last: Int): BaseComponentConnection
+  availableDatasets: [DatasetType]
   package(manager: String, package: String, version: String = ""): PackageComponent
   userIdentity: UserIdentity
 }
@@ -754,7 +1014,7 @@ type LabbookRefEdge {
 
 """
 A type representing a section within a LabBook (i.e., code, input, output)
-    
+
 """
 type LabbookSection implements Node & GitRepository {
   """The ID of the object."""
@@ -768,6 +1028,18 @@ type LabbookSection implements Node & GitRepository {
   isUntracked: Boolean
   hasFiles: Boolean
   hasFavorites: Boolean
+}
+
+input MakeDatasetDirectoryInput {
+  datasetOwner: String!
+  datasetName: String!
+  key: String!
+  clientMutationId: String
+}
+
+type MakeDatasetDirectoryPayload {
+  newDatasetFileEdge: DatasetFileEdge
+  clientMutationId: String
 }
 
 input MakeLabbookDirectoryInput {
@@ -792,10 +1064,50 @@ input MergeFromBranchInput {
 }
 
 """
-Merge from another branch into the current active branch. Force if necessary. 
+Merge from another branch into the current active branch. Force if necessary.
 """
 type MergeFromBranchPayload {
   labbook: Labbook
+  clientMutationId: String
+}
+
+input ModifyDatasetLinkInput {
+  """Owner of the labbook"""
+  labbookOwner: String!
+
+  """Name of the labbook"""
+  labbookName: String!
+
+  """Owner of the dataset to link"""
+  datasetOwner: String!
+
+  """Name of the dataset to link"""
+  datasetName: String!
+
+  """Action to perform, either `link` or `unlink`"""
+  action: String!
+
+  """URL to the Dataset to link. Only required when `action=link`"""
+  datasetUrl: String
+  clientMutationId: String
+}
+
+""""Mutation to link and unlink Datasets from a Project"""
+type ModifyDatasetLinkPayload {
+  newLabbookEdge: LabbookEdge
+  clientMutationId: String
+}
+
+input MoveDatasetFileInput {
+  datasetOwner: String!
+  datasetName: String!
+  srcPath: String!
+  dstPath: String!
+  clientMutationId: String
+}
+
+type MoveDatasetFilePayload {
+  updatedEdges: [DatasetFileEdge]
   clientMutationId: String
 }
 
@@ -813,7 +1125,7 @@ Method to move/rename a file or directory. If file, both src_path and dst_path s
 If a directory, be sure to include the trailing slash
 """
 type MoveLabbookFilePayload {
-  updatedEdges(before: String, after: String, first: Int, last: Int): LabbookFileConnection
+  updatedEdges: [LabbookFileEdge]
   clientMutationId: String
 }
 
@@ -869,6 +1181,18 @@ type PageInfo {
 
   """When paginating forwards, the cursor to continue."""
   endCursor: String
+}
+
+input PublishDatasetInput {
+  owner: String!
+  datasetName: String!
+  setPublic: Boolean
+  clientMutationId: String
+}
+
+type PublishDatasetPayload {
+  jobKey: String
+  clientMutationId: String
 }
 
 input PublishLabbookInput {
@@ -983,6 +1307,18 @@ type RemoveUserIdentityPayload {
   clientMutationId: String
 }
 
+input SetDatasetVisibilityInput {
+  owner: String!
+  datasetName: String!
+  visibility: String!
+  clientMutationId: String
+}
+
+type SetDatasetVisibilityPayload {
+  newDatasetEdge: DatasetEdge
+  clientMutationId: String
+}
+
 input SetLabbookDescriptionInput {
   owner: String!
   labbookName: String!
@@ -1041,6 +1377,18 @@ input StopContainerInput {
 """Mutation to stop a Docker container. """
 type StopContainerPayload {
   environment: Environment
+  clientMutationId: String
+}
+
+input SyncDatasetInput {
+  owner: String!
+  datasetName: String!
+  force: Boolean
+  clientMutationId: String
+}
+
+type SyncDatasetPayload {
+  jobKey: String
   clientMutationId: String
 }
 

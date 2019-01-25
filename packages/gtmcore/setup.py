@@ -33,7 +33,8 @@ setup(
             'open science'
         ],
     packages=find_packages(exclude=['docs', '*tests*']),
-    package_data={'gtmcore': ['logging/*.default', 'configuration/config/*.default', 'labbook/*.default']},
+    package_data={'gtmcore': ['logging/*.default', 'configuration/config/*.default', 'labbook/*.default',
+                              'dataset/*.default', 'dataset/storage/thumbnails/*.png']},
     include_package_data=True,
     author='Gigantum/FlashX LLC',
     install_requires=install_requires,

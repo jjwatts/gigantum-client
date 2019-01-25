@@ -3,23 +3,46 @@
   "labbook": {
    "code": {
     "favorites": {
-     "edges": []
+     "edges": [
+      {
+       "node": {
+        "id": "TGFiYm9va0Zhdm9yaXRlOnVpdGVzdCZ1aS10ZXN0LXByb2plY3QmY29kZSZmb2xkZXIvc2V0dXAucHk=",
+        "owner": "uitest",
+        "name": "ui-test-project",
+        "section": "code",
+        "key": "folder/setup.py",
+        "description": "This is the setup file",
+        "isDir": false
+       }
+      },
+      {
+       "node": {
+        "id": "TGFiYm9va0Zhdm9yaXRlOnVpdGVzdCZ1aS10ZXN0LXByb2plY3QmY29kZSZmb2xkZXIvcmVxdWlyZW1lbnRzLnR4dA==",
+        "owner": "uitest",
+        "name": "ui-test-project",
+        "section": "code",
+        "key": "folder/requirements.txt",
+        "description": "",
+        "isDir": false
+       }
+      }
+     ]
     },
-    "id": "TGFiYm9va1NlY3Rpb246Y2J1dGxlciZkYXRhLXNoYWRlciZjb2Rl"
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZjb2Rl"
    },
    "input": {
     "favorites": {
      "edges": []
     },
-    "id": "TGFiYm9va1NlY3Rpb246Y2J1dGxlciZkYXRhLXNoYWRlciZpbnB1dA=="
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZpbnB1dA=="
    },
    "output": {
     "favorites": {
      "edges": []
     },
-    "id": "TGFiYm9va1NlY3Rpb246Y2J1dGxlciZkYXRhLXNoYWRlciZvdXRwdXQ="
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZvdXRwdXQ="
    },
-   "id": "TGFiYm9vazpjYnV0bGVyJmRhdGEtc2hhZGVy"
+   "id": "TGFiYm9vazp1aXRlc3QmdWktdGVzdC1wcm9qZWN0"
   }
  }
 }

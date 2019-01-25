@@ -22,7 +22,7 @@ import platform
 
 import docker
 
-from gtm.dockerutils import dockerize_windows_path, DockerVolume
+from gtm.utils import dockerize_windows_path, DockerVolume
 
 
 class ClientRunner(object):

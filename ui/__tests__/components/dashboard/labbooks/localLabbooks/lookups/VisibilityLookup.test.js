@@ -10,7 +10,6 @@
       test('Test ContainerLookup', async () => {
         let id = json.data.labbookList.localLabbooks.edges[0].node.id;
         VisibilityLookup.query([id]).then((response) => {
-          console.log(response);
           expect(response.data.ids.length).toEqual(0);
         });
       });

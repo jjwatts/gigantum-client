@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test LinkModal 1`] = `
+<div
+  className="Modal"
+>
+  <div
+    className="Modal__cover"
+    onClick={[Function]}
+  />
+  <div
+    className="Modal__content large"
+  >
+    <div
+      className="Modal__close"
+      onClick={[Function]}
+    />
+    <div
+      className="Modal__container"
+    >
+      <h4
+        className="Modal__header"
+      >
+        Link Dataset
+      </h4>
+      <hr />
+      <div
+        className="Modal__sub-container"
+      >
+        <div
+          className="LinkModal"
+        >
+          <div
+            className="Loader"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

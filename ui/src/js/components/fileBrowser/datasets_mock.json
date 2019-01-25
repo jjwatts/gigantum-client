@@ -1,0 +1,60 @@
+{
+  "edges": [
+    {
+      "node": {
+        "key": "mydataset/",
+        "id": "asadsadandajdnjasndajsd3",
+        "isDir": true,
+        "isDataset": true,
+        "isDatasetRoot": true,
+        "isDownloaded": false,
+        "modifiedAt": 1544653153,
+        "size": "3242343",
+        "isFavorite": false
+      },
+      "cursor": "asda4343sasd"
+    },
+    {
+      "node": {
+        "key": "mydataset/data/",
+        "id": "asadsadandajdnjasndajsd3244423",
+        "isDir": true,
+        "isDataset": true,
+        "isDatasetRoot": false,
+        "isDownloaded": true,
+        "modifiedAt": 1544653153,
+        "size": "3242343",
+        "isFavorite": false
+      },
+      "cursor": "asda4343sasd"
+    },
+    {
+      "node": {
+        "key": "mydataset/data/file.csv",
+        "id": "asadsadandajdnjasndajsd32",
+        "isDir": false,
+        "isDataset": true,
+        "isDatasetRoot": false,
+        "isDownloaded": true,
+        "modifiedAt": 1544653153,
+        "size": "3242343",
+        "isFavorite": false
+      },
+      "cursor": "asdasasdads"
+    },
+    {
+      "node": {
+        "key": "mydataset/file2.csv",
+        "id": "asadsadandajdnjasndajsd331434",
+        "isDir": false,
+        "isDataset": true,
+        "isDatasetRoot": false,
+        "isDownloaded": false,
+        "modifiedAt": 1544653153,
+        "size": "3242343",
+        "isFavorite": false
+      },
+      "cursor": "asdas3333asd"
+    }
+  ]
+}

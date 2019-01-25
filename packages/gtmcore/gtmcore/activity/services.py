@@ -93,7 +93,7 @@ def start_labbook_monitor(labbook: LabBook, username: str, dev_tool: str,
 
     if dev_env_mgr.is_available(dev_tool):
         # Add record to redis for Dev Env Monitor
-        owner = InventoryManager().query_labbook_owner(labbook)
+        owner = InventoryManager().query_owner(labbook)
         dev_env_monitor_key = "dev_env_monitor:{}:{}:{}:{}".format(username,
                                                                    owner,
                                                                    labbook.name,
@@ -105,7 +105,7 @@ def start_labbook_monitor(labbook: LabBook, username: str, dev_tool: str,
                   'key': dev_env_monitor_key}
         job_key = d.schedule_task(run_dev_env_monitor, kwargs=kwargs, repeat=None, interval=3)
 
-        owner = InventoryManager().query_labbook_owner(labbook)
+        owner = InventoryManager().query_owner(labbook)
         redis_conn.hset(dev_env_monitor_key, "container_name", infer_docker_image_name(labbook.name,
                                                                                        owner,
                                                                                        username))
@@ -182,7 +182,7 @@ def stop_labbook_monitor(labbook: LabBook, username: str, database: int = 1) -> 
     base_data = cm.base_fields
 
     for dt in base_data['development_tools']:
-        owner = InventoryManager().query_labbook_owner(labbook)
+        owner = InventoryManager().query_owner(labbook)
         dev_env_monitor_key = "dev_env_monitor:{}:{}:{}:{}".format(username,
                                                                    owner,
                                                                    labbook.name,

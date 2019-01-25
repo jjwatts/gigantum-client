@@ -2,7 +2,7 @@ version: 2
 jobs:
   mypy-gtmcore:
     docker:
-      - image: gigantum/circleci-client:f652c96aba-2018-12-07
+      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
     working_directory: ~/repo
     steps:
       - checkout
@@ -13,7 +13,7 @@ jobs:
 
   mypy-gtmapi:
     docker:
-      - image: gigantum/circleci-client:f652c96aba-2018-12-07
+      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
     working_directory: ~/repo
     steps:
       - checkout
@@ -24,7 +24,7 @@ jobs:
 
   test-confhttpproxy:
     docker:
-      - image: gigantum/circleci-client:f652c96aba-2018-12-07
+      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
     working_directory: ~/repo
     steps:
       - checkout
@@ -41,7 +41,7 @@ jobs:
 
   test-gtmcore:
     docker:
-      - image: gigantum/circleci-client:f652c96aba-2018-12-07
+      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
     working_directory: ~/repo
     steps:
       - checkout
@@ -60,7 +60,7 @@ jobs:
 
   test-gtmapi:
     docker:
-      - image: gigantum/circleci-client:f652c96aba-2018-12-07
+      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
     working_directory: ~/repo
     steps:
       - checkout
@@ -84,7 +84,7 @@ jobs:
 
   test-long-running-env:
     docker:
-      - image: gigantum/circleci-client:d1f2e268a3-2018-12-05
+      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
     working_directory: ~/repo
     steps:
       - checkout
@@ -105,15 +105,11 @@ jobs:
 
   test-ui-components:
     docker:
-      - image: gigantum/circleci-client:f652c96aba-2018-12-07
+      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
     working_directory: ~/repo
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Initialize submodules
-          command: |
-            git submodule update --init --recursive
       - run:
           name: Build frontend production code
           command: |
@@ -130,14 +126,10 @@ jobs:
 
   fossa:
     docker:
-      - image: gigantum/circleci-client:f652c96aba-2018-12-07
+      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
     working_directory: ~/repo
     steps:
       - checkout
-      - run:
-          name: Initialize submodules
-          command: |
-            git submodule update --init --recursive
       - run:
           name: Build frontend production code
           command: |
@@ -179,8 +171,3 @@ workflows:
       - fossa:
           requires:
             - test-confhttpproxy
-        #filters:
-        #  branches:
-        #    only:
-        #      - master
-        #      - integration

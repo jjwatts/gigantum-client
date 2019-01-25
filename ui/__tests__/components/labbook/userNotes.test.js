@@ -11,7 +11,7 @@ const variables = { first: 20 };
 export default variables;
 
 let _hideLabbookModal = () => {
-  console.log('called');
+
 };
 
 test('Test User Note Rendering', () => {

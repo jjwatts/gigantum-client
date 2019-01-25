@@ -6,208 +6,63 @@
     "edges": [
      {
       "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnphYg==",
-       "name": "zab",
+       "id": "TGFiYm9vazp1aXRlc3QmdWktdGVzdC1yZW1vdGU=",
+       "name": "ui-test-remote",
        "description": "",
-       "owner": "cbutler",
+       "owner": "uitest",
+       "creationDateUtc": "2019-01-18T15:01:23.194639",
        "__typename": "Labbook"
       },
       "cursor": "MA=="
      },
      {
       "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnVudHJhY2tlZC1sYWJib29r",
-       "name": "untracked-labbook",
-       "description": "",
-       "owner": "cbutler",
+       "id": "TGFiYm9vazp1aXRlc3QmdWktdGVzdC1wcm9qZWN0",
+       "name": "ui-test-project",
+       "description": "This is a ui test project\n",
+       "owner": "uitest",
+       "creationDateUtc": "2019-01-18T14:54:18.912489",
        "__typename": "Labbook"
       },
       "cursor": "MQ=="
      },
      {
       "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnVudHJhY2tlZC0y",
-       "name": "untracked-2",
+       "id": "TGFiYm9vazp1aXRlc3QmdGVzdC10dA==",
+       "name": "test-tt",
        "description": "",
-       "owner": "cbutler",
+       "owner": "uitest",
+       "creationDateUtc": "2019-01-11T19:31:30.179635",
        "__typename": "Labbook"
       },
       "cursor": "Mg=="
      },
      {
       "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnVudHJhY2tlZA==",
-       "name": "untracked",
+       "id": "TGFiYm9vazp1aXRlc3QmbmV3LXByb2plY3Q=",
+       "name": "new-project",
        "description": "",
-       "owner": "cbutler",
+       "owner": "uitest",
+       "creationDateUtc": "2019-01-16T20:38:00.412161",
        "__typename": "Labbook"
       },
       "cursor": "Mw=="
      },
      {
       "node": {
-       "id": "TGFiYm9vazpkbWsmdHJ1bXAtdHdlZXRz",
-       "name": "trump-tweets",
-       "description": "A LabBook to analyze Trumps stupid tweets",
-       "owner": "dmk",
+       "id": "TGFiYm9vazp1aXRlc3QmYXdmdWwtaW50ZXJzZWN0aW9ucy1kZW1v",
+       "name": "awful-intersections-demo",
+       "description": "A fun demo LabBook to automatically find and generate cringe-worthy maps of horrible intersections",
+       "owner": "uitest",
+       "creationDateUtc": "2018-05-24T18:26:57.843710",
        "__typename": "Labbook"
       },
       "cursor": "NA=="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRyYWNraW5nLWVuZGFibGVk",
-       "name": "tracking-endabled",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "NQ=="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRyYWNrZWQtMg==",
-       "name": "tracked-2",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "Ng=="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRwdWI=",
-       "name": "tpub",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "Nw=="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRoaXNpYXNkbWFkc2thZHNzZmRrampzc2Rmcy1qYXNqZGFzag==",
-       "name": "thisiasdmadskadssfdkjjssdfs-jasjdasj",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "OA=="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpkbWsmdGVzdGluZy1ub3RpZmljYXRpb25z",
-       "name": "testing-notifications",
-       "description": "sdfsdf",
-       "owner": "dmk",
-       "__typename": "Labbook"
-      },
-      "cursor": "OQ=="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3RpbmctYWN0aXZpdHktZmVlZA==",
-       "name": "testing-activity-feed",
-       "description": "testing labbook activity feed",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTA="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3QtdXBsb2FkZXItMQ==",
-       "name": "test-uploader-1",
-       "description": "Test uoload",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTE="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpkbWsmdGVzdC1sYg==",
-       "name": "test-lb",
-       "description": "This a short description",
-       "owner": "dmk",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTI="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3QtbGFiYm9vaw==",
-       "name": "test-labbook",
-       "description": "here is my labbook",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTM="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3QtYnVpbGRpbmctc3RhdHVzLTI=",
-       "name": "test-building-status-2",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTQ="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3QtYnVpbGRpbmctc3RhdGU=",
-       "name": "test-building-state",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTU="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3QtYnVpbGRpbmctNg==",
-       "name": "test-building-6",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTY="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3QtYnVpbGRpbmctNQ==",
-       "name": "test-building-5",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTc="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3QtYnVpbGRpbmctNA==",
-       "name": "test-building-4",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTg="
-     },
-     {
-      "node": {
-       "id": "TGFiYm9vazpjYnV0bGVyJnRlc3QtYnVpbGRpbmctMw==",
-       "name": "test-building-3",
-       "description": "",
-       "owner": "cbutler",
-       "__typename": "Labbook"
-      },
-      "cursor": "MTk="
      }
     ],
     "pageInfo": {
-     "endCursor": "MTk=",
-     "hasNextPage": true,
+     "endCursor": "NA==",
+     "hasNextPage": false,
      "hasPreviousPage": false,
      "startCursor": "MA=="
     }

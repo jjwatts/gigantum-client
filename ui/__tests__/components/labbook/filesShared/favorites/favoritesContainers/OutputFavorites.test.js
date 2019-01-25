@@ -4,7 +4,7 @@
       import {mount} from 'enzyme'
       import OutputFavorites from 'Components/labbook/filesShared/favorites/favoritesContainers/OutputFavorites';
 
-      import relayTestingUtils from 'relay-testing-utils'
+      import relayTestingUtils from '@gigantum/relay-testing-utils'
 
       test('Test OutputFavorites', () => {
 

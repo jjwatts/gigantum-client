@@ -1,25 +1,7 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import json
+from contextlib import contextmanager
 from enum import Enum
-from typing import (Any, List, Optional, Dict)
+from typing import (Any, List, Tuple, Optional, Dict)
 import base64
 import blosc
 import copy
@@ -27,7 +9,10 @@ import operator
 import datetime
 
 from gtmcore.activity.serializers import Serializer
+from gtmcore.exceptions import GigantumException
+from gtmcore.logging import LMLogger
 
+logger = LMLogger.get_logger()
 
 class ActivityType(Enum):
     """Enumeration representing the type of Activity Record"""
@@ -335,8 +320,14 @@ class ActivityRecord(object):
         # Message summarizing the event
         self.message = message
 
-        # Storage for detail objects in a tuple of (type, show, importance, object)
-        self.detail_objects: List[tuple] = list()
+        # Storage for detail objects in a tuple of (show, type (enum *value*), importance, object)
+        self._detail_objects: List[Tuple[bool, int, int, ActivityDetailRecord]] = list()
+
+        # Are we safely editing self._detail_objects?
+        self._in_modify = False
+
+        # During an inspection, we can set modifications to entire sets based on a tag
+        self._tags_to_update: Dict[str, str] = {}
 
         # Type indicating the category of detail
         self.type = activity_type
@@ -359,13 +350,71 @@ class ActivityRecord(object):
         # Email of the user who created the activity record
         self.email = email
 
+    @property
+    def num_detail_objects(self):
+        return len(self._detail_objects)
+
+    @contextmanager
+    def inspect_detail_objects(self):
+        """To modify _detail_objects, use this in a `with` block
+
+        Returns a new list, so that you can update the objects, or even delete them (but be careful to maintain
+        correspondence!). The list in ActivityRecord is sorted upon exiting the with context.
+
+            with ar.inspect_detail_objects() as detail_objs:
+        ...   for i, obj in enumerate(detail_objs):
+        ...       new_obj = mutate_obj(obj)
+        ...       ar.update_detail_object(i, new_obj)
+        ... # ar._detail_objects is sorted on exiting `with` block
+        """
+        self._in_modify = True
+        try:
+            # Using unpacking here to get implicit assertion that records are four elements
+            yield [obj for _, _, _, obj in self._detail_objects]
+        finally:
+            if self._tags_to_update:
+                logger.info(f'_tags_to_update: {self._tags_to_update}')
+                # We regenerate our list, in case the user modified it:
+                old_details = [obj for _, _, _, obj in self._detail_objects]
+                self._detail_objects = []
+                for idx, detail in enumerate(old_details):
+                    # Default behavior is 'auto' whether it's in the comment or not
+                    directive = 'auto'
+
+                    # We don't filter on .startswith('ex') here, so we can use other tags in future
+                    # Note also that
+                    for tag in detail.tags:
+                        try:
+                            # Currently show is the only attribute we update
+                            directive = self._tags_to_update[tag]
+                            if directive == 'show':
+                                detail.show = True
+                                break
+                            elif directive == 'hide':
+                                detail.show = False
+                                break
+                            elif directive in ['ignore', 'auto']:
+                                # 'ignore' is handled below - this will be dropped
+                                break
+
+                        except KeyError:
+                            pass
+
+                    if directive != 'ignore':
+                        self.add_detail_object(detail)
+
+                self._tags_to_update = {}
+
+            self._sort_detail_objects()
+            self._in_modify = False
+
     @staticmethod
     def from_log_str(log_str: str, commit: str, timestamp: datetime.datetime,
                      username: Optional[str] = None, email: Optional[str] = None) -> 'ActivityRecord':
         """Static method to create a ActivityRecord instance from the identifying string stored in the git log
 
         Args:
-            log_str(str): the identifying string stored in the git lo
+            log_str(str): the identifying string stored in the git log
             commit(str): Optional commit hash for this activity record
             timestamp(datetime.datetime): datetime the record was written to the git log
             username(str): Username of the user who created the commit
@@ -420,8 +469,8 @@ class ActivityRecord(object):
                 'linked_commit': self.linked_commit, 'tags': self.tags}
         log_str = f"{log_str}metadata:{json.dumps(meta, separators=(',', ':'))}**\n"
         log_str = f"{log_str}details:**\n"
-        if self.detail_objects:
-            for d in self.detail_objects:
+        if self._detail_objects:
+            for d in self._detail_objects:
                 log_str = f"{log_str}{d[3].log_str}**\n"
 
         log_str = f"{log_str}_GTM_ACTIVITY_END_"
@@ -430,7 +479,7 @@ class ActivityRecord(object):
 
     def _sort_detail_objects(self):
         """Method to sort detail objects by show, type, then importance"""
-        self.detail_objects = sorted(self.detail_objects, key=operator.itemgetter(0, 1, 2), reverse=True)
+        self._detail_objects = sorted(self._detail_objects, key=operator.itemgetter(0, 1, 2), reverse=True)
 
     def add_detail_object(self, obj: ActivityDetailRecord) -> None:
         """Method to add a detail object
@@ -441,22 +490,31 @@ class ActivityRecord(object):
         Returns:
             None
         """
-        self.detail_objects.append((obj.show, obj.type.value, obj.importance, obj))
+        self._detail_objects.append((obj.show, obj.type.value, obj.importance, obj))
         self._sort_detail_objects()
 
     def update_detail_object(self, obj: ActivityDetailRecord, index: int) -> None:
         """Method to update a detail object in place
 
-        Args:
-            obj(ActivityDetailRecord): detail record to add
-            index(int): index to update
+        Can only be used while in the context of self.inspect_detail_objects
 
-        Returns:
-            None
+        Args:
+            obj: detail record to add
+            index: index to update
         """
-        if index < 0 or index >= len(self.detail_objects):
+        if not self._in_modify:
+            raise GigantumException("Attempt to use ActivityRecord.update_detail_object() outside of "
+                                    "ActivityRecord.inspect_detail_objects()")
+        if index < 0 or index >= len(self._detail_objects):
             raise ValueError("Index out of range when updating detail object")
 
-        self.detail_objects.insert(index, (obj.show, obj.type.value, obj.importance, obj))
-        del self.detail_objects[index + 1]
-        self._sort_detail_objects()
+        self._detail_objects[index] = (obj.show, obj.type.value, obj.importance, obj)
+
+    def modify_tag_visibility(self, tag: str, show: str):
+        """Modify all detail objecvts with matching tag to have visibility specified in show"""
+        if not self._in_modify:
+            raise GigantumException("Attempt to use ActivityRecord.modify_tag_visibility() outside of "
+                                    "ActivityRecord.inspect_detail_objects()")
+
+        # We'll actually do the modifications in one pass when we exit the with-context
+        self._tags_to_update[tag] = show

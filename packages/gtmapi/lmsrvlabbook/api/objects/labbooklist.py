@@ -40,9 +40,6 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
 
     NOTE: RemoteLabbooks require all fields to be explicitly set as there is no current way to asynchronously retrieve
           the data
-
-    NOTE: Currently all RemoteLabbook description fields will return empty strings
-
     """
     # List of specific local labbooks based on Node ID
     local_by_id = graphene.List(Labbook, ids=graphene.List(graphene.String))
@@ -108,7 +105,7 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         if reverse:
             local_lbs.reverse()
 
-        edges = [(inv_manager.query_labbook_owner(lb), lb.name) for lb in local_lbs]
+        edges = [(inv_manager.query_owner(lb), lb.name) for lb in local_lbs]
         cursors = [base64.b64encode("{}".format(cnt).encode("UTF-8")).decode("UTF-8") for cnt, x in enumerate(edges)]
 
         # Process slicing and cursor args

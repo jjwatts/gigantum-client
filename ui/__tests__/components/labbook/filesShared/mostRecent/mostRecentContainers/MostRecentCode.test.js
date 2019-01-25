@@ -4,7 +4,7 @@
       import {mount} from 'enzyme'
       import MostRecentCode from 'Components/labbook/filesShared/mostRecent/mostRecentContainers/MostRecentCode';
 
-      import relayTestingUtils from 'relay-testing-utils'
+      import relayTestingUtils from '@gigantum/relay-testing-utils'
 
       test('Test MostRecentCode', () => {
 

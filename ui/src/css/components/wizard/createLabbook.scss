@@ -1,6 +1,8 @@
 .CreateLabbook {
   height: 275px;
-
+  input[type=text] {
+    padding: 0 !important;
+  }
   input[type=text].invalid,
   input[type=text].invalid:focus,
   input[type=text].invalid:hover {

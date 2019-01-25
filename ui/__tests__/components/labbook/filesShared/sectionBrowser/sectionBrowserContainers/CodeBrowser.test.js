@@ -4,7 +4,7 @@
       import {mount} from 'enzyme'
       import CodeBrowser from 'Components/labbook/filesShared/sectionBrowser/sectionBrowserContainers/CodeBrowser';
 
-      import relayTestingUtils from 'relay-testing-utils'
+      import relayTestingUtils from '@gigantum/relay-testing-utils'
 
       test('Test CodeBrowser', () => {
 

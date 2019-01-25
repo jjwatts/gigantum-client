@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 export default class BaseDetails extends React.Component {
   render() {
     const { base } = this.props;
-    if (base) {
+    if (base && !this.props.datasets) {
       const installedPackagesDictionary = {};
       base.installedPackages.forEach((val) => {
         const pkg = val.split('|');
@@ -107,6 +107,39 @@ export default class BaseDetails extends React.Component {
               </tbody>
             </table>
           }
+          </div>
+        </div>
+      );
+    } else if (base && this.props.datasets) {
+      return (
+        <div className="BaseDetails">
+          <div className="BaseDetails__button">
+            <button
+              onClick={() => this.props.backToBaseSelect()}
+              className="button--flat"
+            >
+            Back To Select A Type
+            </button>
+          </div>
+          <div className="BaseDetails__base">
+
+            <div className="Base__image-details">
+              <img
+                alt=""
+                src={`data:image/jpeg;base64,${base.icon}`}
+                height="50"
+                width="50"
+              />
+              <div>
+                <h6 className="Base__image-header">{base.name}</h6>
+              </div>
+            </div>
+            <div className="Base__image-text">
+              <p className="Base__image-description">{base.description}</p>
+            </div>
+            <hr />
+            <ReactMarkdown source={base.readme} />
+            <hr />
           </div>
         </div>
       );

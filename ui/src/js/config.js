@@ -2,7 +2,7 @@ import tips from './tips';
 
 const CONFIG = {
   api: process.env.NODE_ENV,
-  navigation_items: [
+  labbook_navigation_items: [
     { id: 'overview', name: 'Overview' },
     { id: 'activity', name: 'Activity', fragment: '...Activity_labbook' },
     { id: 'environment', name: 'Environment', fragment: '...Environment_labbook' },
@@ -10,7 +10,12 @@ const CONFIG = {
     { id: 'inputData', name: 'Input Data' },
     { id: 'outputData', name: 'Output Data' },
   ],
-  defaultNavOrder: ['overview', 'activity', 'environment', 'code', 'inputData', 'outputData'],
+  dataset_navigation_items: [
+    { id: 'activity', name: 'Activity', fragment: '...Activity_labbook' },
+    { id: 'data', name: 'Data' },
+  ],
+  labbookDefaultNavOrder: ['overview', 'activity', 'environment', 'code', 'inputData', 'outputData'],
+  datasetDefaultNavOrder: ['activity', 'data'],
   navTitles: {
     overview: 'A brief overview of the Project',
     activity: 'Lists activity records for the Project',

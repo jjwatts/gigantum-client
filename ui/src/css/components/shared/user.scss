@@ -32,6 +32,7 @@
   border-right: solid 5px rgba(0, 0, 0, 0);
   text-overflow: ellipsis;
   margin-left: 5px;
+  white-space: nowrap;
 
   &--long:hover:after{
     content: attr(data-tooltip);

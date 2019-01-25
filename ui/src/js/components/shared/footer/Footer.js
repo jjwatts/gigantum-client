@@ -87,7 +87,7 @@ class Footer extends Component {
   gets upload message which tracks progess
  */
   _closeFooter() {
-    this.props.setUploadMessageRemove('', '', 0);
+    setUploadMessageRemove('', '', 0);
   }
   /**
   @param {object} messageItem

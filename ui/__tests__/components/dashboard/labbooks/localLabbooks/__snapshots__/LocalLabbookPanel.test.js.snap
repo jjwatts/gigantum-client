@@ -3,7 +3,7 @@
 exports[`Test LocalLabbooks rendering 1`] = `
 <a
   className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
-  href="/projects/cbutler/zab"
+  href="/projects/uitest/ui-test-remote"
   onClick={[Function]}
 >
   <div
@@ -34,7 +34,7 @@ exports[`Test LocalLabbooks rendering 1`] = `
           <span
             className=""
           >
-            zab
+            ui-test-remote
           </span>
         </span>
       </h6>
@@ -42,12 +42,12 @@ exports[`Test LocalLabbooks rendering 1`] = `
     <p
       className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner "
     >
-      cbutler
+      uitest
     </p>
     <p
       className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
     >
-      Created on 12/07/18
+      Created on Fri Jan 18 2019
     </p>
     <p
       className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
@@ -56,7 +56,7 @@ exports[`Test LocalLabbooks rendering 1`] = `
     </p>
   </div>
   <div
-    className="Tooltip LocalLabbookPanel__undefined"
+    className="Tooltip-Listing LocalLabbookPanel__undefined"
     data-tooltip="undefined"
   />
 </a>

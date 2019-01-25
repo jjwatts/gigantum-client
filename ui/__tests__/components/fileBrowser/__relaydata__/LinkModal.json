@@ -1,0 +1,29 @@
+{
+ "data": {
+  "datasetList": {
+   "localDatasets": {
+    "edges": [
+     {
+      "node": {
+       "id": "RGF0YXNldDp1aXRlc3QmdWktdGVzdC1kYXRhc2V0",
+       "name": "ui-test-dataset",
+       "description": "This is a testing dataset",
+       "owner": "uitest",
+       "modifiedOnUtc": "2019-01-11T17:15:23+00:00",
+       "defaultRemote": null,
+       "__typename": "Dataset"
+      },
+      "cursor": "MA=="
+     }
+    ],
+    "pageInfo": {
+     "endCursor": "MA==",
+     "hasNextPage": false,
+     "hasPreviousPage": false,
+     "startCursor": "MA=="
+    }
+   },
+   "id": "RGF0YXNldExpc3Q6"
+  }
+ }
+}

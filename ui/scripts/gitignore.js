@@ -6,7 +6,6 @@ const updateGitIgnore = function(resolve, reject) {
 // TODO remove and fix for `gtm dev start`
 resolve(true);
 return;
-
   let filepath = __dirname.indexOf('opt') > -1 ? __dirname + '/../../../packages/gtmcore/gtmcore/labbook/gitignore.default' : __dirname + '/../../../packages/gtmcore/gtmcore/labbook/gitignore.default'
   let ignoreFiles = parse(fs.readFileSync(filepath));
   let filePath = './src/js/data/gitignore.json'

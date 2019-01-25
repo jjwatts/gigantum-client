@@ -87,8 +87,7 @@ def client_actions(args):
                        "ENTRYPOINT_FILE": "resources/client/entrypoint.sh"}
 
         builder.write_empty_testing_requirements_file()
-        builder.build_image(show_output=args.verbose, no_cache=args.no_cache,
-                            build_args=build_args, docker_args=docker_args)
+        builder.build_image(no_cache=args.no_cache, build_args=build_args, docker_args=docker_args)
 
         # Print Name of image
         print("\n\n*** Built Gigantum Client Image: {}\n".format(builder.image_name))
@@ -188,8 +187,7 @@ def demo_actions(args):
 
         builder.write_empty_testing_requirements_file()
 
-        builder.build_image(show_output=args.verbose, no_cache=args.no_cache,
-                            build_args=build_args, docker_args=docker_args)
+        builder.build_image(no_cache=args.no_cache, build_args=build_args, docker_args=docker_args)
 
         # Print Name of image
         print("\n\n*** Built LabManager Image with Demo configuration: {}\n".format(builder.image_name))
@@ -255,8 +253,7 @@ def developer_actions(args):
         builder.merge_requirements_files([os.path.join("packages", "gtmapi", "requirements-testing.txt"),
                                           os.path.join("packages", "gtmcore", "requirements-testing.txt")])
 
-        builder.build_image(show_output=args.verbose, no_cache=args.no_cache,
-                            build_args=build_args, docker_args=docker_args)
+        builder.build_image(no_cache=args.no_cache, build_args=build_args, docker_args=docker_args)
 
         # Print Name of image
         print("\n\n*** Built LabManager Dev Image: {}\n".format(builder.image_name))

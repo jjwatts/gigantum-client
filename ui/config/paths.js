@@ -49,7 +49,7 @@ module.exports = {
   appIndexJs: resolveApp('src/js/index.js'),
   dahshboardJs: resolveApp('src/js/components/dashboard/Dashboard.js'),
   labbookJs: resolveApp('src/js/components/labbook/Labbook.js'),
-  labbookActivityJs: resolveApp('src/js/components/labbook/activity/Activity.js'),
+  labbookActivityJs: resolveApp('src/js/components/activity/Activity.js'),
   labbookEnvironmentJs: resolveApp('src/js/components/labbook/environment/Environment.js'),
   labbookOverviewJs: resolveApp('src/js/components/labbook/overview/Overview.js'),
   mutationsJs: resolveApp('src/js/mutations'),

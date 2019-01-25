@@ -122,8 +122,8 @@ class TestLabbookShareProtocol(object):
         assert remote_url
 
         sally_lb = LabBook(mock_config_file[0])
-        sally_lb = loaders.from_remote(remote_url, username="sally", owner="default",
-                                       labbook_name="labbook1", labbook=sally_lb)
+        sally_lb = loaders.labbook_from_remote(remote_url, username="sally", owner="default",
+                                               labbook=sally_lb)
         sally_wf = GitWorkflow(sally_lb)
         assert sally_lb.active_branch == "gm.workspace-sally"
         FileOperations.makedir(sally_lb, relative_path='code/sally-dir', create_activity_record=True)

@@ -1,0 +1,252 @@
+.Data {
+  width: 100%;
+  position: relative;
+  text-align: center;
+
+  .fa {
+    font-family: FontAwesome !important;
+  }
+}
+
+.Data--uploading {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background-color: rgba(254, 254, 254, 0.8);
+  justify-content: center;
+  align-items: center;
+  color: $jet;
+}
+
+.Data__files {
+
+  width: 100%;
+}
+
+.Data__header {
+  line-height: 20px;
+  @include flex(space-between, row);
+}
+
+.Data__toolbar {
+  align-self: center;
+  flex: 0 1 auto;
+  @include flex(space-between, row);
+}
+
+.Data__filter {
+  margin: 0 10px;
+}
+
+.Data__filter:nth-last-child(1) {
+  margin: 0 0 0 10px;
+}
+
+.Data__filter,
+.Data__import-text,
+.Data__import-file {
+  cursor: pointer;
+
+  color: $romanSilver;
+}
+
+.Data__import-text {
+  align-self: right;
+}
+
+.Data__import-file {
+  padding-right: 3px;
+  font-size: 16px;
+  text-decoration: underline;
+}
+
+.Data__filter:hover,
+.Data__import-file:hover {
+  color: $jet;
+}
+
+.Data__filter--selected {
+  color: $jet;
+}
+
+.Data__file-browser {
+  padding: 10px 15px;
+
+  background-color: $white;
+  @extend .box-shadow;
+}
+
+.Data__subtitle {
+  text-align: left;
+  color: $romanSilver;
+  font-weight: 100;
+  position: relative;
+}
+
+.Data__subtitle-sub {
+  text-align: left;
+  color: $romanSilver;
+  margin-top: 0;
+}
+
+.Data__toolbar.end {
+  align-self: flex-end;
+}
+
+.Data__loading {
+  width: 30px;
+  height: 30px;
+  border: 3px solid $grey;
+  border-top: 3px solid $turquise;
+  border-radius: 50%;
+  position: absolute;
+  margin-left: 200px;
+  margin-top: 20px;
+  animation: spin 2s linear infinite;
+  bottom: 0;
+}
+
+.Data__loading--browser {
+  width: 30px;
+  height: 30px;
+  border: 3px solid $grey;
+  border-top: 3px solid $turquise;
+  border-radius: 50%;
+  margin-left: 10px;
+  margin-top: -5px;
+  animation: spin 2s linear infinite;
+}
+
+
+.Data {
+  .FileBrowser__icon {
+    margin: 0 5px 0 0;
+  }
+
+  .action-bar {
+    flex-direction: space-between;
+
+
+    input[type='search'] {
+      height: 50px;
+      margin-right: 20px;
+
+      border-color: $lightGrey;
+      border-radius: 15px !important;
+    }
+
+    input[type='search']:focus {
+      border-color: $turquise;
+      border-bottom: 1px solid $turquise;
+      box-shadow: 0 1px 0 0 $turquise;
+    }
+
+    .btn {
+      padding: 0 10px;
+
+      color: $jet;
+      background-color: initial;
+      box-shadow: none;
+    }
+
+    .btn:hover {
+      color: $romanSilver;
+    }
+  }
+
+  .files {
+    .file.selected, .folder.selected {
+      background: $lightGrey;
+    }
+
+    th {
+      color: $jet;
+    }
+  }
+
+  .item-actions {
+    min-height: 60px;
+    margin-left: 25px;
+    padding: 10px;
+
+    border-radius: 15px;
+    background-color: $lightGrey;
+
+    li {
+      margin: 10px 0 !important;
+    }
+  }
+}
+.Data__tracked-container {
+  @include flex(flex-end, row);
+}
+.Data__tracked {
+  padding: 3px 5px;
+  background-color: $lightGrey;
+  color: $romanSilver;
+}
+
+.FileBrowser__large-dropzone{
+  height: 200px;
+  background-color: $white !important;
+  border: 1px dashed $azure;
+  td{
+    text-align: center !important;
+  }
+}
+
+.FileBrowser__modal{
+  position: relative;
+  @include modal(340px, 540px);
+  z-index: index($elements, modal);
+  padding: 40px;
+  @include flex(space-between, column);
+
+}
+
+.FileBrowser__header{
+  @include modalHeader();
+
+  border-bottom: 1px solid $azure;
+}
+
+.FileBrowser__body{
+  @include flex(space-around, column);
+  flex: 1;
+  p{
+    flex: 1;
+    margin-top: 40px;
+  }
+}
+
+.FileBrowser__button-container{
+  @include flex(space-between, row);
+  width: 100%;
+  text-align: center;
+
+  align-self: center;
+
+  button{
+    padding: 0 8px;
+    margin: 10px;
+    width: auto;
+    text-align: center;
+  }
+
+}
+
+.FileBrowser__close-modal{
+  @include close();
+}
+
+.FileBrowser__cancel-content{
+  @include flex(space-between, column);
+  height: 260px;
+}
+
+.FileBrowser__cancel-buttons{
+  @include flex(space-between, row);
+  button{
+    margin: 5px 10px;
+  }
+}

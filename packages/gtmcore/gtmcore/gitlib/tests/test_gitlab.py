@@ -80,7 +80,7 @@ class TestGitLabManager(object):
     @responses.activate
     def test_exists_true(self, property_mocks_fixture, gitlab_mngr_fixture):
         """test the exists method for a repo that should exist"""
-        assert gitlab_mngr_fixture.labbook_exists("testuser", "test-labbook") is True
+        assert gitlab_mngr_fixture.repository_exists("testuser", "test-labbook") is True
 
     @responses.activate
     def test_exists_false(self, gitlab_mngr_fixture):
@@ -93,7 +93,7 @@ class TestGitLabManager(object):
                             }],
                       status=404)
 
-        assert gitlab_mngr_fixture.labbook_exists("testuser", "derp") is False
+        assert gitlab_mngr_fixture.repository_exists("testuser", "derp") is False
 
     @responses.activate
     def test_create(self, gitlab_mngr_fixture, property_mocks_fixture):
@@ -124,7 +124,7 @@ class TestGitLabManager(object):
 
         gitlab_mngr_fixture.create_labbook("testuser", "new-labbook", visibility="private")
 
-        assert gitlab_mngr_fixture.labbook_exists("testuser", "new-labbook") is True
+        assert gitlab_mngr_fixture.repository_exists("testuser", "new-labbook") is True
 
     @responses.activate
     def test_create_errors(self, gitlab_mngr_fixture, property_mocks_fixture):
@@ -405,11 +405,11 @@ class TestGitLabManager(object):
                       json={},
                       status=204)
 
-        assert gitlab_mngr_fixture.labbook_exists("testuser", "new-labbook") is True
+        assert gitlab_mngr_fixture.repository_exists("testuser", "new-labbook") is True
 
         gitlab_mngr_fixture.remove_labbook("testuser", "new-labbook")
 
-        assert gitlab_mngr_fixture.labbook_exists("testuser", "new-labbook") is False
+        assert gitlab_mngr_fixture.repository_exists("testuser", "new-labbook") is False
 
         with pytest.raises(ValueError):
             gitlab_mngr_fixture.remove_labbook("testuser", "new-labbook")

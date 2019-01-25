@@ -1,22 +1,4 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+import re
 from typing import (Any, Dict, List)
 
 from gtmcore.logging import LMLogger
@@ -25,6 +7,46 @@ from gtmcore.activity import ActivityRecord, ActivityDetailType, ActivityDetailR
 from gtmcore.labbook import LabBook
 
 logger = LMLogger.get_logger()
+
+
+class JupyterLabCellVisibilityProcessor(ActivityProcessor):
+    """Class to set visibility in activity record based on cell metadata
+
+    Currently, 4 variations on tracking metadata can be set:
+      - auto
+      - show
+      - hide
+      - ignore
+    """
+
+    # This is actually fairly permissive - the comment can be anywhere and we're not fussy about whitespace
+    # We'll only get the first one below
+    comment_re = re.compile(r'# *gtm:(\w+)')
+
+    def process(self, result_obj: ActivityRecord, data: List[ExecutionData],
+                status: Dict[str, Any], metadata: Dict[str, Any]) -> ActivityRecord:
+        with result_obj.inspect_detail_objects() as old_details:
+            for idx, detail in enumerate(old_details):
+                if detail.type is ActivityDetailType.CODE_EXECUTED:
+                    code = detail.data['text/markdown']
+                    res = self.comment_re.search(code)
+                    if res:
+                        directive = res[1]
+                        if directive == 'auto':
+                            # This is the default behavior
+                            pass
+                        elif directive in ['show', 'hide', 'ignore']:
+                            for tag in detail.tags:
+                                # currently, the 'ex1' type tags are the only ones...
+                                if tag.startswith('ex'):
+                                    result_obj.modify_tag_visibility(tag, directive)
+                        else:
+                            # TODO DC Currently we don't have a mechanism to highlight any problem to users.
+                            # But this is where we could signal an unknown comment directive. Another place
+                            # would be in the jupyterlab extension. We need to think through this UX!
+                            pass
+
+        return result_obj
 
 
 class JupyterLabCodeProcessor(ActivityProcessor):

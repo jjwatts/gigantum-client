@@ -10,7 +10,8 @@ submodule of [gtm](https://github.com/gigantum/gtm). High-level instructions
 are available in that repository. If working only on the labmanager-ui
 codebase, the development environment can be configured for frontend
 development only by answering 'n' to the question about BACKEND development.
-
+"relay-compiler --src ./src --schema ./schema.graphql",
+"node scripts/build.js",
 ## Installation
 
 1. Install Python 3

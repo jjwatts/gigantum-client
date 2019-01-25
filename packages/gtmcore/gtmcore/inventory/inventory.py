@@ -5,6 +5,8 @@ import json
 import datetime
 from natsort import natsorted
 from pkg_resources import resource_filename
+import pathlib
+import subprocess
 
 from typing import Optional, Generator, List, Tuple, Dict
 
@@ -18,6 +20,12 @@ from gtmcore.configuration.utils import call_subprocess
 from gtmcore.labbook.labbook import LabBook
 from gtmcore.inventory.branching import BranchManager
 from gtmcore.dataset.dataset import Dataset
+from gtmcore.inventory import Repository
+from gtmcore.dataset.storage import SUPPORTED_STORAGE_BACKENDS
+from gtmcore.activity import ActivityStore, ActivityDetailRecord, ActivityDetailType, ActivityRecord, ActivityType, \
+    ActivityAction
+from gtmcore.dataset import Manifest
+
 
 logger = LMLogger.get_logger()
 
@@ -46,11 +54,12 @@ class InventoryManager(object):
         return isinstance(other, InventoryManager) \
                and self.inventory_root == other.inventory_root
 
-    def query_labbook_owner(self, labbook: LabBook) -> str:
-        """Returns the LabBook's owner in the Inventory. """
-        tokens = labbook.root_dir.rsplit('/', 3)
-        if tokens[-2] != 'labbooks':
-            raise InventoryException(f'Unexpected root in {str(labbook)}')
+    def query_owner(self, repository: Repository) -> str:
+        """Returns the Repository's owner in the Inventory. """
+        tokens = repository.root_dir.rsplit('/', 3)
+        # expected pattern: gigantum/<username>/<owner>/<labbook or dataset>/<project or dataset name>
+        if len(tokens) < 3 or tokens[-2] not in ['labbooks', 'datasets']:
+            raise InventoryException(f'Unexpected root in {str(repository)}')
         return tokens[-3]
 
     def _put_labbook(self, path: str, username: str, owner: str) -> LabBook:
@@ -88,7 +97,33 @@ class InventoryManager(object):
             LabBook
         """
         try:
-            return self._put_labbook(path, username, owner)
+            lb = self._put_labbook(path, username, owner)
+
+            # Init dataset submodules if present
+            if len(lb.git.repo.submodules) > 0:
+
+                # Link datasets
+                for submodule in lb.git.list_submodules():
+                    try:
+
+                        namespace, dataset_name = submodule['name'].split("&")
+                        rel_submodule_dir = os.path.join('.gigantum', 'datasets', namespace, dataset_name)
+                        submodule_dir = os.path.join(lb.root_dir, rel_submodule_dir)
+                        call_subprocess(['git', 'submodule', 'init', rel_submodule_dir],
+                                        cwd=lb.root_dir, check=True)
+                        call_subprocess(['git', 'submodule', 'update', rel_submodule_dir],
+                                        cwd=lb.root_dir, check=True)
+
+                        ds = InventoryManager().load_dataset_from_directory(submodule_dir)
+                        ds.namespace = namespace
+                        manifest = Manifest(ds, username)
+                        manifest.link_revision()
+
+                    except Exception as err:
+                        logger.exception(f"Failed to import submodule: {submodule['name']}")
+                        continue
+
+            return lb
         except Exception as e:
             logger.error(e)
             raise InventoryException(e)
@@ -158,13 +193,20 @@ class InventoryManager(object):
                              if os.path.isdir(os.path.join(user_root, d))])
         repository_paths = []
         for owner_dir in owner_dirs:
+            if not os.path.isdir(os.path.join(owner_dir, f'{repository_type}s')):
+                continue
             repository_dirs = sorted([os.path.join(owner_dir, f'{repository_type}s', l)
                                       for l in os.listdir(os.path.join(owner_dir, f'{repository_type}s'))
                                       if os.path.isdir(os.path.join(owner_dir, f'{repository_type}s', l))])
             for repository_dir in repository_dirs:
-                repository_paths.append((username,
-                                         os.path.basename(owner_dir),
-                                         os.path.basename(repository_dir)))
+                git_dir = os.path.join(repository_dir, '.git')
+                gtm_dir = os.path.join(repository_dir, '.gigantum')
+                if os.path.isdir(git_dir) and os.path.isdir(gtm_dir):
+                    repository_paths.append((username,
+                                             os.path.basename(owner_dir),
+                                             os.path.basename(repository_dir)))
+                else:
+                    logger.warning(f'Unknown artifact in inventory: {repository_dir}')
         return repository_paths
 
     def list_labbooks(self, username: str, sort_mode: str = "name") -> List[LabBook]:
@@ -384,7 +426,10 @@ class InventoryManager(object):
             Newly created LabBook instance
 
         """
-        dataset = Dataset(config_file=self.config_file, author=author)
+        dataset = Dataset(config_file=self.config_file, author=author, namespace=owner)
+
+        if storage_type not in SUPPORTED_STORAGE_BACKENDS:
+            raise ValueError(f"Unsupported Dataset storage type: {storage_type}")
 
         try:
             build_info = Configuration(self.config_file).config['build_info']
@@ -455,7 +500,7 @@ class InventoryManager(object):
             dataset._save_gigantum_data()
 
             # Create an empty storage.json file
-            dataset.storage_config = {}
+            dataset.backend_config = {}
 
             # Create .gitignore default file
             shutil.copyfile(os.path.join(resource_filename('gtmcore', 'dataset'), 'gitignore.default'),
@@ -463,14 +508,31 @@ class InventoryManager(object):
 
             # Commit
             dataset.git.add_all()
+            dataset.git.create_branch(name="gm.workspace")
+            bm = BranchManager(dataset, username=username)
 
             # NOTE: this string is used to indicate there are no more activity records to get. Changing the string will
             # break activity paging.
             # TODO: Improve method for detecting the first activity record
             dataset.git.commit(f"Creating new empty Dataset: {dataset_name}")
+            user_workspace_branch = f"gm.workspace-{username}"
+            bm.create_branch(user_workspace_branch)
 
-            # TODO: Move to branch manager class
-            dataset.git.create_branch(name="workspace")
+            # Create Activity Record
+            adr = ActivityDetailRecord(ActivityDetailType.DATASET, show=False, importance=0)
+            adr.add_value('text/plain', f"Created new Dataset: {username}/{dataset_name}")
+            ar = ActivityRecord(ActivityType.DATASET,
+                                message=f"Created new Dataset: {username}/{dataset_name}",
+                                show=True,
+                                importance=255,
+                                linked_commit=dataset.git.commit_hash)
+            ar.add_detail_object(adr)
+            store = ActivityStore(dataset)
+            store.create_activity_record(ar)
+
+            # Initialize file cache and link revision
+            m = Manifest(dataset, username)
+            m.link_revision()
 
             return dataset
 
@@ -489,6 +551,34 @@ class InventoryManager(object):
         ds = self.load_dataset(username, owner, dataset_name)
         shutil.rmtree(ds.root_dir, ignore_errors=True)
 
+    def put_dataset(self, path: str, username: str, owner: str) -> Dataset:
+        try:
+            return self._put_dataset(path, username, owner)
+        except Exception as e:
+            logger.error(e)
+            raise InventoryException(e)
+
+    def _put_dataset(self, path: str, username: str, owner: str) -> Dataset:
+        # Validate that given path contains a dataset
+        _ = self.load_dataset_from_directory(path)
+
+        p = os.path.join(self.inventory_root, username, owner, 'datasets')
+        dir_name = os.path.basename(path)
+        if os.path.exists(p) and dir_name in os.listdir(p):
+            raise InventoryException(f"Dataset directory {dir_name} already exists")
+
+        if not os.path.exists(p):
+            os.makedirs(p, exist_ok=True)
+
+        if os.path.exists(os.path.join(p, dir_name)):
+            raise InventoryException(f"Dataset directory {dir_name} already exists")
+
+        final_path = shutil.move(path, p)
+        assert os.path.dirname(final_path) != 'datasets', f"shutil.move used incorrectly"
+
+        ds = self.load_dataset_from_directory(final_path)
+        return ds
+
     def load_dataset(self, username: str, owner: str, dataset_name: str,
                      author: Optional[GitAuthor] = None) -> Dataset:
         """Method to load a dataset from disk
@@ -503,7 +593,7 @@ class InventoryManager(object):
             Dataset
         """
         try:
-            ds = Dataset(self.config_file, author=author)
+            ds = Dataset(self.config_file, author=author, namespace=owner)
 
             ds_root = os.path.join(self.inventory_root, username,
                                    owner, 'datasets', dataset_name)
@@ -513,6 +603,27 @@ class InventoryManager(object):
             return ds
         except Exception as e:
             raise InventoryException(f"Cannot retrieve ({username}, {owner}, {dataset_name}): {e}")
+
+    def load_dataset_from_directory(self, path: str, author: Optional[GitAuthor] = None) -> Dataset:
+        """ Load a Dataset temporarily from an arbitrary directory.
+
+        Args:
+            path: Path to candidate dataset - generally somewhere in /tmp
+            author: Optional GitAuthor
+
+        Returns:
+            Dataset object
+        """
+        try:
+            ds = Dataset(config_file=self.config_file)
+            ds._set_root_dir(path)
+            ds._load_gigantum_data()
+            ds._validate_gigantum_data()
+            ds.author = author
+            return ds
+        except Exception as e:
+            logger.error(e)
+            raise InventoryException(e)
 
     def list_datasets(self, username: str, sort_mode: str = "name") -> List[Dataset]:
         """ Return list of all available datasets for a given user
@@ -542,3 +653,85 @@ class InventoryManager(object):
             return sorted(local_datasets, key=lambda ds: ds.creation_date)
         else:
             raise InventoryException(f"Invalid sort mode {sort_mode}")
+
+    def link_dataset_to_labbook(self, dataset_url: str, dataset_namespace: str, dataset_name: str,
+                                labbook: LabBook) -> Dataset:
+        """
+
+        Args:
+            dataset_url:
+            dataset_namespace:
+            dataset_name:
+            labbook:
+
+        Returns:
+
+        """
+        # add submodule and init
+        submodules_root = os.path.join(labbook.root_dir, '.gigantum', 'datasets')
+        submodule_dir = os.path.join(submodules_root, dataset_namespace, dataset_name)
+        if not os.path.exists(os.path.join(submodules_root, dataset_namespace)):
+            pathlib.Path(os.path.join(submodules_root, dataset_namespace)).mkdir(parents=True, exist_ok=True)
+
+        subprocess.run(['git', 'submodule', 'add', '--name', f"{dataset_namespace}&{dataset_name}", dataset_url,
+                        os.path.join('.gigantum', 'datasets', dataset_namespace, dataset_name)],
+                       check=True, cwd=labbook.root_dir, stderr=subprocess.STDOUT)
+
+        labbook.git.add_all()
+        commit = labbook.git.commit("adding submodule ref")
+        labbook.git.update_submodules(init=True)
+
+        ds = self.load_dataset_from_directory(submodule_dir)
+        dataset_revision = ds.git.repo.head.commit.hexsha
+
+        # Add Activity Record
+        adr = ActivityDetailRecord(ActivityDetailType.DATASET, show=False, action=ActivityAction.CREATE)
+        adr.add_value('text/markdown',
+                      f"Linked Dataset `{dataset_namespace}/{dataset_name}` to "
+                      f"project at revision `{dataset_revision}`")
+        ar = ActivityRecord(ActivityType.DATASET,
+                            message=f"Linked Dataset {dataset_namespace}/{dataset_name} to project.",
+                            linked_commit=commit.hexsha,
+                            tags=["dataset"],
+                            show=True)
+        ar.add_detail_object(adr)
+        ars = ActivityStore(labbook)
+        ars.create_activity_record(ar)
+
+        return ds
+
+    def unlink_dataset_from_labbook(self, dataset_namespace: str, dataset_name: str, labbook: LabBook) -> None:
+        """Method to removed a dataset reference from a labbook
+
+        Args:
+            dataset_namespace:
+            dataset_name:
+            labbook:
+
+        Returns:
+
+        """
+        # add submodule and init
+        submodule_dir = os.path.join('.gigantum', 'datasets', dataset_namespace, dataset_name)
+
+        subprocess.run(['git', 'submodule', 'deinit', '-f', submodule_dir],
+                       check=True, cwd=labbook.root_dir)
+
+        shutil.rmtree(os.path.join(labbook.root_dir, '.git', 'modules', f"{dataset_namespace}&{dataset_name}"))
+
+        subprocess.run(['git', 'rm', '-f', submodule_dir], check=True, cwd=labbook.root_dir)
+
+        labbook.git.add_all()
+        commit = labbook.git.commit("removing submodule ref")
+
+        # Add Activity Record
+        adr = ActivityDetailRecord(ActivityDetailType.DATASET, show=False, action=ActivityAction.DELETE)
+        adr.add_value('text/markdown', f"Unlinked Dataset `{dataset_namespace}/{dataset_name}` from project")
+        ar = ActivityRecord(ActivityType.DATASET,
+                            message=f"Unlinked Dataset {dataset_namespace}/{dataset_name} from project.",
+                            linked_commit=commit.hexsha,
+                            tags=["dataset"],
+                            show=True)
+        ar.add_detail_object(adr)
+        ars = ActivityStore(labbook)
+        ars.create_activity_record(ar)

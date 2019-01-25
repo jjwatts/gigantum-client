@@ -66,6 +66,7 @@ function deleteEdge(store, labbookID, deletedID, connectionKey) {
   }
 }
 
+
 export default function AddLabbookFileMutation(
   connectionKey,
   owner,
@@ -98,7 +99,9 @@ export default function AddLabbookFileMutation(
   const uploadables = [chunk.blob, accessToken];
 
   const id = uuidv4();
-  const optimisticId = window.btoa((transactionId + filePath));
+  const tempString = transactionId + filePath;
+  const tempId = tempString.replace(/\W/g, '');
+  const optimisticId = window.btoa((tempId));
 
   const variables = {
     input: {

@@ -284,6 +284,7 @@ module.exports = {
     new InterpolateHtmlPlugin(env.raw),
 
     new webpack.LoaderOptionsPlugin({ options: {} }),
+
     //removed webpack4
     // new InterpolateHtmlPlugin(env.raw),
 

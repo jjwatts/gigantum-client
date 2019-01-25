@@ -1,0 +1,55 @@
+@import '~Styles/_imports.scss';
+
+
+.VisibilityModal{
+  @include flex(space-between, column);
+  height: 100%;
+}
+
+.VisibilityModal__buttons{
+  @include flex(space-between, row);
+
+  width: 340px;
+  margin: 0 auto;
+}
+
+.VisibilityModal__private{
+  @include flex(space-between, row);
+  align-items: center;
+  label{
+    min-width: 110px;
+    text-align: left;
+    background: url(~Images/icons/lock.svg) no-repeat 30px center;
+    background-size: 20px;
+    color: $slateBlue;
+    padding-left: 60px;
+    cursor: pointer;
+  }
+  input{
+    cursor: pointer;
+  }
+}
+
+.VisibilityModal__public{
+  @include flex(space-between, row);
+  align-items: center;
+  label{
+    min-width: 110px;
+    text-align: left;
+    background: url(~Images/icons/earth.svg) no-repeat 30px center;
+    background-size: 20px;
+    color: $slateBlue;
+    padding-left: 60px;
+    cursor: pointer;
+  }
+  input{
+    cursor: pointer;
+  }
+}
+
+.VisibilityModal__paragraph{
+  max-width: 640px;
+  min-width: 640px;
+  padding: 0 0 0 80px;
+  color: $romanSilver;
+}

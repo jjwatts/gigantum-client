@@ -1,0 +1,182 @@
+@import '~Styles/_imports.scss';
+
+.DatasetBrowser {
+  color: $white;
+  background: rgb(74,84,101);
+  &--highlight {
+    background-color: rgba(0, 126, 168, 0.5);
+    border: 1px solid $azure;
+
+    .AddSubfolder {
+      background-color: transparent !important;
+    }
+  }
+  &--background {
+    background: rgb(74,84,101);
+    &--highlight {
+      background-color: rgba(0, 126, 168, 0.5);
+      border: 1px solid $azure;
+
+      .AddSubfolder {
+        background-color: transparent !important;
+      }
+    }
+    &--background {
+      background: rgb(74,84,101);
+    }
+  }
+
+.DatasetBrowser__row{
+
+      height: 50px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+
+      cursor: pointer;
+
+      border-bottom: 1px solid $romanSilver;
+
+      @include flex(space-between, row);
+      align-items: center;
+
+      &:hover {
+
+        .ActionsMenu__item {
+          &--rename {
+              background: url('~Images/icons/rename-dark.svg') no-repeat 50% 50%;
+              background-size: 20px;
+          }
+
+          &--delete {
+              background: url('~Images/icons/trash-dark.svg') no-repeat 50% 50%;
+              background-size: 20px;
+          }
+          &--AddSubfolder {
+              background: url('~Images/icons/folder-add-dark.svg') no-repeat 50% 50%;
+              background-size: 20px;
+            }
+          &--favorite-off {
+              background: url('~Images/icons/star__off-dark.svg') no-repeat 50% 50%;
+              background-size: 20px;
+          }
+        }
+      }
+
+      &--hover {
+        @include boxShadowDark();
+      }
+
+  }
+
+.DatasetBrowser__cell{
+    @include flex(flex-start, row);
+
+    &--name{
+        margin: 0 0 0 12px;
+        flex: 1;
+
+        padding: 0 0 0 35px;
+        line-height: 26px;
+
+        background: url(~Images/icons/database-filebrowser.svg) no-repeat 0% 50%;
+        background-size: 20px;
+    }
+
+    &--open{
+      background: url(~Images/icons/database-open.svg) no-repeat 0% 50%;
+      background-size: 20px;
+    }
+
+    &--size{
+        width: 100px;
+    }
+
+    &--date{
+        width: 140px;
+    }
+
+    &--menu{
+      width: 180px;
+    }
+
+  }
+
+
+.DatasetBrowser__btn{
+
+      width: 20px;
+      height: 20px;
+      margin: 0 0 0 20px;
+      padding: 0;
+
+      border: none;
+      background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
+      background-size: 26px !important;
+
+      &:hover {
+          border: none;
+          background: $azure url('~Images/icons/check-selected.svg') no-repeat 50% 50% !important;
+          background-size: 26px !important;
+      }
+
+      &:focus {
+          background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
+          background-size: 26px !important;
+          border: none;
+      }
+
+      &--selected {
+          border: none;
+          background: $azure url('~Images/icons/check-selected.svg') no-repeat 50% 50% !important;
+          background-size: 26px !important;
+      }
+
+      &--selected:hover {
+          border: none;
+          background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
+          background-size: 26px !important;
+      }
+
+      &--selected:focus {
+          background: $azure url('~Images/icons/check-selected.svg') no-repeat 50% 50% !important;
+          background-size: 26px !important;
+          border: none;
+      }
+
+      &--incomplete {
+          background: $azure url('~Images/icons/action-null.svg') no-repeat 50% 50% !important;
+          background-size: 26px !important;
+          border: none;
+      }
+
+      &--incomplete:hover {
+          background: url('~Images/icons/check-selected.svg') no-repeat 50% 50% !important;
+          background-size: 26px !important;
+          border: none;
+      }
+
+      &--incomplete:focus {
+          background: $azure url('~Images/icons/action-null.svg') no-repeat 50% 50% !important;
+          background-size: 26px !important;
+          border: none;
+      }
+  }
+
+.DatasetBrowser__child {
+
+      .AddSubfolder {
+        height: 40px;
+        padding: 6px 0 6px 120px;
+        cursor: pointer;
+        text-align: left;
+        background: #f0f1f5 url(~Images/icons/database-filebrowser.svg) no-repeat 87px 50%;
+        background-size: 20px;
+        line-height: 24px;
+      }
+
+      // .File__row,
+      // .Dataset__row {
+      //   padding-left: 30px;
+      // }
+  }
+}

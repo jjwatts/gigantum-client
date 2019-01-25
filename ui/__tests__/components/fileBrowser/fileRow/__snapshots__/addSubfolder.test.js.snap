@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AddSubFolder Component Renders a Snapshot 1`] = `
+<div
+  className="AddSubfolder"
+  onClick={[Function]}
+  style={Object {}}
+>
+  <div
+    className="AddSubfolder__text hidden"
+  >
+    Add Folder
+  </div>
+  <div
+    className="AddSubfolder__edit"
+  >
+    <div
+      className="AddSubfolder__container"
+    >
+      <input
+        className="AddSubfolder__input"
+        onKeyUp={[Function]}
+        placeholder="Enter Folder Name"
+        type="text"
+      />
+    </div>
+    <div
+      className="flex justify--space-around"
+    >
+      <button
+        className="File__btn--round File__btn--cancel"
+        onClick={[Function]}
+      />
+      <button
+        className="File__btn--round File__btn--add"
+        onClick={[Function]}
+      />
+    </div>
+  </div>
+</div>
+`;

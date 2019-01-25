@@ -41,6 +41,7 @@ export default class Home extends Component {
             <Dashboard
               auth={this.props.auth}
               footerWorkerCallback={this.footerWorkerCallback}
+              section={this.props.match}
               match={this.props.match}
               history={this.props.history}
             />

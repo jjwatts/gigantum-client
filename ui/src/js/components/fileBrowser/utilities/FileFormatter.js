@@ -1,0 +1,109 @@
+export default class FileFormatter {
+    constructor(worker) {
+        const code = worker.toString();
+        const blob = new Blob([`(${code})()`]);
+        return new Worker(URL.createObjectURL(blob));
+    }
+}
+/**
+*  @param {}
+*  Worker that handles the formating and grouping of files
+*  @return {}
+*/
+export const fileHandler = () => {
+    /* eslint-disable */
+    self.addEventListener('message', (evt) => {
+        let edges = evt.data.files;
+        let edgesToSort = JSON.parse(JSON.stringify(edges));
+        let fileObject = {};
+        const { search, linkedDatasets } = evt.data;
+        const searchLowerCase = search.toLowerCase();
+
+       const sortEdges =  (edges, datasetName, datasetOwner) => {
+        if (search !== '') {
+          let edgesSearchMatch = edgesToSort.filter((edge) => {
+            const lowerCaseKey = edge.node.key.toLowerCase();
+            return (lowerCaseKey.indexOf(searchLowerCase) > -1);
+          });
+
+          edgesToSort = edgesToSort.filter((edge) => {
+            let keyMatch = false;
+            edgesSearchMatch.forEach((matchEdge) => {
+              if (matchEdge.node.key.indexOf(edge.node.key) > -1) {
+                keyMatch = true;
+              }
+            });
+            return keyMatch;
+          });
+        }
+
+        edges.forEach((edge, index) => {
+          let key = edge.node.key.toLowerCase();
+          let searchLowerCase = search.toLowerCase();
+
+          if (edge.node) {
+            let currentObject = fileObject;
+            const keyToSplit = datasetName ? `${datasetName}/${edge.node.key}` : edge.node.key;
+            let splitKey = keyToSplit.split('/').filter(key => key.length);
+            splitKey.forEach((key, index) => {
+                if (currentObject && (index === (splitKey.length - 1))) {
+                    if (!currentObject[key]) {
+                      currentObject[key] = {
+                        edge,
+                        index,
+                      };
+                      if (datasetName) {
+                        currentObject[key].edge.node.key = `${datasetName}/${currentObject[key].edge.node.key}`
+                        currentObject[key].edge.node.owner = datasetOwner
+                        currentObject[key].edge.node.datasetName = datasetName
+                      }
+                    } else if(!currentObject[key].edge || !currentObject[key].edge.node || !currentObject[key].edge.node.isDataset) {
+                      currentObject[key].edge = edge;
+                      if (datasetName) {
+                        currentObject[key].edge.node.key = `${datasetName}/${currentObject[key].edge.node.key}`
+                        currentObject[key].edge.node.owner = datasetOwner
+                        currentObject[key].edge.node.datasetName = datasetName
+                      }
+                    }
+                } else if (currentObject && !currentObject[key]) {
+
+                    currentObject[key] = {
+                      children: {
+                      },
+                      edge: {
+                        node: {
+                          key: `${splitKey.slice(0, index + 1).join('/')}/`,
+                          isDir: true,
+                          isDataset: !!datasetName,
+                          modifiedAt: Math.floor(Date.now() / 1000),
+                          owner: datasetOwner || null,
+                          datasetName: datasetName || null,
+                         },
+                      },
+                      index,
+                    };
+                    currentObject = currentObject[key].children;
+                } else if (currentObject && currentObject[key] && !currentObject[key].children) {
+                    currentObject[key].children = {};
+                    currentObject = currentObject[key].children;
+                } else {
+                  currentObject = currentObject[key].children;
+                }
+            });
+          }
+          });
+        }
+        if (linkedDatasets) {
+          linkedDatasets.forEach(dataset => {
+            sortEdges(dataset.allFiles.edges, dataset.name, dataset.owner)
+          })
+
+        }
+        sortEdges(edgesToSort)
+
+        const hash = btoa(JSON.stringify(fileObject) + search);
+        postMessage({ files: fileObject, hash });
+    });
+};
+
+    /* eslint-enable */

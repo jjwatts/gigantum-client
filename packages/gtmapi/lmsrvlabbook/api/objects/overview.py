@@ -1,22 +1,3 @@
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import base64
 import graphene
 import os
@@ -153,10 +134,11 @@ class LabbookOverview(graphene.ObjectType, interfaces=(graphene.relay.Node, GitR
                 break
 
             for item in items:
-                if item.show is True and len(item.detail_objects) > 0:
-                    ar = ActivityRecordObject(id=f"{self.owner}&{self.name}&{item.commit}",
+                if item.show is True and item.num_detail_objects > 0:
+                    ar = ActivityRecordObject(id=f"labbook&{self.owner}&{self.name}&{item.commit}",
                                               owner=self.owner,
                                               name=self.name,
+                                              _repository_type='labbook',
                                               commit=item.commit,
                                               _activity_record=item)
                     records.append(ar)
@@ -172,7 +154,7 @@ class LabbookOverview(graphene.ObjectType, interfaces=(graphene.relay.Node, GitR
         """Resolver for getting recent important activity"""
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             lambda labbook: self.help_resolve_recent_activity(labbook))
-    
+
     @staticmethod
     def helper_resolve_remote_url(labbook):
         if len(labbook.git.repo.remotes) > 0:

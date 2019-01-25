@@ -24,14 +24,12 @@ import glob
 import datetime
 import sys
 
-from git import Repo
 from docker.errors import ImageNotFound, NotFound, APIError
 import yaml
 
 from gtm.common.console import ask_question
-from gtm.dockerutils import get_docker_client
+from gtm.utils import get_docker_client, dockerize_windows_path, get_current_commit_hash
 from gtm.common import get_client_root
-from gtm.dockerutils import dockerize_windows_path
 
 
 class ClientBuilder(object):
@@ -44,35 +42,23 @@ class ClientBuilder(object):
         self.docker_client = get_docker_client()
 
     @staticmethod
-    def _get_current_commit_hash() -> str:
-        """Method to get the current commit hash of the gtm repository
-
-        Returns:
-            str
-        """
-        # Get the path of the root directory
-        repo = Repo(get_client_root())
-        return repo.head.commit.hexsha
-
-    def _remove_pyc(self, directory: str) -> None:
+    def _remove_pyc(directory: str) -> None:
         """Method to remove all pyc files recursively
 
         Args:
             directory(str) Root directory to walk
-
-        Returns:
-
         """
         for filename in glob.glob('{}/**/*.pyc'.format(directory), recursive=True):
                 os.remove(filename)
 
-    def get_image_tag(self) -> str:
+    @staticmethod
+    def get_image_tag() -> str:
         """Method to generate a named tag for the Docker Image
 
         Returns:
             str
         """
-        return self._get_current_commit_hash()[:8]
+        return get_current_commit_hash(8)
 
     def _generate_container_name(self) -> str:
         """Method to generate a name for the Docker container
@@ -96,8 +82,8 @@ class ClientBuilder(object):
     @container_name.setter
     def container_name(self, value: str) -> None:
         # Validate
-        if not re.match("^(?![-\.])(?!.*--)[A-Za-z0-9_.-]+(?<![-\.])$", value):
-            raise ValueError("Invalid container name. Only A-Za-z0-9._- allowed w/ no leading/trailing hyphens.")
+        if not re.match("^(?![-.])(?!.*--)[A-Za-z0-9_.-]+(?<![-.])$", value):
+            raise ValueError("Invalid container name. Only A-Za-z0-9._- allowed w/ no leading/trailing hyphens/periods.")
 
         self._container_name = value
 
@@ -119,9 +105,6 @@ class ClientBuilder(object):
 
         Args:
             image_name(str): Name of the docker image to remove
-
-        Returns:
-            None
         """
         # Remove stopped container if it exists
         self.prune_container(image_name)
@@ -130,15 +113,12 @@ class ClientBuilder(object):
         self.docker_client.images.remove(image_name)
 
     @staticmethod
-    def merge_requirements_files(source_files):
+    def merge_requirements_files(source_files) -> None:
         """Method to merge requirements.txt files into a single file for build purposes. This simplifies build process
         and also lets the app build with additional dependencies when needed (e.g. test)
 
         Args:
             source_files(list): List of relative file paths to requirement.txt files
-
-        Returns:
-
         """
         build_dir = os.path.join(get_client_root(), 'build')
         if os.path.exists(build_dir) is False:
@@ -153,15 +133,9 @@ class ClientBuilder(object):
             fw.write(output)
 
     @staticmethod
-    def write_empty_testing_requirements_file():
+    def write_empty_testing_requirements_file() -> None:
         """Method to merge requirements.txt files into a single file for build purposes. This simplifies build process
         and also lets the app build with additional dependencies when needed (e.g. test)
-
-        Args:
-            source_files(list): List of relative file paths to requirement.txt files
-
-        Returns:
-
         """
         build_dir = os.path.join(get_client_root(), 'build')
         if os.path.exists(build_dir) is False:
@@ -175,9 +149,6 @@ class ClientBuilder(object):
 
         Args:
             container_name(str): Name of the docker container to remove
-
-        Returns:
-            None
         """
         # Remove stopped container if it exists
         try:
@@ -189,12 +160,10 @@ class ClientBuilder(object):
         except NotFound:
             pass
 
-    def build_image(self, show_output: bool=False, no_cache: bool=False,
-                    build_args: dict=None, docker_args: dict=None) -> None:
+    def build_image(self, no_cache: bool=False, build_args: dict=None, docker_args: dict=None) -> None:
         """Method to build the Gigantum Client Docker Image
 
         Args:
-            show_output(bool): Flag indicating if method should print output
             no_cache(bool): Flag indicating if the docker cache should be ignored
             build_args(dict): Variables to prepare files for build
             docker_args(dict): Variables passed to docker during the build process
@@ -209,9 +178,6 @@ class ClientBuilder(object):
             NGINX_API_CONFIG: Nginx config file for the API
             SUPERVISOR_CONFIG: Supervisord config file
             ENTRYPOINT_FILE: Entrypoint file
-
-        Returns:
-            None
         """
         # Check if *nix or windows
         # Doing this at the top of the function so it's clear this variable is
@@ -250,7 +216,7 @@ class ClientBuilder(object):
         # Add Build Info
         base_data['build_info'] = {'application': "LabManager",
                                    'built_on': str(datetime.datetime.utcnow()),
-                                   'revision': self._get_current_commit_hash()}
+                                   'revision': get_current_commit_hash()}
 
         # Write out updated config file
         with open(os.path.join(client_root_dir, final_config_file), "wt") as cf:
@@ -276,7 +242,7 @@ priority=0""")
 
         # Image Labels
         labels = {'io.gigantum.app': 'client',
-                  'io.gigantum.revision': self._get_current_commit_hash(),
+                  'io.gigantum.revision': get_current_commit_hash(),
                   'io.gigantum.maintainer.email': 'support@gigantum.com'}
 
         # Delete .pyc files in case dev tools used on something not ubuntu before building
@@ -311,9 +277,6 @@ priority=0""")
         Args:
             image_tag(str): full image tag to publish
             verbose(bool): Flag indicating if output should be printed
-
-        Returns:
-            None
         """
         # If no tag provided, use current repo hash
         if not image_tag:
@@ -345,9 +308,6 @@ priority=0""")
         Args:
             image_tag(str): full image tag to publish
             verbose(bool): Flag indicating if output should be printed
-
-        Returns:
-            None
         """
         # If no tag provided, use current repo hash
         if not image_tag:
@@ -377,14 +337,11 @@ priority=0""")
 
         self.docker_client.images.push(f'{self.image_name}-edge', tag='latest')
 
-    def cleanup(self, image_name):
+    def cleanup(self, image_name) -> None:
         """Method to clean up old images
 
         Args:
             image_name(str): Name of the image to cleanup (e.g. `gigantum/labmanager`)
-
-        Returns:
-            None
         """
         images = self.docker_client.images.list(image_name)
 

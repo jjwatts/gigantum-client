@@ -10,6 +10,7 @@ import ButtonLoader from 'Components/shared/ButtonLoader';
 import Modal from 'Components/shared/Modal';
 // mutations
 import CreateLabbookMutation from 'Mutations/CreateLabbookMutation';
+import CreateDatasetMutation from 'Mutations/CreateDatasetMutation';
 import BuildImageMutation from 'Mutations/BuildImageMutation';
 // store
 import { setErrorMessage } from 'JS/redux/reducers/footer';
@@ -36,6 +37,7 @@ export default class WizardModal extends React.Component {
 
     this._createLabbookCallback = this._createLabbookCallback.bind(this);
     this._createLabbookMutation = this._createLabbookMutation.bind(this);
+    this._createDatasetMutation = this._createDatasetMutation.bind(this);
     this._selectBaseCallback = this._selectBaseCallback.bind(this);
     this._continueSave = this._continueSave.bind(this);
     this._setComponent = this._setComponent.bind(this);
@@ -155,10 +157,16 @@ export default class WizardModal extends React.Component {
     sets (repository, componentId and revision to state for create labbook mutation
   */
   _selectBaseCallback(node) {
-    const { repository, componentId, revision } = node;
-    this.setState({
+    const {
       repository,
       componentId,
+      revision,
+      storageType,
+    } = node;
+    const selectedType = this.props.datasets ? storageType : componentId;
+    this.setState({
+      repository,
+      componentId: selectedType,
       revision,
     });
     // this._creatLabbookMutation();
@@ -203,7 +211,7 @@ export default class WizardModal extends React.Component {
           }, 2000);
         } else {
           const { owner, name } = response.createLabbook.labbook;
-
+          localStorage.setItem('latest_base', componentId);
           this.setState({
             createLabbookButtonState: 'finished',
           });
@@ -215,6 +223,57 @@ export default class WizardModal extends React.Component {
               createLabbookButtonState: '',
             }, () => {
               self.props.history.push(`../projects/${owner}/${name}`);
+            });
+          }, 2000);
+        }
+      },
+    );
+  }
+  /**
+      @param {}
+      sets name and description to state for create labbook mutation
+  */
+  _createDatasetMutation() {
+    const self = this;
+    const {
+      name,
+      description,
+      componentId,
+    } = this.state;
+
+    this.setState({
+      createLabbookButtonState: 'loading',
+    });
+
+    CreateDatasetMutation(
+      name,
+      description,
+      componentId,
+      (response, error) => {
+        if (error) {
+          setErrorMessage(`An error occured while trying to create Dataset '${name}'.`, error);
+          this.setState({
+            modalBlur: false,
+            createLabbookButtonState: 'error',
+          });
+
+          setTimeout(() => {
+            this.setState({
+              createLabbookButtonState: '',
+            });
+          }, 2000);
+        } else {
+          const { owner, name } = response.createDataset.dataset;
+
+          this.setState({
+            createLabbookButtonState: 'finished',
+          });
+
+          setTimeout(() => {
+            this.setState({
+              createLabbookButtonState: '',
+            }, () => {
+              self.props.history.push(`../datasets/${owner}/${name}`);
             });
           }, 2000);
         }
@@ -250,9 +309,11 @@ export default class WizardModal extends React.Component {
           this.state.modal_visible &&
           <Modal
             size="large"
+            icon="add"
             handleClose={() => this._hideModal()}
             header={currentComponent.header}
             preHeader={currentComponent.preHeader}
+            noPadding
             renderContent={() =>
               (<div>
                 {
@@ -266,6 +327,7 @@ export default class WizardModal extends React.Component {
                   hideModal={this._hideModal}
                   continueSave={this._continueSave}
                   createLabbookCallback={this._createLabbookCallback}
+                  isDataset={this.props.datasets}
                 />
                </div>)
             }
@@ -291,8 +353,9 @@ export default class WizardModal extends React.Component {
               history={this.props.history}
               hideModal={this._hideModal}
               auth={this.props.auth}
+              datasets={this.props.datasets}
             />),
-          header: 'Create Project',
+          header: this.props.datasets ? 'Create Dataset' : 'Create Project',
         };
 
       case 'selectBase':
@@ -303,10 +366,12 @@ export default class WizardModal extends React.Component {
             selectBaseCallback={this._selectBaseCallback}
             toggleDisabledContinue={this._toggleDisabledContinue}
             createLabbookMutation={this._createLabbookMutation}
+            createDatasetMutation={this._createDatasetMutation}
             toggleMenuVisibility={this._toggleMenuVisibility}
+            datasets={this.props.datasets}
           />),
-          header: 'Select A Base',
-          preHeader: 'Create Project',
+          header: this.props.datasets ? 'Select A Type' : 'Select A Base',
+          preHeader: this.props.datasets ? 'Create Dataset' : 'Create Project',
         };
       default:
         return {
@@ -331,7 +396,7 @@ export default class WizardModal extends React.Component {
   @return {string} text
 */
 function ModalNav({
-  self, state, getSelectedComponentId, setComponent, hideModal, continueSave,
+  self, state, getSelectedComponentId, setComponent, hideModal, continueSave, isDataset,
 }) {
   const backButton = classNames({
     'WizardModal__progress-button': true,
@@ -340,7 +405,7 @@ function ModalNav({
   });
 
   const trackingButton = classNames({
-    hidden: (state.selectedComponentId !== 'createLabbook'),
+    hidden: (state.selectedComponentId !== 'createLabbook') || isDataset,
   });
 
   const wizardModalNav = classNames({
@@ -386,7 +451,7 @@ function ModalNav({
           { (state.selectedComponentId === 'selectBase') &&
             <ButtonLoader
               buttonState={state.createLabbookButtonState}
-              buttonText="Create Project"
+              buttonText={isDataset ? 'Create Dataset' : 'Create Project'}
               className=""
               params={{ isSkip: false, text: 'Create Project' }}
               buttonDisabled={state.continueDisabled}

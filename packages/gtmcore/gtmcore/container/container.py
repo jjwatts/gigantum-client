@@ -81,7 +81,7 @@ class ContainerOperations(object):
         Returns:
             A tuple containing the labbook, docker image id.
         """
-        owner = InventoryManager().query_labbook_owner(labbook)
+        owner = InventoryManager().query_owner(labbook)
         image_name = override_image_tag or infer_docker_image_name(labbook_name=labbook.name,
                                                                    owner=owner,
                                                                    username=username)
@@ -114,7 +114,7 @@ class ContainerOperations(object):
         """
         image_name = override_image_tag
         if not image_name:
-            owner = InventoryManager().query_labbook_owner(labbook)
+            owner = InventoryManager().query_owner(labbook)
             image_name = infer_docker_image_name(labbook_name=labbook.name,
                                                  owner=owner,
                                                  username=username)
@@ -189,7 +189,7 @@ class ContainerOperations(object):
         Returns:
             A tuple of (Labbook, boolean indicating whether a container was successfully stopped).
         """
-        owner = InventoryManager().query_labbook_owner(labbook)
+        owner = InventoryManager().query_owner(labbook)
         n = infer_docker_image_name(labbook_name=labbook.name,
                                     owner=owner,
                                     username=username)
@@ -214,7 +214,7 @@ class ContainerOperations(object):
         Returns:
             Externally facing IP
         """
-        owner = InventoryManager().query_labbook_owner(labbook)
+        owner = InventoryManager().query_owner(labbook)
         docker_key = infer_docker_image_name(labbook_name=labbook.name,
                                              owner=owner,
                                              username=username)

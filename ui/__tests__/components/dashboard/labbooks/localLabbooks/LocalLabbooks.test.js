@@ -119,7 +119,6 @@ describe('LocalLabbooks', () => {
       <LocalLabbooksComp history={history} {...fixtures} feed={json.data}/>
      </Router>
     </Provider>,
-
   );
 
 

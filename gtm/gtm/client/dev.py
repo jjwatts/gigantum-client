@@ -24,7 +24,7 @@ import yaml
 import sys
 import platform
 
-from gtm.dockerutils import get_docker_client, DockerVolume
+from gtm.utils import get_docker_client, DockerVolume
 from gtm.common import get_resources_root, get_client_root
 
 

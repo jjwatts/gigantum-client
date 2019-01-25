@@ -6,10 +6,6 @@ import './LabbookSort.scss';
 
 
 class LabbookSort extends Component {
-  state = {
-    sortMenuOpen: false,
-  }
-
   /**
     *  @param {}
     *  gets orderBy and sort value and displays it to the UI more clearly
@@ -27,27 +23,18 @@ class LabbookSort extends Component {
     return this.props.sort === 'asc' ? 'A-Z' : 'Z-A';
   }
 
-  /**
-    *  @param {}
-    *  update sort menu
-    *  @return {}
-  */
-  _toggleSortMenu() {
-    this.setState({ sortMenuOpen: !this.state.sortMenuOpen });
-  }
-
   render() {
-    const { props, state } = this;
+    const { props } = this;
 
     const labbookSortSeclectorCSS = classNames({
       LabbookSort__selector: true,
-      'LabbookSort__selector--open': state.sortMenuOpen,
-      'LabbookSort__selector--collapsed': !state.sortMenuOpen,
+      'LabbookSort__selector--open': props.sortMenuOpen,
+      'LabbookSort__selector--collapsed': !props.sortMenuOpen,
     });
 
     const labbookSortMenuCSS = classNames({
       'LabbookSort__menu box-shadow': true,
-      hidden: !state.sortMenuOpen,
+      hidden: !props.sortMenuOpen,
     });
 
     return (
@@ -57,7 +44,7 @@ class LabbookSort extends Component {
 
         <span
           className={labbookSortSeclectorCSS}
-          onClick={() => this._toggleSortMenu()}
+          onClick={props.toggleSortMenu}
         >
           {this._getSelectedSort()}
         </span>
@@ -68,42 +55,42 @@ class LabbookSort extends Component {
             className="LabbookSort__list-item"
             onClick={() => props.setSortFilter('modified_on', 'desc')}
           >
-            Modified Date (Newest) {state.orderBy === 'modified_on' && state.sort !== 'asc' ? '✓ ' : ''}
+            Modified Date (Newest) {props.orderBy === 'modified_on' && props.sort !== 'asc' ? '✓ ' : ''}
           </li>
 
           <li
             className="LabbookSort__list-item"
             onClick={() => props.setSortFilter('modified_on', 'asc')}
           >
-            Modified Date (Oldest) {state.orderBy === 'modified_on' && state.sort === 'asc' ? '✓ ' : ''}
+            Modified Date (Oldest) {props.orderBy === 'modified_on' && props.sort === 'asc' ? '✓ ' : ''}
           </li>
 
           <li
             className="LabbookSort__list-item"
             onClick={() => props.setSortFilter('created_on', 'desc')}
           >
-            Creation Date (Newest) {state.orderBy === 'created_on' && state.sort !== 'asc' ? '✓ ' : ''}
+            Creation Date (Newest) {props.orderBy === 'created_on' && props.sort !== 'asc' ? '✓ ' : ''}
           </li>
 
           <li
             className="LabbookSort__list-item"
             onClick={() => props.setSortFilter('created_on', 'asc')}
           >
-            Creation Date (Oldest) {state.orderBy === 'created_on' && state.sort === 'asc' ? '✓ ' : ''}
+            Creation Date (Oldest) {props.orderBy === 'created_on' && props.sort === 'asc' ? '✓ ' : ''}
           </li>
 
           <li
             className="LabbookSort__list-item"
             onClick={() => props.setSortFilter('name', 'asc')}
           >
-            A-Z {state.orderBy === 'name' && state.sort === 'asc' ? '✓ ' : ''}
+            A-Z {props.orderBy === 'name' && props.sort === 'asc' ? '✓ ' : ''}
           </li>
 
           <li
             className="LabbookSort__list-item"
             onClick={() => props.setSortFilter('name', 'desc')}
           >
-            Z-A {this.state.orderBy === 'name' && this.state.sort !== 'asc' ? '✓ ' : ''}
+            Z-A {this.props.orderBy === 'name' && this.props.sort !== 'asc' ? '✓ ' : ''}
           </li>
 
         </ul>

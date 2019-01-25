@@ -22,7 +22,6 @@ const jobStatusQuery = graphql`
 const JobStatus = {
   getJobStatus: (jobKey) => {
     const variables = { jobKey };
-
     return new Promise((resolve, reject) => {
       const fetchData = function () {
         fetchQuery(jobStatusQuery(), variables).then((response) => {

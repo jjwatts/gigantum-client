@@ -29,7 +29,7 @@ test('Test Routes Rendering', () => {
 
 
 describe('Test Routes View Change', () => {
-    console.log('Routes');
+  
       const auth = new Auth();
       auth.isAuthenticated = function () { return true; };
       auth.login = function () { return true; };

@@ -1,0 +1,146 @@
+@import '~Styles/_imports.scss';
+
+.DatasetActionsMenu{
+    right: 20px;
+
+    padding: 2px 20px 2px 2px;
+
+    width: 180px;
+
+    @include flex(flex-end, row);
+}
+
+.DatasetActionsMenu__database-actions{
+  @include flex(flex-end, row);
+}
+
+.DatasetActionsMenu__item {
+    position: relative;
+
+    width: 20px;
+    height: 20px;
+    margin: 0 5px;
+
+    cursor: pointer;
+
+    &:hover:after {
+        position: absolute;
+        z-index: index($elements, popup);
+        top: 25px;
+        left: -30px;
+        white-space: nowrap;
+        padding: 5px;
+        border: 2px solid $jet;
+        content: attr(name);
+
+        color: $white;
+        background: $azure;
+
+        font-size: 14px;
+    }
+
+    &--unlink {
+        background: url('~Images/icons/database-remove-white.svg') no-repeat 50% 50%;
+        background-size: 20px;
+
+        position: relative;
+
+    }
+
+    &--manage {
+        background: url('~Images/icons/database-manage.svg') no-repeat 50% 50%;
+        background-size: 20px;
+
+        &:hover{
+            //change color here
+            background: url('~Images/icons/database-manage.svg') no-repeat 50% 50%;
+            background-size: 20px;
+        }
+    }
+
+    &--details {
+      width: 58px;
+      height: 20px;
+        &:hover{
+            //change color here
+            color: $turquise;
+        }
+    }
+
+    &--download {
+        background: url('~Images/icons/database-download.svg') no-repeat 50% 50%;
+        background-size: 20px;
+        margin-right: 5px;
+        align-self: right;
+
+        &:hover {
+            //change color here
+            background: url('~Images/icons/database-download.svg') no-repeat 50% 50%;
+            background-size: 20px;
+        }
+    }
+
+    &--download-grey {
+        background: url('~Images/icons/database-grey-download.svg') no-repeat 50% 50%;
+        background-size: 20px;
+        margin-right: 5px;
+        align-self: right;
+
+        &:hover {
+            //change color here
+            background: url('~Images/icons/database-grey-download.svg') no-repeat 50% 50%;
+            background-size: 20px;
+        }
+    }
+
+
+    &--downloaded {
+      background: url('~Images/icons/database-local.svg') no-repeat 50% 50%;
+      background-size: 20px;
+      margin-right: 5px;
+      align-self: right;
+      cursor: auto;
+    }
+
+    &--downloaded-grey {
+        background: url('~Images/icons/database-grey-local.svg') no-repeat 50% 50%;
+        background-size: 20px;
+        margin-right: 5px;
+        align-self: right;
+        cursor: auto;
+      }
+
+    &--loading {
+        width: 20px;
+        height: 20px;
+        border: 2px solid $grey;
+        border-top: 2px solid $azure;
+        border-radius: 50%;
+        animation: spin 2s linear infinite;
+
+        &:hover:after {
+            display: none !important;
+        }
+    }
+
+}
+
+.DatasetActionsMenu__popup-visible:hover:after{
+  display: none;
+  color: transparent;
+  background: transparent;
+}
+
+.DatasetActionsMenu__popup {
+  width: 140px;
+  position: absolute;
+  top: 34px;
+  right: -60px;
+  text-align: center;
+  z-index: index($elements, popup);
+
+  .ToolTip__pointer {
+    top: -10px;
+    right: 55px;
+  }
+}

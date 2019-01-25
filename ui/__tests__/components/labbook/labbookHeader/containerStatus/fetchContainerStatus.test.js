@@ -4,7 +4,7 @@
       import {mount} from 'enzyme'
       import fetchContainerStatus from 'Components/labbook/labbookHeader/containerStatus/fetchContainerStatus';
 
-      import relayTestingUtils from 'relay-testing-utils'
+      import relayTestingUtils from '@gigantum/relay-testing-utils'
 
       test('Test fetchContainerStatus', () => {
 

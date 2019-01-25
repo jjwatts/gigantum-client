@@ -37,7 +37,8 @@ const mutation = graphql`
 let tempID = 0;
 
 export default function CreateUserNoteMutation(
-  labbookName,
+  type,
+  name,
   title,
   body,
   owner,
@@ -48,7 +49,7 @@ export default function CreateUserNoteMutation(
 ) {
   const variables = {
     input: {
-      labbookName,
+      [`${type}Name`]: name,
       title,
       body,
       owner,

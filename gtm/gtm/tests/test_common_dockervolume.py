@@ -20,7 +20,7 @@
 import pytest
 from docker.errors import NotFound
 
-from gtm.dockerutils import DockerVolume, get_docker_client
+from gtm.utils import DockerVolume, get_docker_client
 
 
 @pytest.fixture()

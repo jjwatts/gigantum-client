@@ -69,6 +69,7 @@ export default class User extends Component {
       <div
         id="user"
         className="User"
+        key="user"
       >
         <div className="User__image" />
         <h6

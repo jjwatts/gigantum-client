@@ -8,7 +8,7 @@ import WizardModal from 'Components/wizard/WizardModal';
 import Loader from 'Components/shared/Loader';
 import LocalLabbooksContainer, { LocalLabbooks } from 'Components/dashboard/labbooks/localLabbooks/LocalLabbooks';
 import RemoteLabbooks from 'Components/dashboard/labbooks/remoteLabbooks/RemoteLabbooks';
-import LoginPrompt from 'Components/labbook/labbookHeader/branchMenu/modals/LoginPrompt';
+import LoginPrompt from 'Components/header/branchMenu/modals/LoginPrompt';
 import ToolTip from 'Components/shared/ToolTip';
 import LabbookFilterBy from './filters/LabbookFilterBy';
 import LabbookSort from './filters/LabbookSort';
@@ -62,6 +62,8 @@ class Labbooks extends Component {
     this._changeSearchParam = this._changeSearchParam.bind(this);
     this._hideSearchClear = this._hideSearchClear.bind(this);
     this._setFilterValue = this._setFilterValue.bind(this);
+    this._toggleSortMenu = this._toggleSortMenu.bind(this);
+    this._toggleFilterMenu = this._toggleFilterMenu.bind(this);
   }
 
   /**
@@ -125,7 +127,7 @@ class Labbooks extends Component {
   */
 
   _closeSortMenu(evt) {
-    const isSortMenu = evt && evt.target && evt.target.className && (evt.target.className.indexOf('Labbooks__sort') > -1);
+    const isSortMenu = evt && evt.target && evt.target.className && (evt.target.className.indexOf('LabbookSort__selector') > -1);
 
     if (!isSortMenu && this.state.sortMenuOpen) {
       this.setState({ sortMenuOpen: false });
@@ -138,7 +140,7 @@ class Labbooks extends Component {
     * hides the filter menu dropdown from the view
   */
   _closeFilterMenu(evt) {
-    const isFilterMenu = evt.target.className.indexOf('Labbooks__filter') > -1;
+    const isFilterMenu = evt.target.className.indexOf('LabbookFilterBy__selector') > -1;
 
     if (!isFilterMenu && this.state.filterMenuOpen) {
       this.setState({ filterMenuOpen: false });
@@ -212,6 +214,19 @@ class Labbooks extends Component {
   _setFilter(filter) {
     this.setState({ filterMenuOpen: false, filter });
     this._changeSearchParam({ filter });
+  }
+
+  /**
+   sets state for filter menu
+  */
+  _toggleFilterMenu() {
+    this.setState({ filterMenuOpen: !this.state.filterMenuOpen });
+  }
+  /**
+   sets state for sort menu
+  */
+  _toggleSortMenu() {
+    this.setState({ sortMenuOpen: !this.state.sortMenuOpen });
   }
   /**
    * @param {string} section
@@ -390,7 +405,7 @@ class Labbooks extends Component {
 
           <div className="Labbooks__panel-bar">
             <h6 className="Labbooks__username">{localStorage.getItem('username')}</h6>
-            <h2 className="Labbooks__title" onClick={() => this.refs.wizardModal._showModal()} >
+            <h2 className="Labbooks__title">
                 Projects
             </h2>
 
@@ -436,10 +451,12 @@ class Labbooks extends Component {
 
             <LabbookFilterBy
               {...this.state}
+              toggleFilterMenu={() => this.setState({ filterMenuOpen: !this.state.filterMenuOpen })}
               setFilter={this._setFilter}
             />
             <LabbookSort
               {...this.state}
+              toggleSortMenu={this._toggleSortMenu}
               setSortFilter={this._setSortFilter}
             />
 

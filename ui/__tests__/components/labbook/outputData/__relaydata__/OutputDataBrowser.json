@@ -1,8 +1,8 @@
 {
  "data": {
   "labbook": {
-   "id": "TGFiYm9vazpjYnV0bGVyJmRhdGEtc2hhZGVy",
-   "description": "",
+   "id": "TGFiYm9vazp1aXRlc3QmdWktdGVzdC1wcm9qZWN0",
+   "description": "This is a ui test project\n",
    "output": {
     "allFiles": {
      "edges": [],
@@ -13,7 +13,7 @@
       "endCursor": null
      }
     },
-    "id": "TGFiYm9va1NlY3Rpb246Y2J1dGxlciZkYXRhLXNoYWRlciZvdXRwdXQ="
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZvdXRwdXQ="
    }
   }
  }

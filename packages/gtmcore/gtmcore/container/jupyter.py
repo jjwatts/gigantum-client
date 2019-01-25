@@ -29,7 +29,7 @@ def start_jupyter(labbook: LabBook, username: str, tag: Optional[str] = None,
     Returns:
         Path to jupyter (e.g., "/lab?token=xyz")
     """
-    owner = InventoryManager().query_labbook_owner(labbook)
+    owner = InventoryManager().query_owner(labbook)
     lb_key = tag or infer_docker_image_name(labbook_name=labbook.name,
                                             owner=owner,
                                             username=username)
@@ -88,7 +88,7 @@ def _start_jupyter_process(labbook: LabBook, lb_container,
                            proxy_prefix: Optional[str] = None) -> None:
     use_savehook = os.path.exists('/mnt/share/jupyterhooks') \
                    and not _shim_skip_python2_savehook(labbook)
-    owner = InventoryManager().query_labbook_owner(labbook)
+    owner = InventoryManager().query_owner(labbook)
     cmd = (f"export PYTHONPATH=/mnt/share:$PYTHONPATH && "
            f'echo "{username},{owner},{labbook.name},{token}" > /home/giguser/jupyter_token && '
            f"cd /mnt/labbook && "

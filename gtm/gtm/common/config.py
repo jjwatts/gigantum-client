@@ -5,7 +5,7 @@ import sys
 
 import yaml
 
-from gtm.dockerutils import dockerize_windows_path
+from gtm.utils import dockerize_windows_path
 from gtm.common.console import ask_question
 
 CONFIG_FILE = os.path.expanduser("~/.gtm/config.yaml")

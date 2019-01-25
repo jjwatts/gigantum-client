@@ -4,7 +4,7 @@
       import {mount} from 'enzyme'
       import Collaborators from 'Components/labbook/labbookHeader/branchMenu/collaborators/Collaborators';
 
-      import relayTestingUtils from 'relay-testing-utils'
+      import relayTestingUtils from '@gigantum/relay-testing-utils'
 
       test('Test Collaborators', () => {
 

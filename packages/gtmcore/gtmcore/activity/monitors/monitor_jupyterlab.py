@@ -1,22 +1,3 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
 import queue
 import json
@@ -33,7 +14,7 @@ from gtmcore.container.utils import infer_docker_image_name
 from gtmcore.activity.monitors.devenv import DevEnvMonitor
 from gtmcore.activity.monitors.activity import ActivityMonitor
 from gtmcore.activity.processors.jupyterlab import JupyterLabCodeProcessor, JupyterLabFileChangeProcessor, \
-    JupyterLabPlaintextProcessor, JupyterLabImageExtractorProcessor
+    JupyterLabPlaintextProcessor, JupyterLabImageExtractorProcessor, JupyterLabCellVisibilityProcessor
 from gtmcore.activity.processors.core import ActivityShowBasicProcessor
 from gtmcore.activity import ActivityType
 from gtmcore.dispatcher import Dispatcher, jobs
@@ -123,9 +104,15 @@ class JupyterLabMonitor(DevEnvMonitor):
         for am in activity_monitors:
             kernel_id = redis_conn.hget(am, "kernel_id").decode()
             if kernel_id not in sessions:
-                logger.info("Detected exited JupyterLab kernel. Stopping monitoring for kernel id {}".format(kernel_id))
-                # Kernel isn't running anymore. Clean up by setting run flag to `False` so worker exits
-                redis_conn.hset(am, 'run', False)
+                if redis_conn.hget(am, 'run').decode() != 'False':
+                    logger.info("Detected exited JupyterLab kernel. Stopping monitoring for kernel id {}".format(kernel_id))
+                    # Kernel isn't running anymore. Clean up by setting run flag to `False` so worker exits
+                    redis_conn.hset(am, 'run', 'False')
+
+                    # TODO DC This runs again and again, persisting across dev API restarts
+                    # At a minimum, propose checking for 'run' before issuing a message (Trying this above, but that
+                    # logic doesn't work - still get messages).
+                    # But probably we should de-register the activity monitor?
 
         # Check for new kernels
         for s in sessions:
@@ -136,7 +123,7 @@ class JupyterLabMonitor(DevEnvMonitor):
                     logger.info("Detected new JupyterLab kernel. Starting monitoring for kernel id {}".format(sessions[s]['kernel_id']))
 
                     # Start new Activity Monitor
-                    _ , user, owner, labbook_name, dev_env_name = key.split(':')
+                    _, user, owner, labbook_name, dev_env_name = key.split(':')
 
                     args = {"module_name": "gtmcore.activity.monitors.monitor_jupyterlab",
                             "class_name": "JupyterLabNotebookMonitor",
@@ -199,6 +186,7 @@ class JupyterLabNotebookMonitor(ActivityMonitor):
         self.add_processor(JupyterLabFileChangeProcessor())
         self.add_processor(JupyterLabPlaintextProcessor())
         self.add_processor(JupyterLabImageExtractorProcessor())
+        self.add_processor(JupyterLabCellVisibilityProcessor())
         self.add_processor(ActivityShowBasicProcessor())
 
     def handle_message(self, msg: Dict[str, Dict]):

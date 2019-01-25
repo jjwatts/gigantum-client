@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>icon/database/manage-files</title>
+    <desc>Created with Sketch.</desc>
+    <g id="icon/database/manage-files" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-4" transform="translate(1.000000, 2.000000)" stroke="#4A4A4A">
+            <g id="image-video_files-copy-2" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                <path d="M8.41460421,0.185780817 L0.524435083,3.84459849 C-0.174811694,4.16885238 -0.174811694,5.09430507 0.524435083,5.41855897 L8.41460397,9.07737708 C8.94878096,9.32508483 9.57753451,9.32508483 10.1117115,9.07737708 L18.0018804,5.41855897 C18.7011276,5.09430507 18.7011276,4.16885238 18.0018804,3.84459849 L10.1117117,0.185780817 C9.57753475,-0.0619269391 8.9487812,-0.0619269391 8.41460421,0.185780817 Z" id="Shape"></path>
+                <path d="M0,8.68421053 L8.43463576,13.11051" id="Shape"></path>
+                <path d="M0,12.7368421 L8.43463576,17.1631409" id="Shape"></path>
+            </g>
+            <g id="Group-3" transform="translate(10.263158, 8.947368)">
+                <path d="M5.65789474,10.7657895 C8.39170425,10.7657895 10.6078947,8.54959899 10.6078947,5.81578947 C10.6078947,3.08197996 8.39170425,0.865789474 5.65789474,0.865789474 C2.92408523,0.865789474 0.707894737,3.08197996 0.707894737,5.81578947" id="Oval" stroke-linecap="round" transform="translate(5.657895, 5.815789) rotate(-180.000000) translate(-5.657895, -5.815789) "></path>
+                <polygon id="Shape" stroke-linejoin="round" points="6.45635986 7.02556795 3.47253081 7.81090115 4.25808564 4.82707107 6.2993584 2.78558798 8.65463613 0.430077212 9.75421761 1.52921538 10.8533537 2.62857414 8.4976223 4.98408491"></polygon>
+                <path d="M4.4536106,5.16780247 L6.14431587,6.78647159" id="Shape" stroke-linejoin="round"></path>
+            </g>
+        </g>
+    </g>
+</svg>

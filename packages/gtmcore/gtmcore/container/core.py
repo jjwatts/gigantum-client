@@ -27,9 +27,10 @@ from typing import Callable, Optional
 
 from gtmcore.configuration import get_docker_client, Configuration
 from gtmcore.logging import LMLogger
-from gtmcore.inventory.inventory  import InventoryManager
+from gtmcore.inventory.inventory  import InventoryManager, InventoryException
 from gtmcore.container.utils import infer_docker_image_name
 from gtmcore.container.exceptions import ContainerBuildException
+from gtmcore.dataset.cache import get_cache_manager_class
 
 logger = LMLogger.get_logger()
 
@@ -150,7 +151,7 @@ def build_docker_image(root_dir: str, override_image_tag: Optional[str],
     lb = InventoryManager().load_labbook_from_directory(root_dir)
 
     # Build image
-    owner = InventoryManager().query_labbook_owner(lb)
+    owner = InventoryManager().query_owner(lb)
     image_name = override_image_tag or infer_docker_image_name(labbook_name=lb.name,
                                                                owner=owner,
                                                                username=username)
@@ -215,7 +216,7 @@ def start_labbook_container(labbook_root: str, config_path: str,
 
     lb = InventoryManager(config_file=config_path).load_labbook_from_directory(labbook_root)
     if not override_image_id:
-        owner = InventoryManager().query_labbook_owner(lb)
+        owner = InventoryManager().query_owner(lb)
         tag = infer_docker_image_name(lb.name, owner, username)
     else:
         tag = override_image_id
@@ -225,6 +226,22 @@ def start_labbook_container(labbook_root: str, config_path: str,
         mnt_point: {'bind': '/mnt/labbook', 'mode': 'cached'},
         'labmanager_share_vol': {'bind': '/mnt/share', 'mode': 'rw'}
     }
+
+    # Set up additional bind mounts for datasets if needed.
+    submodules = lb.git.list_submodules()
+    for submodule in submodules:
+        try:
+            namespace, dataset_name = submodule['name'].split("&")
+            submodule_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', namespace, dataset_name)
+            ds = InventoryManager().load_dataset_from_directory(submodule_dir)
+            ds.namespace = namespace
+
+            cm_class = get_cache_manager_class(ds.client_config)
+            cm = cm_class(ds, username)
+            ds_cache_dir = cm.current_revision_dir.replace('/mnt/gigantum', os.environ['HOST_WORK_DIR'])
+            volumes_dict[ds_cache_dir] = {'bind': f'/mnt/labbook/input/{ds.name}', 'mode': 'ro'}
+        except InventoryException:
+            continue
 
     # If re-mapping permissions, be sure to configure the container
     if 'LOCAL_USER_ID' in os.environ:

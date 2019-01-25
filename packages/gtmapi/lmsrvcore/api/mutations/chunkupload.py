@@ -138,15 +138,18 @@ class ChunkUploadMutation(object):
             logger.debug(f"Write for chunk {chunk_params['chunk_index']} complete")
             if chunk_params['chunk_index'] == chunk_params['total_chunks'] - 1:
                 # Assume last chunk. Let mutation process
-                cls.upload_file_path = cls.get_temp_filename(chunk_params['upload_id'], chunk_params['filename'])
-                cls.filename = cls.get_filename(chunk_params['filename'])
-                return cls.mutate_and_process_upload(info, **kwargs)
+                upload_file_path = cls.get_temp_filename(chunk_params['upload_id'], chunk_params['filename'])
+                filename = cls.get_filename(chunk_params['filename'])
+                return cls.mutate_and_process_upload(info,
+                                                     upload_file_path=upload_file_path,
+                                                     upload_filename=filename,
+                                                     **kwargs)
             else:
                 # Assume more chunks to go. Short circuit request
                 return cls.mutate_and_wait_for_chunks(info, **kwargs)
 
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
             # Something bad happened, so make best effort to dump all the files in the body on the floor.
             # This is important because you must read all bytes out of a POST body when deployed with uwsgi/nginx
             if info.context.files:
@@ -160,12 +163,12 @@ class ChunkUploadMutation(object):
                             pass
             raise
 
-    @abc.abstractclassmethod
-    def mutate_and_process_upload(cls, info, **kwargs):
+    @classmethod
+    def mutate_and_process_upload(cls, info, upload_file_path, upload_filename, **kwargs):
         """Method to implement to process the upload. Must return a Mutation type"""
         raise NotImplemented
 
-    @abc.abstractclassmethod
+    @classmethod
     def mutate_and_wait_for_chunks(cls, info, **kwargs):
         """Method to implement to process set any non-null fields, but essentially just return.
          Must return a Mutation type"""

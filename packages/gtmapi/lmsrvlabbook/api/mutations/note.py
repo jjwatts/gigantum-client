@@ -40,7 +40,8 @@ class CreateUserNote(graphene.relay.ClientIDMutation):
 
     class Input:
         owner = graphene.String(required=True)
-        labbook_name = graphene.String(required=True)
+        labbook_name = graphene.String()
+        dataset_name = graphene.String()
         title = graphene.String(required=True)
         body = graphene.String(required=False)
         tags = graphene.List(graphene.String, required=False)
@@ -67,17 +68,32 @@ class CreateUserNote(graphene.relay.ClientIDMutation):
         return ar
 
     @classmethod
-    def mutate_and_get_payload(cls, root, info, owner, labbook_name, title, body=None, tags=None,
-                               client_mutation_id=None):
-        username = get_logged_in_username()
-        lb = InventoryManager().load_labbook(username, owner, labbook_name,
-                                             author=get_logged_in_author())
+    def mutate_and_get_payload(cls, root, info, owner, title, labbook_name=None, dataset_name=None,
+                               body=None, tags=None, client_mutation_id=None):
 
-        with lb.lock():
-            ar = cls._create_user_note(lb, title, body, tags)
+        if labbook_name is not None and dataset_name is not None:
+            raise ValueError("A note can be created in only 1 repository at a time.")
+        
+        username = get_logged_in_username()
+        if labbook_name:
+            name = labbook_name
+            repository_type = 'labbook'
+            r = InventoryManager().load_labbook(username, owner, labbook_name,
+                                                author=get_logged_in_author())
+        elif dataset_name:
+            name = dataset_name
+            repository_type = 'dataset'
+            r = InventoryManager().load_dataset(username, owner, dataset_name,
+                                                author=get_logged_in_author())
+        else:
+            raise ValueError("You must either set `labbookName` or `datasetName` to create a note.")
+
+        with r.lock():
+            ar = cls._create_user_note(r, title, body, tags)
 
         return CreateUserNote(new_activity_record_edge=ActivityConnection.Edge(
             node=ActivityRecordObject(owner=owner,
-                                      name=labbook_name,
+                                      name=name,
+                                      _repository_type=repository_type,
                                       commit=ar.commit),
             cursor=ar.commit))

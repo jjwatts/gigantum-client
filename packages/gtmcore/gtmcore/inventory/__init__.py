@@ -1,0 +1,1 @@
+from gtmcore.inventory.repository import Repository

@@ -107,8 +107,8 @@ class IdentityManager(metaclass=abc.ABCMeta):
 
                 # Import demo labbook
                 logger.info(f"Importing Demo LabBook for first-time user: {username}")
-                demo_lb = ZipExporter.import_zip(archive_path=os.path.join('/opt', demo_labbook_name),
-                                                 username=username, owner=username)
+                demo_lb = ZipExporter.import_labbook(archive_path=os.path.join('/opt', demo_labbook_name),
+                                                     username=username, owner=username)
 
                 build_img_kwargs = {
                     'path': demo_lb.root_dir,

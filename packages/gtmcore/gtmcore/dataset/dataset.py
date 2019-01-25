@@ -27,7 +27,9 @@ from typing import (Dict, Optional)
 
 from gtmcore.gitlib import GitAuthor
 from gtmcore.dataset.schemas import validate_dataset_schema
-from gtmcore.activity import ActivityType, ActivityDetailType
+from gtmcore.activity import ActivityStore, ActivityRecord, ActivityDetailType, ActivityType,\
+    ActivityAction, ActivityDetailRecord
+from gtmcore.dataset.storage import get_storage_backend, StorageBackend
 
 from gtmcore.inventory.repository import Repository
 
@@ -38,8 +40,13 @@ class Dataset(Repository):
     _default_activity_detail_type = ActivityDetailType.DATASET
     _default_activity_section = "Dataset Root"
 
-    def __init__(self, config_file: Optional[str] = None, author: Optional[GitAuthor] = None) -> None:
+    def __init__(self, config_file: Optional[str] = None, namespace: Optional[str] = None,
+                 author: Optional[GitAuthor] = None) -> None:
         super().__init__(config_file, author)
+        # TODO - Need a more formalizes solution for differentiating Datasets from other repo types
+        self.client_config.config['git']['lfs_enabled'] = False
+        self.namespace = namespace
+        self._backend: Optional[StorageBackend] = None
 
     def __str__(self):
         if self._root_dir:
@@ -138,18 +145,60 @@ class Dataset(Repository):
         self._save_gigantum_data()
 
     @property
-    def storage_config(self) -> dict:
+    def backend(self) -> StorageBackend:
+        """Property to access the storage backend for this dataset"""
+        if not self._backend:
+            self._backend = get_storage_backend(self.storage_type)
+            self._backend.configuration = self.backend_config
+
+        return self._backend
+
+    @property
+    def backend_config(self) -> dict:
         """Property to load the storage.json file"""
-        with open(os.path.join(self.root_dir, ".gigantum", "storage.json"), 'rt') as sf:
-            data = json.load(sf)
+        config_file = os.path.join(self.root_dir, ".gigantum", "backend.json")
+        if os.path.exists(config_file):
+            with open(os.path.join(self.root_dir, ".gigantum", "backend.json"), 'rt') as sf:
+                data = json.load(sf)
+        else:
+            data = dict()
 
         return data
 
-    @storage_config.setter
-    def storage_config(self, data: dict) -> None:
+    @backend_config.setter
+    def backend_config(self, data: dict) -> None:
         """Save storage config data"""
-        with open(os.path.join(self.root_dir, ".gigantum", "storage.json"), 'wt') as sf:
+        if self._backend:
+            self._backend.configuration = data
+
+        # Remove defaults set at runtime that shouldn't be persisted
+        if "username" in data:
+            del data["username"]
+        if "gigantum_bearer_token" in data:
+            del data["gigantum_bearer_token"]
+        if "gigantum_id_token" in data:
+            del data["gigantum_id_token"]
+
+        config_file = os.path.join(self.root_dir, ".gigantum", "backend.json")
+        with open(config_file, 'wt') as sf:
             json.dump(data, sf, indent=2)
+
+        self.git.add(config_file)
+        cm = self.git.commit("Updating backend config")
+
+        ar = ActivityRecord(ActivityType.DATASET,
+                            message="Updated Dataset storage backend configuration",
+                            show=True,
+                            importance=255,
+                            linked_commit=cm.hexsha,
+                            tags=['config'])
+        adr = ActivityDetailRecord(ActivityDetailType.DATASET, show=False, importance=255,
+                                   action=ActivityAction.EDIT)
+        d = json.dumps(data, indent=2)
+        adr.add_value('text/markdown', f"Updated dataset storage backend configuration:\n\n ```{d}```")
+        ar.add_detail_object(adr)
+        ars = ActivityStore(self)
+        ars.create_activity_record(ar)
 
     def _save_gigantum_data(self) -> None:
         """Method to save changes to the LabBook
@@ -165,7 +214,7 @@ class Dataset(Repository):
             df.flush()
 
     def _load_gigantum_data(self) -> None:
-        """Method to load the labbook YAML file to a dictionary
+        """Method to load the dataset YAML file to a dictionary
 
         Returns:
             None
@@ -177,7 +226,7 @@ class Dataset(Repository):
             self._data = yaml.safe_load(df)
 
     def _validate_gigantum_data(self) -> None:
-        """Method to validate the LabBook data file contents
+        """Method to validate the Dataset data file contents
 
         Returns:
             None
@@ -190,5 +239,6 @@ class Dataset(Repository):
 
         # Validate schema is supported by running version of the software and valid
         if not validate_dataset_schema(self.schema, self.data):
+            import json
             errmsg = f"Schema in Dataset {str(self)} does not match indicated version {self.schema}"
             raise ValueError(errmsg)

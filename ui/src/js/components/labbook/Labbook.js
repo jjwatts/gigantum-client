@@ -17,7 +17,7 @@ import { setMergeMode, setBuildingState, setStickyDate } from 'JS/redux/reducers
 import { setCallbackRoute } from 'JS/redux/reducers/routes';
 import { setLatestPackages } from 'JS/redux/reducers/labbook/environment/packageDependencies';
 // components
-import LabbookHeader from './labbookHeader/LabbookHeader';
+import LabbookHeader from '../header/Header';
 import Login from 'Components/login/Login';
 import Loader from 'Components/shared/Loader';
 import ErrorBoundary from 'Components/shared/ErrorBoundary';
@@ -40,19 +40,19 @@ const Overview = Loadable({
   loading: Loading,
 });
 const Activity = Loadable({
-  loader: () => import('./activity/Activity'),
+  loader: () => import('../activity/labbookContainers/LabbookActivityContainer'),
   loading: Loading,
 });
 const Code = Loadable({
-  loader: () => import('./filesShared/sectionWrapper/sectionWrapperFragments/Code'),
+  loader: () => import('../filesShared/sectionWrapper/sectionWrapperFragments/Code'),
   loading: Loading,
 });
 const InputData = Loadable({
-  loader: () => import('./filesShared/sectionWrapper/sectionWrapperFragments/Input'),
+  loader: () => import('../filesShared/sectionWrapper/sectionWrapperFragments/Input'),
   loading: Loading,
 });
 const OutputData = Loadable({
-  loader: () => import('./filesShared/sectionWrapper/sectionWrapperFragments/Output'),
+  loader: () => import('../filesShared/sectionWrapper/sectionWrapperFragments/Output'),
   loading: Loading,
 });
 const Environment = Loadable({
@@ -217,6 +217,7 @@ class Labbook extends Component {
               setBuildingState={this._setBuildingState}
               toggleBranchesView={this._toggleBranchesView}
               branchName={branchName}
+              sectionType={'labbook'}
               {...this.props}
             />
 
@@ -289,6 +290,7 @@ class Labbook extends Component {
                                activeBranch={labbook.activeBranch}
                                isMainWorkspace={branchName === 'workspace'}
                                setBuildingState={this._setBuildingState}
+                               sectionType={'labbook'}
                                {...this.props}
                              />
 
@@ -441,7 +443,7 @@ const LabbookFragmentContainer = createFragmentContainer(
 
           ...Environment_labbook
           ...Overview_labbook
-          ...Activity_labbook
+          ...LabbookActivityContainer_labbook
           ...Code_labbook
           ...Input_labbook
           ...Output_labbook

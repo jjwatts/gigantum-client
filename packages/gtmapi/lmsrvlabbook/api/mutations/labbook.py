@@ -267,15 +267,15 @@ class ImportLabbook(graphene.relay.ClientIDMutation, ChunkUploadMutation):
         return ImportLabbook()
 
     @classmethod
-    def mutate_and_process_upload(cls, info, **kwargs):
-        if not cls.upload_file_path:
+    def mutate_and_process_upload(cls, info, upload_file_path, upload_filename, **kwargs):
+        if not upload_file_path:
             logger.error('No file uploaded')
             raise ValueError('No file uploaded')
 
         username = get_logged_in_username()
         job_metadata = {'method': 'import_labbook_from_zip'}
         job_kwargs = {
-            'archive_path': cls.upload_file_path,
+            'archive_path': upload_file_path,
             'username': username,
             'owner': username
         }
@@ -327,9 +327,9 @@ class ImportRemoteLabbook(graphene.relay.ClientIDMutation):
         #       and do whatever with it.
         make_owner = not is_collab
         logger.info(f"Getting from remote, make_owner = {make_owner}")
-        lb = loaders.from_remote(remote_url, username, owner, labbook_name, labbook=lb,
-                                 make_owner=make_owner)
-        import_owner = InventoryManager().query_labbook_owner(lb)
+        lb = loaders.labbook_from_remote(remote_url, username, owner, labbook=lb,
+                                         make_owner=make_owner)
+        import_owner = InventoryManager().query_owner(lb)
         # TODO: Fix cursor implementation, this currently doesn't make sense
         cursor = base64.b64encode(f"{0}".encode('utf-8'))
         lbedge = LabbookConnection.Edge(node=Labbook(owner=import_owner, name=labbook_name),
@@ -430,32 +430,35 @@ class AddLabbookFile(graphene.relay.ClientIDMutation, ChunkUploadMutation):
 
     @classmethod
     def mutate_and_wait_for_chunks(cls, info, **kwargs):
-        return AddLabbookFile(new_labbook_file_edge=
-            LabbookFileConnection.Edge(node=None, cursor="null"))
+        return AddLabbookFile(new_labbook_file_edge=LabbookFileConnection.Edge(node=None, cursor="null"))
 
     @classmethod
-    def mutate_and_process_upload(cls, info, owner, labbook_name, section,
-                                  file_path, chunk_upload_params,
-                                  transaction_id, client_mutation_id=None):
-        if not cls.upload_file_path:
+    def mutate_and_process_upload(cls, info, upload_file_path, upload_filename, **kwargs):
+        if not upload_file_path:
             logger.error('No file uploaded')
             raise ValueError('No file uploaded')
+
+        owner = kwargs.get('owner')
+        labbook_name = kwargs.get('labbook_name')
+        section = kwargs.get('section')
+        transaction_id = kwargs.get('transaction_id')
+        file_path = kwargs.get('file_path')
 
         try:
             username = get_logged_in_username()
             lb = InventoryManager().load_labbook(username, owner, labbook_name,
                                                  author=get_logged_in_author())
-            dstpath = os.path.join(os.path.dirname(file_path), cls.filename)
+            dst_path = os.path.join(os.path.dirname(file_path), upload_filename)
             with lb.lock():
                 fops = FileOperations.put_file(labbook=lb,
                                                section=section,
-                                               src_file=cls.upload_file_path,
-                                               dst_path=dstpath,
+                                               src_file=upload_file_path,
+                                               dst_path=dst_path,
                                                txid=transaction_id)
         finally:
             try:
-                logger.debug(f"Removing temp file {cls.upload_file_path}")
-                os.remove(cls.upload_file_path)
+                logger.debug(f"Removing temp file {upload_file_path}")
+                os.remove(upload_file_path)
             except FileNotFoundError:
                 pass
 
@@ -466,12 +469,10 @@ class AddLabbookFile(graphene.relay.ClientIDMutation, ChunkUploadMutation):
                        'key': fops['key'],
                        '_file_info': fops}
 
-        # TODO: Fix cursor implementation..
-        # this currently doesn't make sense when adding edges
+        # TODO: Fix cursor implementation..this currently doesn't make sense when adding edges without a refresh
         cursor = base64.b64encode(f"{0}".encode('utf-8'))
-        return AddLabbookFile(new_labbook_file_edge=
-            LabbookFileConnection.Edge(node=LabbookFile(**create_data),
-                                       cursor=cursor))
+        return AddLabbookFile(new_labbook_file_edge=LabbookFileConnection.Edge(node=LabbookFile(**create_data),
+                                                                               cursor=cursor))
 
 
 class DeleteLabbookFiles(graphene.ClientIDMutation):
@@ -505,7 +506,7 @@ class MoveLabbookFile(graphene.ClientIDMutation):
         src_path = graphene.String(required=True)
         dst_path = graphene.String(required=True)
 
-    updated_edges = graphene.relay.ConnectionField(LabbookFileConnection)
+    updated_edges = graphene.List(LabbookFileConnection.Edge)
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, owner, labbook_name, section, src_path, dst_path,
@@ -531,13 +532,9 @@ class MoveLabbookFile(graphene.ClientIDMutation):
         cursors = [base64.b64encode("{}".format(cnt).encode("UTF-8")).decode("UTF-8")
                    for cnt, x in enumerate(file_edges)]
 
-        lbc = ListBasedConnection(file_edges, cursors, kwargs)
-        lbc.apply()
+        edge_objs = [LabbookFileConnection.Edge(node=e, cursor=c) for e, c in zip(file_edges, cursors)]
 
-        edge_objs = []
-        for edge, cursor in zip(lbc.edges, lbc.cursors):
-            edge_objs.append(LabbookFileConnection.Edge(node=edge, cursor=cursor))
-        return MoveLabbookFile(updated_edges=LabbookFileConnection(edges=edge_objs, page_info=lbc.page_info))
+        return MoveLabbookFile(updated_edges=edge_objs)
 
 
 class MakeLabbookDirectory(graphene.ClientIDMutation):

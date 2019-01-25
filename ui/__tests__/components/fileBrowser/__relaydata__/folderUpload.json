@@ -1,0 +1,41 @@
+{
+ "data": {
+  "labbook": {
+   "id": "TGFiYm9vazp1aXRlc3QmdWktdGVzdC1wcm9qZWN0",
+   "code": {
+    "files": {
+     "edges": [
+      {
+       "node": {
+        "isDir": true,
+        "key": "helper/",
+        "id": "TGFiYm9va0ZpbGU6dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZjb2RlJmhlbHBlci8="
+       }
+      }
+     ]
+    },
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZjb2Rl"
+   },
+   "input": {
+    "files": {
+     "edges": [
+      {
+       "node": {
+        "isDir": false,
+        "key": "Gigantum__3_.dmg",
+        "id": "TGFiYm9va0ZpbGU6dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZpbnB1dCZHaWdhbnR1bV9fM18uZG1n"
+       }
+      }
+     ]
+    },
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZpbnB1dA=="
+   },
+   "output": {
+    "files": {
+     "edges": []
+    },
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZvdXRwdXQ="
+   }
+  }
+ }
+}

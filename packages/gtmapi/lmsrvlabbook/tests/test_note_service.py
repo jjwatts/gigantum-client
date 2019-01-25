@@ -167,6 +167,64 @@ class TestNoteService(object):
         assert type(result['data']['createUserNote']['newActivityRecordEdge']['node']['detailObjects'][0]['key']) == str
         assert "AND THIS IS A BODY" in result['data']['createUserNote']['newActivityRecordEdge']['node']['detailObjects'][0]['data'][0][1]
 
+    def test_create_user_note_check_vals_dataset(self, fixture_working_dir, snapshot):
+        """Test to make sure keys and IDs are getting set OK"""
+        # Create labbook
+        im = InventoryManager(fixture_working_dir[0])
+        ds = im.create_dataset("default", "default", "user-note-test", storage_type='gigantum_object_v1',
+                               description="testing user notes")
+
+        # Create a user note
+        query = """
+        mutation makeUserNote {
+          createUserNote(input: {
+            owner: "default",
+            datasetName: "user-note-test",
+            title: "I think this is a thing",
+            body: "##AND THIS IS A BODY\\n- asdggf\\n-asdf",
+            tags: ["this", "and", "that"]
+          })
+          {
+            newActivityRecordEdge {
+                node{
+                  message
+                  detailObjects{    
+                    id
+                    key            
+                    data
+                    type
+                    show
+                    importance
+                    tags
+                  }
+                  id
+                  commit
+                  linkedCommit
+                  type
+                  show
+                  importance
+                  tags
+              }
+              cursor
+            }
+          }
+        }
+        """
+        result = fixture_working_dir[2].execute(query)
+
+        assert len(result['data']['createUserNote']['newActivityRecordEdge']['node']['id']) > 10
+        assert type(result['data']['createUserNote']['newActivityRecordEdge']['node']['id']) == str
+        assert len(result['data']['createUserNote']['newActivityRecordEdge']['node']['commit']) == 40
+        assert type(result['data']['createUserNote']['newActivityRecordEdge']['node']['commit']) == str
+        assert result['data']['createUserNote']['newActivityRecordEdge']['node']['linkedCommit'] == "no-linked-commit"
+        assert result['data']['createUserNote']['newActivityRecordEdge']['node']['message'] == "I think this is a thing"
+
+        assert len(result['data']['createUserNote']['newActivityRecordEdge']['node']['detailObjects'][0]['id']) > 10
+        assert type(result['data']['createUserNote']['newActivityRecordEdge']['node']['detailObjects'][0]['id']) == str
+        assert len(result['data']['createUserNote']['newActivityRecordEdge']['node']['detailObjects'][0]['key']) > 10
+        assert type(result['data']['createUserNote']['newActivityRecordEdge']['node']['detailObjects'][0]['key']) == str
+        assert "AND THIS IS A BODY" in result['data']['createUserNote']['newActivityRecordEdge']['node']['detailObjects'][0]['data'][0][1]
+
 
 
 

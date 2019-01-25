@@ -14,52 +14,6 @@ const mutation = graphql`
   }
 `;
 
-// commented until fully implimented
-// function sharedUpdater(store, labbookId, connectionKey, node) {
-
-//   const labbookProxy = store.get(labbookId);
-//   if(labbookProxy){
-//     const conn = RelayRuntime.ConnectionHandler.getConnection(
-//       labbookProxy,
-//       connectionKey
-//     );
-
-//     if(conn){
-//       const newEdge = RelayRuntime.ConnectionHandler.createEdge(
-//         store,
-//         conn,
-//         node,
-//         "newLabbookFileEdge"
-//       )
-
-//       RelayRuntime.ConnectionHandler.insertEdgeAfter(
-//         conn,
-//         newEdge
-//       );
-//     }
-//   }
-// }
-
-
-//   function deleteEdge(store, labbookID, deletedID, connectionKey) {
-
-//     const labbookProxy = store.get(labbookID);
-//     if(labbookProxy){
-
-//       const conn = RelayRuntime.ConnectionHandler.getConnection(
-//         labbookProxy,
-//         connectionKey,
-//       );
-
-//       if(conn){
-//         RelayRuntime.ConnectionHandler.deleteNode(
-//           conn,
-//           deletedID,
-//         );
-//       }
-//     }
-//   }
-
 export default function AddLabbookFileMutation(
   connectionKey,
   owner,

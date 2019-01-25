@@ -1,0 +1,244 @@
+@import '~Styles/_imports.scss';
+
+.Datasets {
+  width: auto;
+  min-width: 760px;
+  max-width: 1285px;
+  height: 100%;
+  margin: auto;
+  padding: 0 25px;
+}
+
+.Datasets--demo{
+  margin-top: 100px;
+}
+
+/*******************
+Dataset__nav start
+********************/
+.Datasets__nav {
+  position: relative;
+
+  white-space: nowrap;
+
+  border-bottom: 1px solid $grey;
+}
+
+.Datasets__nav-item {
+  padding: 0 30px;
+
+  text-align: center;
+
+  a {
+    display: inline-block;
+
+    margin: 0;
+    padding: .75rem 0;
+
+    cursor: pointer;
+    text-decoration: none;
+
+    color: $jet;
+  }
+
+  a:hover {
+    color: $selected-blue;
+
+    text-decoration: none
+  }
+
+  &--selected a {
+    position: relative;
+    bottom: -4px;
+
+    color: $selected-blue;
+
+    line-height: 15px;
+  }
+
+  &--local:hover ~ hr{
+    width: 50px;
+    margin-left: 25px;
+  }
+
+  &--cloud:hover ~ hr{
+    width: 90px;
+    margin-left: 105px;
+  }
+}
+
+.Datasets__navigation-slider{
+  position: absolute;
+  bottom: 0;
+
+  height: 3px;
+  margin: 0;
+
+  transition: .1s ease-in-out;
+  pointer-events: none;
+
+  border: none;
+  background: $turquise;
+
+  &--local{
+    width: 50px;
+    margin-left: 25px;
+  }
+
+  &--cloud{
+    width: 90px;
+    margin-left: 105px;
+  }
+}
+
+
+/*******************
+Dataset__nav end
+********************/
+.Datasets__title {
+  position: relative;
+
+  width: 280px;
+  margin: 20px 0px;
+  padding: 0;
+
+  color: $jet;
+}
+
+.Datasets__username {
+  margin: 20px 0 10px 0;
+  padding: 0;
+
+}
+
+.Datasets__title-add {
+  position: absolute;
+
+  width: 20px;
+  height: 20px;
+
+  transition: all 0.3s;
+
+  border-width: 0px;
+  border-radius: 12px;
+  background: $azure url('~Images/icons/add.svg') no-repeat center center;
+  background-size: 12px;
+
+}
+
+
+.Datasets__title:hover {
+  .Datasets__title-add {
+    opacity: 1;
+  }
+}
+
+.Datasets__subheader {
+  position: relative;
+
+  display: flex;
+  justify-content: flex-start;
+  height: 28px;
+  margin: 10px;
+  margin: 60px 0 10px 0;
+}
+
+.Datasets__search-container{
+  flex-grow: 1;
+  margin-right: 20px;
+  align-self: flex-end;
+  position: relative;
+}
+
+.Datasets__search {
+  height: 28px !important;
+  margin: 0px !important;
+  color: $azure !important;
+}
+
+.Datasets__search[type="text"]:focus {
+  background: white;
+  border: none !important;
+  box-shadow: 0 4px 30px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+.Datasets__search-cancel{
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  top: 2px;
+  right: 6px;
+  background: url('~Images/icons/close.svg') no-repeat center center;
+  background-size: 24px;
+  cursor: pointer;
+}
+
+.Datasets__search-cancel--text{
+  color: $romanSilver;
+  position: absolute;
+  right: 35px;
+  top: 4px;
+  text-align: right;
+}
+
+.Datasets__dataset-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 125px;
+  padding-top: 20px;
+}
+
+.Datasets__dataset-header {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  @include flex(center, column)
+}
+
+
+.Datasets__fetch-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+  text-align: center;
+  white-space: nowrap;
+
+  font-size: 24px;
+}
+
+.Datasets__no-results{
+  color: $romanSilver;
+  width: 100%;
+  text-align: center;
+  margin-top: 150px;
+}
+
+.Datasets__h3{
+  font-weight: 100;
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.Datasets__paragraph--margin{
+  margin-top: 10px;
+}
+
+.Datasets__span{
+  font-weight: 100;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.Datasets__listing {
+  overflow: visible;
+
+  height: calc(100% - 90px);
+  @include flex(flex-start, row);
+}

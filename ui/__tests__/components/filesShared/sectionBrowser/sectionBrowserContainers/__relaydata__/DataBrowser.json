@@ -1,0 +1,37 @@
+{
+ "errors": [
+  {
+   "message": "Cannot retrieve (uitest, uitest, ui-test-project): /mnt/gigantum/uitest/uitest/datasets/ui-test-project",
+   "locations": [
+    {
+     "line": 9,
+     "column": 5
+    }
+   ],
+   "path": [
+    "dataset",
+    "description"
+   ]
+  },
+  {
+   "message": "Cannot retrieve (uitest, uitest, ui-test-project): /mnt/gigantum/uitest/uitest/datasets/ui-test-project",
+   "locations": [
+    {
+     "line": 15,
+     "column": 3
+    }
+   ],
+   "path": [
+    "dataset",
+    "allFiles"
+   ]
+  }
+ ],
+ "data": {
+  "dataset": {
+   "id": "RGF0YXNldDp1aXRlc3QmdWktdGVzdC1wcm9qZWN0",
+   "description": null,
+   "allFiles": null
+  }
+ }
+}

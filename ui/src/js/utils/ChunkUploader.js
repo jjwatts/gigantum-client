@@ -2,24 +2,37 @@
 import uuidv4 from 'uuid/v4';
 // mutations
 import ImportLabbookMutation from 'Mutations/ImportLabbookMutation';
+import ImportDatasetMutation from 'Mutations/ImportDatasetMutation';
 import AddLabbookFileMutation from 'Mutations/fileBrowser/AddLabbookFileMutation';
+import AddDatasetFileMutation from 'Mutations/fileBrowser/AddDatasetFileMutation';
 import CompleteBatchUploadTransactionMutation from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
+import CompleteDatasetUploadTransactionMutation from 'Mutations/fileBrowser/CompleteDatasetUploadTransactionMutation';
 import store from 'JS/redux/store';
 import { setUploadMessageUpdate, setUploadMessageRemove, setWarningMessage } from 'JS/redux/reducers/footer';
 import { setFinishedUploading, setPauseChunkUpload } from 'JS/redux/reducers/labbook/fileBrowser/fileBrowserWrapper';
 import config from 'JS/config';
 
-const uploadLabbookChunk = (file, chunk, accessToken, getChunkCallback) => {
-  ImportLabbookMutation(chunk.blob, chunk, accessToken, (result, error) => {
-    if (result && (error === undefined)) {
-      getChunkCallback(file, result);
-    } else {
-      getChunkCallback(error);
-    }
-  });
+const uploadLabbookChunk = (file, chunk, accessToken, getChunkCallback, type) => {
+  if (type === 'dataset') {
+    ImportDatasetMutation(chunk.blob, chunk, accessToken, (result, error) => {
+      if (result && (error === undefined)) {
+        getChunkCallback(file, result);
+      } else {
+        getChunkCallback(error);
+      }
+    });
+  } else {
+    ImportLabbookMutation(chunk.blob, chunk, accessToken, (result, error) => {
+      if (result && (error === undefined)) {
+        getChunkCallback(file, result);
+      } else {
+        getChunkCallback(error);
+      }
+    });
+  }
 };
 
-const updateTotalStatus = (file, labbookName, owner, transactionId) => {
+const updateTotalStatus = (file, labbookName, owner, transactionId, section) => {
   const fileCount = store.getState().footer.fileCount + 1;
   const totalFiles = store.getState().footer.totalFiles;
   const progressBarPercentage = ((fileCount / totalFiles) * 100);
@@ -28,22 +41,35 @@ const updateTotalStatus = (file, labbookName, owner, transactionId) => {
   if (fileCount === totalFiles) {
     setFinishedUploading();
     setUploadMessageUpdate(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, progressBarPercentage);
-
-    CompleteBatchUploadTransactionMutation(
-      'connectionKey',
-      owner,
-      labbookName,
-      false,
-      false,
-      transactionId,
-      (response, error) => {
-        setUploadMessageRemove(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, progressBarPercentage);
-      },
-    );
+    if (section === 'data') {
+      CompleteDatasetUploadTransactionMutation(
+        'connectionKey',
+        owner,
+        labbookName,
+        false,
+        false,
+        transactionId,
+        (response, error) => {
+          setUploadMessageRemove(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, progressBarPercentage);
+        },
+      );
+      } else {
+      CompleteBatchUploadTransactionMutation(
+        'connectionKey',
+        owner,
+        labbookName,
+        false,
+        false,
+        transactionId,
+        (response, error) => {
+          setUploadMessageRemove(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, progressBarPercentage);
+        },
+      );
+    }
   }
 };
 
-const updateChunkStatus = (file, chunkData, labbookName, owner, transactionId) => {
+const updateChunkStatus = (file, chunkData, labbookName, owner, transactionId, section) => {
   const {
     fileSizeKb,
     chunkSize,
@@ -56,56 +82,83 @@ const updateChunkStatus = (file, chunkData, labbookName, owner, transactionId) =
   if ((chunkSize * chunkIndex) >= (fileSizeKb * 1000)) {
     setFinishedUploading();
     setUploadMessageUpdate('Please wait while upload is finalizing.', null, (((chunkSize * chunkIndex) / (fileSizeKb * 1000)) * 100));
-
-    CompleteBatchUploadTransactionMutation(
-      'connectionKey',
-      owner,
-      labbookName,
-      false,
-      false,
-      transactionId,
-      (response, error) => {
-        setUploadMessageRemove('Please wait while upload is finalizing.', null, (((chunkSize * chunkIndex) / (fileSizeKb * 1000)) * 100));
-      },
-    );
+    if (section === 'data') {
+      CompleteDatasetUploadTransactionMutation(
+        'connectionKey',
+        owner,
+        labbookName,
+        false,
+        false,
+        transactionId,
+        (response, error) => {
+          setUploadMessageRemove('Please wait while upload is finalizing.', null, (((chunkSize * chunkIndex) / (fileSizeKb * 1000)) * 100));
+        },
+      );
+    } else {
+      CompleteBatchUploadTransactionMutation(
+        'connectionKey',
+        owner,
+        labbookName,
+        false,
+        false,
+        transactionId,
+        (response, error) => {
+          setUploadMessageRemove('Please wait while upload is finalizing.', null, (((chunkSize * chunkIndex) / (fileSizeKb * 1000)) * 100));
+        },
+      );
+    }
   }
 };
 
-
-const uploadFileBrowserChunk = (data, chunkData, file, chunk, accessToken, username, filepath, section, getChunkCallback, componentCallback) => {
+const uploadFileBrowserChunk = (data, chunkData, file, chunk, accessToken, username, filepath, section, getChunkCallback, componentCallback, type) => {
   let { footer, fileBrowser } = store.getState();
   if (fileBrowser.pause || (footer.totalFiles > 0)) {
-    AddLabbookFileMutation(
-      data.connectionKey,
-      username,
-      data.labbookName,
-      data.parentId,
-      filepath,
-      chunk,
-      accessToken,
-      section,
-      data.transactionId,
-      data.deleteId,
-      (result, error) => {
+    const cbFunction = (result, error) => {
 
-        if (result && (error === undefined)) {
-          getChunkCallback(file, result);
+      if (result && (error === undefined)) {
+        getChunkCallback(file, result);
+        if (store.getState().footer.totalFiles > 1) {
+          const lastChunk = (chunkData.totalChunks - 1) === chunkData.chunkIndex;
 
-          if (store.getState().footer.totalFiles > 1) {
-            const lastChunk = (chunkData.totalChunks - 1) === chunkData.chunkIndex;
-
-            if (lastChunk) {
-              updateTotalStatus(file, data.labbookName, username, data.transactionId);
-            }
-          } else {
-            updateChunkStatus(file, chunkData, data.labbookName, username, data.transactionId);
+          if (lastChunk) {
+            updateTotalStatus(file, data.labbookName, username, data.transactionId, section);
           }
         } else {
-          const errorBody = error.length && error[0].message ? error[0].message : error;
-          setWarningMessage(errorBody);
+          updateChunkStatus(file, chunkData, data.labbookName, username, data.transactionId, section);
         }
-      },
-    );
+      } else {
+        const errorBody = error.length && error[0].message ? error[0].message : error;
+        setWarningMessage(errorBody);
+      }
+    };
+
+    if (section === 'data') {
+      AddDatasetFileMutation(
+        data.connectionKey,
+        username,
+        data.labbookName,
+        data.parentId,
+        filepath,
+        chunk,
+        accessToken,
+        data.transactionId,
+        cbFunction,
+      );
+    } else {
+      AddLabbookFileMutation(
+        data.connectionKey,
+        username,
+        data.labbookName,
+        data.parentId,
+        filepath,
+        chunk,
+        accessToken,
+        section,
+        data.transactionId,
+        [],
+        cbFunction,
+      );
+    }
   } else if (chunk.fileSizeKb > (48 * 1000)) {
     setPauseChunkUpload(data, chunkData, section, username);
   }
@@ -167,6 +220,7 @@ const ChunkUploader = {
                 chunkData,
                 data.accessToken,
                 getChunk,
+                data.type,
               );
               postMessage(chunkData, false); // post progress back to worker instantiator file
             }

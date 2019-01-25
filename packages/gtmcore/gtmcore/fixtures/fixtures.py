@@ -101,7 +101,7 @@ def _create_temp_work_dir(override_dict: dict = None, lfs_enabled: bool = True):
     return config_file, unit_test_working_dir
 
 
-def _MOCK_create_remote_repo2(labbook, username: str, visibility, access_token = None) -> None:
+def _MOCK_create_remote_repo2(repository, username: str, visibility, access_token = None) -> None:
     """ Used to mock out creating a Labbook remote Gitlab repo. This is not a fixture per se,
 
     Usage:
@@ -113,11 +113,23 @@ def _MOCK_create_remote_repo2(labbook, username: str, visibility, access_token =
     ```
     """
     rand = str(uuid.uuid4())[:6]
-    working_dir = os.path.join(tempfile.gettempdir(), rand, labbook.name)
+    working_dir = os.path.join(tempfile.gettempdir(), rand, repository.name)
     os.makedirs(working_dir, exist_ok=True)
     r = git.Repo.init(path=working_dir, bare=True)
     assert r.bare is True
-    labbook.add_remote(remote_name="origin", url=working_dir)
+    repository.add_remote(remote_name="origin", url=working_dir)
+
+    # Push branches
+    # TODO: @billvb - need to refactor this once new branch model is in effect.
+    original_branch = repository.git.repo.head.ref.name
+    repository.git.repo.heads['gm.workspace'].checkout()
+    repository.git.repo.git.push("origin", "gm.workspace")
+
+    # Set the head to gm.workspace on the remote
+    r.git.symbolic_ref('HEAD', 'refs/heads/gm.workspace')
+
+    # Check back out the original user branch
+    repository.git.repo.heads[original_branch].checkout()
 
 
 @pytest.fixture()

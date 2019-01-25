@@ -639,6 +639,7 @@ class BranchMenu extends Component {
               ref="collaborators"
               auth={this.props.auth}
               owner={owner}
+              menuOpen={this.state.menuOpen}
               labbookName={labbookName}
               checkSessionIsValid={this._checkSessionIsValid}
               showLoginPrompt={() => this.setState({ showLoginPrompt: true })}

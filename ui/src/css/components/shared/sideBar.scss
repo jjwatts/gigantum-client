@@ -96,11 +96,20 @@
 
 .SideBar__nav-item--datasets {
   align-items: center;
-  opacity: 0.3;
+  text-decoration: none !important;
+  &:hover .SideBar__icon--datasets {
+    background: url('../images/icons/datasets-selected.svg') no-repeat center center;
+    background-size: 40px;
+  }
 }
 
 .SideBar__nav-item--labbooks {
   align-items: center;
+  text-decoration: none !important;
+  &:hover .SideBar__icon--labbooks {
+    background: url('../images/icons/labbooks-selected.svg') no-repeat center center;
+    background-size: 40px;
+  }
 }
 
 .SideBar__icon {
@@ -116,8 +125,18 @@
   background-size: 40px;
 }
 
+.SideBar__icon--datasets-selected:before,
+.SideBar__icon--labbooks-selected:before,{
+    content: "";
+    position: absolute;
+    @include triangle('left', 14px, $background-color);
+    right: -40px;
+    margin-top: 15px;
+}
 
-.SideBar__icon--datasets-selected {
+
+.SideBar__icon--datasets-selected,
+.SideBar__icon--datasets:hover,{
   background: url('../images/icons/datasets-selected.svg') no-repeat center center;
   background-size: 40px;
 }
@@ -127,8 +146,8 @@
   background-size: 40px;
 }
 
-.SideBar__icon--labbooks-selected {
-
+.SideBar__icon--labbooks-selected,
+.SideBar__icon--labbooks:hover {
   background: url('../images/icons/labbooks-selected.svg') no-repeat center center;
   background-size: 40px;
 }

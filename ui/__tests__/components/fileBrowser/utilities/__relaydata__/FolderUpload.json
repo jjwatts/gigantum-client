@@ -1,0 +1,41 @@
+{
+ "data": {
+  "labbook": {
+   "id": "TGFiYm9vazp1aXRlc3QmdWktdGVzdC1wcm9qZWN0",
+   "code": {
+    "files": {
+     "edges": [
+      {
+       "node": {
+        "isDir": true,
+        "key": "folder/",
+        "id": "TGFiYm9va0ZpbGU6dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZjb2RlJmZvbGRlci8="
+       }
+      }
+     ]
+    },
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZjb2Rl"
+   },
+   "input": {
+    "files": {
+     "edges": [
+      {
+       "node": {
+        "isDir": false,
+        "key": "README.md",
+        "id": "TGFiYm9va0ZpbGU6dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZpbnB1dCZSRUFETUUubWQ="
+       }
+      }
+     ]
+    },
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZpbnB1dA=="
+   },
+   "output": {
+    "files": {
+     "edges": []
+    },
+    "id": "TGFiYm9va1NlY3Rpb246dWl0ZXN0JnVpLXRlc3QtcHJvamVjdCZvdXRwdXQ="
+   }
+  }
+ }
+}

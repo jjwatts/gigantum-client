@@ -30,18 +30,21 @@ export default class BaseDetails extends React.Component {
 
     const trackingState = this.state.isTrackingOn ? 'Enabled' : 'Disabled';
     return (
-      <div className="TrackingToggle">
+      <div
+        className="TrackingToggle"
+        onClick={() => this._toggleTrackingState()}
+      >
         <div className="TrackingToggle__text">Input/Output Version Tracking {trackingState}</div>
         <span className={toggleCheckboxCondition}>
 
           <input
             data-on="&#x2714;"
             data-off="&#x2718;"
-            onClick={() => this._toggleTrackingState()}
             id="TrackingToggle__input"
             className="TrackingToggle__input"
             type="checkbox"
-            defaultChecked={this.state.isTrackingOn}
+            checked={this.state.isTrackingOn}
+            onChange={() => this.state.isTrackingOn}
           />
           <label
             className={toggleCondition}

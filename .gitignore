@@ -8,7 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -23,12 +22,11 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
 *.spec
 
 # Installer logs
@@ -106,3 +104,4 @@ gtm-env/
 /.idea
 .DS_Store
 build/
+/node_modules

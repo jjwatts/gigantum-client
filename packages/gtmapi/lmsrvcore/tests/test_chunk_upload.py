@@ -29,7 +29,7 @@ class MyMutation(graphene.relay.ClientIDMutation, ChunkUploadMutation):
         var = graphene.String()
 
     @classmethod
-    def mutate_and_process_upload(cls, info, **kwargs):
+    def mutate_and_process_upload(cls, info, upload_file_path, upload_filename, **kwargs):
         return "success"
 
 

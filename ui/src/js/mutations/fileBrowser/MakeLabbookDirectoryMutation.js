@@ -78,16 +78,14 @@ export default function MakeLabbookDirectoryMutation(
   owner,
   labbookName,
   labbookId,
-  directory,
-  section,
+  key,
   callback,
 ) {
   const variables = {
     input: {
       owner,
       labbookName,
-      directory,
-      section,
+      key,
       clientMutationId: `${tempID++}`,
     },
   };

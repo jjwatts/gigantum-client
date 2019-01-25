@@ -316,7 +316,7 @@ class TestIdentityLocal(object):
         assert os.path.exists(os.path.join('/mnt', 'gigantum', "johndoe", "johndoe", "labbooks",
                                            "awful-intersections-demo")) is False
 
-    @mock.patch('gtmcore.workflows.ZipExporter.import_zip', side_effect=mock_import)
+    @mock.patch('gtmcore.workflows.ZipExporter.import_labbook', side_effect=mock_import)
     @responses.activate
     def test_check_first_login_no_user_locally_in_repo(self, mock_import, mock_config_file_with_auth_first_login,
                                                        cleanup_auto_import):
@@ -337,7 +337,7 @@ class TestIdentityLocal(object):
         assert os.path.exists(os.path.join('/mnt', 'gigantum', "johndoe", "johndoe", "labbooks",
                                            "awful-intersections-demo"))
 
-    @mock.patch('gtmcore.workflows.ZipExporter.import_zip', side_effect=mock_import)
+    @mock.patch('gtmcore.workflows.ZipExporter.import_labbook', side_effect=mock_import)
     @responses.activate
     def test_check_first_login_no_user_locally_no_repo(self, mock_import, mock_config_file_with_auth_first_login,
                                                        cleanup_auto_import):

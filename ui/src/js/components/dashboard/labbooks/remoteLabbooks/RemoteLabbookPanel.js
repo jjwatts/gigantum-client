@@ -13,7 +13,7 @@ import { setWarningMessage, setMultiInfoMessage } from 'JS/redux/reducers/footer
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // components
-import LoginPrompt from 'Components/labbook/labbookHeader/branchMenu/modals/LoginPrompt';
+import LoginPrompt from 'Components/header/branchMenu/modals/LoginPrompt';
 import Loader from 'Components/shared/Loader';
 // assets
 import './RemoteLabbookPanel.scss';
@@ -246,6 +246,8 @@ export default class RemoteLabbookPanel extends Component {
          <p
            className="RemoteLabbooks__paragraph RemoteLabbooks__paragraph--description"
          >
+         {
+          edge.node.description && edge.node.description.length ?
            <Highlighter
              highlightClassName="LocalLabbooks__highlighted"
              searchWords={[store.getState().labbookListing.filterText]}
@@ -253,6 +255,13 @@ export default class RemoteLabbookPanel extends Component {
              caseSensitive={false}
              textToHighlight={edge.node.description}
            />
+           :
+           <span
+           className="RemoteDatasets__description--blank"
+         >
+            No description provided
+         </span>
+         }
          </p>
        </div>
        { !(edge.node.visibility === 'local') &&

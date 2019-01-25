@@ -113,7 +113,7 @@ class TestContainerOps(object):
             ContainerOperations.build_image(labbook=my_lb, username="unittester")
 
         with pytest.raises(docker.errors.ImageNotFound):
-            owner = InventoryManager().query_labbook_owner(my_lb)
+            owner = InventoryManager().query_owner(my_lb)
             get_docker_client().images.get(infer_docker_image_name(labbook_name=my_lb.name,
                                                                    owner=owner,
                                                                    username="unittester"))

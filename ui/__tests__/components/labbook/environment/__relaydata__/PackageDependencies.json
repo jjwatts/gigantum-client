@@ -6,11 +6,11 @@
      "edges": [
       {
        "node": {
-        "id": "UGFja2FnZUNvbXBvbmVudDpjb25kYTMmYm9rZWgmMC4xMi4xNQ==",
+        "id": "UGFja2FnZUNvbXBvbmVudDpjb25kYTImbnVtcHkmMS4xNi4w",
         "schema": 1,
-        "manager": "conda3",
-        "package": "bokeh",
-        "version": "0.12.15",
+        "manager": "conda2",
+        "package": "numpy",
+        "version": "1.16.0",
         "fromBase": false,
         "__typename": "PackageComponent"
        },
@@ -18,75 +18,27 @@
       },
       {
        "node": {
-        "id": "UGFja2FnZUNvbXBvbmVudDpjb25kYTMmZGF0YXNoYWRlciYwLjYuNQ==",
+        "id": "UGFja2FnZUNvbXBvbmVudDpwaXAmcGFuZGFzJjAuMjMuNA==",
         "schema": 1,
-        "manager": "conda3",
-        "package": "datashader",
-        "version": "0.6.5",
+        "manager": "pip",
+        "package": "pandas",
+        "version": "0.23.4",
         "fromBase": false,
         "__typename": "PackageComponent"
        },
        "cursor": "MQ=="
-      },
-      {
-       "node": {
-        "id": "UGFja2FnZUNvbXBvbmVudDpwaXAmY29sb3JjZXQmMC45LjE=",
-        "schema": 1,
-        "manager": "pip",
-        "package": "colorcet",
-        "version": "0.9.1",
-        "fromBase": false,
-        "__typename": "PackageComponent"
-       },
-       "cursor": "Mg=="
-      },
-      {
-       "node": {
-        "id": "UGFja2FnZUNvbXBvbmVudDpwaXAmaG9sb3ZpZXdzJjEuMTAuNA==",
-        "schema": 1,
-        "manager": "pip",
-        "package": "holoviews",
-        "version": "1.10.4",
-        "fromBase": false,
-        "__typename": "PackageComponent"
-       },
-       "cursor": "Mw=="
-      },
-      {
-       "node": {
-        "id": "UGFja2FnZUNvbXBvbmVudDpwaXAmbnVtcHkmMS4xNC4z",
-        "schema": 1,
-        "manager": "pip",
-        "package": "numpy",
-        "version": "1.14.3",
-        "fromBase": false,
-        "__typename": "PackageComponent"
-       },
-       "cursor": "NA=="
-      },
-      {
-       "node": {
-        "id": "UGFja2FnZUNvbXBvbmVudDpwaXAmcGFuZGFzJjAuMjMuMHJjMg==",
-        "schema": 1,
-        "manager": "pip",
-        "package": "pandas",
-        "version": "0.23.0rc2",
-        "fromBase": false,
-        "__typename": "PackageComponent"
-       },
-       "cursor": "NQ=="
       }
      ],
      "pageInfo": {
       "hasNextPage": false,
       "hasPreviousPage": false,
       "startCursor": "MA==",
-      "endCursor": "NQ=="
+      "endCursor": "MQ=="
      }
     },
-    "id": "RW52aXJvbm1lbnQ6Y2J1dGxlciZkYXRhLXNoYWRlcg=="
+    "id": "RW52aXJvbm1lbnQ6dWl0ZXN0JnVpLXRlc3QtcHJvamVjdA=="
    },
-   "id": "TGFiYm9vazpjYnV0bGVyJmRhdGEtc2hhZGVy"
+   "id": "TGFiYm9vazp1aXRlc3QmdWktdGVzdC1wcm9qZWN0"
   }
  }
 }

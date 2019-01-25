@@ -19,17 +19,18 @@
 # SOFTWARE.
 import base64
 import graphene
+import os
 
 from gtmcore.logging import LMLogger
 from gtmcore.dispatcher import Dispatcher
 from gtmcore.inventory.branching import BranchManager
-from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.inventory.inventory import InventoryManager, InventoryException
 from gtmcore.activity import ActivityStore
 from gtmcore.gitlib.gitlab import GitLabManager
 from gtmcore.files import FileOperations
 from gtmcore.environment.utils import get_package_manager
 
-from lmsrvcore.auth.user import get_logged_in_username
+from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 
 from lmsrvcore.api.connections import ListBasedConnection
 from lmsrvcore.api.interfaces import GitRepository
@@ -44,6 +45,7 @@ from lmsrvlabbook.api.objects.labbooksection import LabbookSection
 from lmsrvlabbook.api.connections.activity import ActivityConnection
 from lmsrvlabbook.api.objects.activity import ActivityDetailObject, ActivityRecordObject
 from lmsrvlabbook.api.objects.packagecomponent import PackageComponent, PackageComponentInput
+from lmsrvlabbook.api.objects.dataset import Dataset
 
 logger = LMLogger.get_logger()
 
@@ -136,6 +138,8 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
 
     visibility = graphene.String()
 
+    linked_datasets = graphene.List(Dataset)
+
     @classmethod
     def get_node(cls, info, id):
         """Method to resolve the object based on it's Node ID"""
@@ -189,7 +193,7 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         """Return the size of the labbook on disk (in bytes).
         NOTE! This must be a string, as graphene can't quite handle big integers. """
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: str(FileOperations.content_size(labbook=labbook)))
+            lambda labbook: str(FileOperations.content_size(labbook)))
 
     def resolve_updates_available_count(self, info):
         """Get number of commits the active_branch is behind its remote counterpart.
@@ -203,15 +207,15 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
 
     def resolve_active_branch_name(self, info):
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: BranchManager(labbook=labbook, username=get_logged_in_username()).active_branch)
+            lambda labbook: BranchManager(labbook, username=get_logged_in_username()).active_branch)
 
     def resolve_workspace_branch_name(self, info):
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: BranchManager(labbook=labbook, username=get_logged_in_username()).workspace_branch)
+            lambda labbook: BranchManager(labbook, username=get_logged_in_username()).workspace_branch)
 
     def resolve_available_branch_names(self, info):
         fltr = lambda labbook: \
-            BranchManager(labbook=labbook, username=get_logged_in_username()).available_branches
+            BranchManager(labbook, username=get_logged_in_username()).available_branches
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             fltr)
 
@@ -228,7 +232,7 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             _mergeable)
 
     def helper_resolve_active_branch(self, labbook):
-        active_branch_name = BranchManager(labbook=labbook, username=get_logged_in_username()).active_branch
+        active_branch_name = BranchManager(labbook, username=get_logged_in_username()).active_branch
         return LabbookRef(id=f"{self.owner}&{self.name}&None&{active_branch_name}",
                           owner=self.owner, name=self.name, prefix=None,
                           ref_name=active_branch_name)
@@ -267,7 +271,7 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             if url:
                 return url[0]
             else:
-                logger.warning(f"There exist remotes in {str(lb)}, but no origin found.")
+                logger.warning(f"There exist remotes in {str(labbook)}, but no origin found.")
         return None
 
     def resolve_default_remote(self, info):
@@ -362,9 +366,10 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         edge_objs = []
         for edge, cursor in zip(edges, cursors):
             edge_objs.append(
-                ActivityConnection.Edge(node=ActivityRecordObject(id=f"{self.owner}&{self.name}&{edge.commit}",
+                ActivityConnection.Edge(node=ActivityRecordObject(id=f"labbook&{self.owner}&{self.name}&{edge.commit}",
                                                                   owner=self.owner,
                                                                   name=self.name,
+                                                                  _repository_type='labbook',
                                                                   commit=edge.commit,
                                                                   _activity_record=edge),
                                         cursor=cursor))
@@ -412,9 +417,10 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         Returns:
 
         """
-        return ActivityDetailObject(id=f"{self.owner}&{self.name}&{key}",
+        return ActivityDetailObject(id=f"labbook&{self.owner}&{self.name}&{key}",
                                     owner=self.owner,
                                     name=self.name,
+                                    _repository_type='labbook',
                                     key=key)
 
     def resolve_detail_records(self, info, keys):
@@ -427,9 +433,10 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         Returns:
 
         """
-        return [ActivityDetailObject(id=f"{self.owner}&{self.name}&{key}",
+        return [ActivityDetailObject(id=f"labbook&{self.owner}&{self.name}&{key}",
                                      owner=self.owner,
                                      name=self.name,
+                                     _repository_type='labbook',
                                      key=key) for key in keys]
 
     def _fetch_collaborators(self, labbook, info):
@@ -591,8 +598,9 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         # Get collaborators from remote service
         mgr = GitLabManager(default_remote, admin_service, token)
         try:
-            owner = InventoryManager().query_labbook_owner(labbook)
-            d = mgr.repo_details(namespace=owner, labbook_name=labbook.name)
+            owner = InventoryManager().query_owner(labbook)
+            d = mgr.repo_details(namespace=owner, repository_name=labbook.name)
+            assert 'visibility' in d.keys(), 'Visibility is not in repo details response keys'
             return d.get('visibility')
         except ValueError:
             return "local"
@@ -603,3 +611,26 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
 
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             lambda labbook: self.helper_resolve_visibility(labbook, info))
+
+    @staticmethod
+    def helper_resolve_linked_datasets(labbook, info):
+        submodules = labbook.git.list_submodules()
+        datasets = list()
+        for submodule in submodules:
+            try:
+                namespace, dataset_name = submodule['name'].split("&")
+                submodule_dir = os.path.join(labbook.root_dir, '.gigantum', 'datasets', namespace, dataset_name)
+                ds = InventoryManager().load_dataset_from_directory(submodule_dir, author=get_logged_in_author())
+                ds.namespace = namespace
+                info.context.dataset_loader.prime(f"{get_logged_in_username()}&{namespace}&{dataset_name}", ds)
+
+                datasets.append(Dataset(owner=namespace, name=dataset_name))
+            except InventoryException:
+                continue
+
+        return datasets
+
+    def resolve_linked_datasets(self, info):
+        """ """
+        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda labbook: self.helper_resolve_linked_datasets(labbook, info))

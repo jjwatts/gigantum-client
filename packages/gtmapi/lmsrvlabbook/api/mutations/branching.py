@@ -69,7 +69,7 @@ class CreateExperimentalBranch(graphene.relay.ClientIDMutation):
         lb = InventoryManager().load_labbook(username, owner, labbook_name,
                                              author=get_logged_in_author())
         with lb.lock():
-            bm = BranchManager(labbook=lb, username=username)
+            bm = BranchManager(lb, username=username)
             full_branch_title = bm.create_branch(title=f'gm.workspace-{username}.{branch_name}',
                                                  revision=revision)
             logger.info(f"In {str(lb)} created new experimental feature branch: "
@@ -78,7 +78,7 @@ class CreateExperimentalBranch(graphene.relay.ClientIDMutation):
             if description:
                 cls._update_branch_description(lb, description)
 
-        return CreateExperimentalBranch(labbook=Labbook(id="{}&{}".format(owner, labbook_name),
+        return CreateExperimentalBranch(Labbook(id="{}&{}".format(owner, labbook_name),
                                                         name=labbook_name, owner=owner))
 
 
@@ -98,7 +98,7 @@ class DeleteExperimentalBranch(graphene.relay.ClientIDMutation):
         lb = InventoryManager().load_labbook(username, owner, labbook_name,
                                              author=get_logged_in_author())
         with lb.lock():
-            bm = BranchManager(labbook=lb, username=username)
+            bm = BranchManager(lb, username=username)
             bm.remove_branch(target_branch=branch_name)
         logger.info(f'Removed experimental branch {branch_name} from {str(lb)}')
         return DeleteExperimentalBranch(success=True)
@@ -122,9 +122,9 @@ class WorkonBranch(graphene.relay.ClientIDMutation):
                                              author=get_logged_in_author())
         # TODO - fail fast if already locked.
         with lb.lock():
-            bm = BranchManager(labbook=lb, username=username)
+            bm = BranchManager(lb, username=username)
             bm.workon_branch(branch_name=branch_name)
-        return WorkonBranch(labbook=Labbook(id="{}&{}".format(owner, labbook_name),
+        return WorkonBranch(Labbook(id="{}&{}".format(owner, labbook_name),
                                             name=labbook_name, owner=owner))
 
 
@@ -146,8 +146,8 @@ class MergeFromBranch(graphene.relay.ClientIDMutation):
         lb = InventoryManager().load_labbook(username, owner, labbook_name,
                                              author=get_logged_in_author())
         with lb.lock():
-            bm = BranchManager(labbook=lb, username=username)
+            bm = BranchManager(lb, username=username)
             bm.merge_from(other_branch=other_branch_name, force=force)
 
-        return MergeFromBranch(labbook=Labbook(id="{}&{}".format(owner, labbook_name),
+        return MergeFromBranch(Labbook(id="{}&{}".format(owner, labbook_name),
                                                name=labbook_name, owner=owner))

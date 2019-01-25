@@ -51,7 +51,8 @@ class PipPackageManager(PackageManager):
             fallback_image=self.fallback_image(labbook))
 
         lines = search_result.decode().splitlines()
-        return [x.split(' ')[0] for x in lines]
+        packages = [x.split(' ')[0] for x in lines]
+        return sorted(packages)
 
     def list_versions(self, package_name: str, labbook: LabBook, username: str) -> List[str]:
         """Method to list all available versions of a package based on the package name

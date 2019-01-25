@@ -32,35 +32,35 @@ logger = LMLogger.get_logger()
 class ActivityStore(object):
     """The ActivityStore class provides a centralized interface to activity data stored in both the git log and db.
 
-    High-level information is stored directly in the git commit messages stored in the git log of a LabBook. For more
+    High-level information is stored directly in the git commit messages stored in the git log of a repo. For more
     detailed information and arbitrary information a custom checkout-aware file based key-value store is used.
 
     The ActivityStore class stores ActivityRecords in the git log and ActivityDetailRecords in the database after
     proper serialization. The linked commit indiciate which git record the ActivityRecord is annotating
     """
 
-    def __init__(self, labbook) -> None:
-        """ Load the database for the specified labbook
+    def __init__(self, repository) -> None:
+        """ Load the database for the specified repository
 
         Args:
-            labbook(LabBook): A gtmcore.labbook.LabBook instance
+            repository(gtmcore.inventory.repository.Repository): A Repository instance
         """
         # Configuration parameters
         self.max_num_tags: int = 100
         self.max_tag_length: int = 256
 
-        self.labbook = labbook
+        self.repository = repository
 
-        self.detaildb = ActivityDetailDB(labbook.root_dir, labbook.checkout_id,
-                                         logfile_limit=labbook.client_config.config['detaildb']['logfile_limit'])
+        self.detaildb = ActivityDetailDB(repository.root_dir, repository.checkout_id,
+                                         logfile_limit=repository.client_config.config['detaildb']['logfile_limit'])
 
         # Note record commit messages follow a special structure
         self.note_regex = re.compile(r"(?s)_GTM_ACTIVITY_START_.*?_GTM_ACTIVITY_END_")
 
         # Params used during detail object serialization
-        if self.labbook.client_config.config['detaildb']['options']['compress']:
-            self.compress_details: bool = self.labbook.client_config.config['detaildb']['options']['compress']
-            self.compress_min_bytes = self.labbook.client_config.config['detaildb']['options']['compress_min_bytes']
+        if self.repository.client_config.config['detaildb']['options']['compress']:
+            self.compress_details: bool = self.repository.client_config.config['detaildb']['options']['compress']
+            self.compress_min_bytes = self.repository.client_config.config['detaildb']['options']['compress_min_bytes']
         else:
             self.compress_details: bool = False
             self.compress_min_bytes: int = 0
@@ -125,7 +125,7 @@ class ActivityStore(object):
             path_info = after
 
         while True:
-            for entry in self.labbook.git.log(path_info=path_info, **kwargs):
+            for entry in self.repository.git.log(path_info=path_info, **kwargs):
                 m = self.note_regex.match(entry['message'])
                 if m:
                     log_entries.append((m.group(0), entry['commit'], entry['committed_on'],
@@ -177,20 +177,21 @@ class ActivityStore(object):
             record.linked_commit = uuid.uuid4().hex
 
         # Write all ActivityDetailObjects to the datastore
-        for idx, detail in enumerate(record.detail_objects):
-            updated_detail = self.put_detail_record(detail[3])
-            record.update_detail_object(updated_detail, idx)
+        with record.inspect_detail_objects() as details:
+            for idx, detail in enumerate(details):
+                updated_detail = self.put_detail_record(detail)
+                record.update_detail_object(updated_detail, idx)
 
-        # Add everything in the LabBook activity/log directory
-        self.labbook.git.add_all(self.detaildb.root_path)
+        # Add everything in the repo activity/log directory
+        self.repository.git.add_all(self.detaildb.root_path)
 
         # Commit changes and update record
-        commit = self.labbook.git.commit(record.log_str)
+        commit = self.repository.git.commit(record.log_str)
         record.commit = commit.hexsha
 
         # Update record with username and email
-        record.username = self.labbook.git.author.name
-        record.email = self.labbook.git.author.email
+        record.username = self.repository.git.author.name
+        record.email = self.repository.git.author.email
 
         logger.debug(f"Successfully created ActivityRecord {commit.hexsha}")
         return record
@@ -204,7 +205,7 @@ class ActivityStore(object):
         Returns:
             ActivityRecord
         """
-        entry = self.labbook.git.log_entry(commit)
+        entry = self.repository.git.log_entry(commit)
         m = self.note_regex.match(entry["message"])
         if m:
             ar = ActivityRecord.from_log_str(m.group(0), commit, entry['committed_on'],
@@ -226,7 +227,6 @@ class ActivityStore(object):
         """
         # Get data from the git log
         log_data = self._get_log_records(after=after, first=first)
-
         if log_data:
             if after:
                 # If the "after" record is included. Remove it due to standards on how relay paging works

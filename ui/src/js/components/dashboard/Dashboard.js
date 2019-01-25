@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { graphql, QueryRenderer } from 'react-relay';
 import queryString from 'querystring';
 // components
-import DatasetSets from './datasets/DatasetSets';
 import LocalLabbooksContainer from './labbooks/localLabbooks/LocalLabbooksContainer';
+import LocalDatasetsContainer from './datasets/localDatasets/LocalDatasetsContainer';
 import RemoteLabbooksContainer from './labbooks/remoteLabbooks/RemoteLabbooksContainer';
 import environment from 'JS/createRelayEnvironment';
 // assets
@@ -16,6 +16,10 @@ const LocalListingQuery = graphql`query DashboardLocalQuery($first: Int!, $curso
   ...LocalLabbooksContainer_labbookList
 }`;
 
+const LocalDatasetListingQuery = graphql`query DashboardDatasetLocalQuery($first: Int!, $cursor: String, $orderBy: String $sort: String){
+  ...LocalDatasetsContainer_datasetList
+}`;
+
 const RemoteListingQuery = graphql`query DashboardRemoteQuery($first: Int!, $cursor: String, $orderBy: String $sort: String){
   ...RemoteLabbooksContainer_labbookList
 }`;
@@ -23,9 +27,11 @@ const RemoteListingQuery = graphql`query DashboardRemoteQuery($first: Int!, $cur
 export default class DashboardContainer extends Component {
   constructor(props) {
     super(props);
+
     const { orderBy, sort } = queryString.parse(this.props.history.location.search.slice(1));
+
     this.state = {
-      selectedComponent: props.match.params.id,
+      selectedComponent: props.match.path,
       orderBy: orderBy || 'modified_on',
       sort: sort || 'desc',
     };
@@ -38,7 +44,7 @@ export default class DashboardContainer extends Component {
   */
   UNSAFE_componentWillReceiveProps(nextProps) {
     this.setState({
-      selectedComponent: nextProps.match.params.id,
+      selectedComponent: nextProps.match.path,
     });
     setCallbackRoute(nextProps.history.location.pathname);
   }
@@ -60,9 +66,9 @@ export default class DashboardContainer extends Component {
   *  @return {jsx}
   */
   _displaySelectedComponent() {
-    if (this.state.selectedComponent === 'datasets') {
-      return (<DatasetSets />);
-    }
+    // if (this.state.selectedComponent === '/datasets/:labbookSection') {
+    //   return (<DatasetSets />);
+    // }
 
     const paths = this.props.history.location.pathname.split('/');
     const sectionRoute = paths.length > 2 ? paths[2] : 'local';
@@ -71,10 +77,20 @@ export default class DashboardContainer extends Component {
       this.props.history.replace('../../../../projects/local');
     }
 
+
+    let query;
+    if (this.state.selectedComponent === '/datasets/:labbookSection') {
+      query = LocalDatasetListingQuery;
+    } else if (sectionRoute === 'cloud') {
+      query = RemoteListingQuery;
+    } else {
+      query = LocalListingQuery;
+    }
+
     return (
       <QueryRenderer
         environment={environment}
-        query={sectionRoute === 'cloud' ? RemoteListingQuery : LocalListingQuery}
+        query={query}
         variables={{
             first: sectionRoute === 'cloud' ? 20 : 100,
             cursor: null,
@@ -85,7 +101,17 @@ export default class DashboardContainer extends Component {
             if (error) {
               console.log(error);
             } else if (props) {
-              if (sectionRoute === 'cloud') {
+              if (this.state.selectedComponent === '/datasets/:labbookSection') {
+                return (
+                  <LocalDatasetsContainer
+                    auth={this.props.auth}
+                    datasetList={props}
+                    history={this.props.history}
+                    section={sectionRoute}
+                    refetchSort={this._refetchSort}
+                  />
+                );
+              } else if (sectionRoute === 'cloud') {
                 return (
                   <RemoteLabbooksContainer
                     auth={this.props.auth}
@@ -105,6 +131,19 @@ export default class DashboardContainer extends Component {
                   />
                 );
             } else {
+              if (this.state.selectedComponent === '/datasets/:labbookSection') {
+                return (
+                  <LocalDatasetsContainer
+                    auth={this.props.auth}
+                    datasetList={props}
+                    history={this.props.history}
+                    section={sectionRoute}
+                    refetchSort={this._refetchSort}
+                    loading
+                  />
+                );
+              }
+
               return (
                 <LocalLabbooksContainer
                   auth={this.props.auth}

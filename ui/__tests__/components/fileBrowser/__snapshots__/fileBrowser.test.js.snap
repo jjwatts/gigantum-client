@@ -1,0 +1,144 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
+<div
+  className="FileBrowser FileBrowser--dropzone"
+  style={
+    Object {
+      "zIndex": 0,
+    }
+  }
+>
+  <div
+    className="FileBrowser__tools flex justify--space-between"
+  >
+    <div
+      className="FileBrowser__search flex-1"
+    >
+      <input
+        className="FileBrowser__input full--border"
+        onChange={[Function]}
+        onKeyUp={[Function]}
+        placeholder="Search Files Here"
+        type="text"
+      />
+    </div>
+  </div>
+  <div
+    className="FileBrowser__header"
+  >
+    <div
+      className="FileBrowser__multiselect flex justify--start"
+    >
+      <button
+        className="Btn--multiSelect Btn Btn--round Btn--uncheck"
+        onClick={[Function]}
+      />
+      <button
+        className="Btn Btn--round Btn--delete hidden"
+        onClick={[Function]}
+      />
+      <div
+        className="FileBrowser__popup hidden ToolTip__message"
+      >
+        <div
+          className="ToolTip__pointer"
+        />
+        <p>
+          Are you sure?
+        </p>
+        <div
+          className="flex justify--space-around"
+        >
+          <button
+            className="File__btn--round File__btn--cancel File__btn--delete"
+            onClick={[Function]}
+          />
+          <button
+            className="File__btn--round File__btn--add File__btn--delete-files"
+            onClick={[Function]}
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      className="FileBrowser__header--name flex justify--start"
+      onClick={[Function]}
+    >
+      <div
+        className="FileBrowser__name-text FileBroser__sort--asc"
+      >
+        File
+      </div>
+    </div>
+    <div
+      className="FileBrowser__header--size"
+      onClick={[Function]}
+    >
+      Size
+    </div>
+    <div
+      className="FileBrowser__header--date"
+      onClick={[Function]}
+    >
+      Modified
+    </div>
+    <div
+      className="FileBrowser__header--menu flex flex--row justify--right"
+    >
+      <div
+        className="FileBrowser__button FileBrowser__button--add-folder"
+        data-tooltip="Add Folder"
+        onClick={[Function]}
+      />
+    </div>
+  </div>
+  <div
+    className="FileBrowser__body"
+  >
+    <div
+      className="AddSubfolder hidden"
+      onClick={[Function]}
+    >
+      <div
+        className="AddSubfolder__text"
+      >
+        Add Folder
+      </div>
+      <div
+        className="AddSubfolder__edit hidden"
+      >
+        <div
+          className="AddSubfolder__container"
+        >
+          <input
+            className="AddSubfolder__input"
+            onKeyUp={[Function]}
+            placeholder="Enter Folder Name"
+            type="text"
+          />
+        </div>
+        <div
+          className="flex justify--space-around"
+        >
+          <button
+            className="File__btn--round File__btn--cancel"
+            onClick={[Function]}
+          />
+          <button
+            className="File__btn--round File__btn--add"
+            onClick={[Function]}
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      className="FileBrowser__empty"
+    >
+      <h5>
+        Upload Files by Dragging & Dropping Here
+      </h5>
+    </div>
+  </div>
+</div>
+`;

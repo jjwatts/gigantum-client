@@ -25,7 +25,8 @@ from typing import Optional, List, Tuple
 
 from gtmcore.exceptions import GigantumException
 from gtmcore.logging import LMLogger
-from gtmcore.labbook import LabBook
+# from gtmcore.repository import LabBook
+from gtmcore.inventory import Repository
 from gtmcore.configuration.utils import call_subprocess
 
 logger = LMLogger.get_logger()
@@ -55,8 +56,8 @@ class BranchManager(object):
     TODO(billvb): Finish removing all workflow-specific fields
     """
 
-    def __init__(self, labbook: LabBook, username: str) -> None:
-        self.labbook = labbook
+    def __init__(self, repository: Repository, username: str) -> None:
+        self.repository = repository
         self.username = username
 
     @classmethod
@@ -69,7 +70,7 @@ class BranchManager(object):
     @property
     def active_branch(self) -> str:
         """Return the name of the current branch."""
-        return self.labbook.active_branch
+        return self.repository.active_branch
 
     @property
     def workspace_branch(self) -> str:
@@ -90,8 +91,8 @@ class BranchManager(object):
     @property
     def branches(self) -> List[str]:
         """List all branches (local AND remote) available for checkout"""
-        return sorted(list(set(self.labbook.get_branches()['local']
-                               + self.labbook.get_branches()['remote'])))
+        return sorted(list(set(self.repository.get_branches()['local']
+                               + self.repository.get_branches()['remote'])))
 
     def create_branch(self, title: str, revision: Optional[str] = None) -> str:
         """Create and checkout (work on) a new managed branch."""
@@ -101,21 +102,21 @@ class BranchManager(object):
         if title in self.branches:
             raise InvalidBranchName(f'Branch name `{title}` already exists')
 
-        self.labbook.sweep_uncommitted_changes()
+        self.repository.sweep_uncommitted_changes()
         if revision:
             # The following call prints "commit" if {revision} exists in git history.
             result = subprocess.check_output(f'git cat-file -t {revision} || echo "invalid"',
-                                             cwd=self.labbook.root_dir, shell=True)
+                                             cwd=self.repository.root_dir, shell=True)
             if result.decode().strip() != 'commit':
                 logger.error(result.decode().strip())
-                raise InvalidBranchName(f'Revision {revision} does not exist in {str(self.labbook)};'
+                raise InvalidBranchName(f'Revision {revision} does not exist in {str(self.repository)};'
                                         f'cannot create branch {title}')
             # Should be in a detached-head, and then make branch from there.
-            logger.info(f"Creating rollback branch from revision {revision} in {str(self.labbook)}")
-            r = subprocess.check_output(f'git checkout {revision}', cwd=self.labbook.root_dir, shell=True)
+            logger.info(f"Creating rollback branch from revision {revision} in {str(self.repository)}")
+            r = subprocess.check_output(f'git checkout {revision}', cwd=self.repository.root_dir, shell=True)
             logger.info(r)
-        self.labbook.checkout_branch(branch_name=title, new=True)
-        logger.info(f'Activated new branch {self.active_branch} in {str(self.labbook)}')
+        self.repository.checkout_branch(branch_name=title, new=True)
+        logger.info(f'Activated new branch {self.active_branch} in {str(self.repository)}')
 
         return title
 
@@ -132,17 +133,17 @@ class BranchManager(object):
             raise InvalidBranchName(f'Cannot delete `{target_branch}`; does not exist')
 
         if target_branch == self.workspace_branch:
-            raise BranchWorkflowViolation(f'Cannot delete workspace branch `{target_branch}` in {str(self.labbook)}')
+            raise BranchWorkflowViolation(f'Cannot delete workspace branch `{target_branch}` in {str(self.repository)}')
 
         if target_branch == self.active_branch:
             raise BranchWorkflowViolation(f'Cannot delete current active branch `{target_branch}`')
 
-        logger.info(f'Removing from {str(self.labbook)} feature branch `{target_branch}`')
+        logger.info(f'Removing from {str(self.repository)} feature branch `{target_branch}`')
         # Note use "force=True" to prevent warning on merge.
-        self.labbook.git.delete_branch(target_branch, force=True)
+        self.repository.git.delete_branch(target_branch, force=True)
 
         if target_branch in self.branches:
-            raise BranchWorkflowViolation(f'Removal of branch `{target_branch}` in {str(self.labbook)} failed.')
+            raise BranchWorkflowViolation(f'Removal of branch `{target_branch}` in {str(self.repository)} failed.')
 
     def _workon_branch(self, branch_name: str) -> None:
         """Checkouts a branch as the working revision. """
@@ -150,9 +151,9 @@ class BranchManager(object):
         #if branch_name not in self.branches:
         #    raise InvalidBranchName(f'Target branch `{branch_name}` does not exist')
 
-        self.labbook.sweep_uncommitted_changes(extra_msg="Save state on branch change")
-        self.labbook.checkout_branch(branch_name=branch_name)
-        logger.info(f'Checked out branch {self.active_branch} in {str(self.labbook)}')
+        self.repository.sweep_uncommitted_changes(extra_msg="Save state on branch change")
+        self.repository.checkout_branch(branch_name=branch_name)
+        logger.info(f'Checked out branch {self.active_branch} in {str(self.repository)}')
 
     def workon_branch(self, branch_name: str) -> None:
         """Performs a Git checkout on the given branch_name"""
@@ -173,24 +174,24 @@ class BranchManager(object):
         if other_branch not in self.branches:
             raise InvalidBranchName(f'Other branch {other_branch} not found')
 
-        logger.info(f"In {str(self.labbook)} merging branch `{other_branch}` into `{self.active_branch}`...")
+        logger.info(f"In {str(self.repository)} merging branch `{other_branch}` into `{self.active_branch}`...")
         try:
-            self.labbook.sweep_uncommitted_changes()
+            self.repository.sweep_uncommitted_changes()
             if force:
                 logger.warning("Using force to overwrite local changes")
                 call_subprocess(['git', 'merge', '-s', 'recursive', '-X', 'theirs', other_branch],
-                                cwd=self.labbook.root_dir)
+                                cwd=self.repository.root_dir)
             else:
                 try:
-                    call_subprocess(['git', 'merge', other_branch], cwd=self.labbook.root_dir)
+                    call_subprocess(['git', 'merge', other_branch], cwd=self.repository.root_dir)
                 except (git.exc.GitCommandError, subprocess.CalledProcessError) as merge_error:
-                    logger.error(f"Merge conflict syncing {str(self.labbook)} - Use `force` to overwrite.")
+                    logger.error(f"Merge conflict syncing {str(self.repository)} - Use `force` to overwrite.")
                     # TODO - This should be cleaned up (The UI attempts to match on the token "Cannot merge")
                     raise BranchException(f"Cannot merge - {merge_error}")
-            self.labbook.git.commit(f'Merged from branch `{other_branch}`')
-            logger.info(f"{str(self.labbook)} finished merge")
+            self.repository.git.commit(f'Merged from branch `{other_branch}`')
+            logger.info(f"{str(self.repository)} finished merge")
         except Exception as e:
-            call_subprocess(['git', 'reset', '--hard'], cwd=self.labbook.root_dir)
+            call_subprocess(['git', 'reset', '--hard'], cwd=self.repository.root_dir)
             raise e
 
     def get_commits_behind_remote(self, remote_name: str = "origin") -> Tuple[str, int]:
@@ -210,9 +211,9 @@ class BranchManager(object):
         # However, it's not clear we will continue to use GitPython going forward or that this implementation
         # needs to change right now.
         try:
-            if self.labbook.has_remote:
-                self.labbook.git.fetch(remote=remote_name)
-            result_str = self.labbook.git.repo.git.status().replace('\n', ' ')
+            if self.repository.has_remote:
+                self.repository.git.fetch(remote=remote_name)
+            result_str = self.repository.git.repo.git.status().replace('\n', ' ')
         except Exception as e:
             logger.exception(e)
             raise GigantumException(e)

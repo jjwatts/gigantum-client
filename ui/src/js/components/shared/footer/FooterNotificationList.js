@@ -30,7 +30,9 @@ export default class FooterNotificationList extends Component {
     });
 
     let height = messageList.length > 6 ? 260 : messageList.length * 60;
-    height = messageListOpenItems.length > 0 ? document.body.clientHeight - 200 : height;
+    height = messageListOpenItems.length > 0 ? 'auto' : height;
+
+    height = height === 'auto' ? 'auto' : `${height}px`;
 
 
     return (
@@ -41,7 +43,7 @@ export default class FooterNotificationList extends Component {
         >
           View All
         </div>
-        <div className={footerMessageListClass} style={{ height: `${height}px` }}>
+        <div className={footerMessageListClass} style={{ height, maxHeight: '700px' }}>
 
           <ul>
             {

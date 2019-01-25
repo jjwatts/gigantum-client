@@ -38,7 +38,7 @@ from gtmcore.inventory.branching import BranchManager
 class TestLabbookShareProtocol(object):
 
     @mock.patch('gtmcore.workflows.core.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
-    def  test_simple_publish_new_one_user(self, remote_bare_repo, mock_labbook_lfs_disabled):
+    def test_simple_publish_new_one_user(self, remote_bare_repo, mock_labbook_lfs_disabled):
         # Make sure you cannot clobber a remote branch with your local branch of the same name.
 
         ## 1 - Make initial set of contributions to Labbook.
@@ -94,8 +94,8 @@ class TestLabbookShareProtocol(object):
 
         ## "home_lb" represents the user's home computer -- same Labbook, just in a different LM instance.
         home_lb = LabBook(mock_config_lfs_disabled[0])
-        home_lb = loaders.from_remote(repo_location, username="test", owner="test",
-                            labbook_name="labbook1", labbook=home_lb)
+        home_lb = loaders.labbook_from_remote(repo_location, username="test", owner="test",
+                                              labbook=home_lb)
         assert home_lb.active_branch == "gm.workspace-test"
         assert os.path.exists(os.path.join(home_lb.root_dir, 'code', 'testy-tracked-dir'))
         assert os.path.exists(os.path.join(home_lb.root_dir, 'code', 'dir-created-after-publish'))
@@ -122,8 +122,8 @@ class TestLabbookShareProtocol(object):
         assert remote_repo is not None
 
         bob_user_lb = LabBook(mock_config_lfs_disabled[0])
-        bob_user_lb = loaders.from_remote(remote_repo, username="bob", owner="test",
-                                          labbook_name="labbook1", labbook=bob_user_lb)
+        bob_user_lb = loaders.labbook_from_remote(remote_repo, username="bob", owner="test",
+                                                  labbook=bob_user_lb)
         bob_wf = GitWorkflow(bob_user_lb)
         assert bob_user_lb.active_branch == "gm.workspace-bob"
         FileOperations.makedir(bob_user_lb, relative_path='output/sample-output-dir-xxx', create_activity_record=True)
@@ -146,8 +146,8 @@ class TestLabbookShareProtocol(object):
         remote_repo = test_user_lb.remote
 
         bob_user_lb = LabBook(mock_config_lfs_disabled[0])
-        bob_user_lb = loaders.from_remote(remote_repo, username="bob", owner="test",
-                                          labbook_name="labbook1", labbook=bob_user_lb)
+        bob_user_lb = loaders.labbook_from_remote(remote_repo, username="bob", owner="test",
+                                                  labbook=bob_user_lb)
         bob_wf = GitWorkflow(bob_user_lb)
         assert bob_user_lb.active_branch == "gm.workspace-bob"
         FileOperations.makedir(bob_user_lb, relative_path='output/sample-output-dir-xxx', create_activity_record=True)
@@ -176,9 +176,8 @@ class TestLabbookShareProtocol(object):
         remote_repo = test_user_lb.remote
 
         bob_user_lb = LabBook(mock_config_lfs_disabled[0])
-        bob_user_lb = loaders.from_remote(remote_repo, username="bob",
-                                          owner="test", labbook_name="labbook1",
-                                          labbook=bob_user_lb)
+        bob_user_lb = loaders.labbook_from_remote(remote_repo, username="bob",
+                                                  owner="test", labbook=bob_user_lb)
         wf_bob_user = GitWorkflow(bob_user_lb)
         assert bob_user_lb.active_branch == "gm.workspace-bob"
         with open(os.path.join(bob_user_lb.root_dir, 'code', 's1.txt'), 'w') as f:
@@ -222,8 +221,8 @@ class TestLabbookShareProtocol(object):
         remote_repo = test_user_lb.remote
 
         bob_user_lb = LabBook(mock_config_lfs_disabled[0])
-        bob_user_lb = loaders.from_remote(remote_repo, username="bob", owner="test",
-                                          labbook_name="labbook1", labbook=bob_user_lb)
+        bob_user_lb = loaders.labbook_from_remote(remote_repo, username="bob", owner="test",
+                                                  labbook=bob_user_lb)
         bob_wf = GitWorkflow(bob_user_lb)
         assert bob_user_lb.active_branch == "gm.workspace-bob"
         FileOperations.delete_files(bob_user_lb, 'code', ['testy-tracked-dir'])

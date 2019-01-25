@@ -46,7 +46,7 @@ from gtmcore.fixtures import remote_labbook_repo, mock_config_file
 
 from gtmcore.inventory.inventory import InventoryManager
 
-from lmsrvcore.middleware import error_middleware, LabBookLoaderMiddleware
+from lmsrvcore.middleware import error_middleware, DataloaderMiddleware
 
 
 @pytest.fixture()
@@ -289,22 +289,20 @@ class TestLabBookServiceMutations(object):
                     dstPath: "subdir/sillyfile"
                 }) {
                 updatedEdges {
-                    edges {
-                        node {
-                            id
-                            key
-                            isDir
-                            size
-                            section
-                        }
-                    }
+                    node {
+                        id
+                        key
+                        isDir
+                        size
+                        section
+                    }                    
                 }
             }
         }
         """
         result_1 = mock_create_labbooks[2].execute(query)
         assert 'errors' not in result_1
-        nodes = result_1['data']['moveLabbookFile']['updatedEdges']['edges']
+        nodes = result_1['data']['moveLabbookFile']['updatedEdges']
         assert len(nodes) == 1
         assert nodes[0]['node']['key'] == 'subdir/sillyfile'
         assert nodes[0]['node']['isDir'] is False
@@ -323,22 +321,20 @@ class TestLabBookServiceMutations(object):
                 dstPath: "subdir2"
             }) {
                 updatedEdges {
-                    edges {
-                        node {
-                            id
-                            section
-                            key
-                            isDir
-                            size
-                        }
-                    }
+                    node {
+                        id
+                        section
+                        key
+                        isDir
+                        size
+                    }                
                 }
             }
         }
         """
         result_2 = mock_create_labbooks[2].execute(query)
         assert 'errors' not in result_2
-        nodes = result_2['data']['moveLabbookFile']['updatedEdges']['edges']
+        nodes = result_2['data']['moveLabbookFile']['updatedEdges']
         assert len(nodes) == 2
         assert nodes[0]['node']['key'] == 'subdir2/subdir/'
         assert nodes[0]['node']['isDir'] is True
@@ -364,15 +360,13 @@ class TestLabBookServiceMutations(object):
                 dstPath: "subdir/sillyfile"
             }) {
                 updatedEdges {
-                    edges {
-                        node {
-                            section
-                            key
-                            isDir
-                            size
-                        }
+                    node {
+                        section
+                        key
+                        isDir
+                        size
                     }
-                }
+            }
             }
         }
         """
@@ -387,13 +381,11 @@ class TestLabBookServiceMutations(object):
                 dstPath: "sillyfile"
             }) {
                 updatedEdges {
-                    edges {
-                        node {
-                            section
-                            key
-                            isDir
-                            size
-                        }
+                    node {
+                        section
+                        key
+                        isDir
+                        size
                     }
                 }
             }
@@ -401,39 +393,39 @@ class TestLabBookServiceMutations(object):
         """
         result1 = mock_create_labbooks[2].execute(query1)
         assert 'errors' not in result1
-        assert len(result1['data']['moveLabbookFile']['updatedEdges']['edges']) == 1
-        assert result1['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['key'] == 'subdir/sillyfile'
-        assert result1['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['isDir'] == False
+        assert len(result1['data']['moveLabbookFile']['updatedEdges']) == 1
+        assert result1['data']['moveLabbookFile']['updatedEdges'][0]['node']['key'] == 'subdir/sillyfile'
+        assert result1['data']['moveLabbookFile']['updatedEdges'][0]['node']['isDir'] == False
         assert os.path.exists(os.path.join(labbook_dir, 'subdir', 'sillyfile'))
         assert os.path.isfile(os.path.join(labbook_dir, 'subdir', 'sillyfile'))
 
         result2 = mock_create_labbooks[2].execute(query2)
         assert 'errors' not in result2
-        assert len(result2['data']['moveLabbookFile']['updatedEdges']['edges']) == 1
-        assert result2['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['key'] == 'sillyfile'
-        assert result2['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['isDir'] == False
+        assert len(result2['data']['moveLabbookFile']['updatedEdges']) == 1
+        assert result2['data']['moveLabbookFile']['updatedEdges'][0]['node']['key'] == 'sillyfile'
+        assert result2['data']['moveLabbookFile']['updatedEdges'][0]['node']['isDir'] == False
         assert os.path.exists(os.path.join(labbook_dir, 'sillyfile'))
         assert os.path.isfile(os.path.join(labbook_dir, 'sillyfile'))
 
         result3 = mock_create_labbooks[2].execute(query1)
         assert 'errors' not in result3
-        assert len(result3['data']['moveLabbookFile']['updatedEdges']['edges']) == 1
-        assert result3['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['key'] == 'subdir/sillyfile'
-        assert result3['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['isDir'] == False
+        assert len(result3['data']['moveLabbookFile']['updatedEdges']) == 1
+        assert result3['data']['moveLabbookFile']['updatedEdges'][0]['node']['key'] == 'subdir/sillyfile'
+        assert result3['data']['moveLabbookFile']['updatedEdges'][0]['node']['isDir'] == False
         assert os.path.exists(os.path.join(labbook_dir, 'subdir', 'sillyfile'))
         assert os.path.isfile(os.path.join(labbook_dir, 'subdir', 'sillyfile'))
 
         result4 = mock_create_labbooks[2].execute(query2)
-        assert len(result4['data']['moveLabbookFile']['updatedEdges']['edges']) == 1
-        assert result4['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['key'] == 'sillyfile'
-        assert result4['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['isDir'] == False
+        assert len(result4['data']['moveLabbookFile']['updatedEdges']) == 1
+        assert result4['data']['moveLabbookFile']['updatedEdges'][0]['node']['key'] == 'sillyfile'
+        assert result4['data']['moveLabbookFile']['updatedEdges'][0]['node']['isDir'] == False
         assert os.path.exists(os.path.join(labbook_dir, 'sillyfile'))
         assert os.path.isfile(os.path.join(labbook_dir, 'sillyfile'))
 
         result5 = mock_create_labbooks[2].execute(query1)
-        assert len(result5['data']['moveLabbookFile']['updatedEdges']['edges']) == 1
-        assert result5['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['key'] == 'subdir/sillyfile'
-        assert result5['data']['moveLabbookFile']['updatedEdges']['edges'][0]['node']['isDir'] == False
+        assert len(result5['data']['moveLabbookFile']['updatedEdges']) == 1
+        assert result5['data']['moveLabbookFile']['updatedEdges'][0]['node']['key'] == 'subdir/sillyfile'
+        assert result5['data']['moveLabbookFile']['updatedEdges'][0]['node']['isDir'] == False
         assert os.path.exists(os.path.join(labbook_dir, 'subdir', 'sillyfile'))
         assert os.path.isfile(os.path.join(labbook_dir, 'subdir', 'sillyfile'))
 
@@ -864,7 +856,7 @@ class TestLabBookServiceMutations(object):
                 self.labbook_loader = None
                 self.files = {'uploadChunk': file_handle}
 
-        client = Client(fixture_working_dir[3], middleware=[LabBookLoaderMiddleware()])
+        client = Client(fixture_working_dir[3], middleware=[DataloaderMiddleware()])
 
         # Create a temporary labbook
         lb = InventoryManager(fixture_working_dir[0]).create_labbook("default", "default", "test-export",
