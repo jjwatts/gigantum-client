@@ -227,8 +227,16 @@ class Manifest(object):
         level1, level2 = self._get_object_subdirs(hash_str)
         return os.path.join(self.cache_mgr.cache_root, 'objects', level1, level2, hash_str)
 
-    async def _async_move(self, source, destination):
-        shutil.move(source, destination)
+    @staticmethod
+    def _blocking_move_and_link(source, destination):
+        if os.path.isfile(destination):
+            # Object already exists, no need to store again
+            os.remove(source)
+        else:
+            # Move file to new object
+            shutil.move(source, destination)
+        # Link object back
+        os.link(destination, source)
 
     async def _move_to_object_cache(self, relative_path, hash_str):
         """
@@ -248,15 +256,10 @@ class Manifest(object):
             os.makedirs(os.path.join(self.cache_mgr.cache_root, 'objects', level1, level2), exist_ok=True)
 
             destination = os.path.join(self.cache_mgr.cache_root, 'objects', level1, level2, hash_str)
-            if os.path.isfile(destination):
-                # Object already exists, no need to store again
-                os.remove(source)
-            else:
-                # Move file to new object
-                await self._async_move(source, destination)
 
-            # Link object back
-            os.link(destination, source)
+            # Move file to new object
+            loop = get_event_loop()
+            await loop.run_in_executor(None, self._blocking_move_and_link, source, destination)
 
             # Queue new object for push
             self.queue_to_push(destination, relative_path, self.dataset_revision)
@@ -282,12 +285,14 @@ class Manifest(object):
 
         if update_files:
             # Hash Files
-            hash_result = self.hasher.hash(update_files)
+            loop = get_event_loop()
+            task = asyncio.ensure_future(self.hasher.hash(update_files))
+            loop.run_until_complete(asyncio.gather(task))
 
             # Move files into object cache and link back to the revision directory
-            loop = get_event_loop()
+            hash_result = task.result()
             tasks = [asyncio.ensure_future(self._move_to_object_cache(fd.filename, fd.hash)) for fd in hash_result]
-            loop.run_until_complete(asyncio.ensure_future(asyncio.wait(tasks)))
+            loop.run_until_complete(asyncio.gather(*tasks))
 
             # Update fast hash
             self.hasher.fast_hash(update_files)
@@ -326,7 +331,7 @@ class Manifest(object):
                 'is_favorite': False,
                 'is_local': os.path.exists(abs_path),
                 'is_dir': os.path.isdir(abs_path),
-                'modified_at': int(item.get('m'))}
+                'modified_at': float(item.get('m'))}
 
     def gen_file_info(self, key) -> Dict[str, Any]:
         """

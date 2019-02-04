@@ -1,9 +1,12 @@
 from hashlib import blake2b
 import asyncio
+import aiofiles
+
 from typing import List, Tuple
 import pickle
 import os
 from collections import namedtuple
+
 from gtmcore.dataset.manifest.eventloop import get_event_loop
 
 
@@ -108,13 +111,6 @@ class SmartHash(object):
 
         self._save_fast_hash_file()
 
-    async def async_stat(self, path):
-        try:
-            result = os.stat(self.get_abs_path(path))
-        except FileNotFoundError:
-            result = None
-        return result
-
     def fast_hash(self, path_list: list, save: bool = True) -> List[HashResult]:
         """
 
@@ -131,54 +127,47 @@ class SmartHash(object):
         """
         fast_hash_result = list()
         if len(path_list) > 0:
-            loop = get_event_loop()
-            tasks = [asyncio.ensure_future(self.async_stat(path)) for path in path_list]
-            loop.run_until_complete(asyncio.ensure_future(asyncio.wait(tasks)))
+            file_info = [os.stat(self.get_abs_path(x)) for x in path_list]
 
-            for p, r in zip(path_list, tasks):
-                stat_data = r.result()
-                if stat_data:
-                    hash_val = f"{p}||{stat_data[6]}||{stat_data[8]}||{stat_data[9]}"
-                    fast_hash_result.append(HashResult(filename=p,
-                                                       hash=None,
-                                                       fast_hash=hash_val))
-                    if save:
-                        self.fast_hash_data[p] = hash_val
+            for path, info in zip(path_list, file_info):
+                hash_val = f"{path}||{info.st_size}||{info.st_mtime}||{info.st_ctime}"
+                fast_hash_result.append(HashResult(filename=path,
+                                                   hash=None,
+                                                   fast_hash=hash_val))
+                if save:
+                    self.fast_hash_data[path] = hash_val
 
             if save:
                 self._save_fast_hash_file()
 
         return fast_hash_result
 
-    @staticmethod
-    async def read_block(file_handle, blocksize):
-        return file_handle.read(blocksize)
-
-    async def async_hash_file(self, path: str, blocksize: int = 4096):
-        """Method to compute
+    async def compute_file_hash(self, path: str, blocksize: int = 4096) -> str:
+        """Method to compute the black2b hash for the provided file
 
         Args:
-            path:
-            blocksize:
+            path: Relative path to the file
+            blocksize: Blocksize to use when reading the file and computing the hash
 
         Returns:
-
+            str
         """
         h = blake2b()
 
         abs_path = self.get_abs_path(path)
         if os.path.isfile(abs_path):
-            with open(abs_path, 'rb') as fh:
-                file_buffer = await self.read_block(fh, blocksize)
-                while len(file_buffer) > 0:
-                    h.update(file_buffer)
-                    file_buffer = await self.read_block(fh, blocksize)
+            async with aiofiles.open(abs_path, 'rb') as fh:
+                chunk = await fh.read(blocksize)
+                while chunk:
+                    h.update(chunk)
+                    chunk = await fh.read(blocksize)
         else:
+            # If a directory, just hash the path as an alternative
             h.update(abs_path.encode('utf-8'))
 
         return h.hexdigest()
 
-    def hash(self, path_list: list) -> List[HashResult]:
+    async def hash(self, path_list: List[str]) -> List[HashResult]:
         """Method to compute the hash of a file
 
         Args:
@@ -187,18 +176,14 @@ class SmartHash(object):
         Returns:
             Tuple
         """
-        loop = get_event_loop()
-        tasks = [asyncio.ensure_future(self.async_hash_file(path, self.hashing_block_size)) for path in path_list]
-        loop.run_until_complete(asyncio.ensure_future(asyncio.gather(*tasks)))
+        hash_result_list: List[str] = [await self.compute_file_hash(path, self.hashing_block_size) for path in path_list]
 
-        fast_hash_result = self.fast_hash(path_list)
+        fast_hash_result_list = self.fast_hash(path_list)
 
         result = list()
-        for path, hash_result, fast_result in zip(path_list, tasks, fast_hash_result):
-            task_result = hash_result.result()
-            assert fast_result.filename == path, "Task processing out of order. Failed to hash."
-            result.append(HashResult(filename=path,
-                                     hash=task_result,
-                                     fast_hash=fast_result.fast_hash))
+        for hash_result, fast_hash_result in zip(hash_result_list, fast_hash_result_list):
+            result.append(HashResult(filename=fast_hash_result.filename,
+                                     hash=hash_result,
+                                     fast_hash=fast_hash_result.fast_hash))
 
         return result

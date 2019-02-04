@@ -98,6 +98,7 @@ class TestUploadFilesMutations(object):
                                           key
                                           isDir
                                           size
+                                          modifiedAt
                                         }}
                                       }}
                                     }}
@@ -109,6 +110,9 @@ class TestUploadFilesMutations(object):
         assert r['data']['addLabbookFile']['newLabbookFileEdge']['node']['isDir'] is False
         assert r['data']['addLabbookFile']['newLabbookFileEdge']['node']['key'] == 'newdir/myValidFile.dat'
         assert r['data']['addLabbookFile']['newLabbookFileEdge']['node']['size'] == f"{new_file_size}"
+        assert isinstance(r['data']['addLabbookFile']['newLabbookFileEdge']['node']['modifiedAt'], float)
+        assert r['data']['addLabbookFile']['newLabbookFileEdge']['node']['modifiedAt'] != \
+               round(r['data']['addLabbookFile']['newLabbookFileEdge']['node']['modifiedAt'])
         # When done uploading, file should exist in the labbook
         assert os.path.exists(target_file)
         assert os.path.isfile(target_file)

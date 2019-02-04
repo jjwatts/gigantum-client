@@ -23,8 +23,9 @@ class DatasetFile(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
     # True indicates that the file has been downloaded and exists locally
     is_local = graphene.Boolean()
 
-    # Modified at contains timestamp of last modified - NOT creation - in epoch time.
-    modified_at = graphene.Int()
+    # Modified at contains timestamp of last modified - NOT creation - in epoch time with nanosecond resolution if
+    # supported by the underlying filesystem of the host
+    modified_at = graphene.Float()
 
     # Size in bytes encoded as a string.
     size = graphene.String()

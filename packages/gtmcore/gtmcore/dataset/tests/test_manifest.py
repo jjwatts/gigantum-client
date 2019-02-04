@@ -152,10 +152,11 @@ class TestManifest(object):
 
         status = manifest.status()
         assert len(status.created) == 1
-        assert len(status.modified) == 1
+        assert len(status.modified) == 2
         assert len(status.deleted) == 1
         assert "test99.txt" in status.created
         assert "test2.txt" in status.modified
+        assert "test_dir/nested/" in status.modified
         assert "test_dir/nested/test4.txt" in status.deleted
 
         assert os.path.exists(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision,
@@ -418,6 +419,8 @@ class TestManifest(object):
         assert len(status.created) == 0
         assert len(status.modified) == 0
         assert len(status.deleted) == 1
+        assert 'dir1/test1.txt' in status.deleted
+
         manifest.sweep_all_changes()
         status = manifest.status()
         assert len(status.created) == 0

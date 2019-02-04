@@ -42,8 +42,9 @@ class LabbookFile(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
     # True indicates that path points to a favorite
     is_favorite = graphene.Boolean()
 
-    # Modified at contains timestamp of last modified - NOT creation - in epoch time.
-    modified_at = graphene.Int()
+    # Modified at contains timestamp of last modified - NOT creation - in epoch time with nanosecond resolution if
+    # supported by the underlying filesystem of the host
+    modified_at = graphene.Float()
 
     # Size in bytes encoded as a string.
     size = graphene.String()
@@ -63,7 +64,7 @@ class LabbookFile(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
 
         # Set class properties
         self.is_dir = self._file_info['is_dir']
-        self.modified_at = round(self._file_info['modified_at'])
+        self.modified_at = self._file_info['modified_at']
         self.size = f"{self._file_info['size']}"
         self.is_favorite = self._file_info['is_favorite']
 
