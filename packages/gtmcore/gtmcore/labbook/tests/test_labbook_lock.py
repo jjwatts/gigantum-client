@@ -40,10 +40,6 @@ def write_function(filename: str, delay: int, value: str, labbook: LabBook) -> N
 
 class TestLabBookLock(object):
 
-    def test_vacuous(self):
-        time.sleep(2)
-
-
     def test_simple_write(self, mock_labbook):
         """Test simple lock case"""
         filename = os.path.join(mock_labbook[2].root_dir, 'testfile.txt')
