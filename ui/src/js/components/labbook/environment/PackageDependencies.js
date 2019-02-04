@@ -6,8 +6,8 @@ import uuidv4 from 'uuid/v4';
 import { connect } from 'react-redux';
 
 // components
-import ButtonLoader from 'Components/shared/ButtonLoader';
-import Loader from 'Components/shared/Loader';
+import ButtonLoader from 'Components/common/ButtonLoader';
+import Loader from 'Components/common/Loader';
 // store
 import store from 'JS/redux/store';
 import {

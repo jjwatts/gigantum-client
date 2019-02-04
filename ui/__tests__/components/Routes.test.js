@@ -8,7 +8,7 @@ import renderer from 'react-test-renderer';
 import relayTestingUtils from '@gigantum/relay-testing-utils';
 import { MemoryRouter } from 'react-router';
 
-const variables = { first: 20, owner: 'default', name: 'ui-test-labbook' };
+const variables = { first: 20, owner: 'uitest', name: 'ui-test-labbook' };
 export default variables;
 
 test('Test Routes Rendering', () => {
@@ -29,7 +29,7 @@ test('Test Routes Rendering', () => {
 
 
 describe('Test Routes View Change', () => {
-  
+
       const auth = new Auth();
       auth.isAuthenticated = function () { return true; };
       auth.login = function () { return true; };

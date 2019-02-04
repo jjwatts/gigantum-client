@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { createFragmentContainer, graphql } from 'react-relay';
 // components
 import PackageCount from 'Components/labbook/overview/PackageCount';
-import Loader from 'Components/shared/Loader';
+import Loader from 'Components/common/Loader';
 // assets
 import './Base.scss';
 

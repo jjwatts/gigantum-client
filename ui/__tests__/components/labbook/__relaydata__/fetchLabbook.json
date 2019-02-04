@@ -6,7 +6,7 @@
    "readme": null,
    "defaultRemote": null,
    "owner": "uitest",
-   "creationDateUtc": "2019-01-18T14:54:18.912489",
+   "creationDateUtc": "2019-01-18T14:54:18+00:00",
    "visibility": "local",
    "environment": {
     "containerStatus": "NOT_RUNNING",

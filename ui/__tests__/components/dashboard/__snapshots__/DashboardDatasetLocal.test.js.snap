@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Test LocalDatasets 1`] = `
+exports[`DashbboardDatasetsLocal Renders a snapshot 1`] = `
 <div
   className="Datasets__listing"
 >
@@ -76,58 +76,6 @@ exports[`Test LocalDatasets 1`] = `
         className="hidden"
       />
     </div>
-    <a
-      className="Card Card--text column-4-span-3 flex flex--column justify--space-between"
-      href="/datasets/uitest/ui-test-dataset"
-      onClick={[Function]}
-    >
-      <div
-        className="LocalDatasets__row--icons"
-      />
-      <div
-        className="LocalDatasets__row--text"
-      >
-        <div>
-          <h6
-            className="LocalDatasets__panel-title"
-            onClick={[Function]}
-          >
-            <span>
-              <span
-                className=""
-              >
-                ui-test-dataset
-              </span>
-            </span>
-          </h6>
-        </div>
-        <p
-          className="LocalDatasets__paragraph LocalDatasets__paragraph--owner "
-        >
-          uitest
-        </p>
-        <p
-          className="LocalDatasets__paragraph LocalDatasets__paragraph--owner"
-        >
-          Modified Fri Jan 11 2019
-        </p>
-        <p
-          className="LocalDatasets__paragraph LocalDatasets__paragraph--description"
-        >
-          <span>
-            <span
-              className=""
-            >
-              This is a testing dataset
-            </span>
-          </span>
-        </p>
-      </div>
-      <div
-        className="Tooltip LocalDatasetPanel__loading"
-        data-tooltip="loading"
-      />
-    </a>
     <div
       className="DatasetPaginationLoader--hidden"
     >

@@ -18,14 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import uuid
+from typing import Optional
 
 import graphene
-import confhttpproxy
+from confhttpproxy import ProxyRouter
 
 from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.labbook.labbook import LabBook
 from gtmcore.exceptions import GigantumException
 from gtmcore.container.container import ContainerOperations
-from gtmcore.container.jupyter import check_jupyter_reachable
+from gtmcore.mitmproxy.mitmproxy import MITMProxyOperations
+from gtmcore.container.jupyter import check_jupyter_reachable, start_jupyter
+from gtmcore.container.rserver import start_rserver
 from gtmcore.logging import LMLogger
 from gtmcore.activity.services import start_labbook_monitor
 
@@ -33,6 +37,12 @@ from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 
 logger = LMLogger.get_logger()
 
+def unique_id() -> str:
+    """This is used to, e.g., identify a specific running labbook.
+
+    This allows us to link things like activity monitors, etc.
+    It can safely be improved or changed, as consumers should only expect some "random" string."""
+    return uuid.uuid4().hex[:10]
 
 class StartDevTool(graphene.relay.ClientIDMutation):
     class Input:
@@ -45,48 +55,16 @@ class StartDevTool(graphene.relay.ClientIDMutation):
     path = graphene.String()
 
     @classmethod
-    def _start_dev_tool(cls, lb, username, dev_tool, container_override_id=None):
-        lb_ip = ContainerOperations.get_labbook_ip(lb, username)
-        lb_port = 8888
-        lb_endpoint = f'http://{lb_ip}:{lb_port}'
+    def _start_dev_tool(cls, lb: LabBook, username: str, dev_tool: str, container_override_id: str = None):
+        pr = ProxyRouter.get_proxy(lb.client_config.config['proxy'])
 
-        pr = confhttpproxy.ProxyRouter.get_proxy(lb.client_config.config['proxy'])
-        routes = pr.routes
-
-        est_target = [k for k in routes.keys()
-                      if lb_endpoint in routes[k]['target']
-                      and 'jupyter' in k]
-
-        start_jupyter = True
-        suffix = None
-        if len(est_target) == 1:
-            logger.info(f'Found existing Jupyter instance in route table for {str(lb)}.')
-            suffix = est_target[0]
-
-            # wait for jupyter to be up
-            try:
-                check_jupyter_reachable(lb_ip, lb_port, suffix)
-                start_jupyter = False
-            except GigantumException:
-                logger.warning(f'Detected stale route. Attempting to restart Jupyter and clean up route table.')
-                pr.remove(suffix[1:])
-
-        elif len(est_target) > 1:
-            raise ValueError(f"Multiple Jupyter instances found in route table for {str(lb)}! Restart container.")
-
-        if start_jupyter:
-            rt_prefix = str(uuid.uuid4()).replace('-', '')[:8]
-            rt_prefix, _ = pr.add(lb_endpoint, f'jupyter/{rt_prefix}')
-
-            # Start jupyterlab
-            _, suffix = ContainerOperations.start_dev_tool(
-                lb, dev_tool_name=dev_tool, username=username,
-                tag=container_override_id, proxy_prefix=rt_prefix)
-
-            # Ensure we start monitor IFF jupyter isn't already running.
-            start_labbook_monitor(lb, username, dev_tool,
-                                  url=f'{lb_endpoint}/{rt_prefix}',
-                                  author=get_logged_in_author())
+        if dev_tool == "rstudio":
+            suffix = cls._start_rstudio(lb, pr, username)
+        elif dev_tool in ["jupyterlab", "notebook"]:
+            # Note that starting the dev tool is identical whether we're targeting jupyterlab or notebook
+            suffix = cls._start_jupyter_tool(lb, pr, username, container_override_id)
+        else:
+            raise GigantumException(f"'{dev_tool}' not currently supported as a Dev Tool")
 
         # Don't include the port in the path if running on 80
         apparent_proxy_port = lb.client_config.config['proxy']["apparent_proxy_port"]
@@ -98,14 +76,104 @@ class StartDevTool(graphene.relay.ClientIDMutation):
         return path
 
     @classmethod
-    def mutate_and_get_payload(cls, root, info, owner, labbook_name, dev_tool,
-                               container_override_id=None, client_mutation_id=None):
+    def _start_jupyter_tool(cls, lb: LabBook, pr: ProxyRouter, username: str,
+                            container_override_id: str = None):
+        tool_port = 8888
+        lb_ip = ContainerOperations.get_labbook_ip(lb, username)
+        lb_endpoint = f'http://{lb_ip}:{tool_port}'
+
+        matched_routes = pr.get_matching_routes(lb_endpoint, 'jupyter')
+
+        run_start_jupyter = True
+        suffix = None
+        if len(matched_routes) == 1:
+            logger.info(f'Found existing Jupyter instance in route table for {str(lb)}.')
+            suffix = matched_routes[0]
+
+            # wait for jupyter to be up
+            try:
+                check_jupyter_reachable(lb_ip, tool_port, suffix)
+                run_start_jupyter = False
+            except GigantumException:
+                logger.warning(f'Detected stale route. Attempting to restart Jupyter and clean up route table.')
+                pr.remove(suffix[1:])
+
+        elif len(matched_routes) > 1:
+            raise ValueError(f"Multiple Jupyter instances found in route table for {str(lb)}! Restart container.")
+
+        if run_start_jupyter:
+            rt_prefix = unique_id()
+            rt_prefix, _ = pr.add(lb_endpoint, f'jupyter/{rt_prefix}')
+
+            # Start jupyterlab
+            suffix = start_jupyter(lb, username, tag=container_override_id, proxy_prefix=rt_prefix)
+
+            # Ensure we start monitor IFF jupyter isn't already running.
+            start_labbook_monitor(lb, username, 'jupyterlab',
+                                  url=f'{lb_endpoint}/{rt_prefix}',
+                                  author=get_logged_in_author())
+
+        return suffix
+
+    @classmethod
+    def _start_rstudio(cls, lb: LabBook, pr: ProxyRouter, username: str,
+                       container_override_id: str = None):
+        lb_ip = ContainerOperations.get_labbook_ip(lb, username)
+        lb_endpoint = f'http://{lb_ip}:8787'
+
+        mitm_endpoint = MITMProxyOperations.get_mitmendpoint(lb_endpoint)
+        # start mitm proxy if it doesn't exist
+        if mitm_endpoint is None:
+
+            # get a proxy prefix
+            unique_key = unique_id()
+
+            # start proxy
+            mitm_endpoint = MITMProxyOperations.start_mitm_proxy(lb_endpoint, unique_key)
+
+            # Ensure we start monitor when starting MITM proxy
+            start_labbook_monitor(lb, username, "rstudio",
+                                  # This is the endpoint for the proxy and not the rserver?
+                                  url=f'{lb_endpoint}/{unique_key}',
+                                  author=get_logged_in_author())
+
+            # All messages will come through MITM, so we don't need to monitor rserver directly
+            start_rserver(lb, username, tag=container_override_id)
+
+            # add route
+            rt_prefix, _ = pr.add(mitm_endpoint, f'rserver/{unique_key}/')
+            # Warning: RStudio will break if there is a trailing slash!
+            suffix = f'/{rt_prefix}'
+
+        else:
+            # existing route to MITM or not?
+            matched_routes = pr.get_matching_routes(mitm_endpoint, 'rserver')
+
+            if len(matched_routes) == 1:
+                suffix = matched_routes[0]
+            elif len(matched_routes) == 0:
+                logger.warning('Creating missing route for existing RStudio mitmproxy_proxy')
+                # TODO DC: This feels redundant with already getting the mitm_endpoint above
+                # Can we refactor this into a more coherent single operation? Maybe an MITMProxy instance?
+                unique_key = MITMProxyOperations.get_mitmkey(lb_endpoint)
+                # add route
+                rt_prefix, _ = pr.add(mitm_endpoint, f'rserver/{unique_key}/')
+                # Warning: RStudio will break if there is a trailing slash!
+                suffix = f'/{rt_prefix}'
+            else:
+                raise ValueError(f"Multiple RStudio proxy instances for {str(lb)}. Please restart the Project "
+                                 "or manually delete stale containers.")
+
+        return suffix
+
+    @classmethod
+    def mutate_and_get_payload(cls, root: str, info: str, owner: str, labbook_name: str, dev_tool: str,
+                               container_override_id: str = None, client_mutation_id: str = None):
         username = get_logged_in_username()
         lb = InventoryManager().load_labbook(username, owner, labbook_name,
                                              author=get_logged_in_author())
 
-        # TODO - Fail fast if already locked
         with lb.lock(failfast=True):
-            path = cls._start_dev_tool(lb, username, "jupyterlab")
+            path = cls._start_dev_tool(lb, username, dev_tool.lower(), container_override_id)
 
         return StartDevTool(path=path)

@@ -24,8 +24,8 @@ import uuid
 import os
 
 from gtmcore.activity.monitors.monitor_jupyterlab import JupyterLabNotebookMonitor, JupyterLabCodeProcessor, \
-    JupyterLabFileChangeProcessor, JupyterLabPlaintextProcessor, JupyterLabImageExtractorProcessor
-from gtmcore.activity.processors.core import ActivityShowBasicProcessor
+    JupyterLabPlaintextProcessor, JupyterLabImageExtractorProcessor
+from gtmcore.activity.processors.core import ActivityShowBasicProcessor, GenericFileChangeProcessor
 from gtmcore.activity import ActivityStore, ActivityType, ActivityDetailType
 
 
@@ -49,7 +49,7 @@ class TestJupyterLabNotebookMonitor(object):
 
         assert len(monitor.processors) == 6
         assert type(monitor.processors[0]) == JupyterLabCodeProcessor
-        assert type(monitor.processors[1]) == JupyterLabFileChangeProcessor
+        assert type(monitor.processors[1]) == GenericFileChangeProcessor
         assert type(monitor.processors[2]) == JupyterLabPlaintextProcessor
         assert type(monitor.processors[3]) == JupyterLabImageExtractorProcessor
         assert type(monitor.processors[4]) == JupyterLabCellVisibilityProcessor

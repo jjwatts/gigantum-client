@@ -35,6 +35,29 @@ from gtmcore.labbook.schemas import CURRENT_SCHEMA
 
 logger = LMLogger.get_logger()
 
+PROJECT_ENTRYPOINT = \
+"""#!/bin/bash
+
+USER_ID=${LOCAL_USER_ID:-9001}
+
+echo "Starting with UID: $USER_ID"
+useradd --shell /bin/bash -u $USER_ID -o -c "" -m giguser
+export HOME=/home/giguser
+
+# Setup /mnt/ as a safe place to put user runnable code
+mkdir /mnt/labbook
+chown -R giguser:root /mnt/labbook
+
+# Setup docker sock to run as the user
+chown giguser:root /run/docker.sock
+chmod 777 /var/run/docker.sock
+
+export JUPYTER_RUNTIME_DIR=/mnt/share/jupyter/runtime
+chown -R giguser:root /mnt/share/
+
+# Run the Docker Command
+exec gosu giguser "$@"
+"""
 
 def strip_package_and_version(package_manager: str, package_str: str) -> Tuple[str, Optional[str]]:
     """For a particular package encoded with version, this strips off the version and returns a tuple
@@ -97,35 +120,13 @@ class ComponentManager(object):
                    'docker']
 
         for subdir in subdirs:
-            if not os.path.exists(os.path.join(self.env_dir, subdir)):
-                os.mkdir(os.path.join(self.env_dir, subdir))
+            os.makedirs(os.path.join(self.env_dir, subdir), exist_ok=True)
 
         # Add entrypoint.sh file if missing
         entrypoint_file = os.path.join(self.env_dir, 'entrypoint.sh')
         if os.path.exists(entrypoint_file) is False:
             with open(entrypoint_file, 'wt') as ef:
-                ef.write("""#!/bin/bash
-
-USER_ID=${LOCAL_USER_ID:-9001}
-
-echo "Starting with UID: $USER_ID"
-useradd --shell /bin/bash -u $USER_ID -o -c "" -m giguser
-export HOME=/home/giguser
-
-# Setup /mnt/ as a safe place to put user runnable code
-mkdir /mnt/labbook
-chown -R giguser:root /mnt/labbook
-
-# Setup docker sock to run as the user
-chown giguser:root /run/docker.sock
-chmod 777 /var/run/docker.sock
-
-export JUPYTER_RUNTIME_DIR=/mnt/share/jupyter/runtime
-chown -R giguser:root /mnt/share/
-
-# Run the Docker Command
-exec gosu giguser "$@"
-""")
+                ef.write(PROJECT_ENTRYPOINT)
 
             short_message = "Adding missing entrypoint.sh, required for container automation"
             self.labbook.git.add(entrypoint_file)

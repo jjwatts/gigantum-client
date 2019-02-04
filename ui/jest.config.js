@@ -5,7 +5,6 @@ module.exports = {
   "setupFiles": [
     "<rootDir>/__tests__/setupTests.js",
     "<rootDir>/config/polyfills.js",
-    "<rootDir>/__tests__/slickTestSetup.js",
     "<rootDir>/__tests__/localStorage.js",
   ],
   "testMatch": [
@@ -50,6 +49,7 @@ module.exports = {
     "^react-markdown$": "react-markdown",
     "^Components[/](.+)": "<rootDir>/src/js/components/$1",
     "^Mutations[/](.+)": "<rootDir>/src/js/mutations/$1",
+    "^Tests[/](.+)": "<rootDir>/__tests__/$1",
     "^JS[/](.+)": "<rootDir>/src/js/$1"
   },
   "testEnvironment": "jsdom"

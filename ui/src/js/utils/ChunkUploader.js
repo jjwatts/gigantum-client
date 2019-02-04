@@ -10,6 +10,7 @@ import CompleteDatasetUploadTransactionMutation from 'Mutations/fileBrowser/Comp
 import store from 'JS/redux/store';
 import { setUploadMessageUpdate, setUploadMessageRemove, setWarningMessage } from 'JS/redux/reducers/footer';
 import { setFinishedUploading, setPauseChunkUpload } from 'JS/redux/reducers/labbook/fileBrowser/fileBrowserWrapper';
+import { setIsProcessing } from 'JS/redux/reducers/dataset/dataset';
 import config from 'JS/config';
 
 const uploadLabbookChunk = (file, chunk, accessToken, getChunkCallback, type) => {
@@ -39,9 +40,9 @@ const updateTotalStatus = (file, labbookName, owner, transactionId, section) => 
   setUploadMessageUpdate(`Uploaded ${fileCount} of ${totalFiles} files`, fileCount, progressBarPercentage);
 
   if (fileCount === totalFiles) {
-    setFinishedUploading();
     setUploadMessageUpdate(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, progressBarPercentage);
     if (section === 'data') {
+      setIsProcessing(true);
       CompleteDatasetUploadTransactionMutation(
         'connectionKey',
         owner,
@@ -50,10 +51,14 @@ const updateTotalStatus = (file, labbookName, owner, transactionId, section) => 
         false,
         transactionId,
         (response, error) => {
+          setTimeout(() => {
+            setIsProcessing(false);
+            setFinishedUploading();
+          }, 1100);
           setUploadMessageRemove(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, progressBarPercentage);
         },
       );
-      } else {
+    } else {
       CompleteBatchUploadTransactionMutation(
         'connectionKey',
         owner,
@@ -62,6 +67,7 @@ const updateTotalStatus = (file, labbookName, owner, transactionId, section) => 
         false,
         transactionId,
         (response, error) => {
+          setFinishedUploading();
           setUploadMessageRemove(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, progressBarPercentage);
         },
       );
@@ -80,9 +86,9 @@ const updateChunkStatus = (file, chunkData, labbookName, owner, transactionId, s
   setUploadMessageUpdate(`${uploadedChunkSize} of ${fileSize} files`, 1, (((chunkSize * chunkIndex) / (fileSizeKb * 1000)) * 100));
 
   if ((chunkSize * chunkIndex) >= (fileSizeKb * 1000)) {
-    setFinishedUploading();
     setUploadMessageUpdate('Please wait while upload is finalizing.', null, (((chunkSize * chunkIndex) / (fileSizeKb * 1000)) * 100));
     if (section === 'data') {
+      setIsProcessing(true);
       CompleteDatasetUploadTransactionMutation(
         'connectionKey',
         owner,
@@ -91,6 +97,10 @@ const updateChunkStatus = (file, chunkData, labbookName, owner, transactionId, s
         false,
         transactionId,
         (response, error) => {
+          setTimeout(() => {
+            setIsProcessing(false);
+            setFinishedUploading();
+          }, 1100);
           setUploadMessageRemove('Please wait while upload is finalizing.', null, (((chunkSize * chunkIndex) / (fileSizeKb * 1000)) * 100));
         },
       );
@@ -103,6 +113,7 @@ const updateChunkStatus = (file, chunkData, labbookName, owner, transactionId, s
         false,
         transactionId,
         (response, error) => {
+          setFinishedUploading();
           setUploadMessageRemove('Please wait while upload is finalizing.', null, (((chunkSize * chunkIndex) / (fileSizeKb * 1000)) * 100));
         },
       );

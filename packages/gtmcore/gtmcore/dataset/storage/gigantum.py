@@ -1,19 +1,195 @@
 import asyncio
+import aiohttp
+import aiofiles
+import copy
+
 from gtmcore.dataset import Dataset
 from gtmcore.dataset.storage.backend import StorageBackend
 from typing import Optional, List, Dict, Callable, Tuple
-import requests
-import time
-import shutil
 import os
 
 from gtmcore.dataset.io import PushResult, PushObject, PullResult, PullObject
 from gtmcore.logging import LMLogger
+from gtmcore.dataset.manifest.eventloop import get_event_loop
 
 logger = LMLogger.get_logger()
 
 
+class PresignedS3Upload(object):
+    def __init__(self, object_service_root: str, object_service_headers: dict, upload_chunk_size: int,
+                 object_details: PushObject) -> None:
+        self.service_root = object_service_root
+        self.object_service_headers = object_service_headers
+        self.upload_chunk_size = upload_chunk_size
+
+        self.object_details = object_details
+        self.skip_object = False
+
+        self.presigned_s3_url = ""
+        self.s3_headers: Dict = dict()
+
+    @property
+    def is_presigned(self) -> bool:
+        """Method to check if this upload request has successfully been presigned
+
+        Returns:
+            bool
+        """
+        return self.presigned_s3_url != ""
+
+    def set_s3_headers(self, encryption_key_id: str) -> None:
+        """Method to set the header property for S3
+
+        Args:
+            encryption_key_id: The encryption key id returned from the object service. This is required so the request
+                               made to s3 is consistent with what was signed
+
+        Returns:
+            None
+        """
+        self.s3_headers = {'x-amz-server-side-encryption': 'aws:kms',
+                           'x-amz-server-side-encryption-aws-kms-key-id': encryption_key_id}
+
+    async def get_presigned_s3_url(self, session: aiohttp.ClientSession) -> None:
+        """Method to make a request to the object service and pre-sign an S3 PUT
+
+        Args:
+            session: The current aiohttp session
+
+        Returns:
+            None
+        """
+        # Get the object id from the object path
+        _, obj_id = self.object_details.object_path.rsplit('/', 1)
+
+        async with session.put(f"{self.service_root}/{obj_id}", headers=self.object_service_headers) as response:
+            if response.status == 200:
+                # Successfully signed the request
+                response_data = await response.json()
+                self.presigned_s3_url = response_data.get("presigned_url")
+                self.set_s3_headers(response_data.get("key_id"))
+            elif response.status == 403:
+                # Forbidden indicates Object already exists, don't need to re-push since we deduplicate so mark it skip
+                self.skip_object = True
+            else:
+                # Something when wrong while trying to pre-sign the URL.
+                body = await response.json()
+                raise IOError(f"Failed to get pre-signed URL for PUT at {self.object_details.dataset_path}:{obj_id}."
+                              f" Status: {response.status}. Response: {body}")
+
+    async def _file_loader(self, filename: str):
+        """Method to provide non-blocking chunked reads of files, useful if large.
+
+        Args:
+            filename: absolute path to the file to upload
+        """
+        async with aiofiles.open(filename, 'rb') as f:
+            chunk = await f.read(self.upload_chunk_size)
+            while chunk:
+                yield chunk
+                chunk = await f.read(self.upload_chunk_size)
+
+    async def put_object(self, session: aiohttp.ClientSession) -> None:
+        """Method to put the object in S3 after the pre-signed URL has been obtained
+
+        Args:
+            session: The current aiohttp session
+
+        Returns:
+            None
+        """
+        # Set the Content-Length of the PUT explicitly since it won't happen automatically due to streaming IO
+        headers = copy.deepcopy(self.s3_headers)
+        headers['Content-Length'] = str(os.path.getsize(self.object_details.object_path))
+
+        async with session.put(self.presigned_s3_url, headers=headers,
+                               data=self._file_loader(filename=self.object_details.object_path)) as response:
+            if response.status != 200:
+                # An error occurred
+                body = await response.text()
+                raise IOError(f"Failed to push {self.object_details.dataset_path} to storage backend."
+                              f" Status: {response.status}. Response: {body}")
+
+
+class PresignedS3Download(object):
+    def __init__(self, object_service_root: str, object_service_headers: dict, download_chunk_size: int,
+                 object_details: PullObject) -> None:
+        self.service_root = object_service_root
+        self.object_service_headers = object_service_headers
+        self.download_chunk_size = download_chunk_size
+
+        self.object_details = object_details
+
+        self.presigned_s3_url = ""
+
+    @property
+    def is_presigned(self) -> bool:
+        """Method to check if this upload request has successfully been presigned
+
+        Returns:
+            bool
+        """
+        return self.presigned_s3_url != ""
+
+    async def get_presigned_s3_url(self, session: aiohttp.ClientSession) -> None:
+        """Method to make a request to the object service and pre-sign an S3 GET
+
+        Args:
+            session: The current aiohttp session
+
+        Returns:
+            None
+        """
+        # Get the object id from the object path
+        _, obj_id = self.object_details.object_path.rsplit('/', 1)
+
+        async with session.get(f"{self.service_root}/{obj_id}", headers=self.object_service_headers) as response:
+            if response.status == 200:
+                # Successfully signed the request
+                response_data = await response.json()
+                self.presigned_s3_url = response_data.get("presigned_url")
+            else:
+                # Something when wrong while trying to pre-sign the URL.
+                body = await response.json()
+                raise IOError(f"Failed to get pre-signed URL for GET at {self.object_details.dataset_path}:{obj_id}."
+                              f" Status: {response.status}. Response: {body}")
+
+    async def get_object(self, session: aiohttp.ClientSession) -> None:
+        """Method to get the object from S3 after the pre-signed URL has been obtained
+
+        Args:
+            session: The current aiohttp session
+
+        Returns:
+            None
+        """
+        try:
+            async with session.get(self.presigned_s3_url) as response:
+                if response.status != 200:
+                    # An error occurred
+                    body = await response.text()
+                    raise IOError(f"Failed to get {self.object_details.dataset_path} to storage backend."
+                                  f" Status: {response.status}. Response: {body}")
+
+                async with aiofiles.open(self.object_details.object_path, 'wb') as fd:
+                    while True:
+                        chunk = await response.content.read(self.download_chunk_size)
+                        if not chunk:
+                            break
+                        await fd.write(chunk)
+        except Exception as err:
+            logger.exception(err)
+            raise IOError(f"Failed to get {self.object_details.dataset_path} to storage backend. {err}")
+
+
 class GigantumObjectStore(StorageBackend):
+
+    def __init__(self) -> None:
+        # Additional attributes to track processed requests
+        self.successful_requests: List = list()
+        self.failed_requests: List = list()
+
+        super().__init__()
 
     def _backend_metadata(self) -> dict:
         """Method to specify Storage Backend metadata for each implementation. This is used to render the UI
@@ -31,6 +207,7 @@ class GigantumObjectStore(StorageBackend):
                 "icon": "gigantum_object_storage.png",
                 "url": "https://docs.gigantum.com",
                 "is_managed": True,
+                "client_should_dedup_on_push": True,
                 "readme": """Gigantum Cloud Datasets are backed by a scalable object storage service that is linked to
 your Gigantum account and credentials. It provides efficient storage at the file level and works seamlessly with the 
 Client.
@@ -62,7 +239,7 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         return dict()
 
     @staticmethod
-    def _get_service_endpoint(dataset: Dataset) -> str:
+    def _object_service_endpoint(dataset: Dataset) -> str:
         """
 
         Args:
@@ -83,7 +260,7 @@ to Gigantum Cloud will count towards your storage quota and include all versions
 
         return f"https://{obj_service}"
 
-    def _get_request_headers(self) -> dict:
+    def _object_service_headers(self) -> dict:
         """Method to generate the request headers, including authorization information
 
         Returns:
@@ -91,63 +268,8 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         """
         return {'Authorization': f"Bearer {self.configuration.get('gigantum_bearer_token')}",
                 'Identity': self.configuration.get("gigantum_id_token"),
+                'Content-Type': 'application/json',
                 'Accept': 'application/json'}
-
-    def _gen_push_url(self, dataset: Dataset, object_id: str) -> Tuple[str, str]:
-        """
-
-        Args:
-            dataset:
-            object_id:
-
-        Returns:
-
-        """
-        url = f"{self._get_service_endpoint(dataset)}/{dataset.namespace}/{dataset.name}/{object_id}"
-
-        presigned_url: Optional[str] = None
-        encryption_key: Optional[str] = None
-        for ii in range(4):
-            # Get signed url with backoff
-            response = requests.put(url, headers=self._get_request_headers(), timeout=20)
-            if response.status_code == 200:
-                presigned_url = response.json().get("presigned_url")
-                encryption_key = response.json().get("key_id")
-                break
-            logger.warning(f"Failed to get signed URL for PUT at {url}. Retrying in {2**ii} seconds")
-            time.sleep(2**ii)
-
-        if not presigned_url or not encryption_key:
-            raise IOError(f"Failed to get signed URL for PUT at {url}")
-
-        return presigned_url, encryption_key
-
-    def _gen_pull_url(self, dataset: Dataset, object_id: str) -> str:
-        """
-
-        Args:
-            dataset:
-            object_id:
-
-        Returns:
-
-        """
-        url = f"{self._get_service_endpoint(dataset)}/{dataset.namespace}/{dataset.name}/{object_id}"
-
-        presigned_url = None
-        for ii in range(4):
-            # Get signed url with backoff
-            response = requests.get(url, headers=self._get_request_headers(), timeout=20)
-            if response.status_code == 200:
-                presigned_url = response.json().get("presigned_url")
-                break
-            logger.warning(f"Failed to get signed URL for GET at {url}. Retrying in {2**ii} seconds")
-            time.sleep(2**ii)
-
-        if not presigned_url:
-            raise IOError(f"Failed to get signed URL for GET at {url}")
-
-        return presigned_url
 
     def prepare_push(self, dataset, objects: List[PushObject], status_update_fn: Callable) -> None:
         """Gigantum Object Service only requires that the user's tokens have been set
@@ -170,49 +292,6 @@ to Gigantum Cloud will count towards your storage quota and include all versions
             raise ValueError("User must have valid session to push objects to Gigantum Cloud")
 
         status_update_fn(f"Ready to push objects to {dataset.namespace}/{dataset.name}")
-
-    def push_objects(self, dataset: Dataset, objects: List[PushObject], status_update_fn: Callable) -> PushResult:
-        """
-
-        Args:
-            dataset:
-            objects:
-            status_update_fn:
-
-        Returns:
-
-        """
-        successes = list()
-        failures = list()
-        message = "Successfully pushed all objects"
-        for cnt, obj in enumerate(objects):
-            try:
-                status_update_fn(f"Pushing {cnt + 1} of {len(objects)} objects")
-
-                # Get Signed URL
-                _, obj_id = obj.object_path.rsplit('/', 1)
-                url, encryption_key = self._gen_push_url(dataset, obj_id)
-
-                # Put File
-                with open(obj.object_path, 'rb') as data:
-
-                    response = requests.put(url,
-                                            data=data,
-                                            headers={'x-amz-server-side-encryption': 'aws:kms',
-                                                     'x-amz-server-side-encryption-aws-kms-key-id': encryption_key})
-
-                    if response.status_code != 200:
-                        raise IOError(f"Failed to push object. Backend returned {response.status_code}")
-
-            except Exception as err:
-                logger.exception(err)
-                status_update_fn(f"Failed to push object {cnt + 1}. Continuing...")
-                message = "Some objects failed to push. Check results."
-                failures.append(obj)
-                continue
-            successes.append(obj)
-
-        return PushResult(success=successes, failure=failures, message=message)
 
     def finalize_push(self, dataset, status_update_fn: Callable) -> None:
         status_update_fn(f"Done pushing objects to {dataset.namespace}/{dataset.name}")
@@ -239,48 +318,292 @@ to Gigantum Cloud will count towards your storage quota and include all versions
 
         status_update_fn(f"Ready to pull objects from {dataset.namespace}/{dataset.name}")
 
-    def pull_objects(self, dataset: Dataset, objects: List[PullObject], status_update_fn: Callable) -> PullResult:
-        """
+    def finalize_pull(self, dataset, status_update_fn: Callable) -> None:
+        status_update_fn(f"Done pulling objects from {dataset.namespace}/{dataset.name}")
+
+    async def _push_object_consumer(self, queue: asyncio.LifoQueue, session: aiohttp.ClientSession,
+                                    status_update_fn: Callable) -> None:
+        """Async Queue consumer worker for pushing objects to the object service/s3
 
         Args:
-            dataset:
-            objects:
-            status_update_fn:
+            queue: The current work queue
+            session: The current aiohttp session
+            status_update_fn: the update function for providing feedback
+
+        Returns:
+            None
+        """
+        while True:
+            presigned_request: PresignedS3Upload = await queue.get()
+
+            try:
+                if presigned_request.skip_object is False:
+                    if not presigned_request.is_presigned:
+                        # Fetch the signed URL
+                        status_update_fn(f'Preparing upload for {presigned_request.object_details.dataset_path}')
+                        await presigned_request.get_presigned_s3_url(session)
+                        queue.put_nowait(presigned_request)
+                    else:
+                        # Process S3 Upload
+                        status_update_fn(f'Uploading {presigned_request.object_details.dataset_path}')
+                        await presigned_request.put_object(session)
+                        self.successful_requests.append(presigned_request)
+                else:
+                    # Object skipped because it already exists in the backend (de-duplicating)
+                    status_update_fn(f'{presigned_request.object_details.dataset_path} already exists.'
+                                     f' Skipping upload to avoid duplicated storage.')
+                    self.successful_requests.append(presigned_request)
+
+            except Exception as err:
+                logger.exception(err)
+                self.failed_requests.append(presigned_request)
+
+            # Notify the queue that the item has been processed
+            queue.task_done()
+
+    @staticmethod
+    async def _push_object_producer(queue: asyncio.LifoQueue, object_service_root: str, object_service_headers: dict,
+                                    upload_chunk_size: int, objects: List[PushObject]) -> None:
+        """Async method to populate the queue with upload requests
+
+        Args:
+            queue: The current work queue
+            object_service_root: The root URL to use for all objects, including the namespace and dataset name
+            object_service_headers: The headers to use when requesting signed urls, including auth info
+            upload_chunk_size: Size in bytes for streaming IO chunks
+            objects: A list of PushObjects to push
+
+        Returns:
+            None
+        """
+        for obj in objects:
+            presigned_request = PresignedS3Upload(object_service_root,
+                                                  object_service_headers,
+                                                  upload_chunk_size,
+                                                  obj)
+            await queue.put(presigned_request)
+
+    async def _run_push_pipeline(self, object_service_root: str, object_service_headers: dict,
+                                 objects: List[PushObject], status_update_fn: Callable,
+                                 upload_chunk_size: int = 4194304, num_workers: int = 4):
+        """Method to run the async upload pipeline
+
+        Args:
+            object_service_root: The root URL to use for all objects, including the namespace and dataset name
+            object_service_headers: The headers to use when requesting signed urls, including auth info
+            objects: A list of PushObjects to push
+            status_update_fn: the update function for providing feedback
+            upload_chunk_size: Size in bytes for streaming IO chunks
+            num_workers: the number of consumer workers to start
 
         Returns:
 
         """
-        successes = list()
+        # We use a LifoQueue to ensure S3 uploads start as soon as they are ready to help ensure pre-signed urls do
+        # not timeout before they can be used if there are a lot of files.
+        queue: asyncio.LifoQueue = asyncio.LifoQueue()
+
+        async with aiohttp.ClientSession() as session:
+            # Start workers
+            workers = []
+            for i in range(num_workers):
+                task = asyncio.ensure_future(self._push_object_consumer(queue, session, status_update_fn))
+                workers.append(task)
+
+            # Populate the work queue
+            await self._push_object_producer(queue,
+                                             object_service_root,
+                                             object_service_headers,
+                                             upload_chunk_size,
+                                             objects)
+
+            # wait until the consumer has processed all items
+            await queue.join()
+
+            # the workers are still awaiting for work so close them
+            for worker in workers:
+                worker.cancel()
+
+    def push_objects(self, dataset: Dataset, objects: List[PushObject], status_update_fn: Callable) -> PushResult:
+        """High-level method to push objects to the object service/s3
+
+        Args:
+            dataset: The current dataset
+            objects: A list of PushObjects the enumerate objects to push
+            status_update_fn: A callback to update status and provide feedback to the user
+
+        Returns:
+            PushResult
+        """
+        # Clear lists
+        self.successful_requests = list()
+        self.failed_requests = list()
+        message = "Successfully synced all objects"
+        status_update_fn(f"Uploading {len(objects)} objects to Gigantum Cloud")
+
+        backend_config = dataset.client_config.config['datasets']['backends']['gigantum_object_v1']
+        upload_chunk_size = backend_config['upload_chunk_size']
+        num_workers = backend_config['num_workers']
+
+        object_service_root = f"{self._object_service_endpoint(dataset)}/{dataset.namespace}/{dataset.name}"
+
+        loop = get_event_loop()
+        loop.run_until_complete(self._run_push_pipeline(object_service_root, self._object_service_headers(), objects,
+                                                        status_update_fn=status_update_fn,
+                                                        upload_chunk_size=upload_chunk_size,
+                                                        num_workers=num_workers))
+
+        successes = [x.object_details for x in self.successful_requests]
+
         failures = list()
-        message = "Successfully pulled all objects"
-        for cnt, obj in enumerate(objects):
+        for f in self.failed_requests:
+            # An exception was raised during task processing
+            logger.error(f"Failed to push {f.object_details.dataset_path}:{f.object_details.object_path}")
+            status_update_fn(f"Failed to upload object {f.object_details.dataset_path}.")
+            message = "Some objects failed to upload and will be retried on the next sync operation. Check results."
+            failures.append(f.object_details)
+
+        return PushResult(success=successes, failure=failures, message=message)
+
+    async def _pull_object_consumer(self, queue: asyncio.LifoQueue, session: aiohttp.ClientSession,
+                                    status_update_fn: Callable) -> None:
+        """Async Queue consumer worker for downloading objects from the object service/s3
+
+        Args:
+            queue: The current work queue
+            session: The current aiohttp session
+            status_update_fn: the update function for providing feedback
+
+        Returns:
+            None
+        """
+        while True:
+            presigned_request: PresignedS3Download = await queue.get()
+
             try:
-                # Get Signed URL
-                obj_dir, obj_id = obj.object_path.rsplit('/', 1)
-                url = self._gen_pull_url(dataset, obj_id)
-
-                os.makedirs(obj_dir, exist_ok=True)  # type: ignore
-
-                # Pull File
-                r = requests.get(url, stream=True)
-
-                if r.status_code != 200:
-                    raise IOError(f"Failed to download object. Status code: {r.status_code}")
-
-                with open(obj.object_path, 'wb') as f:
-                    shutil.copyfileobj(r.raw, f)
-
-                status_update_fn(f"Pulled {cnt+1} of {len(objects)} objects")
+                if not presigned_request.is_presigned:
+                    # Fetch the signed URL
+                    status_update_fn(f'Preparing download for {presigned_request.object_details.dataset_path}')
+                    await presigned_request.get_presigned_s3_url(session)
+                    queue.put_nowait(presigned_request)
+                else:
+                    # Process S3 Download
+                    status_update_fn(f'Downloading {presigned_request.object_details.dataset_path}')
+                    await presigned_request.get_object(session)
+                    self.successful_requests.append(presigned_request)
 
             except Exception as err:
                 logger.exception(err)
-                status_update_fn(f"Failed to pull object {cnt + 1} of {len(objects)}. Continuing...")
-                message = "Some objects failed to pull. Check results."
-                failures.append(obj)
-                continue
-            successes.append(obj)
+                self.failed_requests.append(presigned_request)
+
+            # Notify the queue that the item has been processed
+            queue.task_done()
+
+    @staticmethod
+    async def _pull_object_producer(queue: asyncio.LifoQueue, object_service_root: str, object_service_headers: dict,
+                                    download_chunk_size: int, objects: List[PullObject]) -> None:
+        """Async method to populate the queue with download requests
+
+        Args:
+            queue: The current work queue
+            object_service_root: The root URL to use for all objects, including the namespace and dataset name
+            object_service_headers: The headers to use when requesting signed urls, including auth info
+            download_chunk_size: Size in bytes for streaming IO chunks
+            objects: A list of PullObjects to push
+
+        Returns:
+            None
+        """
+        for obj in objects:
+            # Create object destination dir if needed
+            obj_dir, _ = obj.object_path.rsplit('/', 1)
+            os.makedirs(obj_dir, exist_ok=True)  # type: ignore
+
+            # Populate queue with item for object
+            presigned_request = PresignedS3Download(object_service_root,
+                                                    object_service_headers,
+                                                    download_chunk_size,
+                                                    obj)
+            await queue.put(presigned_request)
+
+    async def _run_pull_pipeline(self, object_service_root: str, object_service_headers: dict,
+                                 objects: List[PullObject], status_update_fn: Callable,
+                                 download_chunk_size: int = 4194304, num_workers: int = 4):
+        """Method to run the async download pipeline
+
+        Args:
+            object_service_root: The root URL to use for all objects, including the namespace and dataset name
+            object_service_headers: The headers to use when requesting signed urls, including auth info
+            objects: A list of PushObjects to push
+            status_update_fn: the update function for providing feedback
+            download_chunk_size: Size in bytes for streaming IO chunks
+            num_workers: the number of consumer workers to start
+
+        Returns:
+
+        """
+        # We use a LifoQueue to ensure S3 uploads start as soon as they are ready to help ensure pre-signed urls do
+        # not timeout before they can be used if there are a lot of files.
+        queue: asyncio.LifoQueue = asyncio.LifoQueue()
+
+        async with aiohttp.ClientSession() as session:
+            workers = []
+            for i in range(num_workers):
+                task = asyncio.ensure_future(self._pull_object_consumer(queue, session, status_update_fn))
+                workers.append(task)
+
+            # Populate the work queue
+            await self._pull_object_producer(queue,
+                                             object_service_root,
+                                             object_service_headers,
+                                             download_chunk_size,
+                                             objects)
+
+            # wait until the consumer has processed all items
+            await queue.join()
+
+            # the workers are still awaiting for work so close them
+            for worker in workers:
+                worker.cancel()
+
+    def pull_objects(self, dataset: Dataset, objects: List[PullObject], status_update_fn: Callable) -> PullResult:
+        """High-level method to pull objects from the object service/s3
+
+        Args:
+            dataset: The current dataset
+            objects: A list of PullObjects the enumerate objects to push
+            status_update_fn: A callback to update status and provide feedback to the user
+
+        Returns:
+            PushResult
+        """
+        # Clear lists
+        self.successful_requests = list()
+        self.failed_requests = list()
+        message = "Successfully synced all objects"
+        status_update_fn(f"Downloading {len(objects)} objects from Gigantum Cloud")
+
+        backend_config = dataset.client_config.config['datasets']['backends']['gigantum_object_v1']
+        download_chunk_size = backend_config['download_chunk_size']
+        num_workers = backend_config['num_workers']
+
+        object_service_root = f"{self._object_service_endpoint(dataset)}/{dataset.namespace}/{dataset.name}"
+
+        loop = get_event_loop()
+        loop.run_until_complete(self._run_pull_pipeline(object_service_root, self._object_service_headers(), objects,
+                                                        status_update_fn=status_update_fn,
+                                                        download_chunk_size=download_chunk_size,
+                                                        num_workers=num_workers))
+
+        successes = [x.object_details for x in self.successful_requests]
+
+        failures = list()
+        for f in self.failed_requests:
+            # An exception was raised during task processing
+            logger.error(f"Failed to pull {f.object_details.dataset_path}:{f.object_details.object_path}")
+            status_update_fn(f"Failed to download object {f.object_details.dataset_path}.")
+            message = "Some objects failed to download and will be retried on the next sync operation. Check results."
+            failures.append(f.object_details)
 
         return PullResult(success=successes, failure=failures, message=message)
 
-    def finalize_pull(self, dataset, status_update_fn: Callable) -> None:
-        status_update_fn(f"Done pulling objects from {dataset.namespace}/{dataset.name}")

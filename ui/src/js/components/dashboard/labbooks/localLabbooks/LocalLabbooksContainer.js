@@ -1,4 +1,4 @@
-import Labbooks from '../Labbooks';
+import Labbooks from './../Labbooks';
 import {
   createFragmentContainer,
   graphql,

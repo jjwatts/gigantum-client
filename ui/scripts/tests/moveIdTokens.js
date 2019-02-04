@@ -1,10 +1,10 @@
 var fs = require('fs');
 
 function moveIdFile(oldPath, newPath, callback) {
-
-    fs.copyFile(oldPath, newPath, (err) => {
-      callback(err)
-    });
+  callback(null)
+    // fs.copyFile(oldPath, newPath, (err) => {
+    //   callback(err)
+    // });
 
 }
 

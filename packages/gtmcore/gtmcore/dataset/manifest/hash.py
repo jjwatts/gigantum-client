@@ -189,7 +189,7 @@ class SmartHash(object):
         """
         loop = get_event_loop()
         tasks = [asyncio.ensure_future(self.async_hash_file(path, self.hashing_block_size)) for path in path_list]
-        loop.run_until_complete(asyncio.ensure_future(asyncio.wait(tasks)))
+        loop.run_until_complete(asyncio.ensure_future(asyncio.gather(*tasks)))
 
         fast_hash_result = self.fast_hash(path_list)
 

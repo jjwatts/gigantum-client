@@ -1,22 +1,3 @@
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
 import graphene
 import confhttpproxy
@@ -27,6 +8,7 @@ from gtmcore.dispatcher import Dispatcher, jobs
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.container.container import ContainerOperations
+from gtmcore.mitmproxy.mitmproxy import MITMProxyOperations
 from gtmcore.container.utils import infer_docker_image_name
 from gtmcore.workflows import GitWorkflow
 from gtmcore.logging import LMLogger
@@ -51,7 +33,7 @@ class BuildImage(graphene.relay.ClientIDMutation):
     environment = graphene.Field(lambda: Environment)
 
     # The background job key, this may be None
-    background_job_key = graphene.Field(graphene.String)
+    background_job_key = graphene.String()
 
     @staticmethod
     def get_container_status(labbook_name: str, owner: str, username: str) -> bool:
@@ -80,7 +62,7 @@ class BuildImage(graphene.relay.ClientIDMutation):
                                              author=get_logged_in_author())
 
         # Generate Dockerfile
-        # TODO - Move to build_image ??
+        # TODO BVB - Move to build_image ??
         ib = ImageBuilder(lb)
         ib.assemble_dockerfile(write=True)
 
@@ -137,22 +119,38 @@ class StopContainer(graphene.relay.ClientIDMutation):
 
     @classmethod
     def _stop_container(cls, lb, username):
+        """Stop container and also do necessary cleanup of confhttpproxy, monitors, etc.
+
+        Currently, this supports two cases, applications monitored by MITMProxy,
+        and Jupyter. So, for now, if we can't find an mitmproxy endpoint, we assume
+        we're dealing with a jupyter container.
+        """
         lb_ip = ContainerOperations.get_labbook_ip(lb, username)
+
+        # stop labbook monitor
         stop_labbook_monitor(lb, username)
+
         lb, stopped = ContainerOperations.stop_container(labbook=lb, username=username)
 
-        # Try to remove route from proxy
-        lb_port = 8888
-        lb_endpoint = f'http://{lb_ip}:{lb_port}'
-
         pr = confhttpproxy.ProxyRouter.get_proxy(lb.client_config.config['proxy'])
-        routes = pr.routes
-        est_target = [k for k in routes.keys()
-                      if lb_endpoint in routes[k]['target']
-                      and 'jupyter' in k]
-        if len(est_target) == 1:
-            # TODO: Why only 1? what if there's more?
-            pr.remove(est_target[0][1:])
+
+        # Remove route from proxy
+        if MITMProxyOperations.get_mitmendpoint(f"http://{lb_ip}:8787"):
+            # there is an MITMProxy (currently only used for RStudio)
+            proxy_endpoint = MITMProxyOperations.stop_mitm_proxy(f"http://{lb_ip}:8787")
+            tool = 'rserver'
+        else:
+            # The only alternative to mitmproxy (currently) is jupyter
+            proxy_endpoint = f'http://{lb_ip}:8888'
+            tool = 'jupyter'
+
+        est_target = pr.get_matching_routes(proxy_endpoint, tool)
+
+        for i, target in enumerate(est_target):
+            if i == 1:
+                # We have > 1 entry in the router, which shouldn't happen
+                logger.warning(f'Removing multiple routes for {tool} on {proxy_endpoint} during Project container stop.')
+            pr.remove(target[1:])
 
         wf = GitWorkflow(lb)
         wf.garbagecollect()
@@ -166,8 +164,8 @@ class StopContainer(graphene.relay.ClientIDMutation):
                 os.rmdir(bind_location)
 
         if not stopped:
-            # TODO: Why would stopped=False? Should this move up??
-            raise ValueError(f"Failed to stop labbook {labbook_name}")
+            # TODO DK: Why would stopped=False? Should this move up??
+            raise ValueError(f"Failed to stop labbook {lb.name}")
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, owner, labbook_name, client_mutation_id=None):

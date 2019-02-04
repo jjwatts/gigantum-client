@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Activity renders a snapshot 1`] = `
+<div
+  className="ActivityCard__container column-1-span-10"
+>
+  <div
+    className="ActivityCard__start-node ActivityCard__end-node"
+    onClick={[Function]}
+    onMouseOut={[Function]}
+    onMouseOver={[Function]}
+    style={false}
+  />
+  <div
+    className="ActivityCard ActivityCard--collapsed card ActivityCard--faded ActivityCard__expanded"
+    style={Object {}}
+  >
+    <div
+      className="ActivityCard__badge ActivityCard__badge--environment"
+      title="environment"
+    />
+    <div
+      className="ActivityCard__content"
+    >
+      <div
+        className="ActivityCard__title flex flex--row justify--space-between closed"
+        onClick={[Function]}
+      >
+        <div
+          className="ActivityCard__stack"
+        >
+          <p
+            className="ActivityCard__time"
+          >
+            2:59pm
+          </p>
+          <div
+            className="ActivityCard__user"
+          />
+        </div>
+        <h6
+          className="ActivityCard__commit-message"
+        >
+          <b>
+            uitest - 
+          </b>
+          Added 1 conda2 package(s). 
+        </h6>
+      </div>
+    </div>
+  </div>
+</div>
+`;

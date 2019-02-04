@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UserNote Renders a snapshot 1`] = `
+<div
+  className="UserNote flex flex--column"
+>
+  <input
+    className="UserNote__summary"
+    id="UserNoteTitle"
+    onKeyUp={[Function]}
+    placeholder="Add a summary title"
+  />
+  <textarea
+    className="UserNote__summary"
+    id="markDown"
+  />
+  <div />
+  <button
+    className="UserNote__add-note"
+    disabled={true}
+    onClick={[Function]}
+  >
+    Add Note
+  </button>
+</div>
+`;

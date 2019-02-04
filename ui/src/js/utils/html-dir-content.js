@@ -51,8 +51,9 @@ const isItemFileEntry = function isItemFileEntry(item) {
 };
 
 const getAsEntry = function getAsEntry(item) {
-  var entry = item.getAsEntry ? item.getAsEntry() : item.webkitGetAsEntry ? item.webkitGetAsEntry() : null
-  return item.getAsEntry ? item.getAsEntry() : item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+  var entry = item.getAsEntry ? item.getAsEntry() : item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+  console.log(entry);
+  return entry;
 };
 
 const getListAsArray = function getListAsArray(list) {

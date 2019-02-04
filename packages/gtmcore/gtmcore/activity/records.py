@@ -361,7 +361,7 @@ class ActivityRecord(object):
         Returns a new list, so that you can update the objects, or even delete them (but be careful to maintain
         correspondence!). The list in ActivityRecord is sorted upon exiting the with context.
 
-            with ar.inspect_detail_objects() as detail_objs:
+        >>> with ar.inspect_detail_objects() as detail_objs:
         ...   for i, obj in enumerate(detail_objs):
         ...       new_obj = mutate_obj(obj)
         ...       ar.update_detail_object(i, new_obj)

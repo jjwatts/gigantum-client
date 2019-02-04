@@ -12,32 +12,30 @@ import json from './__relaydata__/DashboardLocal.json';
 
 
 const fixtures = {
-  auth: () => {
-
-  },
+  auth: () => {},
   localLabbooks: json.data.labbookList,
   labbookList: json.data.labbookList,
   history,
-  refetchSort: () => {
-
-  },
+  refetchSort: () => {},
+  loading: false,
 };
 
-test('Test DashboardLocal snapshot', () => {
-  const wrapper = renderer.create(
 
-      relayTestingUtils.relayWrap(
-        <Provider store={store}>
-          <Router>
-            <LocalLabbooksContainer {...fixtures} />
-          </Router>
-        </Provider>,
-       {}, json.data,
-),
+describe('DashboardLocal', () => {
+  test('Renders a snapshot', () => {
+    const wrapper = renderer.create(
+        relayTestingUtils.relayWrap(
+          <Provider store={store}>
+            <Router>
+              <LocalLabbooksContainer {...fixtures} />
+            </Router>
+          </Provider>,
+         {}, json.data,
+       ),
+    );
 
-  );
+    const tree = wrapper.toJSON();
 
-  const tree = wrapper.toJSON();
-
-  expect(tree).toMatchSnapshot();
+    expect(tree).toMatchSnapshot();
+  });
 });

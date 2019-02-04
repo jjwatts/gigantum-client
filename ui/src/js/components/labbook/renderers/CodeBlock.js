@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import SyntaxHighlighter from 'react-syntax-highlighter/prism';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import SyntaxHighlighterHLJS from 'react-syntax-highlighter';
-import { githubGist } from 'react-syntax-highlighter/styles/hljs';
+import { githubGist } from 'react-syntax-highlighter/dist/styles/hljs';
 import customizedStyling from './CodeBlockStyle';
 import classNames from 'classnames';
 // assets

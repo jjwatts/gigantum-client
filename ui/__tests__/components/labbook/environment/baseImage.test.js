@@ -7,7 +7,7 @@ import json from '../../__relaydata__/Routes.json';
 
 
 const variables = {
- first: 20, labbook: 'demo-lab-book', name: 'defualt', owner: 'default',
+ first: 20, labbook: 'demo-lab-book', name: 'defualt', owner: 'uitest',
 };
 export default variables;
 

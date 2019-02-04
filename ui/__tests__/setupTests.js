@@ -2,12 +2,12 @@
 var fetch = require('isomorphic-fetch');
 var FormData = require('form-data');
 require('raf/polyfill');
-import Worker from 'jest-worker';
 
 var { configure } = require('enzyme');
 var Adapter = require('enzyme-adapter-react-16');
 var uuid = require('uuid/v4');
 
+process.env.TZ = 'Europe/London';
 
 configure({ adapter: new Adapter() });
 // need to add root to JSDOM for mounting react
@@ -36,24 +36,24 @@ window.location.href = 'https://localhost:10000';
 window.location.hostname = 'localhost';
 window.location.protocol = 'https:';
 
-// class Worker {
-//   constructor(stringUrl) {
-//     this.url = stringUrl;
-//     this.onmessage = () => {};
-//   }
-//
-//   addEventListener(eventType, callback) {
-//     return window.addEventListener(eventType, callback);
-//   }
-//
-//   removeEventListener(eventType, callback) {
-//     return window.removeEventListener(eventType, callback);
-//   }
-//
-//   postMessage(msg) {
-//     this.onmessage(msg);
-//   }
-// }
+class Worker {
+  constructor(stringUrl) {
+    this.url = stringUrl;
+    this.onmessage = () => {};
+  }
+
+  addEventListener(eventType, callback) {
+    return window.addEventListener(eventType, callback);
+  }
+
+  removeEventListener(eventType, callback) {
+    return window.removeEventListener(eventType, callback);
+  }
+
+  postMessage(msg) {
+    this.onmessage(msg);
+  }
+}
 function noOp() {}
 if (typeof window.URL.createObjectURL === 'undefined') {
   Object.defineProperty(window.URL, 'createObjectURL', { value: noOp });
@@ -67,6 +67,9 @@ var newDiv = document.createElement('div');
 newDiv.setAttribute('id', 'root');
 // set for proxy
 process.env.GIGANTUM_API = process.env.USE_PROXY ? ':10010/api/labbook/' : ':10000/api/labbook/';
+
+// add global data for relay mock
+global.data = {}
 
 // add document globally
 global.document = window.document;

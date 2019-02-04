@@ -24,6 +24,7 @@ import getpass
 import docker
 import requests
 import shutil
+from gtmcore.container.jupyter import start_jupyter
 
 from gtmcore.configuration import get_docker_client
 
@@ -58,8 +59,7 @@ class TestContainerOps(object):
         l = [a for a in stdo.decode().split('\n') if a]
         assert len(l) == 0
 
-        lb, suffix = ContainerOperations.start_dev_tool(labbook=lb, dev_tool_name='jupyterlab', username='unittester',
-                                                        check_reachable=not (getpass.getuser() == 'circleci'))
+        start_jupyter(lb, username='unittester', check_reachable=not (getpass.getuser() == 'circleci'))
 
         ec, stdo = client.containers.get(container_id=container_id).exec_run(
             'sh -c "ps aux | grep jupyter-lab | grep -v \' grep \'"', user='giguser')
@@ -67,8 +67,7 @@ class TestContainerOps(object):
         assert len(l) == 1
 
         # Now, we test the second path through, start jupyterlab when it's already running.
-        lb, suffix = ContainerOperations.start_dev_tool(labbook=lb, dev_tool_name='jupyterlab', username='unittester',
-                                                        check_reachable=not (getpass.getuser() == 'circleci'))
+        start_jupyter(lb, username='unittester', check_reachable=not (getpass.getuser() == 'circleci'))
 
         # Validate there is only one instance running.
         ec, stdo = client.containers.get(container_id=container_id).exec_run(

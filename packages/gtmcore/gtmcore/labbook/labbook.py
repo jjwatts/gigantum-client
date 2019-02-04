@@ -101,12 +101,17 @@ class LabBook(Repository):
             with open(path) as p:
                 info = json.load(p)
                 date_str = info.get('creation_utc')
-                d = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%f')
-                return d
+                try:
+                    d = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%f')
+                except ValueError:
+                    d = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S%z')
         else:
             first_commit = self.git.repo.git.rev_list('HEAD', max_parents=0)
-            create_date = self.git.log_entry(first_commit)['committed_on'].replace(tzinfo=None)
-            return create_date
+            d = self.git.log_entry(first_commit)['committed_on']
+
+        d = d.replace(tzinfo=datetime.timezone.utc)  # Make tz aware so rendering in API is consistent
+        d = d.replace(microsecond=0)  # Make all times consistent
+        return d
 
     @property
     def build_details(self) -> Optional[Dict[str, str]]:

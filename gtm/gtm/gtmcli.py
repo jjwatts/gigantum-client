@@ -20,12 +20,14 @@
 import argparse
 import sys
 import os
+import subprocess
 
 from gtm import client
 from gtm import circleci
 from gtm.common.logreader import show_log
 from gtm import common
 from gtm.client.dev import DevClientRunner
+from gtm.utils import get_current_commit_hash
 
 
 def format_action_help(actions):
@@ -240,7 +242,8 @@ def developer_actions(args):
                        "NGINX_UI_CONFIG": "resources/client/nginx_null",
                        "NGINX_API_CONFIG": "resources/client/nginx_null",
                        "SUPERVISOR_CONFIG": os.path.join(build_args['build_dir'], "supervisord.conf"),
-                       "ENTRYPOINT_FILE": "resources/developer/entrypoint.sh"}
+                       "ENTRYPOINT_FILE": "resources/developer/entrypoint.sh",
+                       "REDIS_CONFIG": "resources/client/redis-dev.conf"}
 
         if config.get("is_backend") is True:
             build_args["supervisor_file"] = os.path.join("resources", "developer", "supervisord_backend.conf")
@@ -295,6 +298,26 @@ def circleci_actions(args):
         print("Error: Unsupported action provided: {}".format(args.action), file=sys.stderr)
         sys.exit(1)
 
+def mitm_actions(args):
+    """Build and publish mitmproxy_proxy"""
+    tag = f"gigantum/mitmproxy_proxy:{get_current_commit_hash(8)}"
+
+    if args.action == 'build':
+        mitm_path = f'{common.get_client_root()}/resources/mitmproxy'
+        dockerfile_path = f'{mitm_path}/Dockerfile'
+        if not os.path.exists(dockerfile_path):
+            print(f"Error: can't find Dockerfile in {mitm_path}", file=sys.stderr)
+            sys.exit(1)
+
+        result = subprocess.run(['docker', 'build', '-t', tag, mitm_path])
+
+    elif args.action == 'publish':
+        result = subprocess.run(['docker', 'push', tag])
+        if result.returncode == 0:
+            print("\nRemember to update mitmproxy.mitmproxy.CURRENT_MITMPROXY_TAG!")
+
+    sys.exit(result.returncode)
+
 
 def main():
     # Setup supported components and commands
@@ -322,6 +345,10 @@ def main():
                          ["log", "Show the client log file"]]
 
     components['circleci'] = [["update", "Build and publish the container for circleci"]]
+
+    components['mitm'] = [["build", "Build and publish the image for mitmproxy_proxy"],
+                          ["publish", "Publish the latest build to Docker Hub as a Demo release"]
+                          ]
 
     # Prep the help string
     help_str = format_component_help(components)
@@ -370,6 +397,8 @@ def main():
         circleci_actions(args)
     elif args.component == "demo":
         demo_actions(args)
+    elif args.component == "mitm":
+        mitm_actions(args)
 
 
 if __name__ == '__main__':

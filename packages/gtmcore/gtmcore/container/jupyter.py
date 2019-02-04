@@ -11,13 +11,14 @@ from gtmcore.logging import LMLogger
 from gtmcore.configuration import get_docker_client
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.environment import ComponentManager
-from gtmcore.container.core import infer_docker_image_name, get_container_ip
+from gtmcore.container.core import infer_docker_image_name, get_container_ip, ps_search
 from gtmcore.labbook import LabBook
 from gtmcore.exceptions import GigantumException
 
 logger = LMLogger.get_logger()
 
 DEFAULT_JUPYTER_PORT = 8888
+PYTHON_ENV_CMD = "export PYTHONPATH=/mnt/share:$PYTHONPATH"
 
 
 def start_jupyter(labbook: LabBook, username: str, tag: Optional[str] = None,
@@ -38,9 +39,7 @@ def start_jupyter(labbook: LabBook, username: str, tag: Optional[str] = None,
     if lb_container.status != 'running':
         raise GigantumException(f"{str(labbook)} container is not running. Start it before launch a dev tool.")
 
-    search_sh = f'sh -c "ps aux | grep \'jupyter lab\' | grep -v \' grep \'"'
-    ec, jupyter_tokens = lb_container.exec_run(search_sh)
-    jupyter_ps = [l for l in jupyter_tokens.decode().split('\n') if l]
+    jupyter_ps = ps_search(lb_container, 'jupyter lab')
 
     # Get IP of container on Docker Bridge Network
     lb_ip_addr = get_container_ip(lb_key)
@@ -89,13 +88,14 @@ def _start_jupyter_process(labbook: LabBook, lb_container,
     use_savehook = os.path.exists('/mnt/share/jupyterhooks') \
                    and not _shim_skip_python2_savehook(labbook)
     owner = InventoryManager().query_owner(labbook)
-    cmd = (f"export PYTHONPATH=/mnt/share:$PYTHONPATH && "
-           f'echo "{username},{owner},{labbook.name},{token}" > /home/giguser/jupyter_token && '
-           f"cd /mnt/labbook && "
+
+    cmd = (PYTHON_ENV_CMD +
+           f'&& echo "{username},{owner},{labbook.name},{token}" > /home/giguser/jupyter_token && '
+           "cd /mnt/labbook && "
            f"jupyter lab --port={DEFAULT_JUPYTER_PORT} --ip=0.0.0.0 "
            f"--NotebookApp.token='{token}' --no-browser "
-           f'--ConnectionFileMixin.ip=0.0.0.0 ' +
-           (f'--FileContentsManager.post_save_hook="jupyterhooks.post_save_hook" '
+           '--ConnectionFileMixin.ip=0.0.0.0 ' +
+           ('--FileContentsManager.post_save_hook="jupyterhooks.post_save_hook" '
             if use_savehook else "") +
            (f'--NotebookApp.base_url="{proxy_prefix}" '
             if proxy_prefix else ''))
@@ -105,10 +105,7 @@ def _start_jupyter_process(labbook: LabBook, lb_container,
     # Pause briefly to avoid race conditions
     for timeout in range(10):
         time.sleep(1)
-        ec, new_ps_list = lb_container.exec_run(
-            f'sh -c "ps aux | grep jupyter | grep -v \' grep \'"')
-        new_ps_list = new_ps_list.decode().split('\n')
-        if any(['jupyter lab' in l or 'jupyter-lab' in l for l in new_ps_list]):
+        if ['jupyter lab' in l or 'jupyter-lab' in l for l in ps_search(lb_container, 'jupyter')]:
             logger.info(f"JupyterLab started within {timeout + 1} seconds")
             break
     else:

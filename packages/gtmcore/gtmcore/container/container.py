@@ -35,6 +35,7 @@ from gtmcore.container.exceptions import ContainerException
 from gtmcore.container.core import (build_docker_image, stop_labbook_container,
                                      start_labbook_container, get_container_ip)
 from gtmcore.container.jupyter import start_jupyter
+from gtmcore.container.rserver import start_rserver
 
 logger = LMLogger.get_logger()
 
@@ -219,32 +220,3 @@ class ContainerOperations(object):
                                              owner=owner,
                                              username=username)
         return get_container_ip(docker_key)
-
-    @classmethod
-    def start_dev_tool(
-            cls, labbook: LabBook, dev_tool_name: str, username: str,
-            tag: Optional[str] = None, check_reachable: bool = True,
-            proxy_prefix: Optional[str] = None) -> Tuple[LabBook, str]:
-        """ Start a given development tool (e.g., JupyterLab).
-
-        Args:
-            labbook: Subject labbook
-            dev_tool_name: Name of development tool, only "jupyterlab" is currently allowed.
-            username: Username of active LabManager user.
-            tag: Tag of Docker container
-            check_reachable: Affirm that dev tool launched and is reachable
-            proxy_prefix: Give proxy route to IDE endpoint if needed
-
-        Returns:
-            (labbook, info): New labbook instance with modified state,
-                             resource suffix needed to connect to dev tool.
-                             (e.g., "/lab?token=xyz" -- it is the caller's
-                             responsibility to know the host)
-        """
-        # A dictionary of dev tools and the port IN THE CONTAINER
-        supported_dev_tools = ['jupyterlab']
-        if dev_tool_name not in supported_dev_tools:
-            raise GigantumException(f"'{dev_tool_name}' not currently supported")
-        suffix = start_jupyter(labbook, username, tag, check_reachable,
-                               proxy_prefix)
-        return labbook, suffix

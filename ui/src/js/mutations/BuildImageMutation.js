@@ -6,7 +6,7 @@ import environment from 'JS/createRelayEnvironment';
 // redux store
 import { setErrorMessage } from 'JS/redux/reducers/footer';
 // utils
-import FooterUtils from 'Components/shared/footer/FooterUtils';
+import FooterUtils from 'Components/common/footer/FooterUtils';
 
 
 const mutation = graphql`

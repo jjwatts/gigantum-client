@@ -17,7 +17,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from typing import Optional
+from typing import Optional, List
+from docker.models.containers import Container
 
 
 def infer_docker_image_name(labbook_name: str, owner: str,
@@ -36,3 +37,14 @@ def infer_docker_image_name(labbook_name: str, owner: str,
         Note the prefix "gmlb" means "Gigantum-Managed LabBook".
     """
     return f"gmlb-{username or 'nouser'}-{owner}-{labbook_name}"
+
+
+def ps_search(lb_container: Container, ps_name: str='jupyter') -> List[str]:
+    """Exec ps and grep in the container to check for a process
+
+    ps_name should NOT include any extra quotes (it will be surrounded by single-quotes in the shell command)
+    """
+    ec, ps_list = lb_container.exec_run(
+        f'sh -c "ps aux | grep \'{ps_name}\'| grep -v \' grep \'"')
+    return [l for l in ps_list.decode().split('\n') if l]
+

@@ -440,6 +440,11 @@ def build_image_for_jupyterlab():
                 shutil.rmtree(lb.root_dir)
 
 
+@pytest.fixture(scope='class')
+def build_image_for_rserver():
+    pass
+
+
 @pytest.fixture
 def fixture_test_file():
     """A pytest fixture that creates a temporary file

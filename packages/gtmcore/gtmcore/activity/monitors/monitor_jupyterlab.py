@@ -13,9 +13,9 @@ from gtmcore.configuration import get_docker_client
 from gtmcore.container.utils import infer_docker_image_name
 from gtmcore.activity.monitors.devenv import DevEnvMonitor
 from gtmcore.activity.monitors.activity import ActivityMonitor
-from gtmcore.activity.processors.jupyterlab import JupyterLabCodeProcessor, JupyterLabFileChangeProcessor, \
+from gtmcore.activity.processors.jupyterlab import JupyterLabCodeProcessor, \
     JupyterLabPlaintextProcessor, JupyterLabImageExtractorProcessor, JupyterLabCellVisibilityProcessor
-from gtmcore.activity.processors.core import ActivityShowBasicProcessor
+from gtmcore.activity.processors.core import ActivityShowBasicProcessor, GenericFileChangeProcessor
 from gtmcore.activity import ActivityType
 from gtmcore.dispatcher import Dispatcher, jobs
 from gtmcore.logging import LMLogger
@@ -183,7 +183,7 @@ class JupyterLabNotebookMonitor(ActivityMonitor):
             None
         """
         self.add_processor(JupyterLabCodeProcessor())
-        self.add_processor(JupyterLabFileChangeProcessor())
+        self.add_processor(GenericFileChangeProcessor())
         self.add_processor(JupyterLabPlaintextProcessor())
         self.add_processor(JupyterLabImageExtractorProcessor())
         self.add_processor(JupyterLabCellVisibilityProcessor())

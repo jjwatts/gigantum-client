@@ -61,6 +61,14 @@ class ProxyRouter(object):
                 return prefix
         return None
 
+    def get_matching_routes(self, endpoint: str, server: str) -> List[str]:
+        """Return a list of prefixes matching endpoint (in the target) and server
+        (in the route prefix)"""
+        routes = self.routes
+        return [prefix for prefix in routes.keys()
+                if endpoint in routes[prefix]['target']
+                and server in prefix]
+
     def check(self, prefix: str) -> bool:
         """Check if the current prefix still routes to some endpoint
         (Sends HTTP HEAD request, fails if timeout or connection refused) """

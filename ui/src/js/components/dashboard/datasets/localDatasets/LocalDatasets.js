@@ -158,11 +158,10 @@ export class LocalDatasets extends Component {
 
   render() {
     const datasetList = this.props.localDatasets;// datasetList is passed as localDatasets
-    console.log(this.props)
     if ((datasetList && datasetList.localDatasets && datasetList.localDatasets.edges) || this.props.loading) {
-      const datasets = !this.props.loading ? this.props.filterDatasets(datasetList.localDatasets.edges, this.props.filterState) : [];
-
+      const datasets = this.props.filterDatasets(datasetList, this.props.filterState, this.props.loading);
       const importVisible = (this.props.section === 'local' || !this.props.loading) && !this.props.filterText;
+
       return (
 
         <div className="Datasets__listing">

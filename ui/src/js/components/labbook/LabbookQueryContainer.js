@@ -6,7 +6,7 @@ import environment from 'JS/createRelayEnvironment';
 
 // components
 import Labbook from './Labbook';
-import Loader from 'Components/shared/Loader';
+import Loader from 'Components/common/Loader';
 // store
 import { setUpdateAll } from 'JS/redux/reducers/routes';
 // labbook query with notes fragment

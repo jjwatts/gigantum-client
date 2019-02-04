@@ -14,12 +14,15 @@ from gtmcore.gitlib.git import GitAuthor
 from gtmcore.fixtures import mock_config_file, mock_labbook, _MOCK_create_remote_repo2
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_datasets_to_list(mock_config_file):
     inv_manager = InventoryManager(mock_config_file[0])
     inv_manager.create_dataset("user1", "user1", "dataset2", "gigantum_object_v1", description="my dataset")
+    time.sleep(1.5)
     inv_manager.create_dataset("user1", "user2", "a-dataset3", "gigantum_object_v1", description="my dataset")
+    time.sleep(1.5)
     inv_manager.create_dataset("user1", "user1", "dataset12", "gigantum_object_v1", description="my dataset")
+    time.sleep(1.5)
     inv_manager.create_dataset("user2", "user1", "dataset1", "gigantum_object_v1", description="my dataset")
     yield mock_config_file
 
@@ -168,7 +171,7 @@ class TestInventoryDatasets(object):
         ds = inv_manager.create_dataset("test", "test", "dataset1", "gigantum_object_v1",
                                         description="my first dataset",
                                         author=auth)
-
+        ds.namespace = 'test'
         orig_location = ds.root_dir
         with tempfile.TemporaryDirectory() as tempdir:
             r = shutil.move(ds.root_dir, tempdir)

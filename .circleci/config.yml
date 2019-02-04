@@ -1,8 +1,13 @@
-version: 2
+version: 2.1
+
+executors:
+  gig_client:
+    docker:
+      - image: gigantum/circleci-client:2ad8563b28-2019-02-01
+
 jobs:
   mypy-gtmcore:
-    docker:
-      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
+    executor: gig_client
     working_directory: ~/repo
     steps:
       - checkout
@@ -12,8 +17,7 @@ jobs:
             python3 -m mypy packages/gtmcore --ignore-missing-imports --strict-optional
 
   mypy-gtmapi:
-    docker:
-      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
+    executor: gig_client
     working_directory: ~/repo
     steps:
       - checkout
@@ -23,8 +27,7 @@ jobs:
             python3 -m mypy packages/gtmapi --ignore-missing-imports --strict-optional
 
   test-confhttpproxy:
-    docker:
-      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
+    executor: gig_client
     working_directory: ~/repo
     steps:
       - checkout
@@ -40,8 +43,7 @@ jobs:
             cd ~/repo
 
   test-gtmcore:
-    docker:
-      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
+    executor: gig_client
     working_directory: ~/repo
     steps:
       - checkout
@@ -59,8 +61,7 @@ jobs:
             codecov -F core
 
   test-gtmapi:
-    docker:
-      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
+    executor: gig_client
     working_directory: ~/repo
     steps:
       - checkout
@@ -83,8 +84,7 @@ jobs:
             codecov -F api
 
   test-long-running-env:
-    docker:
-      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
+    executor: gig_client
     working_directory: ~/repo
     steps:
       - checkout
@@ -104,8 +104,7 @@ jobs:
             codecov -F core
 
   test-ui-components:
-    docker:
-      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
+    executor: gig_client
     working_directory: ~/repo
     steps:
       - checkout
@@ -119,14 +118,13 @@ jobs:
             npm run relay
             unset CI && npm run build
       - run:
-          name: Run dashboard tests
+          name: Run jest tests
           command: |
             cd /home/circleci/repo/ui
-            jest dashboard -u --ci
+            jest shared/fileBrowser activity dashboard -u
 
   fossa:
-    docker:
-      - image: gigantum/circleci-client:8b708c93b1-2019-01-08
+    executor: gig_client
     working_directory: ~/repo
     steps:
       - checkout

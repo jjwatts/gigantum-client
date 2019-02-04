@@ -23,7 +23,7 @@ let tempID = 0;
 
 
 export default function DownloadDatasetFilesMutation(
-  owner,
+  datasetOwner,
   datasetName,
   labbookName,
   labbookOwner,
@@ -33,7 +33,7 @@ export default function DownloadDatasetFilesMutation(
 ) {
   const variables = {
     input: {
-      owner,
+      datasetOwner,
       datasetName,
       clientMutationId: tempID++,
     },

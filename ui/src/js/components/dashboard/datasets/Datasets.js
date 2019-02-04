@@ -5,11 +5,11 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 // components
 import WizardModal from 'Components/wizard/WizardModal';
-import Loader from 'Components/shared/Loader';
+import Loader from 'Components/common/Loader';
 import LocalDatasetsContainer, { LocalDatasets } from 'Components/dashboard/datasets/localDatasets/LocalDatasets';
 // import RemoteDatasets from 'Components/dashboard/datasets/remoteDatasets/RemoteDatasets';
-import LoginPrompt from 'Components/header/branchMenu/modals/LoginPrompt';
-import ToolTip from 'Components/shared/ToolTip';
+import LoginPrompt from 'Components/shared/header/branchMenu/modals/LoginPrompt';
+import ToolTip from 'Components/common/ToolTip';
 import DatasetFilterBy from './filters/DatasetFilterBy';
 import DatasetSort from './filters/DatasetSort';
 // utils
@@ -249,10 +249,16 @@ class Datasets extends Component {
     return false;
   }
   /**
-   * @param {array, string} localDatasets.edges,filter
+   * @param {Object} datasetList
+   * @param {String} filter
+   * @param {Boolean} isLoading
    * @return {array} filteredDatasets
   */
-  _filterDatasets(datasets, filter) {
+  _filterDatasets(datasetList, filter, isLoading) {
+    if (isLoading) {
+      return [];
+    }
+    const datasets = datasetList.localDatasets.edges;
     const username = localStorage.getItem('username');
     let self = this,
       filteredDatasets = [];
@@ -463,6 +469,7 @@ class Datasets extends Component {
               <LocalDatasets
                 loading
                 showModal={this._showModal}
+                filterDatasets={this._filterDatasets}
                 section={this.props.section}
               />
             :

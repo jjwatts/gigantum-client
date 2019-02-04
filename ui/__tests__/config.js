@@ -1,6 +1,6 @@
 const config = {
-  owner: 'cbutler',
-  labbookName: 'data-shader',
+  owner: 'uitest',
+  labbookName: 'ui-test-project',
 };
 
 export default config;

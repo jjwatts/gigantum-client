@@ -10,7 +10,8 @@
        "name": "ui-test-remote",
        "description": "",
        "owner": "uitest",
-       "creationDateUtc": "2019-01-18T15:01:23.194639",
+       "creationDateUtc": "2019-01-18T15:01:23+00:00",
+       "modifiedOnUtc": "2019-01-18T15:01:27+00:00",
        "__typename": "Labbook"
       },
       "cursor": "MA=="
@@ -21,7 +22,8 @@
        "name": "ui-test-project",
        "description": "This is a ui test project\n",
        "owner": "uitest",
-       "creationDateUtc": "2019-01-18T14:54:18.912489",
+       "creationDateUtc": "2019-01-18T14:54:18+00:00",
+       "modifiedOnUtc": "2019-01-18T14:59:22+00:00",
        "__typename": "Labbook"
       },
       "cursor": "MQ=="
@@ -32,7 +34,8 @@
        "name": "test-tt",
        "description": "",
        "owner": "uitest",
-       "creationDateUtc": "2019-01-11T19:31:30.179635",
+       "creationDateUtc": "2019-01-11T19:31:30+00:00",
+       "modifiedOnUtc": "2019-01-11T19:31:32+00:00",
        "__typename": "Labbook"
       },
       "cursor": "Mg=="
@@ -43,7 +46,8 @@
        "name": "new-project",
        "description": "",
        "owner": "uitest",
-       "creationDateUtc": "2019-01-16T20:38:00.412161",
+       "creationDateUtc": "2019-01-16T20:38:00+00:00",
+       "modifiedOnUtc": "2019-01-24T20:17:51+00:00",
        "__typename": "Labbook"
       },
       "cursor": "Mw=="
@@ -54,7 +58,8 @@
        "name": "awful-intersections-demo",
        "description": "A fun demo LabBook to automatically find and generate cringe-worthy maps of horrible intersections",
        "owner": "uitest",
-       "creationDateUtc": "2018-05-24T18:26:57.843710",
+       "creationDateUtc": "2018-05-24T18:26:57+00:00",
+       "modifiedOnUtc": "2019-01-11T19:52:37+00:00",
        "__typename": "Labbook"
       },
       "cursor": "NA=="

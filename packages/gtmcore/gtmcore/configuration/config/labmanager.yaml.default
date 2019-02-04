@@ -96,3 +96,9 @@ proxy:
 # Datasets configuration
 datasets:
   cache_manager: "host"
+  backends:
+    gigantum_object_v1:
+      upload_chunk_size: 4194304
+      download_chunk_size: 4194304
+      num_workers: 10
+

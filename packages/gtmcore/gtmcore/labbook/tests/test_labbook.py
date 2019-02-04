@@ -19,6 +19,8 @@
 # SOFTWARE.
 import pytest
 import os
+import time
+import datetime
 
 from gtmcore.labbook import LabBook
 from gtmcore.inventory.inventory import InventoryManager
@@ -236,3 +238,49 @@ class TestLabBook(object):
         lb.git.add(os.path.join(lb.root_dir, 'input', 'catfile'))
         lb.git.commit("Added file")
         assert lb.is_repo_clean
+
+    def test_is_labbook_create_date(self, mock_config_file):
+        """Test getting the create date, both when stored in the buildinfo file and when using git fallback"""
+        im = InventoryManager(mock_config_file[0])
+        lb = im.create_labbook('test', 'test', 'labbook1', description="my first labbook",
+                               author=GitAuthor(name="test", email="test@test.com"))
+        time.sleep(3)
+        lb.write_readme("doing something to change the modified time")
+
+        create_on = lb.creation_date
+
+        os.remove(os.path.join(lb.root_dir, '.gigantum', 'buildinfo'))
+        create_on_fallback = lb.creation_date
+
+        assert abs((create_on - create_on_fallback).seconds) < 2
+
+        assert create_on.microsecond == 0
+        assert create_on.tzname() == "UTC"
+        assert create_on_fallback.microsecond == 0
+        assert create_on_fallback.tzname() == "UTC"
+
+        assert (datetime.datetime.now(datetime.timezone.utc) - create_on).total_seconds() < 10
+        assert (datetime.datetime.now(datetime.timezone.utc) - create_on_fallback).total_seconds() < 10
+
+    def test_is_labbook_modified_date(self, mock_config_file):
+        """Test getting the modified date"""
+        im = InventoryManager(mock_config_file[0])
+        lb = im.create_labbook('test', 'test', 'labbook1', description="my first labbook",
+                               author=GitAuthor(name="test", email="test@test.com"))
+
+        modified_1 = lb.modified_on
+
+        time.sleep(2)
+        lb.write_readme("doing something to change the modified time")
+
+        modified_2 = lb.modified_on
+
+        assert modified_2 > modified_1
+
+        assert modified_1.microsecond == 0
+        assert modified_1.tzname() == "UTC"
+        assert modified_2.microsecond == 0
+        assert modified_2.tzname() == "UTC"
+
+        assert (datetime.datetime.now(datetime.timezone.utc) - modified_1).total_seconds() < 10
+        assert (datetime.datetime.now(datetime.timezone.utc) - modified_2).total_seconds() < 10

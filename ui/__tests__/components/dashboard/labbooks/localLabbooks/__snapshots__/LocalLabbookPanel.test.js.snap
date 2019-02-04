@@ -50,9 +50,18 @@ exports[`Test LocalLabbooks rendering 1`] = `
       Created on Fri Jan 18 2019
     </p>
     <p
+      className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+    >
+      Modified Fri Jan 18 2019
+    </p>
+    <p
       className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
     >
-      <span />
+      <span
+        className="LocalLabbooks__description--blank"
+      >
+        No description provided
+      </span>
     </p>
   </div>
   <div

@@ -2,12 +2,12 @@
 import React, { Component } from 'react';
 import { createFragmentContainer, graphql } from 'react-relay';
 // components
-import Loader from 'Components/shared/Loader';
+import Loader from 'Components/common/Loader';
 import Base from './Base';
 import PackageDependencies from './PackageDependencies';
 import CustomDockerfile from './CustomDockerfile';
-import ErrorBoundary from 'Components/shared/ErrorBoundary';
-import ToolTip from 'Components/shared/ToolTip';
+import ErrorBoundary from 'Components/common/ErrorBoundary';
+import ToolTip from 'Components/common/ToolTip';
 // mutations
 import BuildImageMutation from 'Mutations/BuildImageMutation';
 import StopContainerMutation from 'Mutations/StopContainerMutation';

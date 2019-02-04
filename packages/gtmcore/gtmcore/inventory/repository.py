@@ -325,7 +325,7 @@ class Repository(object):
 
     @property
     def modified_on(self) -> datetime.datetime:
-        return self.git.log(max_count=1)[0]['committed_on']
+        return self.git.log(max_count=1)[0]['committed_on'].replace(tzinfo=datetime.timezone.utc)
 
     @property
     def build_details(self) -> Optional[Dict[str, str]]:

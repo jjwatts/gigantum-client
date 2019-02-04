@@ -151,7 +151,6 @@ su giguser
                 import_run_configs = ask_question("I want to import run configurations into my `gtm` PyCharm project")
 
         # Prompt for working dir
-        # TODO: Check that this path is actually mounted inside Moby (or whatever the root VM is called)
         working_dir = self.prompt_with_default("Gigantum Working Directory",
                                                os.path.expanduser(os.path.join("~", 'gigantum')))
 

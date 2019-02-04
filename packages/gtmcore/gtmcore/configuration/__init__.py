@@ -61,7 +61,7 @@ def get_docker_client(check_server_version=True, fallback=True):
             return docker.from_env(version=docker_server_api_version)
         except ValueError as e:
             if fallback:
-                logger.warn("Could not determine Docker server API version; using default")
+                logger.warning("Could not determine Docker server API version; using default")
                 return docker.from_env()
             else:
                 logger.error()

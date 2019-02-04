@@ -1,0 +1,130 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`File component File Snapshot 1`] = `
+<div
+  className="Folder"
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
+>
+  <div
+    className="Folder__row"
+    onClick={[Function]}
+    style={
+      Object {
+        "paddingLeft": "NaNpx",
+      }
+    }
+  >
+    <button
+      className="Btn Btn--round Btn--check"
+      onClick={[Function]}
+    />
+    <div
+      className="Folder__cell Folder__cell--name"
+    >
+      <div
+        className="Folder__icon"
+      />
+      <div
+        className="Folder__name"
+      >
+        folder
+      </div>
+    </div>
+    <div
+      className="File__cell File__cell--edit hidden"
+    >
+      <div
+        className="File__container"
+      >
+        <input
+          className="File__input"
+          draggable={true}
+          onChange={[Function]}
+          onDragStart={[Function]}
+          onKeyDown={[Function]}
+          placeholder="Rename File"
+          type="text"
+          value="folder"
+        />
+      </div>
+      <div
+        className="flex justify-space-around"
+      >
+        <button
+          className="File__btn--round File__btn--cancel File__input--rename-cancel"
+          onClick={[Function]}
+        />
+        <button
+          className="File__btn--round File__btn--add File__input--rename-add"
+          onClick={[Function]}
+        />
+      </div>
+    </div>
+    <div
+      className="Folder__cell Folder__cell--size"
+    />
+    <div
+      className="Folder__cell Folder__cell--date"
+    >
+      Fri Jan 18 2019
+    </div>
+    <div
+      className="Folder__cell Folder__cell--menu"
+    >
+      <div
+        className="ActionsMenu"
+      >
+        <div
+          className="ActionsMenu__item ActionsMenu__item--AddSubfolder"
+          name="Add Folder"
+          onClick={[Function]}
+        />
+        <div
+          className="ActionsMenu__item ActionsMenu__item--delete"
+          name="Delete"
+          onClick={[Function]}
+        >
+          <div
+            className="ActionsMenu__popup hidden ToolTip__message"
+          >
+            <div
+              className="ToolTip__pointer"
+            />
+            <p>
+              Are you sure?
+            </p>
+            <div
+              className="flex justify--space-around"
+            >
+              <button
+                className="File__btn--round File__btn--cancel"
+                onClick={[Function]}
+              />
+              <button
+                className="File__btn--round File__btn--add"
+                onClick={[Function]}
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          className="ActionsMenu__item ActionsMenu__item--rename"
+          name="Rename"
+          onClick={[Function]}
+        />
+        <div
+          className="ActionsMenu__item ActionsMenu__item--favorite-off"
+          name="Favorite"
+          onClick={[Function]}
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    className="Folder__child hidden"
+  />
+</div>
+`;

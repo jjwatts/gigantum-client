@@ -5,8 +5,8 @@ import Slider from 'react-slick';
 import classNames from 'classnames';
 import ReactMarkdown from 'react-markdown';
 // components
-import Loader from 'Components/shared/Loader';
-import AdvancedSearch from 'Components/shared/AdvancedSearch';
+import Loader from 'Components/common/Loader';
+import AdvancedSearch from 'Components/common/AdvancedSearch';
 import BaseDetails from './BaseDetails';
 // utilites
 import environment from 'JS/createRelayEnvironment';

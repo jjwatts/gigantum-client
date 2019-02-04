@@ -4,7 +4,7 @@ import {
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
 
-import FooterUtils from 'Components/shared/footer/FooterUtils';
+import FooterUtils from 'Components/common/footer/FooterUtils';
 
 const mutation = graphql`
   mutation PublishDatasetMutation($input: PublishDatasetInput!){

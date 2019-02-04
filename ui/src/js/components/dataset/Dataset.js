@@ -8,10 +8,10 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Loadable from 'react-loadable';
 // components
-import DatasetHeader from '../header/Header';
+import DatasetHeader from '../shared/header/Header';
 import Login from 'Components/login/Login';
-import Loader from 'Components/shared/Loader';
-import ErrorBoundary from 'Components/shared/ErrorBoundary';
+import Loader from 'Components/common/Loader';
+import ErrorBoundary from 'Components/common/ErrorBoundary';
 // store
 import store from 'JS/redux/store';
 import { setStickyState } from 'JS/redux/reducers/dataset/dataset';
@@ -26,13 +26,13 @@ import Config from 'JS/config';
 const Loading = () => <Loader />;
 
 const Activity = Loadable({
-  loader: () => import('../activity/datasetContainers/DatasetActivityContainer'),
+  loader: () => import('./activity/DatasetActivityContainer'),
   loading: Loading,
   delay: 500,
 });
 
 const Data = Loadable({
-  loader: () => import('../filesShared/sectionWrapper/sectionWrapperFragments/Data'),
+  loader: () => import('./data/Data'),
   loading: Loading,
   delay: 500,
 });

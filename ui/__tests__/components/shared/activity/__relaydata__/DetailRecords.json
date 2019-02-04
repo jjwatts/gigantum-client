@@ -1,0 +1,175 @@
+{
+ "data": {
+  "labbook": {
+   "id": "TGFiYm9vazp1aXRlc3QmdWktdGVzdC1wcm9qZWN0",
+   "description": "This is a ui test project\n",
+   "detailRecords": [
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUF4UVlBQUc4QUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAAxQYAAG8AAAA=",
+     "data": [
+      [
+       "text/plain",
+       "Add conda2 managed package: numpy \"1.16.0\""
+      ]
+     ],
+     "type": "ENVIRONMENT",
+     "show": false,
+     "importance": 0,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUFRZ1lBQUc4QUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAAQgYAAG8AAAA=",
+     "data": [
+      [
+       "text/plain",
+       "Add pip managed package: pandas \"0.23.4\""
+      ]
+     ],
+     "type": "ENVIRONMENT",
+     "show": false,
+     "importance": 0,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUFrZ1FBQUhnQUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAAkgQAAHgAAAA=",
+     "data": [
+      [
+       "text/markdown",
+       "Created new Input Data file `input/README.md`"
+      ]
+     ],
+     "type": "INPUT_DATA",
+     "show": false,
+     "importance": 255,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUF0Z1VBQUhnQUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAAtgUAAHgAAAA=",
+     "data": [
+      [
+       "text/markdown",
+       "Created new Input Data file `input/setup.py`"
+      ]
+     ],
+     "type": "INPUT_DATA",
+     "show": false,
+     "importance": 253,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUE0Z0lBQUhnQUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAA4gIAAHgAAAA=",
+     "data": [
+      [
+       "text/markdown",
+       "Created new Code file `code/folder/README.md`"
+      ]
+     ],
+     "type": "CODE",
+     "show": false,
+     "importance": 255,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUFiZ01BQUlRQUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAAbgMAAIQAAAA=",
+     "data": [
+      [
+       "text/markdown",
+       "Created new Code file `code/folder/requirements.txt`"
+      ]
+     ],
+     "type": "CODE",
+     "show": false,
+     "importance": 254,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUFCZ1FBQUhnQUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAABgQAAHgAAAA=",
+     "data": [
+      [
+       "text/markdown",
+       "Created new Code file `code/folder/setup.py`"
+      ]
+     ],
+     "type": "CODE",
+     "show": false,
+     "importance": 253,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUFYQUlBQUhJQUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAAXAIAAHIAAAA=",
+     "data": [
+      [
+       "text/markdown",
+       "Created new Code directory `code/folder2`"
+      ]
+     ],
+     "type": "CODE",
+     "show": false,
+     "importance": 0,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUExZ0VBQUhJQUFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAA1gEAAHIAAAA=",
+     "data": [
+      [
+       "text/markdown",
+       "Created new Code directory `code/folder`"
+      ]
+     ],
+     "type": "CODE",
+     "show": false,
+     "importance": 0,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUFod0FBQURzQkFBQT0=",
+     "action": "CREATE",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAAhwAAADsBAAA=",
+     "data": [
+      [
+       "text/plain",
+       "Added base python2-minimal\n\nA minimal Base containing Python 2.7 and JupyterLab with no additional packages\n\n  - repository: gigantum_base-images\n  - component: python2-minimal\n  - revision: 6\n"
+      ]
+     ],
+     "type": "ENVIRONMENT",
+     "show": false,
+     "importance": 0,
+     "tags": []
+    },
+    {
+     "id": "QWN0aXZpdHlEZXRhaWxPYmplY3Q6bGFiYm9vayZ1aXRlc3QmdWktdGVzdC1wcm9qZWN0JmxvZ181MDQ1OWI2OTFhODA3NTAxNmM5NjFjNzJlZWI5MTY2MVgxOW5YMTlzYzI0QUFBQUFBQUFBQUhNQUFBQT0=",
+     "action": "NOACTION",
+     "key": "log_50459b691a8075016c961c72eeb91661X19nX19sc24AAAAAAAAAAHMAAAA=",
+     "data": [
+      [
+       "text/plain",
+       "Created new LabBook: uitest/ui-test-project"
+      ]
+     ],
+     "type": "LABBOOK",
+     "show": false,
+     "importance": 0,
+     "tags": []
+    }
+   ]
+  }
+ }
+}

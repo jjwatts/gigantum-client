@@ -19,10 +19,15 @@
 # SOFTWARE.
 import pytest
 import os
+import aniso8601
+import time
+import datetime
+
 from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_dataset_populated_scoped
 
 from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.gitlib.git import GitAuthor
 
 
 class TestDatasetQueries(object):
@@ -319,3 +324,69 @@ class TestDatasetQueries(object):
                 }
                 """
         snapshot.assert_match(fixture_working_dir_dataset_populated_scoped[2].execute(query))
+
+    def test_get_dataset_create_date(self, fixture_working_dir_dataset_populated_scoped):
+        """Test getting a dataset's create date"""
+        im = InventoryManager(fixture_working_dir_dataset_populated_scoped[0])
+        ds = im.create_dataset("default", "default", "create-on-test-ds", "gigantum_object_v1",
+                               description="my first dataset",
+                               author=GitAuthor(name="default", email="test@test.com"))
+
+        query = """
+        {
+          dataset(name: "create-on-test-ds", owner: "default") {
+            createdOnUtc
+          }
+        }
+        """
+        r = fixture_working_dir_dataset_populated_scoped[2].execute(query)
+        assert 'errors' not in r
+        d = r['data']['dataset']['createdOnUtc']
+
+        # using aniso8601 to parse because built-in datetime doesn't parse the UTC offset properly (configured for js)
+        create_on = aniso8601.parse_datetime(d)
+        assert create_on.microsecond == 0
+        assert create_on.tzname() == "+00:00"
+
+        assert (datetime.datetime.now(datetime.timezone.utc) - create_on).total_seconds() < 5
+
+    def test_get_dataset_modified_on(self, fixture_working_dir_dataset_populated_scoped):
+        """Test getting a dataset's modified date"""
+        im = InventoryManager(fixture_working_dir_dataset_populated_scoped[0])
+        ds = im.create_dataset("default", "default", "modified-on-test-ds", "gigantum_object_v1",
+                               description="my first dataset",
+                               author=GitAuthor(name="default", email="test@test.com"))
+
+        modified_query = """
+                            {
+                              dataset(name: "modified-on-test-ds", owner: "default") {
+                                modifiedOnUtc
+                              }
+                            }
+                            """
+        r = fixture_working_dir_dataset_populated_scoped[2].execute(modified_query)
+        assert 'errors' not in r
+        d = r['data']['dataset']['modifiedOnUtc']
+        # using aniso8601 to parse because built-in datetime doesn't parse the UTC offset properly (configured for js)
+        modified_on_1 = aniso8601.parse_datetime(d)
+        assert modified_on_1.microsecond == 0
+        assert modified_on_1.tzname() == "+00:00"
+
+        time.sleep(3)
+        with open(os.path.join(ds.root_dir, '.gigantum', 'dummy.txt'), 'wt') as testfile:
+            testfile.write("asdfasdf")
+
+        ds.git.add_all()
+        ds.git.commit("testing")
+
+        r = fixture_working_dir_dataset_populated_scoped[2].execute(modified_query)
+        assert 'errors' not in r
+        d = r['data']['dataset']['modifiedOnUtc']
+        modified_on_2 = aniso8601.parse_datetime(d)
+        assert modified_on_2.microsecond == 0
+        assert modified_on_2.tzname() == "+00:00"
+
+        assert (datetime.datetime.now(datetime.timezone.utc) - modified_on_1).total_seconds() < 10
+        assert (datetime.datetime.now(datetime.timezone.utc) - modified_on_2).total_seconds() < 10
+        assert modified_on_2 > modified_on_1
+

@@ -124,7 +124,7 @@ class IOManager(object):
         if not status_update_fn:
             status_update_fn = self._log_updater
 
-        objs: List[PushObject] = self.objects_to_push()
+        objs: List[PushObject] = self.objects_to_push(remove_duplicates=self.dataset.backend.client_should_dedup_on_push)
 
         try:
             self.dataset.backend.prepare_push(self.dataset, objs, status_update_fn)

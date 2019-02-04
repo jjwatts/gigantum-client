@@ -67,7 +67,9 @@ class TestInventory(object):
         """Test list create dated sorted labbooks"""
         inv_manager = InventoryManager(mock_config_file[0])
         lb1 = inv_manager.create_labbook("user1", "user1", "labbook3", description="my first labbook")
+        time.sleep(1.5)
         lb2 = inv_manager.create_labbook("user1", "user1", "asdf", description="my second labbook")
+        time.sleep(1.5)
         lb3 = inv_manager.create_labbook("user1", "user2", "labbook1", description="my other labbook")
 
         labbooks = inv_manager.list_labbooks(username="user1", sort_mode="created_on")

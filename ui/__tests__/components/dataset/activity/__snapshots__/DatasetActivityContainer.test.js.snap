@@ -1,0 +1,385 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DatasetActivityContainer Renders a snapshot 1`] = `
+<div
+  className="Activity"
+>
+  <div
+    className="Activity__inner-container flex flex--row flex--wrap justify--flex-start"
+  >
+    <div
+      className="Activity__sizer flex-1-0-auto"
+    >
+      <div />
+      <div>
+        <div
+          className="Activity__date-tab note"
+        >
+          <div
+            className="Activity__date-day"
+          >
+            11
+          </div>
+          <div
+            className="Activity__date-sub"
+          >
+            <div
+              className="Activity__date-month"
+            >
+              Jan
+            </div>
+            <div
+              className="Activity__date-year"
+            >
+              2019
+            </div>
+          </div>
+        </div>
+        <div
+          className="UserActivity__container"
+        >
+          <div
+            className="Activity__user-note"
+          >
+            <div
+              className="hidden userNote"
+            >
+              <div
+                className="ToolTip__toggle userNote"
+                onClick={[Function]}
+              >
+                <div
+                  className="ToolTip__glow-container"
+                >
+                  <div
+                    className="ToolTip__glow-ring-outer"
+                  >
+                    <div
+                      className="ToolTip__glow-ring-inner"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                className="hidden userNote"
+              />
+              <div
+                className="hidden userNote"
+              >
+                This menu can be used to create a note. A note is added to the current point in the Activity Feed and can be viewed by collaborators when synced. 
+ The note editor supports markdown.
+              </div>
+            </div>
+            <div
+              className="Activity__user-note-menu-icon"
+              onClick={[Function]}
+            />
+            <div
+              className="Activity__user-note-menu"
+            >
+              <div
+                className="Activity__add-note"
+                onClick={[Function]}
+              >
+                <button
+                  className="Activity__add-note-button"
+                />
+                <h5>
+                  Add Note
+                </h5>
+              </div>
+            </div>
+          </div>
+          <div
+            className="hidden"
+          >
+            <div
+              className="UserNote flex flex--column"
+            >
+              <input
+                className="UserNote__summary"
+                id="UserNoteTitle"
+                onKeyUp={[Function]}
+                placeholder="Add a summary title"
+              />
+              <textarea
+                className="UserNote__summary"
+                id="markDown"
+              />
+              <div />
+              <button
+                className="UserNote__add-note"
+                disabled={true}
+                onClick={[Function]}
+              >
+                Add Note
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          className="Activity__card-container Activity__card-container--last"
+        >
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--dataset"
+                  title="dataset"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        5:15pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Uploaded 1 new file(s). 
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            />
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--dataset"
+                  title="dataset"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        5:14pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Uploaded 1 new file(s). 
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            />
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--dataset"
+                  title="dataset"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        5:12pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Uploaded 1 new file(s). 
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            />
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--dataset"
+                  title="dataset"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        5:10pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Created new Dataset: uitest/ui-test-dataset
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            />
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--dataset"
+                  title="dataset"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        5:10pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Updated Dataset storage backend configuration
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--0 card column-1-span-10"
+      />
+      <div
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--1 card column-1-span-10"
+      />
+      <div
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--2 card column-1-span-10"
+      />
+      <div
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--3 card column-1-span-10"
+      />
+      <div
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--4 card column-1-span-10"
+      />
+    </div>
+  </div>
+</div>
+`;

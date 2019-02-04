@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Tue Jan 22 2019 10:22:37 GMT-0500 (Eastern Standard Time)
+# timestamp: Wed Jan 23 2019 17:43:01 GMT-0500 (Eastern Standard Time)
 
 schema {
   query: LabbookQuery
@@ -772,6 +772,7 @@ type Labbook implements Node & GitRepository {
   branches(before: String, after: String, first: Int, last: Int): LabbookRefConnection @deprecated(reason: "Can use availableBranchNames instead")
   defaultRemote: String
   creationDateUtc: DateTime
+  modifiedOnUtc: DateTime
   collaborators: [String]
   canManageCollaborators: Boolean
   updatesAvailableCount: Int

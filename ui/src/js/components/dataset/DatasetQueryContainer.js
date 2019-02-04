@@ -6,7 +6,7 @@ import environment from 'JS/createRelayEnvironment';
 
 // components
 import Dataset from './Dataset';
-import Loader from 'Components/shared/Loader';
+import Loader from 'Components/common/Loader';
 // store
 import { setUpdateAll } from 'JS/redux/reducers/routes';
 // dataset query with notes fragment

@@ -6,10 +6,10 @@ import {
 } from 'react-relay';
 import { Link } from 'react-router-dom';
 // components
-import Loader from 'Components/shared/Loader';
+import Loader from 'Components/common/Loader';
 import FileCard from './FileCard';
 import FileEmpty from './FileEmpty';
-import ToolTip from 'Components/shared/ToolTip';
+import ToolTip from 'Components/common/ToolTip';
 // utilites
 import environment from 'JS/createRelayEnvironment';
 // store

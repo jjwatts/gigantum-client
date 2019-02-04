@@ -15,9 +15,9 @@ exports[`Test RemoteLabbooks rendering 1`] = `
       Imported
     </button>
     <button
-      className="RemoteLabbooks__icon RemoteLabbooks__icon--delete-disabled"
-      data-tooltip="Can only delete remote projects created by you"
-      disabled={true}
+      className="RemoteLabbooks__icon RemoteLabbooks__icon--delete"
+      data-tooltip=""
+      disabled={false}
       onClick={[Function]}
     >
       Delete

@@ -114,6 +114,7 @@ module.exports = {
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
       'react-native': 'react-native-web',
+      '@Components': path.resolve(__dirname, '../src/js/components/'),
       'Components': path.resolve(__dirname, '../src/js/components/'),
       'Mutations': path.resolve(__dirname, '../src/js/mutations/'),
       'JS': path.resolve(__dirname, '../src/js/'),
@@ -144,12 +145,12 @@ module.exports = {
 
       // First, run the linter.
       // It's important to do this before Babel processes the JS.
-      {
-        test: /\.(js|jsx)$/,
-        enforce: 'pre',
-        loader: "eslint-loader",
-        include: paths.appSrc,
-      },
+      // {
+      //   test: /\.(js|jsx)$/,
+      //   enforce: 'pre',
+      //   loader: "eslint-loader",
+      //   include: paths.appSrc,
+      // },
       // ** ADDING/UPDATING LOADERS **
       // The "file" loader handles all assets unless explicitly excluded.
       // The `exclude` list *must* be updated with every change to loader extensions.

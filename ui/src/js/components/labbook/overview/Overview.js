@@ -12,10 +12,10 @@ import classNames from 'classnames';
 import Base from 'Components/labbook/environment/Base';
 import FilePreview from './FilePreview';
 import RecentActivity from './RecentActivity';
-import Loader from 'Components/shared/Loader';
+import Loader from 'Components/common/Loader';
 import FileEmpty from 'Components/labbook/overview/FileEmpty';
 import CodeBlock from 'Components/labbook/renderers/CodeBlock';
-import ToolTip from 'Components/shared/ToolTip';
+import ToolTip from 'Components/common/ToolTip';
 // mutations
 import WriteReadmeMutation from 'Mutations/WriteReadmeMutation';
 import SetLabbookDescriptionMutation from 'Mutations/SetLabbookDescriptionMutation';

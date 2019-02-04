@@ -3,8 +3,8 @@ import React, { Component, Fragment } from 'react';
 import classNames from 'classnames';
 import uuidv4 from 'uuid/v4';
 // components
-import ToolTip from 'Components/shared/ToolTip';
-import Modal from 'Components/shared/Modal';
+import ToolTip from 'Components/common/ToolTip';
+import Modal from 'Components/common/Modal';
 import JobStatus from 'JS/utils/JobStatus';
 import ChunkUploader from 'JS/utils/ChunkUploader';
 import { setUploadMessageRemove } from 'JS/redux/reducers/footer';

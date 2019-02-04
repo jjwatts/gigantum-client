@@ -65,11 +65,15 @@ class StorageBackend(metaclass=abc.ABCMeta):
         Simply implement this method in a child class. Note, 'icon' should be the name of the icon file saved in the
         thumbnails directory. It should be a 128x128 px PNG image.
 
+        `client_should_dedup_on_push` indicates if the backend wants every object, or if objects with the same contents
+        should be deduplicated on push (when generating objects to push)
+
         return {"storage_type": "a_unique_identifier",
                 "name": "My Dataset Type",
                 "description": "Short string",
                 "readme": "Long string",
                 "is_managed": True|False,
+                "client_should_dedup_on_push": True|False,
                 "icon": "my_icon.png",
                 "url": "http://moreinfo.com"
                 }
@@ -99,6 +103,10 @@ class StorageBackend(metaclass=abc.ABCMeta):
     @property
     def is_managed(self):
         return self._backend_metadata().get("is_managed")
+
+    @property
+    def client_should_dedup_on_push(self):
+        return self._backend_metadata().get("client_should_dedup_on_push")
 
     @property
     def is_configured(self) -> bool:

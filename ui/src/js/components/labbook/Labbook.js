@@ -17,10 +17,10 @@ import { setMergeMode, setBuildingState, setStickyDate } from 'JS/redux/reducers
 import { setCallbackRoute } from 'JS/redux/reducers/routes';
 import { setLatestPackages } from 'JS/redux/reducers/labbook/environment/packageDependencies';
 // components
-import LabbookHeader from '../header/Header';
+import LabbookHeader from '../shared/header/Header';
 import Login from 'Components/login/Login';
-import Loader from 'Components/shared/Loader';
-import ErrorBoundary from 'Components/shared/ErrorBoundary';
+import Loader from 'Components/common/Loader';
+import ErrorBoundary from 'Components/common/ErrorBoundary';
 
 // utils
 import { getFilesFromDragEvent } from 'JS/utils/html-dir-content';
@@ -40,19 +40,19 @@ const Overview = Loadable({
   loading: Loading,
 });
 const Activity = Loadable({
-  loader: () => import('../activity/labbookContainers/LabbookActivityContainer'),
+  loader: () => import('./activity/LabbookActivityContainer'),
   loading: Loading,
 });
 const Code = Loadable({
-  loader: () => import('../filesShared/sectionWrapper/sectionWrapperFragments/Code'),
+  loader: () => import('./code/Code'),
   loading: Loading,
 });
 const InputData = Loadable({
-  loader: () => import('../filesShared/sectionWrapper/sectionWrapperFragments/Input'),
+  loader: () => import('./inputData/Input'),
   loading: Loading,
 });
 const OutputData = Loadable({
-  loader: () => import('../filesShared/sectionWrapper/sectionWrapperFragments/Output'),
+  loader: () => import('./outputData/Output'),
   loading: Loading,
 });
 const Environment = Loadable({

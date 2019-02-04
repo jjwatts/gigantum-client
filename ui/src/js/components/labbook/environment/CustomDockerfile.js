@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import classNames from 'classnames';
 // Components
 import CodeBlock from 'Components/labbook/renderers/CodeBlock';
-import ToolTip from 'Components/shared/ToolTip';
+import ToolTip from 'Components/common/ToolTip';
 // mutations
 import AddCustomDockerMutation from 'Mutations/AddCustomDockerMutation';
 // store

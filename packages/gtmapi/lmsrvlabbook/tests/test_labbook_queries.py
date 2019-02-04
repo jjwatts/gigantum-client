@@ -20,6 +20,7 @@
 import pytest
 
 import os
+import time
 from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir, fixture_working_dir_populated_scoped, fixture_test_file
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped
@@ -27,7 +28,7 @@ from gtmcore.files import FileOperations
 from gtmcore.fixtures import ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
 import datetime
 import pprint
-
+import aniso8601
 import graphene
 
 import gtmcore
@@ -433,8 +434,10 @@ class TestLabBookServiceQueries(object):
         assert r['data']['labbook']['activeBranch']['prefix'] is None
         assert r['data']['labbook']['name'] == 'labbook1'
         d = r['data']['labbook']['creationDateUtc']
-        n = datetime.datetime.strptime(d, '%Y-%m-%dT%H:%M:%S.%f')
-        assert (datetime.datetime.utcnow() - n).total_seconds() < 30
+        n = aniso8601.parse_datetime(d)
+        assert (datetime.datetime.now(datetime.timezone.utc) - n).total_seconds() < 5
+        assert n.microsecond == 0
+        assert n.tzname() == "+00:00"
 
     def test_get_labbook_size_rediculously_huge(self, monkeypatch, fixture_working_dir):
         """Test listing labbooks"""
@@ -1700,3 +1703,74 @@ class TestLabBookServiceQueries(object):
         lb.write_readme("##Summary\nThis is my readme!!")
 
         snapshot.assert_match(fixture_working_dir[2].execute(query))
+
+    def test_get_labbook_create_date(self, fixture_working_dir, snapshot):
+        """Test getting a labbook's create date"""
+        # Create labbooks
+        im = InventoryManager(fixture_working_dir[0])
+        lb = im.create_labbook('default', 'default', 'labbook1', description="my test description")
+
+        query = """
+        {
+          labbook(name: "labbook1", owner: "default") {
+            creationDateUtc
+          }
+        }
+        """
+        r = fixture_working_dir[2].execute(query)
+        assert 'errors' not in r
+        d = r['data']['labbook']['creationDateUtc']
+        # using aniso8601 to parse because built-in datetime doesn't parse the UTC offset properly (configured for js)
+        create_on = aniso8601.parse_datetime(d)
+        assert create_on.microsecond == 0
+        assert create_on.tzname() == "+00:00"
+
+        # wait, add another commit, and remove the buildinfo file to test the fallback method for getting create date
+        time.sleep(4)
+        lb.write_readme("##Summary\nThis is my readme!!")
+        os.remove(os.path.join(lb.root_dir, '.gigantum', 'buildinfo'))
+
+        r = fixture_working_dir[2].execute(query)
+        assert 'errors' not in r
+        d = r['data']['labbook']['creationDateUtc']
+        create_on_fallback = aniso8601.parse_datetime(d)
+        assert create_on_fallback.microsecond == 0
+        assert create_on_fallback.tzname() == "+00:00"
+
+        # Because there can be 1 second of drift between normal and fallback methods, be safe and check they are not 2
+        # seconds apart.
+        assert abs((create_on - create_on_fallback).seconds) < 2
+
+    def test_get_labbook_modified_on(self, fixture_working_dir, snapshot):
+        """Test getting a labbook's modifed date"""
+        # Create labbooks
+        im = InventoryManager(fixture_working_dir[0])
+        lb = im.create_labbook('default', 'default', 'labbook1', description="my test description")
+
+        modified_query = """
+        {
+          labbook(name: "labbook1", owner: "default") {
+            modifiedOnUtc
+          }
+        }
+        """
+        r = fixture_working_dir[2].execute(modified_query)
+        assert 'errors' not in r
+        d = r['data']['labbook']['modifiedOnUtc']
+        # using aniso8601 to parse because built-in datetime doesn't parse the UTC offset properly (configured for js)
+        modified_on_1 = aniso8601.parse_datetime(d)
+        assert modified_on_1.microsecond == 0
+        assert modified_on_1.tzname() == "+00:00"
+
+        time.sleep(2)
+        lb.write_readme("##Summary\nThis is my readme!!")
+
+        r = fixture_working_dir[2].execute(modified_query)
+        assert 'errors' not in r
+        d = r['data']['labbook']['modifiedOnUtc']
+        modified_on_2 = aniso8601.parse_datetime(d)
+
+        assert (datetime.datetime.now(datetime.timezone.utc) - modified_on_1).total_seconds() < 30
+        assert (datetime.datetime.now(datetime.timezone.utc) - modified_on_2).total_seconds() < 30
+        assert modified_on_2 > modified_on_1
+

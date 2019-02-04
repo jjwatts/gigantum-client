@@ -1,11 +1,12 @@
 import history from 'JS/history';
 import auth0 from 'auth0-js';
-import { AUTH_CONFIG } from './auth0-variables';
 import RemoveUserIdentityMutation from 'Mutations/RemoveUserIdentityMutation';
 // queries
 import SessionCheck from 'JS/Auth/sessionCheck';
 // store
 import { setLogout, setLoginError } from 'JS/redux/reducers/login';
+// variables
+import { AUTH_CONFIG } from './auth0-variables';
 
 export default class Auth {
   auth0 = new auth0.WebAuth({

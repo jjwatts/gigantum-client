@@ -100,6 +100,9 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
     # Creation date/timestamp in UTC in ISO format
     creation_date_utc = graphene.types.datetime.DateTime()
 
+    # Modified date/timestamp in UTC in ISO format
+    modified_on_utc = graphene.types.datetime.DateTime()
+
     # List of collaborators
     collaborators = graphene.List(graphene.String)
 
@@ -261,6 +264,20 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         # Note! creation_date might be None!!
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             lambda labbook: labbook.creation_date)
+
+    def resolve_modified_on_utc(self, info):
+        """Return the modified on timestamp
+
+        Args:
+            args:
+            context:
+            info:
+
+        Returns:
+
+        """
+        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda labbook: labbook.modified_on)
 
     @staticmethod
     def helper_resolve_default_remote(labbook):

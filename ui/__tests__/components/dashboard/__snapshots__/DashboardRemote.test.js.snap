@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Test DashboardRemote 1`] = `
+exports[`DashboardRemote Renders a snapshot 1`] = `
 <div
   className="Labbooks"
 >
@@ -11,7 +11,7 @@ exports[`Test DashboardRemote 1`] = `
     <h6
       className="Labbooks__username"
     >
-      cbutler
+      uitest
     </h6>
     <h2
       className="Labbooks__title"
@@ -145,7 +145,7 @@ exports[`Test DashboardRemote 1`] = `
           onClick={[Function]}
         >
           Modified Date (Newest) 
-          
+          ✓ 
         </li>
         <li
           className="LabbookSort__list-item"
@@ -205,9 +205,9 @@ exports[`Test DashboardRemote 1`] = `
             Imported
           </button>
           <button
-            className="RemoteLabbooks__icon RemoteLabbooks__icon--delete-disabled"
-            data-tooltip="Can only delete remote projects created by you"
-            disabled={true}
+            className="RemoteLabbooks__icon RemoteLabbooks__icon--delete"
+            data-tooltip=""
+            disabled={false}
             onClick={[Function]}
           >
             Delete

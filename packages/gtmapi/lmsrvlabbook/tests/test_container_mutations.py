@@ -24,7 +24,7 @@ import pprint
 import subprocess
 
 from lmsrvlabbook.tests.fixtures import fixture_working_dir, fixture_working_dir_env_repo_scoped, \
-    build_image_for_jupyterlab
+    build_image_for_jupyterlab, build_image_for_rserver
 
 from gtmcore.container.container import ContainerOperations
 
@@ -168,3 +168,8 @@ class TestContainerMutations(object):
             # Remove the container you fired up
             build_image_for_jupyterlab[2].containers.get(container_id=container_id).stop(timeout=10)
             build_image_for_jupyterlab[2].containers.get(container_id=container_id).remove()
+
+
+    @pytest.mark.skipif(getpass.getuser() == 'circleci', reason="Cannot run this networking test in CircleCI environment")
+    def test_start_rserver(self, build_image_for_rserver):
+        pytest.xfail("RStudio Server tests not implemented")

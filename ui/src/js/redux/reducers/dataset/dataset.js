@@ -4,6 +4,7 @@ import dispatcher from 'JS/redux/dispatcher';
  * constants
  */
 export const UPDATE_STICKY_STATE = 'UPDATE_STICKY_STATE';
+export const SET_IS_PROCESSING = 'SET_IS_PROCESSING';
 
 
 /**
@@ -11,11 +12,13 @@ export const UPDATE_STICKY_STATE = 'UPDATE_STICKY_STATE';
  */
 
 export const setStickyState = isSticky => dispatcher(UPDATE_STICKY_STATE, { isSticky });
+export const setIsProcessing = isProcessing => dispatcher(SET_IS_PROCESSING, { isProcessing });
 
 
 export default (
   state = {
     isSticky: false,
+    isProcessing: false,
   },
   action,
 ) => {
@@ -24,6 +27,11 @@ export default (
     return {
       ...state,
       isSticky: action.payload.isSticky,
+    };
+  } else if (action.type === SET_IS_PROCESSING) {
+    return {
+      ...state,
+      isProcessing: action.payload.isProcessing,
     };
   }
 

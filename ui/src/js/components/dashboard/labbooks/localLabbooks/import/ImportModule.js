@@ -6,8 +6,8 @@ import uuidv4 from 'uuid/v4';
 import JobStatus from 'JS/utils/JobStatus';
 import ChunkUploader from 'JS/utils/ChunkUploader';
 // components
-import LoginPrompt from 'Components/header/branchMenu/modals/LoginPrompt';
-import ToolTip from 'Components/shared/ToolTip';
+import LoginPrompt from 'Components/shared/header/branchMenu/modals/LoginPrompt';
+import ToolTip from 'Components/common/ToolTip';
 // store
 import store from 'JS/redux/store';
 import { setUploadMessageRemove } from 'JS/redux/reducers/footer';

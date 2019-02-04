@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Test DashboardLocal snapshot 1`] = `
+exports[`DashboardLocal Renders a snapshot 1`] = `
 <div
   className="Labbooks"
 >
@@ -11,7 +11,7 @@ exports[`Test DashboardLocal snapshot 1`] = `
     <h6
       className="Labbooks__username"
     >
-      cbutler
+      uitest
     </h6>
     <h2
       className="Labbooks__title"
@@ -145,7 +145,7 @@ exports[`Test DashboardLocal snapshot 1`] = `
           onClick={[Function]}
         >
           Modified Date (Newest) 
-          
+          ✓ 
         </li>
         <li
           className="LabbookSort__list-item"
@@ -344,9 +344,18 @@ exports[`Test DashboardLocal snapshot 1`] = `
             Created on Fri Jan 18 2019
           </p>
           <p
+            className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+          >
+            Modified Fri Jan 18 2019
+          </p>
+          <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
           >
-            <span />
+            <span
+              className="LocalLabbooks__description--blank"
+            >
+              No description provided
+            </span>
           </p>
         </div>
         <div
@@ -401,6 +410,11 @@ exports[`Test DashboardLocal snapshot 1`] = `
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
           >
             Created on Fri Jan 18 2019
+          </p>
+          <p
+            className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+          >
+            Modified Fri Jan 18 2019
           </p>
           <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
@@ -469,9 +483,18 @@ exports[`Test DashboardLocal snapshot 1`] = `
             Created on Fri Jan 11 2019
           </p>
           <p
+            className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+          >
+            Modified Fri Jan 11 2019
+          </p>
+          <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
           >
-            <span />
+            <span
+              className="LocalLabbooks__description--blank"
+            >
+              No description provided
+            </span>
           </p>
         </div>
         <div
@@ -528,9 +551,18 @@ exports[`Test DashboardLocal snapshot 1`] = `
             Created on Wed Jan 16 2019
           </p>
           <p
+            className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+          >
+            Modified Thu Jan 24 2019
+          </p>
+          <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
           >
-            <span />
+            <span
+              className="LocalLabbooks__description--blank"
+            >
+              No description provided
+            </span>
           </p>
         </div>
         <div
@@ -585,6 +617,11 @@ exports[`Test DashboardLocal snapshot 1`] = `
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
           >
             Created on Thu May 24 2018
+          </p>
+          <p
+            className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+          >
+            Modified Fri Jan 11 2019
           </p>
           <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"

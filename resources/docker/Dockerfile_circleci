@@ -34,7 +34,7 @@ RUN apt-get -y update && \
 RUN useradd -ms /bin/bash circleci
 
 # Install jest for UI tests
-RUN npm install -g @babel/cli@7.1.5 @babel/core@7.1.5  jest@23.6.0 relay-compiler@1.6.0
+RUN npm install -g @babel/cli@7.2.3 @babel/core@7.2.2 jest@23.6.0 relay-compiler@1.6.1
 
 # Install fossa
 RUN curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash

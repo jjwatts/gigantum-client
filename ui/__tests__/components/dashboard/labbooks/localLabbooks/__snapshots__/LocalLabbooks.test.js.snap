@@ -160,9 +160,18 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
           Created on Fri Jan 18 2019
         </p>
         <p
+          className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+        >
+          Modified Fri Jan 18 2019
+        </p>
+        <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
         >
-          <span />
+          <span
+            className="LocalLabbooks__description--blank"
+          >
+            No description provided
+          </span>
         </p>
       </div>
       <div
@@ -217,6 +226,11 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
         >
           Created on Fri Jan 18 2019
+        </p>
+        <p
+          className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+        >
+          Modified Fri Jan 18 2019
         </p>
         <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
@@ -285,9 +299,18 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
           Created on Fri Jan 11 2019
         </p>
         <p
+          className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+        >
+          Modified Fri Jan 11 2019
+        </p>
+        <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
         >
-          <span />
+          <span
+            className="LocalLabbooks__description--blank"
+          >
+            No description provided
+          </span>
         </p>
       </div>
       <div
@@ -344,9 +367,18 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
           Created on Wed Jan 16 2019
         </p>
         <p
+          className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+        >
+          Modified Thu Jan 24 2019
+        </p>
+        <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
         >
-          <span />
+          <span
+            className="LocalLabbooks__description--blank"
+          >
+            No description provided
+          </span>
         </p>
       </div>
       <div
@@ -401,6 +433,11 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
         >
           Created on Thu May 24 2018
+        </p>
+        <p
+          className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner"
+        >
+          Modified Fri Jan 11 2019
         </p>
         <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"

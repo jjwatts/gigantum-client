@@ -22,11 +22,13 @@ import functools
 import glob
 import os
 import yaml
+from gtmcore.environment.componentmanager import ComponentManager
 from typing import (Any, Dict, List)
 
 from gtmcore.labbook import LabBook
 from gtmcore.logging import LMLogger
 from gtmcore.environment.utils import get_package_manager
+from gtmcore.mitmproxy.mitmproxy import CURRENT_MITMPROXY_TAG
 
 
 logger = LMLogger.get_logger()
@@ -68,6 +70,16 @@ class ImageBuilder(object):
         for subdir in subdirs:
             if not os.path.exists(os.path.join(self.labbook.root_dir, *subdir)):
                 raise ValueError("Labbook directory missing subdir `{}'".format(subdir))
+
+    def _extra_base_images(self) -> List[str]:
+        """Add other needed images via multi-stage build"""
+        docker_lines = []
+        cm = ComponentManager(self.labbook)
+        if 'rstudio' in cm.base_fields['development_tools']:
+                docker_lines.append("FROM gigantum/mitmproxy_proxy:" + CURRENT_MITMPROXY_TAG)
+
+        return docker_lines
+
 
     def _import_baseimage_fields(self) -> Dict[str, Any]:
         """Load fields from base_image yaml file into a convenient dict. """
@@ -182,7 +194,8 @@ class ImageBuilder(object):
         Returns:
             str - Content of Dockerfile in single string using os.linesep as line separator.
         """
-        assembly_pipeline = [self._load_baseimage,
+        assembly_pipeline = [self._extra_base_images,
+                             self._load_baseimage,
                              self._load_packages,
                              self._load_docker_snippets,
                              self._post_image_hook,
@@ -202,7 +215,7 @@ class ImageBuilder(object):
         if write:
             logger.info("Writing Dockerfile to {}".format(dockerfile_name))
             with open(dockerfile_name, "w") as dockerfile:
-                dockerfile.write(os.linesep.join(docker_lines))
+                dockerfile.write('\n'.join(docker_lines))
         else:
             logger.info("Dockerfile NOT being written; write=False; {}".format(dockerfile_name))
 

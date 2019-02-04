@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import Moment from 'moment';
 // components
 import CodeBlock from 'Components/labbook/renderers/CodeBlock';
-import ToolTip from 'Components/shared/ToolTip';
+import ToolTip from 'Components/common/ToolTip';
 // store
 import store from 'JS/redux/store';
 // assets

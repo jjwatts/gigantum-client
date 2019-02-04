@@ -1,8 +1,8 @@
 import pytest
 import os
-import responses
 import uuid
 import flask
+from aioresponses import aioresponses
 
 from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped, fixture_working_dir
@@ -15,8 +15,6 @@ from gtmcore.fixtures.datasets import mock_dataset_with_cache_dir, mock_dataset_
 
 
 class TestDatasetFilesMutations(object):
-
-    @responses.activate
     def test_download_dataset_files(self, fixture_working_dir, snapshot):
         # Create a bunch of lab books
         im = InventoryManager(fixture_working_dir[0])
@@ -51,86 +49,85 @@ class TestDatasetFilesMutations(object):
         assert os.path.isfile(obj1_source) is True
         assert os.path.isfile(obj2_source) is True
 
-        responses.add(responses.GET, f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_1}',
-                      json={
-                              "presigned_url": f"https://dummyurl.com/{obj_id_1}?params=1",
-                              "namespace": ds.namespace,
-                              "obj_id": obj_id_1,
-                              "dataset": ds.name
-                      },
-                      status=200)
+        with aioresponses() as mocked_responses:
+            mocked_responses.get(f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_1}',
+                                 payload={
+                                         "presigned_url": f"https://dummyurl.com/{obj_id_1}?params=1",
+                                         "namespace": ds.namespace,
+                                         "obj_id": obj_id_1,
+                                         "dataset": ds.name
+                                 },
+                                 status=200)
 
-        with open(obj1_source, 'rb') as data1:
-            responses.add(responses.GET, f"https://dummyurl.com/{obj_id_1}?params=1",
-                          body=data1.read(), status=200,
-                          content_type='application/octet-stream',
-                          stream=True)
+            with open(obj1_source, 'rb') as data1:
+                mocked_responses.get(f"https://dummyurl.com/{obj_id_1}?params=1",
+                                     body=data1.read(), status=200,
+                                     content_type='application/octet-stream')
 
-        responses.add(responses.GET, f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_2}',
-                      json={
-                              "presigned_url": f"https://dummyurl.com/{obj_id_2}?params=1",
-                              "namespace": ds.namespace,
-                              "obj_id": obj_id_2,
-                              "dataset": ds.name
-                      },
-                      status=200)
+            mocked_responses.get(f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_2}',
+                                 payload={
+                                         "presigned_url": f"https://dummyurl.com/{obj_id_2}?params=1",
+                                         "namespace": ds.namespace,
+                                         "obj_id": obj_id_2,
+                                         "dataset": ds.name
+                                 },
+                                 status=200)
 
-        with open(obj2_source, 'rb') as data2:
-            responses.add(responses.GET, f"https://dummyurl.com/{obj_id_2}?params=1",
-                          body=data2.read(), status=200,
-                          content_type='application/octet-stream',
-                          stream=True)
-        iom.dataset.backend.set_default_configuration("default", "abcd", '1234')
+            with open(obj2_source, 'rb') as data2:
+                mocked_responses.get(f"https://dummyurl.com/{obj_id_2}?params=1",
+                                     body=data2.read(), status=200,
+                                     content_type='application/octet-stream')
+            iom.dataset.backend.set_default_configuration("default", "abcd", '1234')
 
-        query = """
-                   mutation myMutation {
-                     downloadDatasetFiles(input: {datasetOwner: "default", datasetName: "dataset100", keys: ["test1.txt"]}) {
-                         updatedFileEdges {
-                           node {
-                             name
-                             key
-                             isLocal
-                             size
-                           }
+            query = """
+                       mutation myMutation {
+                         downloadDatasetFiles(input: {datasetOwner: "default", datasetName: "dataset100", keys: ["test1.txt"]}) {
+                             updatedFileEdges {
+                               node {
+                                 name
+                                 key
+                                 isLocal
+                                 size
+                               }
+                             }
                          }
-                     }
-                   }
-                   """
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
+                       }
+                       """
+            snapshot.assert_match(fixture_working_dir[2].execute(query))
 
-        assert os.path.isfile(obj1_target) is True
-        assert os.path.isfile(obj2_target) is False
-        with open(obj1_source, 'rt') as dd:
-            source1 = dd.read()
-        with open(obj1_target, 'rt') as dd:
-            assert source1 == dd.read()
+            assert os.path.isfile(obj1_target) is True
+            assert os.path.isfile(obj2_target) is False
+            with open(obj1_source, 'rt') as dd:
+                source1 = dd.read()
+            with open(obj1_target, 'rt') as dd:
+                assert source1 == dd.read()
 
-        query = """
-                   mutation myMutation {
-                     downloadDatasetFiles(input: {datasetOwner: "default", datasetName: "dataset100", keys: ["test2.txt"]}) {
-                         updatedFileEdges {
-                           node {
-                             id
-                             name
-                             isLocal
-                             size
-                           }
+            query = """
+                       mutation myMutation {
+                         downloadDatasetFiles(input: {datasetOwner: "default", datasetName: "dataset100", keys: ["test2.txt"]}) {
+                             updatedFileEdges {
+                               node {
+                                 id
+                                 name
+                                 isLocal
+                                 size
+                               }
+                             }
                          }
-                     }
-                   }
-                   """
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
+                       }
+                       """
+            snapshot.assert_match(fixture_working_dir[2].execute(query))
 
-        assert os.path.isfile(obj1_target) is True
-        assert os.path.isfile(obj2_target) is True
-        with open(obj1_source, 'rt') as dd:
-            source1 = dd.read()
-        with open(obj1_target, 'rt') as dd:
-            assert source1 == dd.read()
-        with open(obj2_source, 'rt') as dd:
-            source2 = dd.read()
-        with open(obj2_target, 'rt') as dd:
-            assert source2 == dd.read()
+            assert os.path.isfile(obj1_target) is True
+            assert os.path.isfile(obj2_target) is True
+            with open(obj1_source, 'rt') as dd:
+                source1 = dd.read()
+            with open(obj1_target, 'rt') as dd:
+                assert source1 == dd.read()
+            with open(obj2_source, 'rt') as dd:
+                source2 = dd.read()
+            with open(obj2_target, 'rt') as dd:
+                assert source2 == dd.read()
 
     def test_delete_dataset_files(self, fixture_working_dir, snapshot):
         im = InventoryManager(fixture_working_dir[0])

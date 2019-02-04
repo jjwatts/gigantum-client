@@ -5,9 +5,9 @@ import classNames from 'classnames';
 import CreateLabbook from './CreateLabbook';
 import SelectBase from './SelectBase';
 import TrackingToggle from './TrackingToggle';
-import Loader from 'Components/shared/Loader';
-import ButtonLoader from 'Components/shared/ButtonLoader';
-import Modal from 'Components/shared/Modal';
+import Loader from 'Components/common/Loader';
+import ButtonLoader from 'Components/common/ButtonLoader';
+import Modal from 'Components/common/Modal';
 // mutations
 import CreateLabbookMutation from 'Mutations/CreateLabbookMutation';
 import CreateDatasetMutation from 'Mutations/CreateDatasetMutation';

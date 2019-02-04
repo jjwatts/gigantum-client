@@ -1,0 +1,867 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LabbookActivityContainer Renders a snapshot 1`] = `
+<div
+  className="Activity"
+>
+  <div
+    className="Activity__inner-container flex flex--row flex--wrap justify--flex-start"
+  >
+    <div
+      className="Activity__sizer flex-1-0-auto"
+    >
+      <div />
+      <div>
+        <div
+          className="Activity__date-tab note"
+        >
+          <div
+            className="Activity__date-day"
+          >
+            18
+          </div>
+          <div
+            className="Activity__date-sub"
+          >
+            <div
+              className="Activity__date-month"
+            >
+              Jan
+            </div>
+            <div
+              className="Activity__date-year"
+            >
+              2019
+            </div>
+          </div>
+        </div>
+        <div
+          className="UserActivity__container"
+        >
+          <div
+            className="Activity__user-note"
+          >
+            <div
+              className="hidden userNote"
+            >
+              <div
+                className="ToolTip__toggle userNote"
+                onClick={[Function]}
+              >
+                <div
+                  className="ToolTip__glow-container"
+                >
+                  <div
+                    className="ToolTip__glow-ring-outer"
+                  >
+                    <div
+                      className="ToolTip__glow-ring-inner"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                className="hidden userNote"
+              />
+              <div
+                className="hidden userNote"
+              >
+                This menu can be used to create a note. A note is added to the current point in the Activity Feed and can be viewed by collaborators when synced. 
+ The note editor supports markdown.
+              </div>
+            </div>
+            <div
+              className="Activity__user-note-menu-icon"
+              onClick={[Function]}
+            />
+            <div
+              className="Activity__user-note-menu"
+            >
+              <div
+                className="Activity__add-note"
+                onClick={[Function]}
+              >
+                <button
+                  className="Activity__add-note-button"
+                />
+                <h5>
+                  Add Note
+                </h5>
+              </div>
+              <div
+                className="Activity__add-branch"
+                onClick={[Function]}
+              >
+                <button
+                  className="Activity__add-branch-button"
+                />
+                <h5>
+                  Add Branch
+                </h5>
+              </div>
+            </div>
+          </div>
+          <div
+            className="hidden"
+          >
+            <div
+              className="UserNote flex flex--column"
+            >
+              <input
+                className="UserNote__summary"
+                id="UserNoteTitle"
+                onKeyUp={[Function]}
+                placeholder="Add a summary title"
+              />
+              <textarea
+                className="UserNote__summary"
+                id="markDown"
+              />
+              <div />
+              <button
+                className="UserNote__add-note"
+                disabled={true}
+                onClick={[Function]}
+              >
+                Add Note
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          className="Activity__card-container Activity__card-container--last"
+        >
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--environment"
+                  title="environment"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        2:59pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Added 1 conda2 package(s). 
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            >
+              <div
+                className="hidden activitySubmenu"
+              >
+                <div
+                  className="ToolTip__toggle activitySubmenu"
+                  onClick={[Function]}
+                >
+                  <div
+                    className="ToolTip__glow-container"
+                  >
+                    <div
+                      className="ToolTip__glow-ring-outer"
+                    >
+                      <div
+                        className="ToolTip__glow-ring-inner"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="hidden activitySubmenu"
+                />
+                <div
+                  className="hidden activitySubmenu"
+                >
+                  A dot between two activity records indicates the availability of the rollback menu. 
+ This menu will allow you to rollback to a previous state, including code, data, and environment configuration. 
+ When choosing to rollback a new branch is created at the specified point.
+                </div>
+              </div>
+              <div
+                className="Activity__submenu-circle"
+                onClick={[Function]}
+              />
+              <div
+                className="Activity__submenu-subcontainer"
+              >
+                <div
+                  className="Activity__rollback"
+                  onClick={[Function]}
+                  onMouseOut={[Function]}
+                  onMouseOver={[Function]}
+                >
+                  <button
+                    className="Activity__rollback-button"
+                  />
+                  <h5
+                    className="Activity__rollback-text"
+                  >
+                    Rollback
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--environment"
+                  title="environment"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        2:57pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Added 1 pip package(s). 
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            >
+              <div
+                className="hidden activitySubmenu"
+              >
+                <div
+                  className="ToolTip__toggle activitySubmenu"
+                  onClick={[Function]}
+                >
+                  <div
+                    className="ToolTip__glow-container"
+                  >
+                    <div
+                      className="ToolTip__glow-ring-outer"
+                    >
+                      <div
+                        className="ToolTip__glow-ring-inner"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="hidden activitySubmenu"
+                />
+                <div
+                  className="hidden activitySubmenu"
+                >
+                  A dot between two activity records indicates the availability of the rollback menu. 
+ This menu will allow you to rollback to a previous state, including code, data, and environment configuration. 
+ When choosing to rollback a new branch is created at the specified point.
+                </div>
+              </div>
+              <div
+                className="Activity__submenu-circle"
+                onClick={[Function]}
+              />
+              <div
+                className="Activity__submenu-subcontainer"
+              >
+                <div
+                  className="Activity__rollback"
+                  onClick={[Function]}
+                  onMouseOut={[Function]}
+                  onMouseOver={[Function]}
+                >
+                  <button
+                    className="Activity__rollback-button"
+                  />
+                  <h5
+                    className="Activity__rollback-text"
+                  >
+                    Rollback
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--input_data"
+                  title="input_data"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        2:56pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Uploaded 3 new file(s). 
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            >
+              <div
+                className="hidden activitySubmenu"
+              >
+                <div
+                  className="ToolTip__toggle activitySubmenu"
+                  onClick={[Function]}
+                >
+                  <div
+                    className="ToolTip__glow-container"
+                  >
+                    <div
+                      className="ToolTip__glow-ring-outer"
+                    >
+                      <div
+                        className="ToolTip__glow-ring-inner"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="hidden activitySubmenu"
+                />
+                <div
+                  className="hidden activitySubmenu"
+                >
+                  A dot between two activity records indicates the availability of the rollback menu. 
+ This menu will allow you to rollback to a previous state, including code, data, and environment configuration. 
+ When choosing to rollback a new branch is created at the specified point.
+                </div>
+              </div>
+              <div
+                className="Activity__submenu-circle"
+                onClick={[Function]}
+              />
+              <div
+                className="Activity__submenu-subcontainer"
+              >
+                <div
+                  className="Activity__rollback"
+                  onClick={[Function]}
+                  onMouseOut={[Function]}
+                  onMouseOver={[Function]}
+                >
+                  <button
+                    className="Activity__rollback-button"
+                  />
+                  <h5
+                    className="Activity__rollback-text"
+                  >
+                    Rollback
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--code"
+                  title="code"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        2:55pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Uploaded 3 new file(s). 
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            >
+              <div
+                className="hidden activitySubmenu"
+              >
+                <div
+                  className="ToolTip__toggle activitySubmenu"
+                  onClick={[Function]}
+                >
+                  <div
+                    className="ToolTip__glow-container"
+                  >
+                    <div
+                      className="ToolTip__glow-ring-outer"
+                    >
+                      <div
+                        className="ToolTip__glow-ring-inner"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="hidden activitySubmenu"
+                />
+                <div
+                  className="hidden activitySubmenu"
+                >
+                  A dot between two activity records indicates the availability of the rollback menu. 
+ This menu will allow you to rollback to a previous state, including code, data, and environment configuration. 
+ When choosing to rollback a new branch is created at the specified point.
+                </div>
+              </div>
+              <div
+                className="Activity__submenu-circle"
+                onClick={[Function]}
+              />
+              <div
+                className="Activity__submenu-subcontainer"
+              >
+                <div
+                  className="Activity__rollback"
+                  onClick={[Function]}
+                  onMouseOut={[Function]}
+                  onMouseOver={[Function]}
+                >
+                  <button
+                    className="Activity__rollback-button"
+                  />
+                  <h5
+                    className="Activity__rollback-text"
+                  >
+                    Rollback
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--code"
+                  title="code"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        2:54pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Created new Code directory \`code/folder2\`
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            >
+              <div
+                className="hidden activitySubmenu"
+              >
+                <div
+                  className="ToolTip__toggle activitySubmenu"
+                  onClick={[Function]}
+                >
+                  <div
+                    className="ToolTip__glow-container"
+                  >
+                    <div
+                      className="ToolTip__glow-ring-outer"
+                    >
+                      <div
+                        className="ToolTip__glow-ring-inner"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="hidden activitySubmenu"
+                />
+                <div
+                  className="hidden activitySubmenu"
+                >
+                  A dot between two activity records indicates the availability of the rollback menu. 
+ This menu will allow you to rollback to a previous state, including code, data, and environment configuration. 
+ When choosing to rollback a new branch is created at the specified point.
+                </div>
+              </div>
+              <div
+                className="Activity__submenu-circle"
+                onClick={[Function]}
+              />
+              <div
+                className="Activity__submenu-subcontainer"
+              >
+                <div
+                  className="Activity__rollback"
+                  onClick={[Function]}
+                  onMouseOut={[Function]}
+                  onMouseOver={[Function]}
+                >
+                  <button
+                    className="Activity__rollback-button"
+                  />
+                  <h5
+                    className="Activity__rollback-text"
+                  >
+                    Rollback
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--code"
+                  title="code"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        2:54pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Created new Code directory \`code/folder\`
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            >
+              <div
+                className="hidden activitySubmenu"
+              >
+                <div
+                  className="ToolTip__toggle activitySubmenu"
+                  onClick={[Function]}
+                >
+                  <div
+                    className="ToolTip__glow-container"
+                  >
+                    <div
+                      className="ToolTip__glow-ring-outer"
+                    >
+                      <div
+                        className="ToolTip__glow-ring-inner"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="hidden activitySubmenu"
+                />
+                <div
+                  className="hidden activitySubmenu"
+                >
+                  A dot between two activity records indicates the availability of the rollback menu. 
+ This menu will allow you to rollback to a previous state, including code, data, and environment configuration. 
+ When choosing to rollback a new branch is created at the specified point.
+                </div>
+              </div>
+              <div
+                className="Activity__submenu-circle"
+                onClick={[Function]}
+              />
+              <div
+                className="Activity__submenu-subcontainer"
+              >
+                <div
+                  className="Activity__rollback"
+                  onClick={[Function]}
+                  onMouseOut={[Function]}
+                  onMouseOver={[Function]}
+                >
+                  <button
+                    className="Activity__rollback-button"
+                  />
+                  <h5
+                    className="Activity__rollback-text"
+                  >
+                    Rollback
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--environment"
+                  title="environment"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        2:54pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Added base: python2-minimal
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ActivityCard__wrapper"
+          >
+            <div
+              className="Activity__submenu-container"
+            />
+            <div
+              className="ActivityCard__container column-1-span-10"
+            >
+              <div
+                className="ActivityCard ActivityCard--collapsed card"
+                style={Object {}}
+              >
+                <div
+                  className="ActivityCard__badge ActivityCard__badge--labbook"
+                  title="labbook"
+                />
+                <div
+                  className="ActivityCard__content"
+                >
+                  <div
+                    className="ActivityCard__title flex flex--row justify--space-between closed"
+                    onClick={[Function]}
+                  >
+                    <div
+                      className="ActivityCard__stack"
+                    >
+                      <p
+                        className="ActivityCard__time"
+                      >
+                        2:54pm
+                      </p>
+                      <div
+                        className="ActivityCard__user"
+                      />
+                    </div>
+                    <h6
+                      className="ActivityCard__commit-message"
+                    >
+                      <b>
+                        uitest - 
+                      </b>
+                      Created new LabBook: uitest/ui-test-project
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className="ActivityCard ActivityCard__loader-hidden column-1-span-10"
+      />
+      <div
+        className="ActivityCard ActivityCard__loader-hidden column-1-span-10"
+      />
+      <div
+        className="ActivityCard ActivityCard__loader-hidden column-1-span-10"
+      />
+      <div
+        className="ActivityCard ActivityCard__loader-hidden column-1-span-10"
+      />
+      <div
+        className="ActivityCard ActivityCard__loader-hidden column-1-span-10"
+      />
+    </div>
+  </div>
+</div>
+`;

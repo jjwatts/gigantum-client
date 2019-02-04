@@ -101,6 +101,8 @@ class Dataset(Repository):
         if self._data:
             created_at = self._data["created_on"]
             d = datetime.datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%S.%f')
+            d = d.replace(tzinfo=datetime.timezone.utc)  # Make tz aware so rendering in API is consistent
+            d = d.replace(microsecond=0)  # Make all times consistent
             return d
         else:
             raise ValueError("No creation date set.")

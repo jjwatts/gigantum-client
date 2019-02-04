@@ -23,20 +23,20 @@ const fixtures = {
   filterDatasets: data => data,
 };
 
-test('Test LocalDatasets', () => {
-  const wrapper = renderer.create(
-    relayTestingUtils.relayWrap(
-      <Provider store={store}>
-        <Router>
-          <LocalDatasets
-              {...fixtures}
-          />
-        </Router>
-      </Provider>, {}, json.data)
-  );
+describe('LocalDatasets', () => {
+  it('Renders a snapshot', () => {
+    const wrapper = renderer.create(
+      relayTestingUtils.relayWrap(
+        <Provider store={store}>
+          <Router>
+            <LocalDatasets
+                {...fixtures}
+            />
+          </Router>
+        </Provider>, {}, json.data)
+    );
+    const tree = wrapper.toJSON();
 
-  const tree = wrapper.toJSON();
-
-  expect(tree).toMatchSnapshot();
-
-})
+    expect(tree).toMatchSnapshot();
+  });
+});
