@@ -33,14 +33,14 @@ ENV SHELL=/bin/bash
 
 # Super instruction to install all dependencies
 RUN apt-get -y update && \
-    apt-get -y --no-install-recommends install git nginx supervisor wget openssl python3.7 python3-pip python3-distutils \
-    gcc g++ gosu redis-server libjpeg-dev git-lfs python3-setuptools python3.7-dev libdpkg-perl zip unzip && \
+    apt-get -y --no-install-recommends install git nginx supervisor wget openssl \
+        python3.7 python3-pip python3-distutils gcc g++ gosu redis-server \
+        libjpeg-dev git-lfs python3-setuptools python3.7-dev libdpkg-perl zip unzip && \
     git lfs install && \
     apt-get -y install curl gnupg gnupg1 gnupg2 && \
     curl -sL https://deb.nodesource.com/setup_8.x | bash && \
-    apt-get -y install nodejs
-
-RUN rm -f /usr/bin/python3 && ln -s /usr/bin/python3.7 /usr/bin/python3
+    apt-get -y install nodejs && \
+    rm -f /usr/bin/python3 && ln -s /usr/bin/python3.7 /usr/bin/python3
 
 RUN npm install -g configurable-http-proxy && \
     cd /opt/confhttpproxy && pip3 install . && \
