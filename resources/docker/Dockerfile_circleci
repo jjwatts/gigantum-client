@@ -26,6 +26,9 @@ RUN apt-get -y update && \
     pip3 install -r /opt/gtmcore/requirements.txt && \
     pip3 install -r /opt/gtmapi/requirements.txt && \
     pip3 install uwsgi && \
+    pip3 install -r /opt/gtmcore/requirements-testing.txt && \
+    pip3 install -r /opt/gtmapi/requirements-testing.txt && \
+    pip3 install codecov pytest-cov pytest-xdist && \
     apt-get -qq -y remove gcc g++ python3-dev wget curl gnupg gnupg1 gnupg2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/log/dpkg.log
