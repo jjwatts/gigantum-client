@@ -40,9 +40,8 @@ RUN apt-get -y update && \
     apt-get -y install curl gnupg gnupg1 gnupg2 && \
     curl -sL https://deb.nodesource.com/setup_8.x | bash && \
     apt-get -y install nodejs && \
-    rm -f /usr/bin/python3 && ln -s /usr/bin/python3.7 /usr/bin/python3
-
-RUN npm install -g configurable-http-proxy && \
+    rm -f /usr/bin/python3 && ln -s /usr/bin/python3.7 /usr/bin/python3 && \
+    npm install -g configurable-http-proxy && \
     cd /opt/confhttpproxy && pip3 install . && \
     pip3 install wheel && \
     pip3 install -r /opt/gtmcore/requirements.txt && \
