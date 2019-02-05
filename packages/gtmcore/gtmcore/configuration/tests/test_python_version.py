@@ -9,6 +9,6 @@ class TestPythonVersion(object):
         @dataclass
         class TestDataClass(object):
             x: int = 2
-            
+
         python_version = platform.python_version()
         assert python_version.startswith('3.7')
