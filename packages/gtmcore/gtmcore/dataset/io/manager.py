@@ -58,30 +58,31 @@ class IOManager(object):
         if os.path.exists(self.push_dir):
             push_files = [f for f in os.listdir(self.push_dir) if os.path.isfile(os.path.join(self.push_dir, f))]
 
-            object_ids: List[str] = list()
-            for pf in push_files:
-                if os.path.basename(pf) == '.DS_Store':
-                    continue
+            if push_files:
+                object_ids: List[str] = list()
+                for pf in push_files:
+                    if os.path.basename(pf) == '.DS_Store':
+                        continue
 
-                if not self._commit_in_branch(pf):
-                    continue
+                    if not self._commit_in_branch(pf):
+                        continue
 
-                with open(os.path.join(self.push_dir, pf), 'rt') as pfh:
-                    lines = pfh.readlines()
+                    with open(os.path.join(self.push_dir, pf), 'rt') as pfh:
+                        lines = pfh.readlines()
+                        lines = sorted(lines)
+                        for line in lines:
+                            line = line.strip()
+                            dataset_path, object_path = line.split(',')
+                            _, object_id = object_path.rsplit('/', 1)
 
-                    for line in lines:
-                        line = line.strip()
-                        dataset_path, object_path = line.split(',')
-                        _, object_id = object_path.rsplit('/', 1)
+                            # Handle de-duplicating objects if the backend supports it
+                            if remove_duplicates is True:
+                                if object_id in object_ids:
+                                    continue
 
-                        # Handle de-duplicating objects if the backend supports it
-                        if remove_duplicates is True:
-                            if object_id in object_ids:
-                                continue
+                                object_ids.append(object_id)
 
-                            object_ids.append(object_id)
-
-                        objects.append(PushObject(dataset_path=dataset_path, object_path=object_path, revision=pf))
+                            objects.append(PushObject(dataset_path=dataset_path, object_path=object_path, revision=pf))
 
             objects = natsorted(objects, key=attrgetter('dataset_path'))
 

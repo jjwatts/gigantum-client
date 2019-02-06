@@ -63,6 +63,15 @@ class FileBrowser extends Component {
         let files = props.files.edges;
 
         const processChildState = (edges, datasetName) => {
+          if (datasetName && edges.length === 0) {
+            const adjustedKey = `${datasetName}/`;
+            childrenState[adjustedKey] = {
+              isSelected: (state.childrenState && state.childrenState[adjustedKey]) ? state.childrenState[adjustedKey].isSelected : false,
+              isIncomplete: (state.childrenState && state.childrenState[adjustedKey]) ? state.childrenState[adjustedKey].isIncomplete : false,
+              isExpanded: (state.childrenState && state.childrenState[adjustedKey]) ? state.childrenState[adjustedKey].isExpanded : false,
+              isAddingFolder: (state.childrenState && state.childrenState[adjustedKey]) ? state.childrenState[adjustedKey].isAddingFolder : false,
+            };
+          }
           edges.forEach((edge) => {
             if (edge.node && edge.node.key) {
               let key = datasetName ? `${datasetName}/${edge.node.key}` : edge.node.key;

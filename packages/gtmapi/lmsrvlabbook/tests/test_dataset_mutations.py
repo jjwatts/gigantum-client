@@ -195,6 +195,50 @@ class TestDatasetMutations(object):
         assert "errors" in result
         snapshot.assert_match(result)
 
+    def test_modify_dataset_link_local(self, fixture_working_dir):
+        im = InventoryManager(fixture_working_dir[0])
+        lb = im.create_labbook('default', 'default', 'test-lb', 'testing dataset links')
+        ds = im.create_dataset('default', 'default', "dataset100", storage_type="gigantum_object_v1", description="100")
+
+        assert os.path.exists(os.path.join(lb.root_dir, '.gitmodules')) is False
+
+        query = """
+                   mutation myMutation($lo: String!, $ln: String!, $do: String!, $dn: String!,
+                                       $a: String!) {
+                     modifyDatasetLink(input: {labbookOwner: $lo, labbookName: $ln, datasetOwner: $do, datasetName: $dn,
+                                               action: $a}) {
+                         newLabbookEdge {
+                           node {
+                             id
+                             name
+                             description
+                             linkedDatasets {
+                               name
+                               defaultRemote
+                             }
+                           }
+                         }
+                     }
+                   }
+                   """
+        variables = {"lo": "default", "ln": "test-lb", "do": "default", "dn": "dataset100", "a": "link"}
+        result = fixture_working_dir[2].execute(query, variable_values=variables)
+        assert "errors" not in result
+        assert result['data']['modifyDatasetLink']['newLabbookEdge']['node']['name'] == 'test-lb'
+        assert len(result['data']['modifyDatasetLink']['newLabbookEdge']['node']['linkedDatasets']) == 1
+        assert result['data']['modifyDatasetLink']['newLabbookEdge']['node']['linkedDatasets'][0]['name'] == 'dataset100'
+        assert '.git' in result['data']['modifyDatasetLink']['newLabbookEdge']['node']['linkedDatasets'][0]['defaultRemote']
+
+        assert os.path.exists(os.path.join(lb.root_dir, '.gitmodules')) is True
+        dataset_submodule_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', 'default', 'dataset100')
+        assert os.path.exists(dataset_submodule_dir) is True
+        assert os.path.exists(os.path.join(dataset_submodule_dir, '.gigantum')) is True
+
+        with open(os.path.join(lb.root_dir, '.gitmodules'), 'rt') as mf:
+            data = mf.read()
+
+        assert len(data) > 0
+
         query = """
                    mutation myMutation($lo: String!, $ln: String!, $do: String!, $dn: String!,
                                        $a: String!) {
@@ -213,7 +257,16 @@ class TestDatasetMutations(object):
                      }
                    }
                    """
-        variables = {"lo": "default", "ln": "test-lb", "do": "default", "dn": "dataset100", "a": "link"}
+        variables = {"lo": "default", "ln": "test-lb", "do": "default", "dn": "dataset100", "a": "unlink"}
         result = fixture_working_dir[2].execute(query, variable_values=variables)
-        assert "errors" in result
-        snapshot.assert_match(result)
+        assert "errors" not in result
+        assert result['data']['modifyDatasetLink']['newLabbookEdge']['node']['name'] == 'test-lb'
+        assert len(result['data']['modifyDatasetLink']['newLabbookEdge']['node']['linkedDatasets']) == 0
+
+        dataset_submodule_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', 'default', 'dataset100')
+        assert os.path.exists(dataset_submodule_dir) is False
+        assert os.path.exists(os.path.join(dataset_submodule_dir, '.gigantum')) is False
+        with open(os.path.join(lb.root_dir, '.gitmodules'), 'rt') as mf:
+            data = mf.read()
+
+        assert len(data) == 0

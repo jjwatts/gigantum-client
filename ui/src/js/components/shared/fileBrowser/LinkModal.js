@@ -64,7 +64,7 @@ export default class LinkModal extends Component {
         this.state.selectedDataset.owner,
         this.state.selectedDataset.name,
         'link',
-        this.state.selectedUrl,
+        this.state.selectedUrl || null,
         (response, error) => {
             if (error) {
                 setErrorMessage('Unable to link dataset', error);
@@ -130,23 +130,20 @@ export default class LinkModal extends Component {
                                                   LinkModal__card: true,
                                                 });
                                                 return (<div key={edge.node.id}>
-                                                  {
-                                                    edge.node.defaultRemote &&
-                                                    <div
-                                                        className={LinkModalCard}
-                                                        onClick={() => { this._updateSelected(edge); }}>
-                                                        <LocalDatasetsPanel
-                                                          key={`${edge.node.id}__LocalDatasetsPanel`}
-                                                          ref={`LocalDatasetPanel${edge.node.name}`}
-                                                          className="LocalDatasets__panel Card--auto"
-                                                          edge={edge}
-                                                          visibility={'local'}
-                                                          filterText={''}
-                                                          noLink
-                                                          />
-                                                    </div>
-                                                }
-                                               </div>);
+                                                            <div
+                                                                className={LinkModalCard}
+                                                                onClick={() => { this._updateSelected(edge); }}>
+                                                                <LocalDatasetsPanel
+                                                                key={`${edge.node.id}__LocalDatasetsPanel`}
+                                                                ref={`LocalDatasetPanel${edge.node.name}`}
+                                                                className="LocalDatasets__panel Card--auto"
+                                                                edge={edge}
+                                                                visibility={'local'}
+                                                                filterText={''}
+                                                                noLink
+                                                            />
+                                                            </div>
+                                                        </div>);
                                         })
                                     }
                                 </div>

@@ -40,6 +40,13 @@
   }
 }
 
+.Modal__content.project .Modal__container{
+  .Modal__header{
+    background: url('./../images/icons/labbooks-blue.svg') no-repeat 274px 40px;
+    background-size: 42px;
+  }
+}
+
 .Modal__sub-container{
   padding: 0 20px;
   height: calc(100% - 60px);

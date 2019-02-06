@@ -117,30 +117,35 @@ class ModifyDatasetLink(graphene.relay.ClientIDMutation):
 
         with lb.lock():
             if action == 'link':
-                if not dataset_url:
-                    raise ValueError("datasetUrl is required when linking a dataset")
+                if dataset_url:
+                    remote_domain = cls._get_remote_domain(dataset_url, dataset_owner, dataset_name)
 
-                remote_domain = cls._get_remote_domain(dataset_url, dataset_owner, dataset_name)
+                    if remote_domain:
+                        # Make sure git creds are configured for the remote
+                        admin_service = None
+                        for remote in lb.client_config.config['git']['remotes']:
+                            if remote_domain == remote:
+                                admin_service = lb.client_config.config['git']['remotes'][remote]['admin_service']
+                                break
+                        if "HTTP_AUTHORIZATION" in info.context.headers.environ:
+                            token = parse_token(info.context.headers.environ["HTTP_AUTHORIZATION"])
+                        else:
+                            raise ValueError("Authorization header not provided."
+                                             " Must have a valid session to query for collaborators")
+                        mgr = GitLabManager(remote_domain, admin_service, token)
+                        mgr.configure_git_credentials(remote_domain, logged_in_username)
+                else:
+                    # Link to local dataset
+                    ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+                    dataset_url = f"{ds.root_dir}/.git"
 
-                if remote_domain:
-                    # Make sure git creds are configured for the remote
-                    admin_service = None
-                    for remote in lb.client_config.config['git']['remotes']:
-                        if remote_domain == remote:
-                            admin_service = lb.client_config.config['git']['remotes'][remote]['admin_service']
-                            break
-                    if "HTTP_AUTHORIZATION" in info.context.headers.environ:
-                        token = parse_token(info.context.headers.environ["HTTP_AUTHORIZATION"])
-                    else:
-                        raise ValueError(
-                            "Authorization header not provided. Must have a valid session to query for collaborators")
-                    mgr = GitLabManager(remote_domain, admin_service, token)
-                    mgr.configure_git_credentials(remote_domain, logged_in_username)
-
-                # Link dataset to labbook via submodule references
+                # Link the dataset to the labbook
                 ds = im.link_dataset_to_labbook(dataset_url, dataset_owner, dataset_name, lb)
                 ds.namespace = dataset_owner
+
+                # Preload the dataloaders
                 info.context.dataset_loader.prime(f"{get_logged_in_username()}&{dataset_owner}&{dataset_name}", ds)
+                info.context.labbook_loader.prime(f"{get_logged_in_username()}&{labbook_owner}&{labbook_name}", lb)
 
                 # Relink the revision
                 m = Manifest(ds, logged_in_username)

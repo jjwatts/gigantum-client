@@ -15,6 +15,7 @@ const mutation = graphql`
             id
             isDir
             modifiedAt
+            isLocal
             key
             size
           }

@@ -1,0 +1,258 @@
+@import '~Styles/_imports.scss';
+
+
+.PublishDatasetsModal{
+  @include flex(space-between, column);
+  height: 100%;
+}
+
+.PublishDatasetsModal__buttons{
+  @include flex(space-between, row);
+  margin: 0 50px 0 450px;
+}
+
+.PublishDatasetsModal__private{
+  @include flex(space-between, row);
+  align-items: center;
+  label{
+    min-width: 110px;
+    text-align: left;
+    background: url(~Images/icons/lock.svg) no-repeat 30px center;
+    background-size: 20px;
+    color: $slateBlue;
+    padding-left: 60px;
+    cursor: pointer;
+  }
+  input{
+    cursor: pointer;
+  }
+}
+
+.PublishDatasetsModal__public{
+  @include flex(space-between, row);
+  align-items: center;
+  label{
+    min-width: 110px;
+    text-align: left;
+    background: url(~Images/icons/earth.svg) no-repeat 30px center;
+    background-size: 20px;
+    color: $slateBlue;
+    padding-left: 60px;
+    cursor: pointer;
+  }
+  input{
+    cursor: pointer;
+  }
+}
+
+.PublishDatasetsModal__paragraph{
+  max-width: 475px;
+  min-width: 475px;
+  padding: 0 0 0 80px;
+  color: $romanSilver;
+}
+
+.PublishDatasetsModal__radio-container{
+  @include flex(flex-start, row);
+  position: relative;
+}
+.PublishDatasetsModal__radio-subcontainer{
+  margin-left: 20px;
+  min-width: 300px;
+  position:absolute;
+  left: 200px;
+  @include flex(space-around, row);
+}
+.PublishDatasetsModal__container{
+  height: 275px;
+  margin-bottom: 20px;
+  overflow: auto;
+  li {
+    margin: 15px 0;
+    position: relative;
+  }
+  &--processing {
+    li {
+      margin: 30px 0;
+    }
+  }
+}
+
+.PublishDatasetsModal__Label{
+  margin-top: 20px;
+}
+
+.PublishDatasetsModal__Datasets-radio-container{
+  margin-left: 20px;
+  min-width: 300px;
+  left: 200px;
+  position: absolute;
+  @include flex(space-around, row);
+  .PublishDatasetsModal__private-label {
+    min-width: 110px;
+    text-align: left;
+    background: url(~Images/icons/lock.svg) no-repeat 30px center;
+    background-size: 20px;
+    color: $slateBlue;
+    padding-left: 60px;
+    cursor: pointer;
+  }
+  .PublishDatasetsModal__public-label{
+    min-width: 110px;
+    text-align: left;
+    background: url(~Images/icons/earth.svg) no-repeat 30px center;
+    background-size: 20px;
+    color: $slateBlue;
+    padding-left: 60px;
+    cursor: pointer;
+  }
+}
+
+progress{
+  transition: all 0.4s linear;
+}
+
+.PublishDatasetsModal__header-text {
+  margin-top: 15px;
+  text-align: center;
+  p {
+    margin: 0;
+  }
+  p:first-child {
+    font-weight: 999;
+    font-size: 19px;
+  }
+  p:last-child {
+    font-style: italic;
+  }
+}
+
+ul.PublishDatasetsModal__list {
+  columns: 2;
+  -webkit-columns: 2;
+  -moz-columns: 2;
+  list-style-type: square;
+  list-style-position: inside;
+  li {
+    display:list-item;
+    margin: auto;
+    margin-left: 20px;
+  }
+}
+
+.PublishDatasetsModal__ul-label{
+  font-weight: 900;
+}
+
+
+%remain-steps{
+  &:before {
+    // content: counter(stepNum);
+    font-family: inherit;
+    font-weight: 700;
+  }
+  &:after{
+    background-color: $romanSilver;
+  }
+}
+.multi-steps{
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  height: 46px;
+
+  &.project > li:before {
+    left: 79px !important;
+  }
+  > li{
+    counter-increment: stepNum;
+    text-align: center;
+    display: table-cell;
+    position: relative;
+    color: $azure;
+    padding-top: 20px;
+    transition: all 0.25s;
+
+    &:before{
+      font-size: 14px;
+      transition: all 0.25s;
+      content: '';
+      display: block;
+      margin: 0 auto 2px;
+      background-color: $white;
+      width: 18px;
+      height: 18px;
+      line-height: 20px;
+      text-align: center;
+      position: absolute;
+      top: 0;
+      left: 54px;
+      border:{
+        width: 2px;
+        style: solid;
+        color: $azure;
+        radius: 50%;
+      }
+    }
+    &:after{
+      transition: all 0.25s;
+      content: '';
+      height: 2px;
+      width: 100%;
+      background-color: $azure;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      z-index: -1;
+    }
+    &:last-child{
+      &:after{
+        transition: all 0.25s;
+        display: none;
+      }
+    }
+
+    &.is-completed{
+      transition: all 0.25s;
+      color: $azure;
+
+      &:before{
+        transition: all 0.25s;
+        content: '\f00c';
+        content: '\2713;';
+        content: '\10003';
+        content: '\10004';
+        content: '\2713';
+        position: absolute;
+        background: $azure;
+        color: $white;
+        top: 0;
+        left: 54px;
+      }
+    }
+
+    &.is-active{
+      transition: all 0.25s;
+      @extend %remain-steps;
+      &:before{
+        border-color: $turquise;
+        animation: spin 2s linear infinite;
+        background: $white url(~Images/loaders/publish-spinner.svg) no-repeat 50% 50%;
+        background-size: 20px;
+        width: 20px;
+        height: 20px;
+        border: none;
+      }
+
+      ~ li{
+        transition: all 0.25s;
+        color: $azure;
+        @extend %remain-steps;
+        &:before{
+          background-color: $white;
+          border-color: $azure;
+        }
+      }
+    }
+  }
+}

@@ -685,7 +685,7 @@ class InventoryManager(object):
                        check=True, cwd=labbook.root_dir, stderr=subprocess.STDOUT)
 
         labbook.git.add_all()
-        commit = labbook.git.commit("adding submodule ref")
+        commit = labbook.git.commit(f"adding submodule ref to link dataset {dataset_namespace}/{dataset_name}")
         labbook.git.update_submodules(init=True)
 
         ds = self.load_dataset_from_directory(submodule_dir)

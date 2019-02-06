@@ -165,7 +165,8 @@ class Manifest(object):
                 if change == FileChangeType.NOCHANGE:
                     continue
                 elif change == FileChangeType.MODIFIED:
-                    status['modified'].append(rel_path)
+                    # Don't record directory modifications
+                    pass
                 elif change == FileChangeType.CREATED:
                     status['created'].append(rel_path)
                 else:
@@ -286,27 +287,28 @@ class Manifest(object):
         if update_files:
             # Hash Files
             loop = get_event_loop()
-            task = asyncio.ensure_future(self.hasher.hash(update_files))
-            loop.run_until_complete(asyncio.gather(task))
+            hash_task = asyncio.ensure_future(self.hasher.hash(update_files))
+            loop.run_until_complete(asyncio.gather(hash_task))
 
             # Move files into object cache and link back to the revision directory
-            hash_result = task.result()
-            tasks = [asyncio.ensure_future(self._move_to_object_cache(fd.filename, fd.hash)) for fd in hash_result]
+            hash_result = hash_task.result()
+            tasks = [asyncio.ensure_future(self._move_to_object_cache(f, h)) for f, h in zip(update_files, hash_result)]
             loop.run_until_complete(asyncio.gather(*tasks))
 
-            # Update fast hash
-            self.hasher.fast_hash(update_files)
+            # Update fast hash after objects have been moved/relinked
+            fast_hash_result = self.hasher.fast_hash(update_files, save=True)
 
             # Update manifest file
-            for result in hash_result:
-                _, file_bytes, mtime, ctime = result.fast_hash.split("||")
-                self.manifest[result.filename] = {'h': result.hash,
-                                                  'c': ctime,
-                                                  'm': mtime,
-                                                  'b': file_bytes}
+            for f, h, fh in zip(update_files, hash_result, fast_hash_result):
+                if not fh:
+                    raise ValueError(f"Failed to update manifest for {f}. File not found.")
+                _, file_bytes, mtime = fh.split("||")
+                self.manifest[f] = {'h': h,
+                                    'm': mtime,
+                                    'b': file_bytes}
 
         if status.deleted:
-            self.hasher.delete_hashes(status.deleted)
+            self.hasher.delete_fast_hashes(status.deleted)
             for f in status.deleted:
                 del self.manifest[f]
 
@@ -568,7 +570,8 @@ class Manifest(object):
                         logger.exception(err)
                         continue
 
-        # Update fast hash
+        # Completely re-compute the fast hash index
+        self.hasher.fast_hash_data = dict()
         self.hasher.fast_hash(list(self.manifest.keys()))
 
     def sweep_all_changes(self, upload: bool = False, extra_msg: str = None) -> None:

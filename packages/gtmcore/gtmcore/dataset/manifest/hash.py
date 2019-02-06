@@ -1,16 +1,9 @@
 from hashlib import blake2b
-import asyncio
 import aiofiles
 
-from typing import List, Tuple
+from typing import List, Optional
 import pickle
 import os
-from collections import namedtuple
-
-from gtmcore.dataset.manifest.eventloop import get_event_loop
-
-
-HashResult = namedtuple('HashResult', ['hash', 'fast_hash', 'filename'])
 
 
 class SmartHash(object):
@@ -64,44 +57,44 @@ class SmartHash(object):
 
         return os.path.join(self.file_cache_root, self.current_revision, relative_path)
 
-    def is_cached(self, path) -> bool:
-        """
+    def is_cached(self, path: str) -> bool:
+        """Method to check if a file has been loaded into the file cache
 
         Args:
-            path:
+            path: relative path to the file in the dataset
 
         Returns:
 
         """
         return path in self.fast_hash_data
 
-    def has_changed_fast(self, path) -> bool:
-        """
+    def has_changed_fast(self, path: str) -> bool:
+        """Method to check if a file has changed according to the fast hash
 
         Args:
-            path:
+            path: Relative path to the file in the dataset
 
         Returns:
 
         """
-        return self.fast_hash([path], save=False)[0].fast_hash != self.fast_hash_data.get(path)
+        return self._compute_fast_hash(path) != self.fast_hash_data.get(path)
 
     def get_deleted_files(self, file_list: List[str]) -> list:
-        """
+        """Method to list files that have previously been in the fast hash (exist locally) and have been removed
 
         Args:
-            file_list:
+            file_list: List of relative paths to files in the dataset
 
         Returns:
 
         """
         return sorted(list(set(self.fast_hash_data.keys()).difference(file_list)))
 
-    def delete_hashes(self, file_list: List[str]) -> None:
-        """
+    def delete_fast_hashes(self, file_list: List[str]) -> None:
+        """Method to remove fast hashes from the stored hash file
 
         Args:
-            file_list:
+            file_list: list of relative paths to remove from the fast hash data
 
         Returns:
 
@@ -111,12 +104,32 @@ class SmartHash(object):
 
         self._save_fast_hash_file()
 
-    def fast_hash(self, path_list: list, save: bool = True) -> List[HashResult]:
+    def _compute_fast_hash(self, relative_path: str) -> Optional[str]:
         """
 
         Note, the delimiter `||` is used as it's unlikely to be in a path. Hash structure:
 
-        relative file path || size in bytes || mtime || ctime
+        relative file path || size in bytes || mtime
+
+        Args:
+            relative_path:
+
+        Returns:
+            str
+        """
+        abs_path = self.get_abs_path(relative_path)
+        fast_hash_val = None
+        if os.path.exists(abs_path):
+            file_info = os.stat(abs_path)
+            fast_hash_val = f"{relative_path}||{file_info.st_size}||{file_info.st_mtime}"
+        return fast_hash_val
+
+    def fast_hash(self, path_list: list, save: bool = True) -> List[Optional[str]]:
+        """
+
+        Note, the delimiter `||` is used as it's unlikely to be in a path. Hash structure:
+
+        relative file path || size in bytes || mtime
 
         Args:
             path_list:
@@ -125,19 +138,15 @@ class SmartHash(object):
         Returns:
 
         """
-        fast_hash_result = list()
+        fast_hash_result: List[Optional[str]] = list()
         if len(path_list) > 0:
-            file_info = [os.stat(self.get_abs_path(x)) for x in path_list]
-
-            for path, info in zip(path_list, file_info):
-                hash_val = f"{path}||{info.st_size}||{info.st_mtime}||{info.st_ctime}"
-                fast_hash_result.append(HashResult(filename=path,
-                                                   hash=None,
-                                                   fast_hash=hash_val))
-                if save:
-                    self.fast_hash_data[path] = hash_val
+            fast_hash_result = [self._compute_fast_hash(x) for x in path_list]
 
             if save:
+                for p, h in zip(path_list, fast_hash_result):
+                    if h:
+                        self.fast_hash_data[p] = h
+
                 self._save_fast_hash_file()
 
         return fast_hash_result
@@ -167,23 +176,16 @@ class SmartHash(object):
 
         return h.hexdigest()
 
-    async def hash(self, path_list: List[str]) -> List[HashResult]:
-        """Method to compute the hash of a file
+    async def hash(self, path_list: List[str]) -> List[str]:
+        """Method to compute the blake2b hash of a file's contents.
 
         Args:
             path_list:
 
         Returns:
-            Tuple
+            list
         """
-        hash_result_list: List[str] = [await self.compute_file_hash(path, self.hashing_block_size) for path in path_list]
+        hash_result_list: List[str] = [await self.compute_file_hash(path,
+                                                                    self.hashing_block_size) for path in path_list]
 
-        fast_hash_result_list = self.fast_hash(path_list)
-
-        result = list()
-        for hash_result, fast_hash_result in zip(hash_result_list, fast_hash_result_list):
-            result.append(HashResult(filename=fast_hash_result.filename,
-                                     hash=hash_result,
-                                     fast_hash=fast_hash_result.fast_hash))
-
-        return result
+        return hash_result_list

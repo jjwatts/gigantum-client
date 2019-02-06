@@ -129,23 +129,3 @@ snapshots['TestDatasetMutations.test_modify_dataset_link_errors 1'] = {
         }
     ]
 }
-
-snapshots['TestDatasetMutations.test_modify_dataset_link_errors 2'] = {
-    'data': {
-        'modifyDatasetLink': None
-    },
-    'errors': [
-        {
-            'locations': [
-                {
-                    'column': 22,
-                    'line': 4
-                }
-            ],
-            'message': 'datasetUrl is required when linking a dataset',
-            'path': [
-                'modifyDatasetLink'
-            ]
-        }
-    ]
-}

@@ -37,6 +37,24 @@ export const fileHandler = () => {
           });
         }
 
+        if (datasetName && edges.length === 0) {
+          fileObject[datasetName] = {
+            children: {
+            },
+            edge: {
+              node: {
+                key: `${datasetName}/`,
+                isDir: true,
+                isDataset: !!datasetName,
+                modifiedAt: Math.floor(Date.now() / 1000),
+                owner: datasetOwner || null,
+                datasetName: datasetName || null,
+               },
+            },
+            index: 0,
+          };
+        }
+
         edges.forEach((edge, index) => {
           let key = edge.node.key.toLowerCase();
           let searchLowerCase = search.toLowerCase();

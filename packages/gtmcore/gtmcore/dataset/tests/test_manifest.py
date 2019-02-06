@@ -1,6 +1,7 @@
 import pytest
 import os
 from collections import OrderedDict
+import time
 
 from gtmcore.dataset import Manifest
 from gtmcore.fixtures.datasets import mock_dataset_with_cache_dir, mock_dataset_with_manifest, helper_append_file, \
@@ -56,6 +57,7 @@ class TestManifest(object):
         assert "test1.txt" in status.created
 
         manifest.update(status=status)
+        time.sleep(2)
 
         status = manifest.status()
         assert len(status.created) == 0
@@ -152,11 +154,10 @@ class TestManifest(object):
 
         status = manifest.status()
         assert len(status.created) == 1
-        assert len(status.modified) == 2
+        assert len(status.modified) == 1
         assert len(status.deleted) == 1
         assert "test99.txt" in status.created
         assert "test2.txt" in status.modified
-        assert "test_dir/nested/" in status.modified
         assert "test_dir/nested/test4.txt" in status.deleted
 
         assert os.path.exists(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision,
@@ -290,8 +291,12 @@ class TestManifest(object):
         assert len(status.created) == 6
         assert len(status.modified) == 0
         assert len(status.deleted) == 0
+        print(manifest.manifest.keys())
         manifest.sweep_all_changes()
+        print(manifest.manifest.keys())
+        time.sleep(2)
         status = manifest.status()
+        print(manifest.manifest.keys())
         assert len(status.created) == 0
         assert len(status.modified) == 0
         assert len(status.deleted) == 0
@@ -414,6 +419,7 @@ class TestManifest(object):
 
         src = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "dir1", "test1.txt")
         os.remove(src)
+        time.sleep(1.5)
 
         status = manifest.status()
         assert len(status.created) == 0

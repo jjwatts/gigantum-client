@@ -93,7 +93,13 @@
     "keyword-spacing": 1,
     "padded-blocks": 1,
     "no-debugger": 1,
-    "import/no-dynamic-require": 0
+    "import/no-dynamic-require": 0,
+    "react/destructuring-assignment": 0,
+    "lines-between-class-members": 0,
+    "react/no-access-state-in-setstate": 0,
+    "operator-linebreak": 0,
+    "no-else-return": 0,
+    "react/button-has-type": 0
   },
   "settings": {
     "import/resolver": {
