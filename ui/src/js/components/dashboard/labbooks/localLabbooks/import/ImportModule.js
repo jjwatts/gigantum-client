@@ -17,7 +17,7 @@ import UserIdentity from 'JS/Auth/UserIdentity';
 import ImportRemoteLabbookMutation from 'Mutations/ImportRemoteLabbookMutation';
 import BuildImageMutation from 'Mutations/BuildImageMutation';
 // config
-import config from 'JS/config'
+import config from 'JS/config';
 // assets
 import './ImportModule.scss';
 
@@ -525,7 +525,7 @@ export default class ImportModule extends Component {
     const id = uuidv4(),
       labbookName = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 1],
       owner = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 2],
-      remote = `https://repo.gigantum.io/${owner}/${labbookName}.git`;
+      remote = `https://repo.${config.domain}/${owner}/${labbookName}.git`;
 
     const self = this;
 

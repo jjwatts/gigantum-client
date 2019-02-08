@@ -17,6 +17,8 @@ import LoginPrompt from 'Components/shared/header/branchMenu/modals/LoginPrompt'
 import Loader from 'Components/common/Loader';
 // assets
 import './RemoteLabbookPanel.scss';
+// config
+import config from 'JS/config';
 
 export default class RemoteLabbookPanel extends Component {
   constructor(props) {
@@ -104,7 +106,7 @@ export default class RemoteLabbookPanel extends Component {
  importLabbook = (owner, labbookName) => {
    const self = this;
    const id = uuidv4();
-   const remote = `https://repo.gigantum.io/${owner}/${labbookName}`;
+   const remote = `https://repo.${config.domain}/${owner}/${labbookName}`;
 
    UserIdentity.getUserIdentity().then((response) => {
      if (navigator.onLine) {
