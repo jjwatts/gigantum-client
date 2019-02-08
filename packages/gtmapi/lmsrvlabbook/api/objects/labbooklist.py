@@ -203,7 +203,6 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
             raise IOError("Failed to retrieve Project listing from remote server")
         edges = response.json()['data']
         cursors = response.json()['cursors']
-        # cursor = base64.b64encode("{}".format(page).encode("UTF-8")).decode("UTF-8")
 
         # Get Labbook instances
         edge_objs = []
@@ -221,7 +220,6 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
 
         # Create Page Info instance
         has_previous_page = True if (kwargs.get("before") or kwargs.get("after")) else False
-        # has_next_page = len(edges) != 0
         has_next_page = len(edges) == per_page
 
         page_info = graphene.relay.PageInfo(has_next_page=has_next_page, has_previous_page=has_previous_page,
