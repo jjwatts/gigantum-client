@@ -525,7 +525,7 @@ export default class ImportModule extends Component {
     const id = uuidv4(),
       labbookName = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 1],
       owner = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 2],
-      remote = `https://repo.gtm-dev.cloud/${owner}/${labbookName}.git`;
+      remote = `https://repo.gigantum.io/${owner}/${labbookName}.git`;
 
     const self = this;
 

@@ -4,7 +4,6 @@ import shutil
 import tempfile
 import time
 import os
-import requests
 
 from gtmcore.configuration.utils import call_subprocess
 from gtmcore.labbook.labbook import LabBook
@@ -86,11 +85,6 @@ def _from_remote(remote_url: str, username: str, owner: str,
             new_owner = owner
 
         repository = put_repository(candidate_repo.root_dir, username, new_owner)
-
-    # update tracking service
-    tracking_service = 'yvnb2ma8id.execute-api.us-east-1.amazonaws.com/api'
-    requests.post(f"https://{tracking_service}/repo/{username}/{repository.name}/clone",
-                  headers={"token": "d43f80mbvdsrju567ubg"})
 
     return repository
 

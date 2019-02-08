@@ -2,7 +2,6 @@ import os
 from typing import List, Callable
 import subprocess
 import glob
-import requests
 from natsort import natsorted
 from operator import attrgetter
 
@@ -146,16 +145,6 @@ class IOManager(object):
         for failed_push in result.failure:
             self.manifest.queue_to_push(failed_push.object_path, failed_push.dataset_path, failed_push.revision)
 
-        # sum up size of successfully pushed files
-        total_size = 0
-        for successful_push in result.success:
-            total_size += int(self.manifest.manifest.get(successful_push.dataset_path).get('b'))
-
-        # update tracking service with total size of pushed files
-        tracking_service = 'yvnb2ma8id.execute-api.us-east-1.amazonaws.com/api'
-        requests.post(f"https://{tracking_service}/repo/{self.dataset.namespace}/{self.dataset.name}/data_size/{total_size}",
-                      headers={"token": "d43f80mbvdsrju567ubg"})
-
         return result
 
     def _gen_pull_objects(self, keys: List[str]) -> List[PullObject]:
@@ -194,13 +183,6 @@ class IOManager(object):
         self.dataset.backend.prepare_pull(self.dataset, objs, status_update_fn)
         result = self.dataset.backend.pull_objects(self.dataset, objs, status_update_fn)
         self.dataset.backend.finalize_pull(self.dataset, status_update_fn)
-
-        # increment object download counts in tracking service
-        for successful_pull in result.success:
-            object_id = successful_pull.object_path.rsplit('/')[-1]
-            tracking_service = 'yvnb2ma8id.execute-api.us-east-1.amazonaws.com/api'
-            requests.post(f"https://{tracking_service}/object_download/{self.dataset.namespace}/{self.dataset.name}/{object_id}",
-                          headers={"token": "d43f80mbvdsrju567ubg"})
 
         # Return pull result
         return result

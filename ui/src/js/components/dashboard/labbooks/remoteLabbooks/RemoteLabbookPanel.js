@@ -104,7 +104,7 @@ export default class RemoteLabbookPanel extends Component {
  importLabbook = (owner, labbookName) => {
    const self = this;
    const id = uuidv4();
-   const remote = `https://repo.gtm-dev.cloud/${owner}/${labbookName}`;
+   const remote = `https://repo.gigantum.io/${owner}/${labbookName}`;
 
    UserIdentity.getUserIdentity().then((response) => {
      if (navigator.onLine) {
