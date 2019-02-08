@@ -27,66 +27,72 @@ from lmsrvlabbook.tests.fixtures import fixture_working_dir
 import pytest
 
 
-DUMMY_DATA = [
-                {
-                    "environment": {
-                        "base": {
-                            "name": "Python3 Minimal",
-                            "os_class": "ubuntu",
-                            "os_release": "18.04",
-                            "languages": [
-                                "python3"
-                            ],
-                            "development_tools": [
-                                "jupyterlab"
-                            ],
-                            "description": "A minimal Base containing Python 3.6 and JupyterLab with no additional packages"
-                        },
-                        "packages": {
-                            "pip": 1
-                        }
-                    },
-                    "hashed_namespace": "26fdb6eafd356c3e4ae0303f5f39e431|tester",
-                    "created_at": "2018-08-30T18:01:33.312Z",
-                    "namespace": "tester",
-                    "storage_size": 122,
-                    "project_schema": 1,
-                    "indexed_at": "2018-08-30T18:01:49.165815Z",
-                    "visibility": "private_project",
-                    "project": "test-proj-1",
-                    "description": "No Description",
-                    "modified_at": "2018-08-30T18:01:33.312Z"
+DUMMY_DATA = {
+    "data": [
+        {
+            "environment": {
+                "base": {
+                    "name": "Python3 Minimal",
+                    "os_class": "ubuntu",
+                    "os_release": "18.04",
+                    "languages": [
+                        "python3"
+                    ],
+                    "development_tools": [
+                        "jupyterlab"
+                    ],
+                    "description": "A minimal Base containing Python 3.6 and JupyterLab with no additional packages"
                 },
-                {
-                    "environment": {
-                        "base": {
-                            "name": "Python3 Minimal",
-                            "os_class": "ubuntu",
-                            "os_release": "18.04",
-                            "languages": [
-                                "python3"
-                            ],
-                            "development_tools": [
-                                "jupyterlab"
-                            ],
-                            "description": "A minimal Base containing Python 3.6 and JupyterLab with no additional packages"
-                        },
-                        "packages": {
-                            "pip": 1
-                        }
-                    },
-                    "hashed_namespace": "26fdb6eafd356c3e4ae0303f5f39e431|tester",
-                    "created_at": "2018-08-29T18:01:33.312Z",
-                    "namespace": "tester",
-                    "storage_size": 122,
-                    "project_schema": 1,
-                    "indexed_at": "2018-08-30T18:01:49.165815Z",
-                    "visibility": "private_project",
-                    "project": "test-proj-2",
-                    "description": "No Description",
-                    "modified_at": "2018-09-01T18:01:33.312Z"
+                "packages": {
+                    "pip": 1
                 }
-            ]
+            },
+            "hashed_namespace": "26fdb6eafd356c3e4ae0303f5f39e431|tester",
+            "created_at": "2018-08-30T18:01:33.312Z",
+            "namespace": "tester",
+            "storage_size": 122,
+            "project_schema": 1,
+            "indexed_at": "2018-08-30T18:01:49.165815Z",
+            "visibility": "private_project",
+            "project": "test-proj-1",
+            "description": "No Description",
+            "modified_at": "2018-08-30T18:01:33.312Z"
+        },
+        {
+            "environment": {
+                "base": {
+                    "name": "Python3 Minimal",
+                    "os_class": "ubuntu",
+                    "os_release": "18.04",
+                    "languages": [
+                        "python3"
+                    ],
+                    "development_tools": [
+                        "jupyterlab"
+                    ],
+                    "description": "A minimal Base containing Python 3.6 and JupyterLab with no additional packages"
+                },
+                "packages": {
+                    "pip": 1
+                }
+            },
+            "hashed_namespace": "26fdb6eafd356c3e4ae0303f5f39e431|tester",
+            "created_at": "2018-08-29T18:01:33.312Z",
+            "namespace": "tester",
+            "storage_size": 122,
+            "project_schema": 1,
+            "indexed_at": "2018-08-30T18:01:49.165815Z",
+            "visibility": "private_project",
+            "project": "test-proj-2",
+            "description": "No Description",
+            "modified_at": "2018-09-01T18:01:33.312Z"
+        }
+    ],
+    "cursors": [
+        "eyJwYWdlIjogMSwgIml0ZW0iOiAxfQ==",
+        "eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ=="
+    ]
+}
 
 
 class TestLabBookRemoteOperations(object):
@@ -220,12 +226,12 @@ class TestLabBookRemoteOperations(object):
     @responses.activate
     def test_list_remote_labbooks_az(self, fixture_working_dir, snapshot):
         """test list labbooks"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=2&page=1&order_by=name&sort=desc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=2&order_by=name&sort=desc',
                       json=DUMMY_DATA, status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=3&page=1&order_by=name&sort=asc',
-                      json=list(reversed(DUMMY_DATA)), status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=3&page=2&order_by=name&sort=asc',
-                      json=list(), status=200)
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=3&order_by=name&sort=asc',
+                      json={'data': list(reversed(DUMMY_DATA['data'])), 'cursors': list(reversed(DUMMY_DATA['cursors']))}, status=200)
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=3&cursor=eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ==&order_by=name&sort=asc',
+                      json={'data': list(), 'cursors': list()}, status=200)
 
         list_query = """
                     {
@@ -251,6 +257,7 @@ class TestLabBookRemoteOperations(object):
                     }"""
 
         r = fixture_working_dir[2].execute(list_query)
+        print(r)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
@@ -278,12 +285,13 @@ class TestLabBookRemoteOperations(object):
 
         r = fixture_working_dir[2].execute(list_query)
         assert 'errors' not in r
+        print(r)
         snapshot.assert_match(r)
 
         list_query = """
                     {
                     labbookList{
-                      remoteLabbooks(orderBy: "name", sort: "asc", first: 3, after: "MQ=="){
+                      remoteLabbooks(orderBy: "name", sort: "asc", first: 3, after: "eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ=="){
                         edges{
                           node{
                             id
@@ -311,7 +319,7 @@ class TestLabBookRemoteOperations(object):
         """test list labbooks"""
         """test list labbooks"""
         responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=2&page=1&order_by=modified_on&sort=desc',
-                      json=list(reversed(DUMMY_DATA)), status=200)
+                      json={'data': list(reversed(DUMMY_DATA['data'])), 'cursors': list(reversed(DUMMY_DATA['cursors']))}, status=200)
         responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=10&page=1&order_by=modified_on&sort=asc',
                       json=DUMMY_DATA, status=200)
 
@@ -374,7 +382,7 @@ class TestLabBookRemoteOperations(object):
         responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=2&page=1&order_by=created_on&sort=desc',
                       json=DUMMY_DATA, status=200)
         responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=2&page=1&order_by=created_on&sort=asc',
-                      json=list(reversed(DUMMY_DATA)), status=200)
+                      json={'data': list(reversed(DUMMY_DATA['data'])), 'cursors': list(reversed(DUMMY_DATA['cursors']))}, status=200)
 
         list_query = """
                     {
@@ -432,14 +440,14 @@ class TestLabBookRemoteOperations(object):
     @responses.activate
     def test_list_remote_labbooks_page(self, fixture_working_dir, snapshot):
         """test list labbooks"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=1&page=1&order_by=name&sort=desc',
-                      json=[DUMMY_DATA[0]], status=200)
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=1&order_by=name&sort=desc',
+                      json={'data': [DUMMY_DATA['data'][0]], 'cursors': [DUMMY_DATA['cursors'][0]]}, status=200)
 
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=1&page=2&order_by=name&sort=desc',
-                      json=[DUMMY_DATA[1]], status=200)
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=1&cursor=eyJwYWdlIjogMSwgIml0ZW0iOiAxfQ==&order_by=name&sort=desc',
+                      json={'data': [DUMMY_DATA['data'][1]], 'cursors': [DUMMY_DATA['cursors'][1]]}, status=200)
 
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=1&page=3&order_by=name&sort=desc',
-                      json=list(), status=200)
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?per_page=1&cursor=eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ==&order_by=name&sort=desc',
+                      json={'data': list(), 'cursors': list()}, status=200)
 
         list_query = """
                     {

@@ -201,6 +201,6 @@ class DatasetList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         has_next_page = len(edges) == per_page
 
         page_info = graphene.relay.PageInfo(has_next_page=has_next_page, has_previous_page=has_previous_page,
-                                            start_cursor=cursors[0], end_cursor=cursors[-1])
+                                            start_cursor=cursors[0] if cursors else None, end_cursor=cursors[-1] if cursors else None)
 
         return RemoteDatasetConnection(edges=edge_objs, page_info=page_info)

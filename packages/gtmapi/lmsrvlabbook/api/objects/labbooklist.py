@@ -219,10 +219,11 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
                                                           cursor=cursor))
 
         # Create Page Info instance
-        has_previous_page = True if (kwargs.get("before") or kwargs.get("after")) else False
+        has_previous_page = True if kwargs.get("after") else False
         has_next_page = len(edges) == per_page
 
         page_info = graphene.relay.PageInfo(has_next_page=has_next_page, has_previous_page=has_previous_page,
-                                            start_cursor=cursors[0], end_cursor=cursors[-1])
+                                            start_cursor=cursors[0] if cursors else None,
+                                            end_cursor=cursors[-1] if cursors else None)
 
         return RemoteLabbookConnection(edges=edge_objs, page_info=page_info)
