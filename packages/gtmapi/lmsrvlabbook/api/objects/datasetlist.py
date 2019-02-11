@@ -148,17 +148,17 @@ class DatasetList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         if "first" in kwargs:
             per_page = int(kwargs['first'])
         elif "last" in kwargs:
-            per_page = int(kwargs['last'])
+            raise ValueError("Cannot page in reverse direction, must provide first/after parameters instead")
         else:
             per_page = 20
 
-        url = f"https://{index_service}/datasets?per_page={per_page}"
+        url = f"https://{index_service}/datasets?first={per_page}"
 
         # Add optional arguments
-        if kwargs.get("before"):
-            url = f"{url}&cursor={kwargs.get('before')}"
-        elif kwargs.get("after"):
-            url = f"{url}&cursor={kwargs.get('after')}"
+        if kwargs.get("after"):
+            url = f"{url}&after={kwargs.get('after')}"
+        elif kwargs.get("before"):
+            raise ValueError("Cannot page in reverse direction, must provide first/after parameters instead")
 
         if order_by is not None:
             if order_by not in ['name', 'created_on', 'modified_on']:
@@ -178,12 +178,11 @@ class DatasetList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
 
         if response.status_code != 200:
             raise IOError("Failed to retrieve Project listing from remote server")
-        edges = response.json()['data']
-        cursors = response.json()['cursors']
+        edges = response.json()
 
         # Get Labbook instances
         edge_objs = []
-        for edge, cursor in zip(edges, cursors):
+        for edge in edges:
             create_data = {"id": "{}&{}".format(edge["namespace"], edge["project"]),
                            "name": edge["project"],
                            "owner": edge["namespace"],
@@ -193,14 +192,13 @@ class DatasetList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
                            "visibility": "public" if edge.get("visibility") == "public_project" else "private"}
 
             edge_objs.append(RemoteDatasetConnection.Edge(node=RemoteDataset(**create_data),
-                                                          cursor=cursor))
+                                                          cursor=edge['cursor']))
 
         # Create Page Info instance
         has_previous_page = True if (kwargs.get("before") or kwargs.get("after")) else False
-        # has_next_page = len(edges) != 0
         has_next_page = len(edges) == per_page
 
         page_info = graphene.relay.PageInfo(has_next_page=has_next_page, has_previous_page=has_previous_page,
-                                            start_cursor=cursors[0] if cursors else None, end_cursor=cursors[-1] if cursors else None)
+                                            start_cursor=edges[0]['cursor'] if edges else None, end_cursor=edges[-1]['cursor'] if edges else None)
 
         return RemoteDatasetConnection(edges=edge_objs, page_info=page_info)

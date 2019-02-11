@@ -36,8 +36,6 @@ class RemoteLabbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRep
     NOTE: RemoteLabbooks require all fields to be explicitly set as there is no current way to asynchronously retrieve
           the data
 
-    NOTE: Currently all description fields will return empty strings
-
     """
     # A short description of the LabBook limited to 140 UTF-8 characters
     description = graphene.String()
