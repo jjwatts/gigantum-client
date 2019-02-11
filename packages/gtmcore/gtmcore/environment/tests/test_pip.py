@@ -147,9 +147,9 @@ class TestPipPackageManager(object):
 
     def test_is_valid_errors(self, build_lb_image_for_env):
         """Test list_versions command"""
-        pkgs = [{"manager": "pip", "package": "numpy", "version": "1.14.2"},
-                {"manager": "pip", "package": "plotly", "version": "100.00"},
-                {"manager": "pip", "package": "scipy", "version": ""},
+        pkgs = [{"manager": "pip", "package": "gtmunit1", "version": '0.2.4'},
+                {"manager": "pip", "package": "gtmunit2", "version": "100.00"},
+                {"manager": "pip", "package": "gtmunit3", "version": ""},
                 {"manager": "pip", "package": "asdfasdfasdf", "version": ""}]
 
         mrg = PipPackageManager()
@@ -157,16 +157,16 @@ class TestPipPackageManager(object):
         username = build_lb_image_for_env[1]
         result = mrg.validate_packages(pkgs, lb, username)
 
-        assert result[0].package == "numpy"
-        assert result[0].version == "1.14.2"
+        assert result[0].package == "gtmunit1"
+        assert result[0].version == "0.2.4"
         assert result[0].error is False
 
-        assert result[1].package == "plotly"
+        assert result[1].package == "gtmunit2"
         assert result[1].version == "100.00"
         assert result[1].error is True
 
-        assert result[2].package == "scipy"
-        assert result[2].version == "1.2.0"
+        assert result[2].package == "gtmunit3"
+        assert result[2].version == "5.0"
         assert result[2].error is False
 
         assert result[3].package == "asdfasdfasdf"

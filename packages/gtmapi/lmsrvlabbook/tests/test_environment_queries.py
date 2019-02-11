@@ -186,9 +186,9 @@ class TestEnvironmentServiceQueries(object):
                       labbook(owner: "default", name: "labbook5"){
                         id
                         packages(packageInput: [
-                          {manager: "pip", package: "numpy", version:"1.14.2"},
-                          {manager: "pip", package: "plotly", version:"100.00"},
-                          {manager: "pip", package: "scipy", version:""},
+                          {manager: "pip", package: "gtmunit1", version:"0.2.4"},
+                          {manager: "pip", package: "gtmunit2", version:"100.00"},
+                          {manager: "pip", package: "gtmunit3", version:""},
                           {manager: "pip", package: "asdfasdfasdf", version:""}]){
                           id
                           manager 
@@ -212,8 +212,8 @@ class TestEnvironmentServiceQueries(object):
                       labbook(owner: "default", name: "labbook6"){
                         id
                         packages(packageInput: [
-                          {manager: "pip", package: "numpy", version:"1.14.2"},
-                          {manager: "pip", package: "scipy", version:""}]){
+                          {manager: "pip", package: "gtmunit1", version:"0.2.4"},
+                          {manager: "pip", package: "gtmunit2", version:""}]){
                           id
                           manager 
                           package
