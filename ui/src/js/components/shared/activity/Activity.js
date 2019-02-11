@@ -112,6 +112,8 @@ class Activity extends Component {
     window.addEventListener('scroll', this._handleScroll);
     window.addEventListener('visibilitychange', this._handleVisibilityChange);
 
+    this.setState({ activityRecords: this._transformActivity(activityRecords) });
+
     if (activityRecords.pageInfo.hasNextPage && (this._countUnexpandedRecords() < 7)) {
       this._loadMore();
     }
@@ -120,6 +122,8 @@ class Activity extends Component {
       this.setState({ refetchEnabled: true });
       this._refetch();
     }
+
+
   }
 
   componentWillUnmount() {

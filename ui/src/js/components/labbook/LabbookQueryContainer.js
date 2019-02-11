@@ -33,7 +33,7 @@ class LabbookQueryContainer extends Component {
           {
             name: parentProps.labbookName,
             owner: parentProps.owner,
-            first: 2,
+            first: 10,
             hasNext: false,
           }
         }

@@ -124,68 +124,6 @@ snapshots['TestEnvironmentServiceQueries.test_get_package_manager 3'] = {
     }
 }
 
-snapshots['TestEnvironmentServiceQueries.test_package_query_with_errors 1'] = {
-    'data': {
-        'labbook': {
-            'id': 'TGFiYm9vazpkZWZhdWx0JmxhYmJvb2s1',
-            'packages': [
-                {
-                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmbnVtcHkmMS4xNC4y',
-                    'isValid': True,
-                    'manager': 'pip',
-                    'package': 'numpy',
-                    'version': '1.14.2'
-                },
-                {
-                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmcGxvdGx5JjEwMC4wMA==',
-                    'isValid': False,
-                    'manager': 'pip',
-                    'package': 'plotly',
-                    'version': '100.00'
-                },
-                {
-                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmc2NpcHkmMS4yLjA=',
-                    'isValid': True,
-                    'manager': 'pip',
-                    'package': 'scipy',
-                    'version': '1.2.0'
-                },
-                {
-                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmYXNkZmFzZGZhc2RmJg==',
-                    'isValid': False,
-                    'manager': 'pip',
-                    'package': 'asdfasdfasdf',
-                    'version': ''
-                }
-            ]
-        }
-    }
-}
-
-snapshots['TestEnvironmentServiceQueries.test_package_query 1'] = {
-    'data': {
-        'labbook': {
-            'id': 'TGFiYm9vazpkZWZhdWx0JmxhYmJvb2s2',
-            'packages': [
-                {
-                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmbnVtcHkmMS4xNC4y',
-                    'isValid': True,
-                    'manager': 'pip',
-                    'package': 'numpy',
-                    'version': '1.14.2'
-                },
-                {
-                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmc2NpcHkmMS4yLjA=',
-                    'isValid': True,
-                    'manager': 'pip',
-                    'package': 'scipy',
-                    'version': '1.2.0'
-                }
-            ]
-        }
-    }
-}
-
 snapshots['TestEnvironmentServiceQueries.test_get_package_manager 2'] = {
     'data': {
         'labbook': {
@@ -242,6 +180,68 @@ snapshots['TestEnvironmentServiceQueries.test_get_package_manager 2'] = {
                     }
                 }
             }
+        }
+    }
+}
+
+snapshots['TestEnvironmentServiceQueries.test_package_query_with_errors 1'] = {
+    'data': {
+        'labbook': {
+            'id': 'TGFiYm9vazpkZWZhdWx0JmxhYmJvb2s1',
+            'packages': [
+                {
+                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDEmMC4yLjQ=',
+                    'isValid': True,
+                    'manager': 'pip',
+                    'package': 'gtmunit1',
+                    'version': '0.2.4'
+                },
+                {
+                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDImMTAwLjAw',
+                    'isValid': False,
+                    'manager': 'pip',
+                    'package': 'gtmunit2',
+                    'version': '100.00'
+                },
+                {
+                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDMmNS4w',
+                    'isValid': True,
+                    'manager': 'pip',
+                    'package': 'gtmunit3',
+                    'version': '5.0'
+                },
+                {
+                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmYXNkZmFzZGZhc2RmJg==',
+                    'isValid': False,
+                    'manager': 'pip',
+                    'package': 'asdfasdfasdf',
+                    'version': ''
+                }
+            ]
+        }
+    }
+}
+
+snapshots['TestEnvironmentServiceQueries.test_package_query 1'] = {
+    'data': {
+        'labbook': {
+            'id': 'TGFiYm9vazpkZWZhdWx0JmxhYmJvb2s2',
+            'packages': [
+                {
+                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDEmMC4yLjQ=',
+                    'isValid': True,
+                    'manager': 'pip',
+                    'package': 'gtmunit1',
+                    'version': '0.2.4'
+                },
+                {
+                    'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDImMTIuMg==',
+                    'isValid': True,
+                    'manager': 'pip',
+                    'package': 'gtmunit2',
+                    'version': '12.2'
+                }
+            ]
         }
     }
 }
