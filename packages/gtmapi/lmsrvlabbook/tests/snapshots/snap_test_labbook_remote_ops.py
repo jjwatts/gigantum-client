@@ -81,20 +81,6 @@ snapshots['TestLabBookRemoteOperations.test_list_remote_labbooks_az 2'] = {
     }
 }
 
-snapshots['TestLabBookRemoteOperations.test_list_remote_labbooks_az 3'] = {
-    'data': {
-        'labbookList': {
-            'remoteLabbooks': {
-                'edges': [
-                ],
-                'pageInfo': {
-                    'hasNextPage': False
-                }
-            }
-        }
-    }
-}
-
 snapshots['TestLabBookRemoteOperations.test_list_remote_labbooks_modified 1'] = {
     'data': {
         'labbookList': {
@@ -292,64 +278,4 @@ snapshots['TestLabBookRemoteOperations.test_list_remote_labbooks_page 2'] = {
             }
         }
     }
-}
-
-snapshots['TestLabBookRemoteOperations.test_list_remote_labbooks_page 3'] = {
-    'data': {
-        'labbookList': {
-            'remoteLabbooks': {
-                'edges': [
-                ],
-                'pageInfo': {
-                    'hasNextPage': False
-                }
-            }
-        }
-    }
-}
-
-snapshots['TestLabBookRemoteOperations.test_list_remote_labbooks_invalid_args 1'] = {
-    'data': {
-        'labbookList': {
-            'remoteLabbooks': None
-        }
-    },
-    'errors': [
-        {
-            'locations': [
-                {
-                    'column': 23,
-                    'line': 4
-                }
-            ],
-            'message': 'Unsupported order_by: asdf. Use `name`, `created_on`, `modified_on`',
-            'path': [
-                'labbookList',
-                'remoteLabbooks'
-            ]
-        }
-    ]
-}
-
-snapshots['TestLabBookRemoteOperations.test_list_remote_labbooks_invalid_args 2'] = {
-    'data': {
-        'labbookList': {
-            'remoteLabbooks': None
-        }
-    },
-    'errors': [
-        {
-            'locations': [
-                {
-                    'column': 23,
-                    'line': 4
-                }
-            ],
-            'message': 'Unsupported sort: asdf. Use `desc`, `asc`',
-            'path': [
-                'labbookList',
-                'remoteLabbooks'
-            ]
-        }
-    ]
 }

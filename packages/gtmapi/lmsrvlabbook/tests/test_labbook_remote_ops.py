@@ -194,7 +194,8 @@ class TestLabBookRemoteOperations(object):
                     }"""
         r = fixture_working_dir[2].execute(list_query)
         assert 'errors' in r
-        snapshot.assert_match(r)
+        assert r['data']['labbookList']['remoteLabbooks'] is None
+        assert 'Unsupported order_by' in r['errors'][0]['message']
 
         list_query = """
                     {
@@ -219,9 +220,9 @@ class TestLabBookRemoteOperations(object):
                     }
                     }"""
         r = fixture_working_dir[2].execute(list_query)
-
         assert 'errors' in r
-        snapshot.assert_match(r)
+        assert r['data']['labbookList']['remoteLabbooks'] is None
+        assert 'Unsupported sort' in r['errors'][0]['message']
 
     @responses.activate
     def test_list_remote_labbooks_az(self, fixture_working_dir, snapshot):
@@ -257,7 +258,6 @@ class TestLabBookRemoteOperations(object):
                     }"""
 
         r = fixture_working_dir[2].execute(list_query)
-        print(r)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
@@ -312,7 +312,8 @@ class TestLabBookRemoteOperations(object):
 
         r = fixture_working_dir[2].execute(list_query)
         assert 'errors' not in r
-        snapshot.assert_match(r)
+        assert len(r['data']['labbookList']['remoteLabbooks']['edges']) == 0
+        assert r['data']['labbookList']['remoteLabbooks']['pageInfo']['hasNextPage'] is False
 
     @responses.activate
     def test_list_remote_labbooks_modified(self, fixture_working_dir, snapshot):
@@ -526,5 +527,6 @@ class TestLabBookRemoteOperations(object):
 
         r = fixture_working_dir[2].execute(list_query)
         assert 'errors' not in r
-        snapshot.assert_match(r)
+        assert len(r['data']['labbookList']['remoteLabbooks']['edges']) == 0
+        assert r['data']['labbookList']['remoteLabbooks']['pageInfo']['hasNextPage'] is False
 
