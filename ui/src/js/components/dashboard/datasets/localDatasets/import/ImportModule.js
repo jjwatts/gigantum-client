@@ -452,7 +452,7 @@ export default class ImportModule extends Component {
       const id = uuidv4(),
         datasetName = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 1],
         owner = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 2],
-        remote = `https://repo.gigantum.io/${owner}/${datasetName}.git`;
+        remote = `https://repo.${config.domain}/${owner}/${datasetName}.git`;
       const self = this;
 
       UserIdentity.getUserIdentity().then((response) => {

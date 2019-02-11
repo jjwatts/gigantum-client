@@ -17,6 +17,8 @@ import LoginPrompt from 'Components/shared/header/branchMenu/modals/LoginPrompt'
 import Loader from 'Components/common/Loader';
 // assets
 import './RemoteDatasetsPanel.scss';
+// config
+import config from 'JS/config';
 
 export default class RemoteDatasetPanel extends Component {
   constructor(props) {
@@ -104,7 +106,7 @@ export default class RemoteDatasetPanel extends Component {
  importDataset = (owner, datasetName) => {
    const self = this;
    const id = uuidv4();
-   const remote = `https://repo.gtm-dev.cloud/${owner}/${datasetName}`;
+   const remote = `https://repo.${config.domain}/${owner}/${datasetName}`;
 
    UserIdentity.getUserIdentity().then((response) => {
      if (navigator.onLine) {
