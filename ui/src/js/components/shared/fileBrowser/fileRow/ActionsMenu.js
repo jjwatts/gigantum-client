@@ -148,7 +148,7 @@ export default class ActionsMenu extends Component {
           <div
             onClick={() => { this.props.folder && this.props.addFolderVisible(true); }}
             className={folderCSS}
-            name="Add Folder">
+            name="Add Subfolder">
           </div>
           <div
             className={deleteCSS}

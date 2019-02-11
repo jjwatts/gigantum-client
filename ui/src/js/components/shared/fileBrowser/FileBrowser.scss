@@ -228,6 +228,49 @@
       box-shadow: .05em .01em .5em rgba(0,0,0,.2);
     }
   }
+  &--download-all {
+    background: $background-color url(~Images/icons/database-dark-download.svg) no-repeat center center;
+    background-size: 25px;
+    margin-right: -8px;
+    &:hover {
+      border: 2px solid $azure;
+      box-shadow: .05em .01em .5em rgba(0,0,0,.2);
+    }
+  }
+  &--downloaded {
+    background: $background-color url(~Images/icons/database-dark-local.svg) no-repeat center center;
+    background-size: 25px;
+    margin-right: -8px;
+    &:hover {
+      border: 2px solid $azure;
+      box-shadow: .05em .01em .5em rgba(0,0,0,.2);
+    }
+  }
+  &--downloading{
+    background: $background-color no-repeat center center;
+    background-size: 25px;
+    margin-right: -8px;
+    position: relative;
+    cursor: auto;
+      div {
+        position: absolute;
+        top: 3px;
+        left: 10px;
+        width: 25px;
+        height: 25px;
+        border: 2px solid $grey;
+        border-top: 2px solid $azure;
+        border-radius: 50%;
+        animation: spin 2s linear infinite;
+      }
+    &:hover {
+        border: none;
+        box-shadow: none;
+    }
+    &:hover:after {
+        display: none;
+    }
+  }
 }
 
 .FileBrowser__veil{

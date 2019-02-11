@@ -21,6 +21,22 @@ import Modal from 'Components/common/Modal';
 import FileFormatter, { fileHandler } from './utilities/FileFormatter';
 
 
+const checkLocal = (files) => {
+  let isLocal = true;
+  Object.keys(files).forEach((fileKey) => {
+    if (files[fileKey].children) {
+      const isChildrenLocal = checkLocal(files[fileKey].children);
+      if (isChildrenLocal === false) {
+        isLocal = false;
+      }
+    } else if (!files[fileKey].edge.node.isLocal) {
+      isLocal = false;
+    }
+  });
+  return isLocal;
+};
+
+
 class FileBrowser extends Component {
     constructor(props) {
       super(props);
@@ -153,6 +169,31 @@ class FileBrowser extends Component {
       const files = this.props.files.edges;
       const linkedDatasets = this.props.linkedDatasets;
       this.fileHandler.postMessage({ files, search: this.state.search, linkedDatasets });
+    }
+    /**
+    *  @param {Boolean} allFilesLocal
+    *  handles downloading all files in data-filebrowser
+    *  @return {}
+    */
+    _handleDownloadAll(allFilesLocal) {
+      if (!this.state.downloadingAll && !allFilesLocal) {
+        const { owner, labbookName } = store.getState().routes;
+        const data = {
+          owner,
+          datasetName: labbookName,
+          allKeys: true,
+        };
+
+        const callback = (response, error) => {
+          if (error) {
+            this.setState({ downloadingAll: false });
+          } else {
+            this.setState({ downloadingAll: false });
+          }
+        };
+        this.setState({ downloadingAll: true });
+        this.state.mutations.downloadDatasetFiles(data, callback);
+      }
     }
     /**
     *  @param {string} key - key of file to be updated
@@ -561,6 +602,7 @@ class FileBrowser extends Component {
     fileKeys = this._childSort(fileKeys, this.state.sort, this.state.reverse, files, 'files');
     let childrenKeys = folderKeys.concat(fileKeys);
     const { isSelected } = this._checkChildState();
+    const allFilesLocal = checkLocal(files);
 
     const fileBrowserCSS = classNames({
         FileBrowser: true,
@@ -602,6 +644,12 @@ class FileBrowser extends Component {
       multiSelectCSS = classNames({
         'FileBrowser__multiselect flex justify--start': true,
         'box-shadow-50': isSelected,
+      }),
+      downloadAllCSS = classNames({
+        FileBrowser__button: true,
+        'FileBrowser__button--download-all': !this.state.downloadingAll && !allFilesLocal,
+        'FileBrowser__button--downloaded': !this.state.downloadingAll && allFilesLocal,
+        'FileBrowser__button--downloading': this.state.downloadingAll,
       });
 
    return (
@@ -716,6 +764,19 @@ class FileBrowser extends Component {
                   >
                   </div>
                 }
+                {
+                  this.props.section === 'data' &&
+                  <div
+                    className={downloadAllCSS}
+                    onClick={() => this._handleDownloadAll(allFilesLocal)}
+                    data-tooltip={allFilesLocal ? 'Downloaded' : 'Download All'}
+                  >
+                    {
+                      this.state.downloadingAll &&
+                      <div></div>
+                    }
+                  </div>
+                }
               </div>
           </div>
       <div className="FileBrowser__body">
@@ -815,7 +876,7 @@ class FileBrowser extends Component {
           {
             this.props.isProcessing &&
             <div className="FileBrowser__veil">
-              <span>Processing...</span>
+              <span></span>
             </div>
           }
       </div>

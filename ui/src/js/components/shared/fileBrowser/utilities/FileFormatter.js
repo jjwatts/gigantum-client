@@ -21,12 +21,12 @@ export const fileHandler = () => {
 
        const sortEdges =  (edges, datasetName, datasetOwner) => {
         if (search !== '') {
-          let edgesSearchMatch = edgesToSort.filter((edge) => {
+          let edgesSearchMatch = edges.filter((edge) => {
             const lowerCaseKey = edge.node.key.toLowerCase();
             return (lowerCaseKey.indexOf(searchLowerCase) > -1);
           });
 
-          edgesToSort = edgesToSort.filter((edge) => {
+          edges = edges.filter((edge) => {
             let keyMatch = false;
             edgesSearchMatch.forEach((matchEdge) => {
               if (matchEdge.node.key.indexOf(edge.node.key) > -1) {
@@ -37,7 +37,7 @@ export const fileHandler = () => {
           });
         }
 
-        if (datasetName && edges.length === 0) {
+       if (datasetName && (edges.length === 0) && (datasetName.toLowerCase().indexOf(searchLowerCase) > -1)) {
           fileObject[datasetName] = {
             children: {
             },
