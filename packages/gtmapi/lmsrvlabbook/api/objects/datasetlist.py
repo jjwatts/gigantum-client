@@ -189,7 +189,7 @@ class DatasetList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
                            "description": edge["description"],
                            "creation_date_utc": edge["created_at"],
                            "modified_date_utc": edge["modified_at"],
-                           "visibility": "public" if edge.get("visibility") == "public_project" else "private"}
+                           "visibility": "public" if edge.get("visibility") == "public_dataset" else "private"}
 
             edge_objs.append(RemoteDatasetConnection.Edge(node=RemoteDataset(**create_data),
                                                           cursor=edge['cursor']))
