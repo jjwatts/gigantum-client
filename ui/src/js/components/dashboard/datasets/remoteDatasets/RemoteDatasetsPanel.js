@@ -99,6 +99,44 @@ export default class RemoteDatasetPanel extends Component {
   }
 
   /**
+    *  @param {}
+    *  changes state of isImporting to true
+  */
+  _importingState = () => {
+    this.setState({
+      isImporting: true,
+    });
+  }
+
+  /**
+    *  @param {String} owner
+    *  @param {String} datasetName
+    *  @param {String} remote
+    *  handles importing dataset mutation
+  */
+  _handleImportDataset = (owner, datasetName, remote) => {
+    ImportRemoteDatasetMutation(
+      owner,
+      datasetName,
+      remote,
+      (response, error) => {
+        this._clearState();
+
+        if (error) {
+          console.error(error);
+          setMultiInfoMessage(id, 'ERROR: Could not import remote Project', null, true, error);
+        } else if (response) {
+          const datasetName = response.importRemoteDataset.newDatasetEdge.node.name;
+          const owner = response.importRemoteDataset.newDatasetEdge.node.owner;
+          setMultiInfoMessage(id, `Successfully imported remote Dataset ${datasetName}`, true, false);
+
+          this.props.history.replace(`/datasets/${owner}/${datasetName}`);
+        }
+      },
+    );
+  }
+
+  /**
     *  @param {owner, datasetName}
     *  imports dataset from remote url, builds the image, and redirects to imported dataset
     *  @return {}
@@ -114,25 +152,7 @@ export default class RemoteDatasetPanel extends Component {
          if (response.data.userIdentity.isSessionValid) {
            this._importingState();
            setMultiInfoMessage(id, 'Importing Project please wait', false, false);
-           ImportRemoteDatasetMutation(
-             owner,
-             datasetName,
-             remote,
-             (response, error) => {
-               this._clearState();
-
-               if (error) {
-                 console.error(error);
-                 setMultiInfoMessage(id, 'ERROR: Could not import remote Project', null, true, error);
-               } else if (response) {
-                 const datasetName = response.importRemoteDataset.newDatasetEdge.node.name;
-                 const owner = response.importRemoteDataset.newDatasetEdge.node.owner;
-                 setMultiInfoMessage(id, `Successfully imported remote Dataset ${datasetName}`, true, false);
-
-                 self.props.history.replace(`/datasets/${owner}/${datasetName}`);
-               }
-             },
-           );
+           this._handleImportDataset(owner, datasetName, remote);
          } else {
            this.props.auth.renewToken(true, () => {
              this.setState({ showLoginPrompt: true });
