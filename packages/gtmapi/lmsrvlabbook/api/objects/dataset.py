@@ -16,6 +16,7 @@ from lmsrvlabbook.api.objects.datasettype import DatasetType
 from lmsrvlabbook.api.connections.activity import ActivityConnection
 from lmsrvlabbook.api.objects.activity import ActivityDetailObject, ActivityRecordObject
 from lmsrvlabbook.api.connections.datasetfile import DatasetFileConnection, DatasetFile
+from lmsrvlabbook.api.objects.overview import DatasetOverview
 
 
 class Dataset(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepository)):
@@ -64,6 +65,9 @@ class Dataset(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
     # Get the URL of the remote origin
     default_remote = graphene.String()
 
+    # Overview Information
+    overview = graphene.Field(DatasetOverview)
+
     @classmethod
     def get_node(cls, info, id):
         """Method to resolve the object based on it's Node ID"""
@@ -81,6 +85,10 @@ class Dataset(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             self.id = f"{self.owner}&{self.name}"
 
         return self.id
+
+    def resolve_overview(self, info):
+        """"""
+        return DatasetOverview(id=f"{self.owner}&{self.name}", owner=self.owner, name=self.name)
 
     def resolve_description(self, info):
         """Get number of commits the active_branch is behind its remote counterpart.

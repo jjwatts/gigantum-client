@@ -25,6 +25,12 @@ import Config from 'JS/config';
 
 const Loading = () => <Loader />;
 
+const Overview = Loadable({
+  loader: () => import('./overview/DatasetOverviewContainer'),
+  loading: Loading,
+  delay: 500,
+});
+
 const Activity = Loadable({
   loader: () => import('./activity/DatasetActivityContainer'),
   loading: Loading,
@@ -166,11 +172,9 @@ class Dataset extends Component {
   render() {
     if (this.props.dataset) {
       const { dataset } = this.props;
-
       const datasetCSS = classNames({
         Dataset: true,
         'Dataset--detail-mode': this.props.detailMode,
-        // 'Dataset--branch-mode': branchesOpen,
         'Dataset--demo-mode': window.location.hostname === Config.demoHostName,
       });
 
@@ -195,27 +199,45 @@ class Dataset extends Component {
                   exact
                   path={`${this.props.match.path}`}
                   render={() => (
-                    <ErrorBoundary type="datasetSectionError" key="activity">
-
-                        <Activity
-                            key={`${this.props.datasetName}_activity`}
-                            dataset={dataset}
-                            activityRecords={this.props.activityRecords}
-                            datasetId={dataset.id}
-                            activeBranch={dataset.activeBranch}
-                            setBuildingState={this._setBuildingState}
-                            sectionType={'dataset'}
-                            {...this.props}
+                    <ErrorBoundary type="datasetSectionError" key="overview">
+                      <Overview
+                        key={`${this.props.datasetName}_overview`}
+                        dataset={dataset}
+                        isManaged={dataset.datasetType.isManaged}
+                        datasetId={dataset.id}
+                        scrollToTop={this._scrollToTop}
+                        sectionType="dataset"
+                        datasetType={dataset.datasetType}
                         />
-
                     </ErrorBoundary>
-                        )}
+                  )}
                 />
 
                 <Route path={`${this.props.match.path}/:datasetMenu`}>
 
                   <Switch>
 
+                    <Route
+                      path={`${this.props.match.path}/overview`}
+                      render={() => (
+                        <ErrorBoundary
+                          type="datasetSectionError"
+                          key="activity"
+                        >
+
+                          <Overview
+                            key={`${this.props.datasetName}_overview`}
+                            dataset={dataset}
+                            isManaged={dataset.datasetType.isManaged}
+                            datasetId={dataset.id}
+                            scrollToTop={this._scrollToTop}
+                            sectionType="dataset"
+                            datasetType={dataset.datasetType}
+                             />
+
+                        </ErrorBoundary>
+                          )}
+                    />
                     <Route
                       path={`${this.props.match.path}/activity`}
                       render={() => (
@@ -306,9 +328,11 @@ const DatasetFragmentContainer = createFragmentContainer(
               tags
               icon
               url
+              isManaged
           }
           ...Data_dataset
           ...DatasetActivityContainer_dataset
+          ...DatasetOverviewContainer_dataset
       }`,
   },
 

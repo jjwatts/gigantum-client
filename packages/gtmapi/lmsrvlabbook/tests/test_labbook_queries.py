@@ -1683,27 +1683,6 @@ class TestLabBookServiceQueries(object):
         """.format(",".join(f'"{k}"' for k in keys))
         snapshot.assert_match(fixture_working_dir[2].execute(query))
 
-    def test_get_labbook_readme(self, fixture_working_dir, snapshot):
-        """Test getting a labbook's readme document"""
-        # Create labbooks
-        im = InventoryManager(fixture_working_dir[0])
-        lb = im.create_labbook('default', 'default', 'labbook1', description="my test description")
-
-        query = """
-        {
-          labbook(name: "labbook1", owner: "default") {
-            name
-            description
-            readme
-          }
-        }
-        """
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
-
-        lb.write_readme("##Summary\nThis is my readme!!")
-
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
-
     def test_get_labbook_create_date(self, fixture_working_dir, snapshot):
         """Test getting a labbook's create date"""
         # Create labbooks

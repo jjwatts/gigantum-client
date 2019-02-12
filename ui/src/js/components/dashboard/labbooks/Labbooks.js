@@ -391,7 +391,7 @@ class Labbooks extends Component {
         'Labbooks__nav-item--cloud': true,
         'Labbooks__nav-item--selected': this.state.selectedSection === 'cloud',
       });
-      console.log(localStorage.getItem('username'));
+
       return (
 
         <div className={labbooksCSS}>

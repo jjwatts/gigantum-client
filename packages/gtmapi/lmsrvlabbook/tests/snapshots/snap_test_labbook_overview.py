@@ -90,3 +90,24 @@ snapshots['TestLabBookOverviewQueries.test_no_remote_url 1'] = {
         }
     }
 }
+
+snapshots['TestLabBookOverviewQueries.test_readme 1'] = {
+    'data': {
+        'labbook': {
+            'overview': {
+                'readme': None
+            }
+        }
+    }
+}
+
+snapshots['TestLabBookOverviewQueries.test_readme 2'] = {
+    'data': {
+        'labbook': {
+            'overview': {
+                'readme': '''##Summary
+This is my readme!!'''
+            }
+        }
+    }
+}

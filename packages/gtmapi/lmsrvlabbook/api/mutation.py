@@ -30,14 +30,14 @@ from lmsrvlabbook.api.mutations import (CreateLabbook, BuildImage, StartContaine
                                         RemovePackageComponents,
                                         StartDevTool, SetLabbookDescription, CreateExperimentalBranch,
                                         DeleteExperimentalBranch,
-                                        MergeFromBranch, WorkonBranch, WriteReadme, AddCustomDocker, RemoveCustomDocker,
-                                        DeleteRemoteLabbook,
+                                        MergeFromBranch, WorkonBranch, WriteLabbookReadme, AddCustomDocker,
+                                        RemoveCustomDocker, DeleteRemoteLabbook,
                                         CompleteBatchUploadTransaction, SetVisibility, FetchLabbookEdge,
                                         CreateDataset, AddDatasetFile, CompleteDatasetUploadTransaction,
                                         DeleteDatasetFiles, MoveDatasetFile, MakeDatasetDirectory,
                                         FetchDatasetEdge, SetDatasetVisibility, SyncDataset,
                                         AddDatasetCollaborator, DeleteDatasetCollaborator, DownloadDatasetFiles,
-                                        ModifyDatasetLink)
+                                        ModifyDatasetLink, WriteDatasetReadme, SetDatasetDescription)
 
 from lmsrvlabbook.api.mutations import (ImportDataset, ExportDataset)
 
@@ -151,7 +151,7 @@ class LabbookMutations(graphene.ObjectType):
     delete_dataset_collaborator = DeleteDatasetCollaborator.Field()
 
     # Write a readme to a LabBook
-    write_readme = WriteReadme.Field()
+    write_labbook_readme = WriteLabbookReadme.Field()
 
     # Create a Rollback or Feature branch
     create_experimental_branch = CreateExperimentalBranch.Field()
@@ -203,3 +203,9 @@ class LabbookMutations(graphene.ObjectType):
 
     # Create an empty directory inside of a Dataset
     make_dataset_directory = MakeDatasetDirectory.Field()
+
+    # Write a readme to a Dataset
+    write_dataset_readme = WriteDatasetReadme.Field()
+
+    # Write a description to a Dataset
+    set_dataset_description = SetDatasetDescription.Field()

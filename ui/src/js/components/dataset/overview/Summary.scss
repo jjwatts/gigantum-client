@@ -1,0 +1,52 @@
+@import '~Styles/_imports.scss';
+
+.Summary {
+    @include flex(flex-start, row);
+    background: #D8D8D8;
+    padding: 15px 5px;
+    color: $darkGrey;
+}
+
+.Summary__subheader{
+    font-weight: bold;
+    font-size: 14px;
+    padding-bottom: 10px;
+    color: $jet;
+}
+
+.Summary__content{
+    font-size: 28px;
+    font-weight: 100;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.Summary__file-count{
+    width: 15%;
+    text-align: center;
+    border-right: 1px solid $azure;
+}
+.Summary__size {
+    @include flex(space-around, row);
+    width: 32.5%;
+    border-right: 1px solid $azure;
+}
+.Summary__file-type {
+    padding: 0 20px;
+    width: 32.5%;
+    border-right: 1px solid $azure;
+}
+.Summary__list{
+    white-space: nowrap;
+    column-count: 3;
+    font-size: 14px;
+}
+.Summary__manage-type {
+    width: 20%;
+    @include flex(center, column);
+    .Summary__header {
+        font-size: 28px;
+        align-self: center;
+    }
+
+}

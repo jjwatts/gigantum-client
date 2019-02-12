@@ -19,6 +19,7 @@
 # SOFTWARE.
 import graphene
 import base64
+import os
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.logging import LMLogger
@@ -26,6 +27,9 @@ from gtmcore.gitlib.gitlab import GitLabManager
 
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 from lmsrvcore.auth.identity import parse_token
+from gtmcore.activity import ActivityStore, ActivityType, ActivityAction, ActivityDetailType, ActivityRecord, \
+    ActivityDetailRecord
+
 
 from lmsrvlabbook.api.objects.dataset import Dataset
 from gtmcore.dataset.manifest import Manifest
@@ -159,3 +163,56 @@ class ModifyDatasetLink(graphene.relay.ClientIDMutation):
                                           cursor=base64.b64encode(f"{0}".encode('utf-8')))
 
         return ModifyDatasetLink(new_labbook_edge=edge)
+
+
+class SetDatasetDescription(graphene.relay.ClientIDMutation):
+    class Input:
+        owner = graphene.String(required=True)
+        dataset_name = graphene.String(required=True)
+        description = graphene.String(required=True)
+
+    updated_dataset = graphene.Field(Dataset)
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, owner, dataset_name,
+                               description, client_mutation_id=None):
+        username = get_logged_in_username()
+        ds = InventoryManager().load_dataset(username, owner, dataset_name,
+                                             author=get_logged_in_author())
+        ds.description = description
+        with ds.lock():
+            ds.git.add(os.path.join(ds.root_dir, '.gigantum/gigantum.yaml'))
+            commit = ds.git.commit('Updating description')
+
+            adr = ActivityDetailRecord(ActivityDetailType.LABBOOK, show=False)
+            adr.add_value('text/plain', f"Updated Dataset description: {description}")
+            ar = ActivityRecord(ActivityType.LABBOOK,
+                                message="Updated Dataset description",
+                                linked_commit=commit.hexsha,
+                                tags=["dataset"],
+                                show=False)
+            ar.add_detail_object(adr)
+            ars = ActivityStore(ds)
+            ars.create_activity_record(ar)
+        return SetDatasetDescription(updated_dataset=Dataset(owner=owner, name=dataset_name))
+
+
+class WriteDatasetReadme(graphene.relay.ClientIDMutation):
+    class Input:
+        owner = graphene.String(required=True)
+        dataset_name = graphene.String(required=True)
+        content = graphene.String(required=True)
+
+    updated_dataset = graphene.Field(Dataset)
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, owner, dataset_name, content, client_mutation_id=None):
+        username = get_logged_in_username()
+        ds = InventoryManager().load_dataset(username, owner, dataset_name,
+                                             author=get_logged_in_author())
+
+        # Write data
+        with ds.lock():
+            ds.write_readme(content)
+
+        return WriteDatasetReadme(updated_dataset=Dataset(owner=owner, name=dataset_name))

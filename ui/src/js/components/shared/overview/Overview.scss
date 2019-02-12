@@ -31,15 +31,19 @@
   align-items: center;
 
   a {
-    color: $dark-blue;
+    color: $azure;
+    text-decoration: none;
+    margin-left: 20px;
+    margin-top: 40px;
   }
 
-  @include flex(space-between, row);
+  @include flex(flex-start, row);
 }
 
 .Overview__title {
   padding: 0px;
   position: relative;
+  color: $jet;
 }
 
 .Overview__header {
@@ -81,6 +85,7 @@
 .PackageCount {
   width: 50%;
   @include flex(flex-start, row);
+  white-space: nowrap;
 
   .PackageCount__dependencies {
     width: 50%;
@@ -139,7 +144,6 @@
   position: relative;
   background: white;
   min-height: 200px;
-  overflow: hidden;
   text-align: left;
   h1 {
     padding: 10px 0;
@@ -181,7 +185,7 @@
 }
 
 .ReadmeMarkdown {
-  max-height: 330px;
+  max-height: 200px;
   overflow: hidden;
   blockquote {
     border-left: 5px solid $lightblue;
@@ -295,58 +299,35 @@
   margin-top: 0;
 }
 
-.Overview__readme-bar-less:before,
-.Overview__readme-bar-more:before{
-  border-top: 1px solid $slateBlue;
-  content:"";
-  position: absolute;
-  bottom: 3px;
-  right: 0;
-  height: 0.5em;
-  z-index: -1;
-  text-align: center;
-  width: calc(50% - 50px);
-
-}
-
-.Overview__readme-bar-more:hover:after,
-.Overview__readme-bar-more:hover:before,
-.Overview__readme-bar-less:hover:after,
-.Overview__readme-bar-less:hover:before  {
-  border-top: 1px solid $turquise;
-}
-
-.Overview__readme-bar-more:after,
-.Overview__readme-bar-less:after {
-  border-top: 1px solid $slateBlue;
-  content:"";
-  position: absolute;
-  bottom: 3px;
-  left: 0;
-  height: 0.5em;
-  z-index: -1;
-  text-align: center;
-  width: calc(50% - 50px);
-}
-
-
-
-.Overview__readme-edit-button,
-.Overview__readme-edit-button:hover,
-.Overview__readme-edit-button:focus {
+.Overview__readme-edit-button {
+  transition: all 0.125s ease, background-position 1ms;
   font-weight: light;
-  color: $romanSilver;
-  font-size: 14px;
-  height: 22px;
-  width: 22px;
+  height: 30px;
+  width: 30px;
+  border-radius: 30px;
+  top: -20px;
+  right: 15px;
   padding: 5px;
   border: 0px;
-  background: url('~Images/icons/edit.svg') no-repeat center center;
-  background-size: 22px;
+  background: $azure url('~Images/icons/edit-azure.svg') no-repeat center center;
+  background-size: 18px;
   position: absolute;
-  margin-left: 10px;
-  bottom: 2px;
-  right: -53px;
+  span {
+    display: none;
+  }
+
+  &:hover,
+  &:focus {
+    border: none;
+    width: auto;
+    padding: 0 40px 0 15px;
+    background: $azure url('~Images/icons/edit-azure.svg') no-repeat right 7px center;
+    background-size: 18px;
+
+    span {
+      display: block;
+    }
+  }
 }
 
 .Overview__readme-more,
@@ -357,9 +338,9 @@
 
 .Overview__readme-more,
 .Overview__readme-more:focus {
-  color: $slateBlue;
+  color: $azure;
   border: 0px;
-  background: url('~Images/icons/down-arrow-slate.svg') no-repeat 80px;
+  background: url('~Images/icons/down-arrow-azure.svg') no-repeat 80px;
   background-size: 15px;
   padding-right: 40px;
 }
@@ -374,9 +355,9 @@
 
 .Overview__readme-less,
 .Overview__readme-less:focus {
-  color: $slateBlue;
+  color: $azure;
   border: 0px;
-  background: url('~Images/icons/up-arrow-slate.svg') no-repeat 87px;
+  background: url('~Images/icons/up-arrow-azure.svg') no-repeat 87px;
   background-size: 15px;
   padding-right: 40px;
 }
@@ -397,4 +378,33 @@
 .CodeMirror-wrap {
   height: 270px;
   box-sizing: border-box;
+}
+
+.Overview__empty{
+  height: 100px;
+  background: $grey-border;
+  @include flex(center, row);
+  text-align: center;
+  padding: 30px;
+  position: relative;
+}
+
+.Overview__empty-content{
+  @include flex(center, column);
+  p {
+    margin: 0;
+  }
+  p:first-child {
+    font-weight: 900;
+    color: $darkGrey;
+  }
+  .Overview__empty-action{
+    color: $azure;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+}
+.Overview__environment{
+  position: relative;
 }

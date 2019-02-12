@@ -62,9 +62,6 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
     # A short description of the LabBook limited to 140 UTF-8 characters
     description = graphene.String()
 
-    # An arbitrarily long markdown document
-    readme = graphene.String()
-
     # Data schema version of this labbook. It may be behind the most recent version and need
     # to be upgraded.
     schema_version = graphene.Int()
@@ -169,14 +166,6 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
                 lambda labbook: labbook.description)
 
         return self.description
-
-    def resolve_readme(self, info):
-        """Resolve the readme document inside the labbook"""
-        if not self.readme:
-            return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-                lambda labbook: labbook.get_readme())
-
-        return self.readme
 
     def resolve_environment(self, info):
         """"""

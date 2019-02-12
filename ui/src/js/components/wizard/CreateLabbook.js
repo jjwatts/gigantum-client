@@ -140,16 +140,17 @@ export default class CreateLabbook extends React.Component {
       });
 
       this.props.toggleDisabledContinue((evt.target.value === '') || (isMatch === false));
-    }
-    const textLength = 260 - evt.target.value.length;
-    if (textLength > 50) {
-      state.textWarning = 'CreateLabbook__warning--green';
-    } else if ((textLength <= 50) && (textLength > 20)) {
-      state.textWarning = 'CreateLabbook__warning--yellow';
     } else {
-      state.textWarning = 'CreateLabbook__warning--red';
+      const textLength = 260 - evt.target.value.length;
+      if (textLength > 50) {
+        state.textWarning = 'CreateLabbook__warning--green';
+      } else if ((textLength <= 50) && (textLength > 20)) {
+        state.textWarning = 'CreateLabbook__warning--yellow';
+      } else {
+        state.textWarning = 'CreateLabbook__warning--red';
+      }
+      state.textLength = textLength;
     }
-    state.textLength = textLength;
 
     this.setState(state);
   }

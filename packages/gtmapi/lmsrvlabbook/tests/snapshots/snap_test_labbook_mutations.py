@@ -528,21 +528,6 @@ snapshots['TestLabBookServiceMutations.test_update_favorite 6'] = {
     }
 }
 
-snapshots['TestLabBookServiceMutations.test_write_readme 1'] = {
-    'data': {
-        'writeReadme': {
-            'updatedLabbook': {
-                'description': 'Cats labbook 1',
-                'name': 'labbook1',
-                'readme': '''##Overview
-
-This is my readme
- :df,a//3p49kasdf'''
-            }
-        }
-    }
-}
-
 snapshots['TestLabBookServiceMutations.test_create_labbook 2'] = {
     'data': {
         'labbook': {
@@ -737,6 +722,23 @@ Data Science Quickstart using Jupyterlab, numpy, and Matplotlib. A great base fo
                         }
                     }
                 ]
+            }
+        }
+    }
+}
+
+snapshots['TestLabBookServiceMutations.test_write_readme 1'] = {
+    'data': {
+        'writeLabbookReadme': {
+            'updatedLabbook': {
+                'description': 'Cats labbook 1',
+                'name': 'labbook1',
+                'overview': {
+                    'readme': '''##Overview
+
+This is my readme
+ :df,a//3p49kasdf'''
+                }
             }
         }
     }

@@ -217,6 +217,7 @@ class LabbookHeader extends Component {
                 description={this.props.description}
                 hovered={this.state.hovered}
                 setHoverState={this._setHoverState}
+                sectionType={this.props.sectionType}
               />
             </div>
 
@@ -355,6 +356,7 @@ const BranchName = ({
   description,
   hovered,
   setHoverState,
+  sectionType,
 }) => {
   const branchNameCSS = classNames({
     LabbookHeader__branchTitle: true,
@@ -378,6 +380,7 @@ const BranchName = ({
       <Description
         hovered={hovered}
         description={description}
+        sectionType={sectionType}
       />
     </div>
   );

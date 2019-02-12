@@ -270,3 +270,101 @@ class TestDatasetMutations(object):
             data = mf.read()
 
         assert len(data) == 0
+
+    def test_set_dataset_description(self, fixture_working_dir):
+        create_query = """
+                mutation myCreateDataset($name: String!, $desc: String!, $storage_type: String!) {
+                  createDataset(input: {name: $name, description: $desc,
+                                        storageType: $storage_type}) {
+                    dataset {
+                      id
+                      name
+                    }
+                  }
+                }
+                """
+        create_variables = {"name": "test-dataset-55", "desc": "starting description",
+                            "storage_type": "gigantum_object_v1"}
+        result = fixture_working_dir[2].execute(create_query, variable_values=create_variables)
+        assert "errors" not in result
+
+        query = """
+                mutation myMutation($owner: String!, $datasetName: String!, $desc: String!) {
+                  setDatasetDescription(input: {owner: $owner, datasetName: $datasetName, description: $desc}) {
+                      updatedDataset {
+                          id
+                          name
+                          description                        
+                      }
+                  }
+                }
+                """
+        variables = {"datasetName": "test-dataset-55", "owner": "default", "desc": "updated description"}
+        result = fixture_working_dir[2].execute(query, variable_values=variables)
+        assert "errors" not in result
+        assert "test-dataset-55" == result['data']['setDatasetDescription']['updatedDataset']['name']
+        assert "updated description" == result['data']['setDatasetDescription']['updatedDataset']['description']
+
+        query = """{
+                    dataset(name: "test-dataset-55", owner: "default") {
+                      id
+                      name
+                      description
+                    }
+                    }
+                """
+        result = fixture_working_dir[2].execute(query, variable_values=variables)
+        assert "errors" not in result
+        assert result['data']['dataset']['description'] == "updated description"
+        assert result['data']['dataset']['name'] == "test-dataset-55"
+
+    def test_write_dataset_readme(self, fixture_working_dir):
+        create_query = """
+                mutation myCreateDataset($name: String!, $desc: String!, $storage_type: String!) {
+                  createDataset(input: {name: $name, description: $desc,
+                                        storageType: $storage_type}) {
+                    dataset {
+                      id
+                      name
+                    }
+                  }
+                }
+                """
+        create_variables = {"name": "test-dataset-35", "desc": "starting description",
+                            "storage_type": "gigantum_object_v1"}
+        result = fixture_working_dir[2].execute(create_query, variable_values=create_variables)
+        assert "errors" not in result
+
+        query = """
+                mutation myMutation($owner: String!, $datasetName: String!, $content: String!) {
+                  writeDatasetReadme(input: {owner: $owner, datasetName: $datasetName, content: $content}) {
+                      updatedDataset {
+                          id
+                          name
+                          overview {
+                            readme
+                        }                        
+                      }
+                  }
+                }
+                """
+        variables = {"datasetName": "test-dataset-35", "owner": "default", "content": "##My readme\nthis thing"}
+        result = fixture_working_dir[2].execute(query, variable_values=variables)
+        assert "errors" not in result
+        assert "test-dataset-35" == result['data']['writeDatasetReadme']['updatedDataset']['name']
+        assert "##My readme\nthis thing" == result['data']['writeDatasetReadme']['updatedDataset']['overview']['readme']
+
+        query = """{
+                    dataset(name: "test-dataset-35", owner: "default") {
+                          id
+                          name
+                          overview {
+                            readme
+                        }            
+                    }
+                    }
+                """
+        result = fixture_working_dir[2].execute(query, variable_values=variables)
+        assert "errors" not in result
+        assert result['data']['dataset']['overview']['readme'] == "##My readme\nthis thing"
+        assert result['data']['dataset']['name'] == "test-dataset-35"

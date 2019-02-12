@@ -36,7 +36,7 @@ const Loading = () => <Loader />;
 */
 
 const Overview = Loadable({
-  loader: () => import('./overview/Overview'),
+  loader: () => import('./overview/LabbookOverviewContainer'),
   loading: Loading,
 });
 const Activity = Loadable({
@@ -241,10 +241,11 @@ class Labbook extends Component {
                         labbook={labbook}
                         labbookId={labbook.id}
                         setBuildingState={this._setBuildingState}
-                        readme={labbook.readme}
                         isSyncing={props.isSyncing}
                         isPublishing={props.isPublishing}
                         scrollToTop={this._scrollToTop}
+                        sectionType="labbook"
+                        history={this.props.history}
                       />
 
                     </ErrorBoundary>
@@ -270,10 +271,11 @@ class Labbook extends Component {
                                description={labbook.description}
                                labbookId={labbook.id}
                                setBuildingState={this._setBuildingState}
-                               readme={labbook.readme}
                                isSyncing={props.isSyncing}
                                isPublishing={props.isPublishing}
                                scrollToTop={this._scrollToTop}
+                               sectionType="labbook"
+                                history={this.props.history}
                              />
 
                         </ErrorBoundary>
@@ -419,7 +421,6 @@ const LabbookFragmentContainer = createFragmentContainer(
       fragment Labbook_labbook on Labbook{
           id
           description
-          readme
           defaultRemote
           owner
           creationDateUtc
@@ -448,7 +449,7 @@ const LabbookFragmentContainer = createFragmentContainer(
           activeBranchName
 
           ...Environment_labbook
-          ...Overview_labbook
+          ...LabbookOverviewContainer_labbook
           ...LabbookActivityContainer_labbook
           ...Code_labbook
           ...Input_labbook
