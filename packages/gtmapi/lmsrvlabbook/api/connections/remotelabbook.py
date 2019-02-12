@@ -27,9 +27,6 @@ class RemoteLabbookConnection(graphene.relay.Connection):
     This is a remote call, so should be fetched on its own and only when needed. The user must have a valid
     session for data to be returned.
 
-    It is recommended to use large page size (e.g. 50-100). This is due to how the remote server returns all the
-    available data at once, so it is more efficient to load a lot of records at a time.
-
     Supported sorting modes:
         - az: naturally sort
         - created_on: sort by creation date, newest first
