@@ -50,6 +50,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                 {
                     'node': {
                         'componentId': 'quickstart-jupyterlab',
+                        'cudaVersion': None,
                         'description': 'Data Science Quickstart using Jupyterlab, numpy, and Matplotlib. A great base for any analysis.',
                         'developmentTools': [
                             'jupyterlab'
@@ -93,6 +94,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                 {
                     'node': {
                         'componentId': 'ut-busybox',
+                        'cudaVersion': None,
                         'description': 'Super lightweight image for build testing',
                         'developmentTools': [
                         ],
@@ -124,6 +126,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                 {
                     'node': {
                         'componentId': 'ut-jupyterlab-1',
+                        'cudaVersion': None,
                         'description': 'Unit Test 1',
                         'developmentTools': [
                             'jupyterlab'
@@ -175,6 +178,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                 {
                     'node': {
                         'componentId': 'ut-jupyterlab-2',
+                        'cudaVersion': None,
                         'description': 'Unit Test 2',
                         'developmentTools': [
                             'jupyterlab'
@@ -221,6 +225,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                 {
                     'node': {
                         'componentId': 'ut-jupyterlab-3',
+                        'cudaVersion': None,
                         'description': 'Unit Test 3',
                         'developmentTools': [
                             'jupyterlab'

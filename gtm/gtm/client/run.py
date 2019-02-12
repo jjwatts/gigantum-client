@@ -18,11 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import os
+import re
 import platform
+import subprocess
 
 import docker
 
 from gtm.utils import dockerize_windows_path, DockerVolume
+from gtm.common.gpu import get_nvidia_driver_version
 
 
 class ClientRunner(object):
@@ -75,20 +78,27 @@ class ClientRunner(object):
         if not share_volume.exists():
             share_volume.create()
 
-        volume_mapping = {'labmanager_share_vol': {'bind': '/mnt/share', 'mode': 'rw'}}
+        volume_mapping = dict()
+        volume_mapping['labmanager_share_vol'] = {'bind': '/mnt/share', 'mode': 'rw'}
         volume_mapping['/var/run/docker.sock'] = {'bind': '/var/run/docker.sock', 'mode': 'rw'}
 
+        environment_mapping = dict()
         if platform.system() == 'Windows':
             # HOST_WORK_DIR will be used to mount inside labbook.
-            environment_mapping = {'HOST_WORK_DIR': dockerize_windows_path(working_dir)}
+            environment_mapping['HOST_WORK_DIR'] = dockerize_windows_path(working_dir)
             environment_mapping['WINDOWS_HOST'] = 1
             # Windows does not support cached, but this is silently ignored (as of late Jan 2018)
             # We convert \ to /
             volume_mapping[dockerize_windows_path(working_dir)] = {'bind': '/mnt/gigantum', 'mode': 'cached'}
         else:
-            environment_mapping = {'HOST_WORK_DIR': working_dir}
+            environment_mapping['HOST_WORK_DIR'] = working_dir
             environment_mapping['LOCAL_USER_ID'] = os.getuid()
             volume_mapping[working_dir] = {'bind': '/mnt/gigantum', 'mode': 'cached'}
+
+        # get the nvidia driver if available on the host
+        nvidia_driver_version = get_nvidia_driver_version()
+        if nvidia_driver_version:
+            environment_mapping['NVIDIA_DRIVER_VERSION'] = nvidia_driver_version
 
         self.docker_client.containers.run(image=self.docker_image,
                                           detach=True,

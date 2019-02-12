@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Thu Feb 07 2019 11:57:26 GMT-0500 (Eastern Standard Time)
+# timestamp: Mon Feb 11 2019 16:41:34 GMT-0500 (Eastern Standard Time)
 
 schema {
   query: LabbookQuery
@@ -235,6 +235,7 @@ type BaseComponent implements Node {
   dockerImageNamespace: String
   dockerImageRepository: String
   dockerImageTag: String
+  cudaVersion: String
 }
 
 """A Connection for paging through Base components"""

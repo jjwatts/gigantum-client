@@ -2,6 +2,7 @@ import pytest
 import os
 import glob
 import uuid
+import shutil
 from aioresponses import aioresponses
 
 from gtmcore.inventory.branching import BranchManager
@@ -399,6 +400,12 @@ class TestIOManager(object):
         assert os.path.isfile(obj1_source) is True
         assert os.path.isfile(obj2_source) is True
 
+        # remove data from the local file cache
+        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt"))
+        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test2.txt"))
+        shutil.rmtree(os.path.join(manifest.cache_mgr.cache_root, 'objects'))
+        os.makedirs(os.path.join(manifest.cache_mgr.cache_root, 'objects'))
+
         with aioresponses() as mocked_responses:
             mocked_responses.get(f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_1}',
                                  payload={
@@ -446,3 +453,90 @@ class TestIOManager(object):
                 with open(r.object_path, 'rt') as dd:
                     dest1 = dd.read()
                 assert source1 == dest1
+
+    def test_pull_objects_all_partial_download(self, mock_dataset_with_manifest):
+        ds, manifest, working_dir = mock_dataset_with_manifest
+        iom = IOManager(ds, manifest)
+
+        revision = manifest.dataset_revision
+        os.makedirs(os.path.join(manifest.cache_mgr.cache_root, revision, "other_dir"))
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "other_dir/test3.txt", "1")
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "test1.txt", "asdfadfsdf")
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "test2.txt", "fdsfgfd")
+        manifest.sweep_all_changes()
+
+        obj_to_push = iom.objects_to_push()
+        assert len(obj_to_push) == 3
+        _, obj_id_1 = obj_to_push[0].object_path.rsplit('/', 1)
+        _, obj_id_2 = obj_to_push[1].object_path.rsplit('/', 1)
+        _, obj_id_3 = obj_to_push[2].object_path.rsplit('/', 1)
+        obj1_target = obj_to_push[0].object_path
+        obj2_target = obj_to_push[1].object_path
+        obj3_target = obj_to_push[2].object_path
+
+        obj1_source = os.path.join('/tmp', uuid.uuid4().hex)
+
+        assert "test3.txt" in obj_to_push[0].dataset_path
+
+        assert os.path.exists(obj1_target) is True
+        assert os.path.exists(obj2_target) is True
+        assert os.path.exists(obj3_target) is True
+
+        # Completely remove other_dir/test3.txt object
+        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "other_dir", "test3.txt"))
+        os.rename(obj1_target, obj1_source)
+
+        # Remove link for test1.txt
+        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt"))
+
+        assert os.path.isfile(obj1_target) is False
+        assert os.path.isfile(obj2_target) is True
+        assert os.path.isfile(obj3_target) is True
+
+        with aioresponses() as mocked_responses:
+            mocked_responses.get(f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_1}',
+                                 payload={
+                                         "presigned_url": f"https://dummyurl.com/{obj_id_1}?params=1",
+                                         "namespace": ds.namespace,
+                                         "obj_id": obj_id_1,
+                                         "dataset": ds.name
+                                 },
+                                 status=200)
+
+            with open(obj1_source, 'rb') as data1:
+                mocked_responses.get(f"https://dummyurl.com/{obj_id_1}?params=1",
+                                     body=data1.read(), status=200,
+                                     content_type='application/octet-stream')
+
+            iom.dataset.backend.set_default_configuration("test-user", "abcd", '1234')
+
+            result = iom.pull_all()
+            assert len(result.success) == 1
+            assert len(result.failure) == 0
+            assert result.success[0].object_path == obj1_target
+            assert "test3.txt" in result.success[0].dataset_path
+
+            assert os.path.isfile(obj1_target) is True
+            assert os.path.isfile(obj2_target) is True
+            assert os.path.isfile(obj3_target) is True
+
+            filename = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "other_dir", "test3.txt")
+            assert os.path.isfile(filename) is True
+            with open(filename, 'rt') as dd:
+                assert dd.read() == "1"
+
+            filename = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision,  "test1.txt")
+            assert os.path.isfile(filename) is True
+            with open(filename, 'rt') as dd:
+                assert dd.read() == "asdfadfsdf"
+
+            filename = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision,  "test2.txt")
+            assert os.path.isfile(filename) is True
+            with open(filename, 'rt') as dd:
+                assert dd.read() == "fdsfgfd"
+
+            # Try pulling all again with nothing to pull
+            result = iom.pull_all()
+            assert len(result.success) == 0
+            assert len(result.failure) == 0
+            assert result.message == "Dataset already downloaded."

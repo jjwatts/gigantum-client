@@ -90,6 +90,9 @@ class BaseComponent(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
     # The image tag to use on the container registry server when pulling the image
     docker_image_tag = graphene.String()
 
+    # The cuda version supported by this base. If no cuda support, returns Null
+    cuda_version = graphene.String()
+
     def _format_package(self, package_str):
         """Helper method to format package strings
 
@@ -129,6 +132,7 @@ class BaseComponent(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         self.docker_image_namespace = self._component_data['image']['namespace']
         self.docker_image_repository = self._component_data['image']['repository']
         self.docker_image_tag = self._component_data['image']['tag']
+        self.cuda_version = self._component_data.get('cuda_version')
 
         self.package_managers = list()
         self.installed_packages = list()
@@ -262,3 +266,9 @@ class BaseComponent(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         if self.installed_packages is None:
             self._load_component_info()
         return self.installed_packages
+
+    def resolve_cuda_version(self, info):
+        """Resolve the installed_packages field"""
+        if self.cuda_version is None:
+            self._load_component_info()
+        return self.cuda_version

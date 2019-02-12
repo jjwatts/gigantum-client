@@ -17,6 +17,7 @@ services:
       - LOCAL_USER_ID={% USER_ID %}
       - HOST_WORK_DIR={% WORKING_DIR %}
       - PYCHARM-DEV=1
+      - NVIDIA_DRIVER_VERSION=${NVIDIA_DRIVER_VERSION}
     network_mode: "bridge"
 
 volumes:

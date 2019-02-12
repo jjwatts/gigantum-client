@@ -298,7 +298,6 @@ class InventoryManager(object):
 
         # Build data file contents
         labbook._data = {
-            "cuda_version": None,
             "labbook": {"id": uuid.uuid4().hex,
                         "name": name,
                         "description": description or ''},
