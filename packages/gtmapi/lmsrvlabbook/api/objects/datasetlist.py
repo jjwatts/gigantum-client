@@ -152,6 +152,9 @@ class DatasetList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         else:
             per_page = 20
 
+        # use version=2 to page through both projects and datasets returned by gitlab but only return projects.
+        # omitting the version parameter will return projects and datasets together, but avoids breaking functionality
+        # in any gigantum instances not using the latest client code
         url = f"https://{index_service}/datasets?first={per_page}"
 
         # Add optional arguments
@@ -195,10 +198,11 @@ class DatasetList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
                                                           cursor=edge['cursor']))
 
         # Create Page Info instance
-        has_previous_page = True if (kwargs.get("before") or kwargs.get("after")) else False
+        has_previous_page = True if kwargs.get("after") else False
         has_next_page = len(edges) == per_page
 
         page_info = graphene.relay.PageInfo(has_next_page=has_next_page, has_previous_page=has_previous_page,
-                                            start_cursor=edges[0]['cursor'] if edges else None, end_cursor=edges[-1]['cursor'] if edges else None)
+                                            start_cursor=edges[0]['cursor'] if edges else None,
+                                            end_cursor=edges[-1]['cursor'] if edges else None)
 
         return RemoteDatasetConnection(edges=edge_objs, page_info=page_info)

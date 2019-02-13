@@ -52,8 +52,8 @@ DUMMY_DATA = [
         "storage_size": 122,
         "project_schema": 1,
         "indexed_at": "2018-08-30T18:01:49.165815Z",
-        "visibility": "private_project",
-        "project": "test-proj-1",
+        "visibility": "private_dataset",
+        "project": "test-data-1",
         "description": "No Description",
         "modified_at": "2018-08-30T18:01:33.312Z",
         "cursor": "eyJwYWdlIjogMSwgIml0ZW0iOiAxfQ=="
@@ -82,8 +82,8 @@ DUMMY_DATA = [
         "storage_size": 122,
         "project_schema": 1,
         "indexed_at": "2018-08-30T18:01:49.165815Z",
-        "visibility": "private_project",
-        "project": "test-proj-2",
+        "visibility": "private_dataset",
+        "project": "test-data-2",
         "description": "No Description",
         "modified_at": "2018-09-01T18:01:33.312Z",
         "cursor": "eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ=="
@@ -91,85 +91,14 @@ DUMMY_DATA = [
 ]
 
 
-class TestLabBookRemoteOperations(object):
+class TestDatasetRemoteOperations(object):
 
-    def test_delete_remote_labbook_dryrun(self, fixture_working_dir):
-        """Test deleting a LabBook on a remote server - dry run"""
-
-        delete_query = f"""
-        mutation delete {{
-            deleteRemoteLabbook(input: {{
-                owner: "default",
-                labbookName: "new-labbook",
-                confirm: false
-            }}) {{
-                success
-            }}
-        }}
-        """
-        r = fixture_working_dir[2].execute(delete_query)
-        print(r)
-        assert 'errors' not in r
-        assert r['data']['deleteRemoteLabbook']['success'] is False
-
-    @responses.activate
-    def test_delete_remote_labbook(self, fixture_working_dir):
-        """Test deleting a LabBook on a remote server"""
-        # Setup responses mock for this test
-        responses.add(responses.GET, 'https://usersrv.gigantum.io/key',
-                      json={'key': 'afaketoken'}, status=200)
-        responses.add(responses.GET, 'https://repo.gigantum.io/api/v4/projects/default%2Fnew-labbook',
-                      json=[{
-                              "id": 27,
-                              "description": "",
-                            }],
-                      status=200)
-        responses.add(responses.DELETE, 'https://repo.gigantum.io/api/v4/projects/default%2Fnew-labbook',
-                      json={
-                                "message": "202 Accepted"
-                            },
-                      status=202)
-        responses.add(responses.GET, 'https://repo.gigantum.io/api/v4/projects/default%2Fnew-labbook',
-                      json=[{
-                                "message": "404 Project Not Found"
-                            }],
-                      status=404)
-        responses.add(responses.DELETE, 'https://api.gigantum.com/read/index/default%2Fnew-labbook',
-                      json=[{
-                                "message": "success"
-                            }],
-                      status=204)
-
-
-        im = InventoryManager(fixture_working_dir[0])
-        lb = im.create_labbook("default", "default", "new-labbook")
-
-        delete_query = f"""
-        mutation delete {{
-            deleteRemoteLabbook(input: {{
-                owner: "default",
-                labbookName: "new-labbook",
-                confirm: true
-            }}) {{
-                success
-            }}
-        }}
-        """
-
-        r = fixture_working_dir[2].execute(delete_query)
-        assert 'errors' not in r
-        assert r['data']['deleteRemoteLabbook']['success'] is True
-
-        # Try deleting again, which should return an error
-        r2 = fixture_working_dir[2].execute(delete_query)
-        assert 'errors' in r2
-
-    def test_list_remote_labbooks_invalid_args(self, fixture_working_dir, snapshot):
-        """test list labbooks"""
+    def test_list_remote_datasets_invalid_args(self, fixture_working_dir, snapshot):
+        """test list datasets"""
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "asdf", sort: "desc", first: 2){
+                    datasetList{
+                      remoteDatasets(orderBy: "asdf", sort: "desc", first: 2){
                         edges{
                           node{
                             id
@@ -190,13 +119,13 @@ class TestLabBookRemoteOperations(object):
                     }"""
         r = fixture_working_dir[2].execute(list_query)
         assert 'errors' in r
-        assert r['data']['labbookList']['remoteLabbooks'] is None
+        assert r['data']['datasetList']['remoteDatasets'] is None
         assert 'Unsupported order_by' in r['errors'][0]['message']
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "name", sort: "asdf", first: 2){
+                    datasetList{
+                      remoteDatasets(orderBy: "name", sort: "asdf", first: 2){
                         edges{
                           node{
                             id
@@ -217,23 +146,23 @@ class TestLabBookRemoteOperations(object):
                     }"""
         r = fixture_working_dir[2].execute(list_query)
         assert 'errors' in r
-        assert r['data']['labbookList']['remoteLabbooks'] is None
+        assert r['data']['datasetList']['remoteDatasets'] is None
         assert 'Unsupported sort' in r['errors'][0]['message']
 
     @responses.activate
-    def test_list_remote_labbooks_az(self, fixture_working_dir, snapshot):
-        """test list labbooks"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&order_by=name&sort=desc',
+    def test_list_remote_datasets_az(self, fixture_working_dir, snapshot):
+        """test list datasets"""
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&order_by=name&sort=desc',
                       json=DUMMY_DATA, status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=3&order_by=name&sort=asc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=3&order_by=name&sort=asc',
                       json=list(reversed(DUMMY_DATA)), status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=3&after=eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ==&order_by=name&sort=asc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=3&after=eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ==&order_by=name&sort=asc',
                       json=list(), status=200)
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "name", sort: "desc", first: 2){
+                    datasetList{
+                      remoteDatasets(orderBy: "name", sort: "desc", first: 2){
                         edges{
                           node{
                             id
@@ -259,8 +188,8 @@ class TestLabBookRemoteOperations(object):
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "name", sort: "asc", first: 3){
+                    datasetList{
+                      remoteDatasets(orderBy: "name", sort: "asc", first: 3){
                         edges{
                           node{
                             id
@@ -286,8 +215,8 @@ class TestLabBookRemoteOperations(object):
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "name", sort: "asc", first: 3, after: "eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ=="){
+                    datasetList{
+                      remoteDatasets(orderBy: "name", sort: "asc", first: 3, after: "eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ=="){
                         edges{
                           node{
                             id
@@ -308,22 +237,22 @@ class TestLabBookRemoteOperations(object):
 
         r = fixture_working_dir[2].execute(list_query)
         assert 'errors' not in r
-        assert len(r['data']['labbookList']['remoteLabbooks']['edges']) == 0
-        assert r['data']['labbookList']['remoteLabbooks']['pageInfo']['hasNextPage'] is False
+        assert len(r['data']['datasetList']['remoteDatasets']['edges']) == 0
+        assert r['data']['datasetList']['remoteDatasets']['pageInfo']['hasNextPage'] is False
 
     @responses.activate
-    def test_list_remote_labbooks_modified(self, fixture_working_dir, snapshot):
-        """test list labbooks"""
-        """test list labbooks"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&page=1&order_by=modified_on&sort=desc',
+    def test_list_remote_datasets_modified(self, fixture_working_dir, snapshot):
+        """test list datasets"""
+        """test list datasets"""
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&page=1&order_by=modified_on&sort=desc',
                       json=list(reversed(DUMMY_DATA)), status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=10&page=1&order_by=modified_on&sort=asc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=10&page=1&order_by=modified_on&sort=asc',
                       json=DUMMY_DATA, status=200)
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "modified_on", sort: "desc", first: 2){
+                    datasetList{
+                      remoteDatasets(orderBy: "modified_on", sort: "desc", first: 2){
                         edges{
                           node{
                             id
@@ -349,8 +278,8 @@ class TestLabBookRemoteOperations(object):
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "modified_on", sort: "asc", first: 10){
+                    datasetList{
+                      remoteDatasets(orderBy: "modified_on", sort: "asc", first: 10){
                         edges{
                           node{
                             id
@@ -374,17 +303,17 @@ class TestLabBookRemoteOperations(object):
         snapshot.assert_match(r)
 
     @responses.activate
-    def test_list_remote_labbooks_created(self, fixture_working_dir, snapshot):
-        """test list labbooks"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&page=1&order_by=created_on&sort=desc',
+    def test_list_remote_datasets_created(self, fixture_working_dir, snapshot):
+        """test list datasets"""
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&page=1&order_by=created_on&sort=desc',
                       json=DUMMY_DATA, status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&page=1&order_by=created_on&sort=asc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&page=1&order_by=created_on&sort=asc',
                       json=list(reversed(DUMMY_DATA)), status=200)
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "created_on", sort: "desc", first: 2){
+                    datasetList{
+                      remoteDatasets(orderBy: "created_on", sort: "desc", first: 2){
                         edges{
                           node{
                             id
@@ -410,8 +339,8 @@ class TestLabBookRemoteOperations(object):
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "created_on", sort: "asc", first: 10){
+                    datasetList{
+                      remoteDatasets(orderBy: "created_on", sort: "asc", first: 10){
                         edges{
                           node{
                             id
@@ -435,21 +364,21 @@ class TestLabBookRemoteOperations(object):
         snapshot.assert_match(r)
 
     @responses.activate
-    def test_list_remote_labbooks_page(self, fixture_working_dir, snapshot):
-        """test list labbooks"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=1&order_by=name&sort=desc',
+    def test_list_remote_datasets_page(self, fixture_working_dir, snapshot):
+        """test list datasets"""
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=1&order_by=name&sort=desc',
                       json=[DUMMY_DATA[0]], status=200)
 
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=1&after=eyJwYWdlIjogMSwgIml0ZW0iOiAxfQ==&order_by=name&sort=desc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=1&after=eyJwYWdlIjogMSwgIml0ZW0iOiAxfQ==&order_by=name&sort=desc',
                       json=[DUMMY_DATA[1]], status=200)
 
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=1&after=eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ==&order_by=name&sort=desc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=1&after=eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ==&order_by=name&sort=desc',
                       json=list(), status=200)
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "name", sort: "desc", first: 1){
+                    datasetList{
+                      remoteDatasets(orderBy: "name", sort: "desc", first: 1){
                         edges{
                           node{
                             id
@@ -475,8 +404,8 @@ class TestLabBookRemoteOperations(object):
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "name", sort: "desc", first: 1, after: "eyJwYWdlIjogMSwgIml0ZW0iOiAxfQ=="){
+                    datasetList{
+                      remoteDatasets(orderBy: "name", sort: "desc", first: 1, after: "eyJwYWdlIjogMSwgIml0ZW0iOiAxfQ=="){
                         edges{
                           node{
                             id
@@ -501,8 +430,8 @@ class TestLabBookRemoteOperations(object):
 
         list_query = """
                     {
-                    labbookList{
-                      remoteLabbooks(orderBy: "name", sort: "desc", first: 1, after: "eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ=="){
+                    datasetList{
+                      remoteDatasets(orderBy: "name", sort: "desc", first: 1, after: "eyJwYWdlIjogMSwgIml0ZW0iOiAzfQ=="){
                         edges{
                           node{
                             id
@@ -523,6 +452,6 @@ class TestLabBookRemoteOperations(object):
 
         r = fixture_working_dir[2].execute(list_query)
         assert 'errors' not in r
-        assert len(r['data']['labbookList']['remoteLabbooks']['edges']) == 0
-        assert r['data']['labbookList']['remoteLabbooks']['pageInfo']['hasNextPage'] is False
+        assert len(r['data']['datasetList']['remoteDatasets']['edges']) == 0
+        assert r['data']['datasetList']['remoteDatasets']['pageInfo']['hasNextPage'] is False
 
