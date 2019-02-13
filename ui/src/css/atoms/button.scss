@@ -90,6 +90,68 @@ button:disabled {
      border-radius: 15px;
    }
 
+   &--redirect {
+    transition: all 0.25s ease, background-position 1ms;
+    width: 30px;
+    height: 30px;
+    border-radius: 30px;
+    position: absolute;
+    right: 15px;
+    top: -20px;
+    padding: 0;
+    background: $azure url('~Images/icons/continue-arrow.svg') no-repeat -1px center;
+    background-size: 30px;
+    border: none;
+    z-index: 1;
+    span {
+      display: none;
+    }
+
+    &:hover,
+    &:focus {
+      border: none;
+      width: auto;
+      padding: 0 40px 0 15px;
+      background: $azure url('~Images/icons/continue-arrow.svg') no-repeat right 1px center;
+      background-size: 30px;
+
+      span {
+        display: block;
+      }
+    }
+   }
+
+   &--expandable-close {
+    transition: all 0.25s ease, background-position 1ms;
+    width: 30px;
+    height: 30px;
+    border-radius: 30px;
+    position: absolute;
+    right: 15px;
+    top: -20px;
+    padding: 0;
+    background: $azure url('~Images/icons/close-white.svg') no-repeat center center;
+    background-size: 15px;
+    border: none;
+    z-index: 1;
+    span {
+      display: none;
+    }
+
+    &:hover,
+    &:focus {
+      border: none;
+      width: auto;
+      padding: 0 40px 0 15px;
+      background: $azure url('~Images/icons/close-white.svg') no-repeat right 10px center;
+      background-size: 15px;
+
+      span {
+        display: block;
+      }
+    }
+   }
+
    &--check {
      background: url(~Images/icons/check-selected.svg) no-repeat center center;
      background-size: 30px;

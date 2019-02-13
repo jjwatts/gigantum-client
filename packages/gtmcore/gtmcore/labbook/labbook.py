@@ -22,6 +22,7 @@ import re
 import yaml
 import json
 import datetime
+import glob
 
 from typing import (Dict, Optional)
 
@@ -141,18 +142,23 @@ class LabBook(Repository):
 
     @property
     def cuda_version(self) -> Optional[str]:
-        if self._data and self._data.get("cuda_version"):
-            return self._data.get("cuda_version")
-        else:
+        """Get the cuda version of the LabBook from the base configuration. If no cuda_version is present, return None
+
+        Returns:
+
+        """
+        base_yaml_file = glob.glob(os.path.join(self.root_dir, '.gigantum', 'env', 'base', '*.yaml'))
+
+        if len(base_yaml_file) > 1:
+            raise ValueError(f"Project misconfigured. Found {len(base_yaml_file)} base configurations.")
+        elif len(base_yaml_file) == 0:
             return None
 
-    @cuda_version.setter
-    def cuda_version(self, cuda_version: Optional[str] = None) -> None:
-        if self._data:
-            self._data['cuda_version'] = cuda_version
-            self._save_gigantum_data()
-        else:
-            raise ValueError("LabBook _data cannot be None")
+        # If you got 1 base, load from disk
+        with open(base_yaml_file[0], 'rt') as bf:
+            base_data = yaml.safe_load(bf)
+
+        return base_data.get('cuda_version')
 
     def _save_gigantum_data(self) -> None:
         """Method to save changes to the LabBook

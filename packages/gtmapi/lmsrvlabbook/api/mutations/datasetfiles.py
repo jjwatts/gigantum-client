@@ -162,9 +162,6 @@ class DownloadDatasetFiles(graphene.relay.ClientIDMutation):
         else:
             result = iom.pull_objects(keys=keys)
 
-        # Relink the revision
-        iom.manifest.link_revision()
-
         edge_objs = list()
         # Prime the dataset loader with the dataset object. This handles making sure if loaded from the Project it
         # is the correct repository.

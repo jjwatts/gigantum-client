@@ -12,6 +12,7 @@ from gtmcore.inventory.inventory  import InventoryManager, InventoryException
 from gtmcore.container.utils import infer_docker_image_name, ps_search
 from gtmcore.container.exceptions import ContainerBuildException
 from gtmcore.dataset.cache import get_cache_manager_class
+from gtmcore.container.cuda import should_launch_with_cuda_support
 
 logger = LMLogger.get_logger()
 
@@ -234,6 +235,7 @@ def start_labbook_container(labbook_root: str, config_path: str,
     resource_args = dict()
     memory_limit = lb.client_config.config['container']['memory']
     cpu_limit = lb.client_config.config['container']['cpu']
+    gpu_shared_mem = lb.client_config.config['container']['gpu_shared_mem']
     if memory_limit:
         # If memory_limit not None, pass to Docker to limit memory allocation to container
         resource_args["mem_limit"] = memory_limit
@@ -244,16 +246,18 @@ def start_labbook_container(labbook_root: str, config_path: str,
 
     docker_client = get_docker_client()
 
-    # run with nvidia if we have GPU support in the labmanager 
-    # CUDA must be set (not None) and version must match between labbook and labmanager
-    cudav = Configuration().config['container'].get('cuda_version')
-    logger.info(f"Host CUDA version {cudav}, LabBook CUDA ver {lb.cuda_version}")
-    if cudav and lb.cuda_version:
-        logger.info(f"Launching container with GPU support CUDA version {lb.cuda_version}")
+    # run with nvidia-docker if we have GPU support on the Host compatible with the project
+    should_run_nvidia, reason = should_launch_with_cuda_support(lb.cuda_version)
+    if should_run_nvidia:
+        logger.info(f"Launching container with GPU support:{reason}")
+        if gpu_shared_mem:
+            resource_args["shm_size"] = gpu_shared_mem
+
         container_id = docker_client.containers.run(tag, detach=True, init=True, name=tag,
                                                     environment=env_var, volumes=volumes_dict,
                                                     runtime='nvidia', **resource_args).id
     else:
+        logger.info(f"Launching container without GPU support. {reason}")
         container_id = docker_client.containers.run(tag, detach=True, init=True, name=tag,
                                                     environment=env_var, volumes=volumes_dict,
                                                     **resource_args).id

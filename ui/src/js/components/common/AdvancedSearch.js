@@ -10,6 +10,7 @@ export default class Modal extends Component {
     super(props);
     this.state = {
       expandedIndex: null,
+      tooltipShown: false,
     };
     this._resetSelectedFilter = this._resetSelectedFilter.bind(this);
   }
@@ -35,6 +36,9 @@ export default class Modal extends Component {
   _resetSelectedFilter(evt) {
     if (evt.target.className.indexOf('AdvancedSearch__filter-section') === -1) {
       this.setState({ expandedIndex: null });
+    }
+    if (evt.target.className.indexOf('AdvancedSearch__info') === -1) {
+      this.setState({ tooltipShown: false });
     }
   }
   /**
@@ -93,8 +97,7 @@ export default class Modal extends Component {
          />
         <div className="AdvancedSearch__filters">
         {
-          Object.keys(this.props.filterCategories).map((category, index) =>
-          <div
+          Object.keys(this.props.filterCategories).map((category, index) => <div
             key={category}
             className="AdvancedSearch__filter-container"
           >
@@ -106,13 +109,31 @@ export default class Modal extends Component {
                 {category}
             </div>
             {
+              category === 'CUDA Version' &&
+              <div
+                className="AdvancedSearch__info"
+                onClick={() => this.setState({ tooltipShown: !this.state.tooltipShown })}
+              >
+                {
+                  this.state.tooltipShown &&
+                  <div className="InfoTooltip">
+                    CUDA enabled bases will automatically use the NVIDIA Container Runtime when NVIDIA drivers on the host are compatible with the CUDA version installed in the Base.&nbsp;&nbsp;
+                    <a
+                      target="_blank" href="https://docs.gigantum.com/" rel="noopener noreferrer"
+                    >
+                      Learn more.
+                    </a>
+                  </div>
+                }
+              </div>
+            }
+            {
                 this.state.expandedIndex === index &&
                 <ul
                     className="AdvancedSearch__filter-list"
                 >
                     {
-                        this.props.filterCategories[category].map(filter =>
-                            <li
+                        this.props.filterCategories[category].map(filter => <li
                                 key={filter}
                                 onClick={() => this._handleAddition({ id: filter, text: filter }, category)}
                             >

@@ -908,13 +908,12 @@ class TestLabBookServiceMutations(object):
 
                 chunk.close()
 
-
     def test_write_readme(self, mock_create_labbooks, snapshot):
         content = json.dumps('##Overview\n\nThis is my readme\n :df,a//3p49kasdf')
 
         query = f"""
         mutation writeReadme {{
-          writeReadme(
+          writeLabbookReadme(
             input: {{
               owner: "default",
               labbookName: "labbook1",
@@ -923,7 +922,9 @@ class TestLabBookServiceMutations(object):
               updatedLabbook{{
                 name
                 description
-                readme
+                overview{{
+                    readme
+                }}
               }}
             }}
         }}

@@ -2,16 +2,24 @@
 
 .RecentActivity__title-container{
   align-items: center;
-  @include flex(space-between, row);
+  color: $jet;
+  @include flex(flex-start, row);
   a {
-    color: $dark-blue;
+    color: $azure;
+    text-decoration: none;
+    margin-left: 20px;
+    margin-top: 40px;
   }
 }
 
 .RecentActivity__card {
-  min-height: 150px;
-  padding: 20px 20px 60px 20px;
-  text-align: left;
+  @include flex(flex-start, row);
+  width: 100%;
+  border-bottom: 10px solid $azure;
+  min-height: 80x;
+  max-height: 150px;
+  padding: 0 10px;
+  position: relative;
 }
 
 .RecentActivity__card-date {
@@ -145,4 +153,62 @@
   @extend .RecentActivity__card;
   opacity: 0.1;
   animation: fluxuateLoad 3s infinite;
+}
+.RecentActivity__time{
+  font-size: 14px;
+  margin-bottom: 0;
+}
+.RecentActivity__message{
+  margin-top: 5px;
+}
+
+.RecentActivityCard__content{
+  @include flex(space-between, row);
+  padding: 10px;
+  width: 100%;
+  img {
+    transition: all 0.25s;
+    border: 1px solid $romanSilver;
+    height: 120px;
+    width: 120px;
+    cursor: pointer;
+    &:hover {
+      opacity: 0.4;
+    }
+    &:hover ~ .RecentActivity__expand {
+      opacity: 1;
+      z-index: 1;
+    }
+  }
+}
+
+.RecentActivity__img-container {
+  position: relative;
+  div {
+    z-index: -1;
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events:none;
+    cursor: pointer;
+    &:hover {
+      opacity: 1;
+      z-index: 1;
+    }
+    &:hover ~ img {
+      opacity: 0.4;
+    }
+  }
+}
+
+.RecentActivity__lightbox{
+  width: 100%;
+  height: 100%;
+  background: $slateBlueOpaque;
+  position: fixed;
+  z-index: index($elements, modal);
 }

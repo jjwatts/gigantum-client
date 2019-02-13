@@ -1,6 +1,5 @@
 // vendor
 import React, { Component } from 'react';
-import Loadable from 'react-loadable';
 import { WithContext as ReactTags } from 'react-tag-input';
 // mutations
 import CreateUserNoteMutation from 'Mutations/CreateUserNoteMutation';

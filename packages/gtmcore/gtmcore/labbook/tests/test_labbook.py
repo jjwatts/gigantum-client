@@ -30,7 +30,6 @@ from gtmcore.fixtures import (mock_config_file, mock_labbook, remote_labbook_rep
 
 
 class TestLabBook(object):
-
     def test_checkout_id_property(self, mock_config_file):
         """Test trying to create a labbook with a name that already exists locally"""
         im = InventoryManager(mock_config_file[0])

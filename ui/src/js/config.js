@@ -12,6 +12,7 @@ const CONFIG = {
     { id: 'outputData', name: 'Output Data' },
   ],
   dataset_navigation_items: [
+    { id: 'overview', name: 'Overview' },
     { id: 'activity', name: 'Activity', fragment: '...Activity_labbook' },
     { id: 'data', name: 'Data' },
   ],

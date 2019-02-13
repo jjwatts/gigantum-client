@@ -241,3 +241,26 @@
   75% { opacity:0; }
   100% { opacity:1; }
 }
+
+.InfoTooltip {
+  &:before {
+    content: '';
+    @include triangle('up', 8px, $slateBlue);
+    position: absolute;
+    right: 100px;
+    top: -8px;
+  }
+  user-select: none;
+  animation: slide-down-fade-in 0.25s;
+  position: absolute;
+  font-size: 14px;
+  background: $slateBlue;
+  color: white;
+  padding: 15px;
+  width: 250px;
+  top: 25px;
+  right: -100px;
+  a {
+    text-decoration: underline;
+  }
+}

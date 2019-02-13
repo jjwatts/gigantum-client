@@ -184,18 +184,42 @@ class IOManager(object):
         result = self.dataset.backend.pull_objects(self.dataset, objs, status_update_fn)
         self.dataset.backend.finalize_pull(self.dataset, status_update_fn)
 
+        # Relink the revision
+        self.manifest.link_revision()
+
         # Return pull result
         return result
 
     def pull_all(self, status_update_fn: Callable = None) -> PullResult:
-        """Helper to pull every object in the dataset
+        """Helper to pull every object in the dataset, ignoring files that already exist and linking files if needed
 
         Args:
-            status_update_fn:
+            status_update_fn: Callable to provide status during pull
 
         Returns:
-
+            PullResult
         """
-        keys = list(self.manifest.manifest.keys())
-        keys = [key for key in keys if key[-1] != os.path.sep]  # Filter out directories
-        return self.pull_objects(keys, status_update_fn)
+        keys_to_pull = list()
+        for key in self.manifest.manifest:
+            # If dir, skip
+            if key[-1] == os.path.sep:
+                continue
+
+            # If object is linked to the revision already, skip
+            revision_path = os.path.join(self.manifest.cache_mgr.current_revision_dir, key)
+            if os.path.exists(revision_path):
+                continue
+
+            # Check if file exists in object cache and simply needs to be linked
+            obj_path = self.manifest.dataset_to_object_path(key)
+            if os.path.isfile(obj_path):
+                os.link(obj_path, revision_path)
+                continue
+
+            # Queue for downloading
+            keys_to_pull.append(key)
+
+        if keys_to_pull:
+            return self.pull_objects(keys_to_pull, status_update_fn)
+        else:
+            return PullResult(success=[], failure=[], message="Dataset already downloaded.")

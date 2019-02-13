@@ -51,7 +51,7 @@ module.exports = {
   labbookJs: resolveApp('src/js/components/labbook/Labbook.js'),
   labbookActivityJs: resolveApp('src/js/components/shared/activity/Activity.js'),
   labbookEnvironmentJs: resolveApp('src/js/components/labbook/environment/Environment.js'),
-  labbookOverviewJs: resolveApp('src/js/components/labbook/overview/Overview.js'),
+  labbookOverviewJs: resolveApp('src/js/components/shared/overview/Overview.js'),
   mutationsJs: resolveApp('src/js/mutations'),
   appPackageJson: resolveApp('package.json'),
   appSrc: resolveApp('src'),

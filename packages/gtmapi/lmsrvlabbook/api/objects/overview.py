@@ -2,6 +2,9 @@ import base64
 import graphene
 import os
 import glob
+from collections import OrderedDict
+from operator import itemgetter
+from typing import List
 
 from gtmcore.logging import LMLogger
 from gtmcore.activity import ActivityStore
@@ -10,6 +13,8 @@ from lmsrvcore.auth.user import get_logged_in_username
 from lmsrvcore.api.interfaces import GitRepository
 
 from lmsrvlabbook.api.objects.activity import ActivityRecordObject
+from lmsrvlabbook.api.objects.datasettype import DatasetType
+from gtmcore.dataset.manifest import Manifest
 
 logger = LMLogger.get_logger()
 
@@ -34,6 +39,9 @@ class LabbookOverview(graphene.ObjectType, interfaces=(graphene.relay.Node, GitR
 
     # Share URL if the LabBook has been published
     remote_url = graphene.String()
+
+    # An arbitrarily long markdown document
+    readme = graphene.String()
 
     def _get_all_package_manager_counts(self, labbook):
         """helper method to get all package manager counts in a LabBook
@@ -167,3 +175,141 @@ class LabbookOverview(graphene.ObjectType, interfaces=(graphene.relay.Node, GitR
         """Resolver for getting the remote_url in the labbook"""
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             lambda labbook: self.helper_resolve_remote_url(labbook))
+
+    def resolve_readme(self, info):
+        """Resolve the readme document inside the labbook"""
+        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda labbook: labbook.get_readme())
+
+
+class DatasetOverview(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepository)):
+    """A type representing the overview of a Dataset
+    """
+    _dataset_file_info = None
+
+    # Dataset size information
+    num_files = graphene.Int()
+    total_bytes = graphene.String()
+    local_bytes = graphene.String()
+
+    # File type distribution in the format `.XX,.json`
+    file_type_distribution = graphene.List(graphene.String)
+
+    # Readme document for the Dataset
+    readme = graphene.String()
+
+    def _get_dataset_file_info(self, dataset) -> dict:
+        """helper method to iterate over the manifest and get file info for the overview page
+
+        Returns:
+            None
+        """
+        m = Manifest(dataset, get_logged_in_username())
+
+        count = 0
+        total_bytes = 0
+        file_type_distribution: OrderedDict = OrderedDict()
+        for key in m.manifest:
+            item = m.manifest[key]
+            if key[-1] == '/':
+                # Skip directories
+                continue
+
+            # Count file type distribution
+            parts = key.rsplit('.', 1)
+            if len(parts) == 2:
+                file_type = f".{parts[1]}"
+                if file_type in file_type_distribution:
+                    file_type_distribution[file_type] += 1
+                else:
+                    file_type_distribution[file_type] = 1
+
+            # Count total file size
+            total_bytes += int(item['b'])
+
+            # Count files
+            count += 1
+
+        # Format the output for file type distribution
+        formatted_file_type_info: List[str] = list()
+        file_type_distribution = OrderedDict(sorted(file_type_distribution.items(),
+                                                    key=itemgetter(1),
+                                                    reverse=True))
+        for file_type in file_type_distribution:
+            percentage = float(file_type_distribution[file_type]) / float(count)
+            formatted_file_type_info.append(f"{percentage:.2f}|{file_type}")
+
+        self._dataset_file_info = {'num_files': count,
+                                   'total_bytes': total_bytes,
+                                   'local_bytes': count,
+                                   'file_type_distribution': formatted_file_type_info
+                                   }
+
+        return self._dataset_file_info
+
+    @classmethod
+    def get_node(cls, info, id):
+        """Method to resolve the object based on it's Node ID"""
+        # Parse the key
+        owner, name = id.split("&")
+
+        return LabbookOverview(owner=owner, name=name)
+
+    def resolve_id(self, info):
+        """Resolve the unique Node id for this object"""
+        if not self.id:
+            if not self.owner or not self.name:
+                raise ValueError("Resolving a LabbookOverview Node ID requires owner and name to be set")
+
+            self.id = f"{self.owner}&{self.name}"
+
+        return self.id
+
+    def resolve_num_files(self, info):
+        """Resolver for getting number of files in the dataset"""
+        if self._dataset_file_info is None:
+            return info.context.dataset_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+                lambda dataset: self._get_dataset_file_info(dataset)['num_files'])
+
+        return self._dataset_file_info['num_files']
+
+    def resolve_total_bytes(self, info):
+        """Resolver for getting total bytes of files in the dataset"""
+        if self._dataset_file_info is None:
+            return info.context.dataset_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+                lambda dataset: self._get_dataset_file_info(dataset)['total_bytes'])
+
+        return self._dataset_file_info['total_bytes']
+
+    def resolve_file_type_distribution(self, info):
+        """Resolver for getting the distribution of file types in the dataset"""
+        if self._dataset_file_info is None:
+            return info.context.dataset_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+                lambda dataset: self._get_dataset_file_info(dataset)['file_type_distribution'])
+
+        return self._dataset_file_info['file_type_distribution']
+
+    @staticmethod
+    def _helper_local_bytes(dataset):
+        """Helper to compute total size of a dataset on disk"""
+        m = Manifest(dataset, get_logged_in_username())
+        total_size = 0
+
+        for dirpath, dirnames, filenames in os.walk(m.cache_mgr.current_revision_dir):
+            for f in filenames:
+                if f == '.smarthash':
+                    continue
+                fp = os.path.join(dirpath, f)
+                total_size += os.path.getsize(fp)
+
+        return total_size
+
+    def resolve_local_bytes(self, info):
+        """Resolver for getting total bytes of files in the dataset"""
+        return info.context.dataset_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda dataset: self._helper_local_bytes(dataset))
+
+    def resolve_readme(self, info):
+        """Resolve the readme document inside the dataset"""
+        return info.context.dataset_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda dataset: dataset.get_readme())

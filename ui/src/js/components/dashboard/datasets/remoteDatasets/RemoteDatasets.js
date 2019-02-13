@@ -65,7 +65,7 @@ class RemoteDatasets extends Component {
 
             if (this.props.remoteDatasets.remoteDatasets.pageInfo.hasNextPage) {
               this.props.relay.loadMore(
-                20, // Fetch the next 20 items
+                8, // Fetch the next 8 items
                 (ev) => {
                   this.setState({
                     isPaginating: false,

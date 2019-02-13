@@ -1,0 +1,71 @@
+@import '~Styles/_imports.scss';
+
+.Type *{
+  font-weight: 100;
+  text-align: left;
+}
+
+.Type__header{
+  color: $romanSilver;
+}
+
+.Type__card{
+  padding: 30px;
+
+  color: $romanSilver;
+
+  @include flex(space-between, row);
+}
+
+.Type__image{
+  min-width: 70px;
+  margin: 0 10px 0 0;
+}
+
+
+.Type__imageContainer{
+  width: 250px;
+  margin: 0 20px 0 0;
+
+  @include flex(space-between, row);
+}
+
+.Type__paragraph{
+   font-size: 16px;
+   font-weight: 400;
+ }
+
+.Type__name{
+  font-weight: bold;
+}
+
+.Type__title{
+  flex: 1;
+
+  width: 160px;
+}
+
+.Type__cardText{
+  flex: 1;
+
+  p{
+    margin-top: 0px;
+  }
+}
+
+.Type__categories{
+  @include flex(flex-start, row);
+
+  h6{
+    font-size: 16px;
+    font-weight: 400;
+  }
+}
+
+.Type__languages{
+  width: 50%;
+}
+
+.Type__tools{
+  width: 50%;
+}

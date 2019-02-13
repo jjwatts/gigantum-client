@@ -6,11 +6,13 @@ import environment from 'JS/createRelayEnvironment';
 
 
 const mutation = graphql`
-  mutation WriteReadmeMutation($input: WriteReadmeInput!){
-    writeReadme(input: $input){
+  mutation WriteLabbookReadmeMutation($input: WriteLabbookReadmeInput!){
+    writeLabbookReadme(input: $input){
       updatedLabbook {
-        id
-        readme
+        overview{
+          id
+          readme
+        }
       }
       clientMutationId
     }
@@ -20,7 +22,7 @@ const mutation = graphql`
 let tempID = 0;
 
 
-export default function WriteReadmeMutation(
+export default function WriteLabbookReadmeMutation(
   owner,
   labbookName,
   content,

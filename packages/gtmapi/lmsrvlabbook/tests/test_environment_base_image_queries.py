@@ -49,6 +49,7 @@ class TestEnvironmentBaseImageQueries(object):
                         dockerImageTag
                         packageManagers
                         installedPackages
+                        cudaVersion
                       }
                     }
                   }

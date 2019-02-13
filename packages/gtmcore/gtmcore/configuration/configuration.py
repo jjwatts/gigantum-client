@@ -69,15 +69,6 @@ class Configuration(object):
             return os.path.join(resource_filename("gtmcore", "configuration/config"), "labmanager.yaml.default")
 
     @property
-    def host_cuda_version(self) -> Optional[str]:
-        v = self.config['container'].get('cuda_version')
-        # Make sure it's passed up as a string, as yaml may interpret it as float.
-        if v:
-            return str(v)
-        else:
-            return None
-
-    @property
     def user_config(self) -> Dict[str, Any]:
         """Return the configuration items loaded from the user's config.yaml"""
 

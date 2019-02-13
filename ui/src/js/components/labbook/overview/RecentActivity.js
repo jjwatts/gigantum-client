@@ -1,18 +1,23 @@
 // vendor
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import Moment from 'moment';
 // components
 import CodeBlock from 'Components/labbook/renderers/CodeBlock';
 import ToolTip from 'Components/common/ToolTip';
+import Lightbox from 'Components/common/Lightbox';
 // store
 import store from 'JS/redux/store';
 // assets
 import './RecentActivity.scss';
 
 export default class RecentActivity extends Component {
+
+  state = {
+    imageExpanded: false,
+  }
+
   componentDidMount() {
     this._setLinks();
     window.addEventListener('resize', this._setLinks.bind(this));
@@ -125,53 +130,80 @@ export default class RecentActivity extends Component {
   */
   _getDate(edge) {
     const date = new Date(edge.timestamp);
-    return Moment((date)).format('hh:mm a, MMMM Do, YYYY');
+    return Moment((date)).format('hh:mm a');
+  }
+  /**
+    @param {String} section
+    handles redirect and scrolling to top
+  */
+  _handleRedirect(section) {
+    const { owner, labbookName } = store.getState().routes;
+    const { props } = this;
+    props.scrollToTop();
+    props.history.push(`/projects/${owner}/${labbookName}/${section}`);
   }
 
   render() {
     if (this.props.recentActivity) {
       const { owner, labbookName } = store.getState().routes;
-      const recentActivity = this.props.recentActivity.slice(0, 3);
+      const { props, state } = this;
+      const edge = props.recentActivity[0];
+      const isImage = edge.detailObjects && edge.detailObjects[0].data[0] && edge.detailObjects[0].data[0][0] === 'image/png';
+      const imageMetadata = isImage && edge.detailObjects[0].data[0][1];
 
       return (<div className="RecentActivity">
         <div className="RecentActivity__title-container">
 
           <h5 className="RecentActivity__header">
-            Activity
+            Recent Activity
             <ToolTip section="recentActivity" />
           </h5>
-
-          <Link
-            onClick={this.props.scrollToTop}
-            to={`../../../../projects/${owner}/${labbookName}/activity`}
-          >
-            Activity Details >
-          </Link>
-
         </div>
 
         <div className="RecentActivity__list grid">
-          {
-            recentActivity.map((edge, index) => (<div key={edge.id} className="RecentActivity__card Card Card--auto Card--no-hover column-3-span-4">
-              <div className="RecentActivity__card-date">{this._getDate(edge)}</div>
-              <div className="RecentActivity__card-detail">
-                {this._renderDetail(edge)}
+          <div key={edge.id} className="RecentActivity__card Card Card--auto Card--no-hover column-3-span-4">
+            <button
+              className="Btn--redirect"
+              onClick={() => this._handleRedirect('activity')}
+            >
+              <span>View more in Activity Feed</span>
+            </button>
+            <div className={`ActivityCard__badge ActivityCard__badge--${edge.type.toLowerCase()}`}
+              title={edge.type}
+            />
+            <div className="RecentActivityCard__content">
+              <div className="RecentActivityCard__text-content">
+                <p className="RecentActivity__time">
+                  {this._getDate(edge)}
+                </p>
+                <p className="RecentActivity__message">
+                  <b>
+                    {`${edge.username} - `}
+                  </b>
+                  {edge.message }
+                </p>
               </div>
-              <div className="RecentActivity__fadeout hidden" />
-              <Link
-                className="RecentActivity__card-link hidden"
-                to={{
-                    pathname: `../../../../projects/${owner}/${labbookName}/activity`,
-                  }}
-                replace
-                ref={index}
-                onClick={this.props.scrollToTop}
-              >
-                  View More in Activity Feed >
-              </Link>
+              {
+                imageMetadata && state.imageExpanded &&
+                <Lightbox
+                  imageMetadata={imageMetadata}
+                  onClose={() => this.setState({ imageExpanded: false })}
+                />
+              }
+              <div className="RecentActivity__img-container">
+                {
+                  isImage &&
+                  <img
+                    onClick={() => this.setState({ imageExpanded: true })}
+                    src={imageMetadata} alt="detail"
+                  />
+                }
+                <div className="RecentActivity__expand">
+                  Expand
+                </div>
+              </div>
             </div>
-              ))
-            }
+            </div>
         </div>
               </div>
       );

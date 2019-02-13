@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Thu Feb 07 2019 11:57:26 GMT-0500 (Eastern Standard Time)
+# timestamp: Tue Feb 12 2019 14:25:24 GMT-0500 (Eastern Standard Time)
 
 schema {
   query: LabbookQuery
@@ -235,6 +235,7 @@ type BaseComponent implements Node {
   dockerImageNamespace: String
   dockerImageRepository: String
   dockerImageTag: String
+  cudaVersion: String
 }
 
 """A Connection for paging through Base components"""
@@ -401,6 +402,7 @@ type Dataset implements Node & GitRepository {
   detailRecords(keys: [String]): [ActivityDetailObject]
   visibility: String
   defaultRemote: String
+  overview: DatasetOverview
 }
 
 """A Connection for paging through datasets that exist locally. """
@@ -461,6 +463,22 @@ type DatasetList implements Node {
   localById(ids: [String]): [Dataset]
   localDatasets(orderBy: String = "name", sort: String = "asc", before: String, after: String, first: Int, last: Int): DatasetConnection
   remoteDatasets(orderBy: String = "name", sort: String = "asc", before: String, after: String, first: Int, last: Int): RemoteDatasetConnection
+}
+
+"""
+A type representing the overview of a Dataset
+    
+"""
+type DatasetOverview implements Node & GitRepository {
+  """The ID of the object."""
+  id: ID!
+  owner: String!
+  name: String!
+  numFiles: Int
+  totalBytes: String
+  localBytes: String
+  fileTypeDistribution: [String]
+  readme: String
 }
 
 """A type that represents a type of Dataset that can be created"""
@@ -762,7 +780,6 @@ type Labbook implements Node & GitRepository {
   owner: String!
   name: String!
   description: String
-  readme: String
   schemaVersion: Int
   sizeBytes: String
   activeBranchName: String
@@ -931,7 +948,7 @@ type LabbookMutations {
   deleteCollaborator(input: DeleteLabbookCollaboratorInput!): DeleteLabbookCollaboratorPayload
   addDatasetCollaborator(input: AddDatasetCollaboratorInput!): AddDatasetCollaboratorPayload
   deleteDatasetCollaborator(input: DeleteDatasetCollaboratorInput!): DeleteDatasetCollaboratorPayload
-  writeReadme(input: WriteReadmeInput!): WriteReadmePayload
+  writeLabbookReadme(input: WriteLabbookReadmeInput!): WriteLabbookReadmePayload
   createExperimentalBranch(input: CreateExperimentalBranchInput!): CreateExperimentalBranchPayload
   deleteExperimentalBranch(input: DeleteExperimentalBranchInput!): DeleteExperimentalBranchPayload
   mergeFromBranch(input: MergeFromBranchInput!): MergeFromBranchPayload
@@ -949,6 +966,8 @@ type LabbookMutations {
   deleteDatasetFiles(input: DeleteDatasetFilesInput!): DeleteDatasetFilesPayload
   moveDatasetFile(input: MoveDatasetFileInput!): MoveDatasetFilePayload
   makeDatasetDirectory(input: MakeDatasetDirectoryInput!): MakeDatasetDirectoryPayload
+  writeDatasetReadme(input: WriteDatasetReadmeInput!): WriteDatasetReadmePayload
+  setDatasetDescription(input: SetDatasetDescriptionInput!): SetDatasetDescriptionPayload
 }
 
 """
@@ -968,6 +987,7 @@ type LabbookOverview implements Node & GitRepository {
   numCustomDependencies: Int
   recentActivity: [ActivityRecordObject]
   remoteUrl: String
+  readme: String
 }
 
 """Entry point for all LabBook queryable fields"""
@@ -1358,6 +1378,18 @@ type RemoveUserIdentityPayload {
   clientMutationId: String
 }
 
+input SetDatasetDescriptionInput {
+  owner: String!
+  datasetName: String!
+  description: String!
+  clientMutationId: String
+}
+
+type SetDatasetDescriptionPayload {
+  updatedDataset: Dataset
+  clientMutationId: String
+}
+
 input SetDatasetVisibilityInput {
   owner: String!
   datasetName: String!
@@ -1503,14 +1535,26 @@ type WorkonBranchPayload {
   clientMutationId: String
 }
 
-input WriteReadmeInput {
+input WriteDatasetReadmeInput {
+  owner: String!
+  datasetName: String!
+  content: String!
+  clientMutationId: String
+}
+
+type WriteDatasetReadmePayload {
+  updatedDataset: Dataset
+  clientMutationId: String
+}
+
+input WriteLabbookReadmeInput {
   owner: String!
   labbookName: String!
   content: String!
   clientMutationId: String
 }
 
-type WriteReadmePayload {
+type WriteLabbookReadmePayload {
   updatedLabbook: Labbook
   clientMutationId: String
 }

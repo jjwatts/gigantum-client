@@ -1,0 +1,29 @@
+@import '~Styles/_imports.scss';
+
+.Lightbox{
+  z-index: index($elements, modal);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.Lightbox__cover{
+    position: fixed;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+    background-color: $slateBlue;
+    animation: fade-in-modal forwards .25s;
+    opacity: 0.5;
+    z-index: index($elements, modal);
+}
+
+.Lightbox__container{
+    z-index: index($elements, modal);
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}

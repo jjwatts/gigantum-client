@@ -1844,24 +1844,3 @@ snapshots['TestLabBookServiceQueries.test_get_detail_records 1'] = {
         }
     }
 }
-
-snapshots['TestLabBookServiceQueries.test_get_labbook_readme 1'] = {
-    'data': {
-        'labbook': {
-            'description': 'my test description',
-            'name': 'labbook1',
-            'readme': None
-        }
-    }
-}
-
-snapshots['TestLabBookServiceQueries.test_get_labbook_readme 2'] = {
-    'data': {
-        'labbook': {
-            'description': 'my test description',
-            'name': 'labbook1',
-            'readme': '''##Summary
-This is my readme!!'''
-        }
-    }
-}

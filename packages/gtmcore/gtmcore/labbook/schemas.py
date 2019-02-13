@@ -34,6 +34,7 @@ LABBOOK_SCHEMA_VERSIONS = {
     #
     # These are all the supported schemas
     1: {
+        # TODO next time we version schema remove cuda_version.  It is no longer used.  Ask RB
         SchemaOptional('cuda_version'): SchemaOr(SchemaUse(str), None),
         'labbook': {
             'id': str,
@@ -48,7 +49,6 @@ LABBOOK_SCHEMA_VERSIONS = {
 }
 
 # TODO: Add validation methods and formalized schemas for Environment Component Definitions
-
 
 def validate_labbook_schema(schema_version: int, lb_data: Optional[Dict[str, Any]]) -> bool:
     """ Validate a labbook's data against a known schema. Returns true if schema matches

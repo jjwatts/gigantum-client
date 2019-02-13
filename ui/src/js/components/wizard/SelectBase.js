@@ -38,6 +38,7 @@ const BaseQuery = graphql`query SelectBaseQuery($first: Int!, $cursor: String){
         dockerImageNamespace
         dockerImageRepository
         dockerImageTag
+        cudaVersion
       }
       cursor
     }
@@ -96,6 +97,10 @@ const searchTagsForMatch = ((node, tags, lowercaseJSON, isReturned) => {
       }
     } else if (className === 'Tags') {
       if (node.tags.indexOf(text) === -1) {
+        isReturned = false;
+      }
+    } else if (className === 'CUDA Version') {
+      if (node.cudaVersion !== text) {
         isReturned = false;
       }
     } else if (lowercaseJSON.indexOf(text.toLowerCase()) === -1) {
@@ -214,6 +219,7 @@ export default class SelectBase extends React.Component {
     const tags = new Set();
     const languages = new Set();
     const devTools = new Set();
+    const cudaVersions = new Set();
 
     projectBases.forEach(({ node }) => {
       node.tags.forEach((tag) => {
@@ -230,11 +236,15 @@ export default class SelectBase extends React.Component {
             devTools.add(devTool);
           }
         });
+        if (!cudaVersions.has(node.cudaVersion) && node.cudaVersion) {
+          cudaVersions.add(node.cudaVersion);
+        }
       });
     });
     filters.Tags = Array.from(tags);
     filters.Languages = Array.from(languages);
     filters['Development Environments'] = Array.from(devTools);
+    filters['CUDA Version'] = Array.from(cudaVersions).sort((a, b) => Number(b) - Number(a));
 
     return filters;
   }

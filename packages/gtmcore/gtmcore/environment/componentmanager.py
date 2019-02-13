@@ -379,7 +379,6 @@ class ComponentManager(object):
         with open(base_final_path, 'wt') as cf:
             cf.write(yaml.safe_dump(base_data, default_flow_style=False))
 
-        self.labbook.cuda_version = base_data.get('cuda_version')
         for manager in base_data['package_managers']:
             packages = list()
             # Build dictionary of packages
@@ -451,7 +450,7 @@ class ComponentManager(object):
         base_yaml_file = glob.glob(os.path.join(self.env_dir, 'base', '*.yaml'))
 
         if len(base_yaml_file) != 1:
-            raise ValueError(f"LabBook misconfigured. Found {len(base_yaml_file)} base configurations.")
+            raise ValueError(f"Project misconfigured. Found {len(base_yaml_file)} base configurations.")
 
         # If you got 1 base, load from disk
         with open(base_yaml_file[0], 'rt') as bf:

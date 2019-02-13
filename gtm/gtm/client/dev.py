@@ -23,9 +23,11 @@ import shlex
 import yaml
 import sys
 import platform
+import re
 
 from gtm.utils import get_docker_client, DockerVolume
 from gtm.common import get_resources_root, get_client_root
+from gtm.common.gpu import get_nvidia_driver_version
 
 
 class DevClientRunner(object):
@@ -95,10 +97,17 @@ class DevClientRunner(object):
                 share_volume.create()
 
             print("Running docker up. CTRL+C to exit.")
-            cmd = 'docker-compose -f {} run -T --service-ports labmanager'.format(os.path.join(self._build_dir,
+            docker_cmd = 'docker-compose -f {} run -T --service-ports labmanager'.format(
+                                                                                   os.path.join(self._build_dir,
                                                                                   'docker-compose.yml'))
+
+            # get the nvidia driver if available on the host
+            nvidia_driver_version = get_nvidia_driver_version()
+            if nvidia_driver_version:
+                docker_cmd = f'bash -c "export NVIDIA_DRIVER_VERSION={nvidia_driver_version}; {docker_cmd}"'
+
             try:
-                process = subprocess.run(shlex.split(cmd, posix=not platform.system() == 'Windows'),
+                process = subprocess.run(shlex.split(docker_cmd, posix=not platform.system() == 'Windows'),
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE)
                 print(process)

@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import ToolTip from 'Components/common/ToolTip';
 // mutations
 import SetLabbookDescriptionMutation from 'Mutations/SetLabbookDescriptionMutation';
+import SetDatasetDescriptionMutation from 'Mutations/SetDatasetDescriptionMutation';
 // store
 import store from 'JS/redux/store';
 // assets
@@ -48,12 +49,11 @@ export default class Description extends Component {
     }
   }
   /**
-    *  @param {}
-    *  fires setlabbookdescription mutation
-  */
-  _saveDescription() {
-    const { owner, labbookName } = store.getState().routes;
-    this.setState({ savingDescription: true });
+   @param {String} owner
+   @param {String} labbookName
+   calls mutation to save labbook description
+   */
+  _saveLabbookDescription(owner, labbookName) {
     SetLabbookDescriptionMutation(
       owner,
       labbookName,
@@ -67,6 +67,41 @@ export default class Description extends Component {
         }
       },
     );
+  }
+
+  /**
+   @param {String} owner
+   @param {String} labbookName
+   calls mutation to save dataset description
+   */
+  _saveDatasetDescription(owner, labbookName) {
+    SetDatasetDescriptionMutation(
+      owner,
+      labbookName,
+      this.state.descriptionText.replace(/\n/g, ' '),
+      (res, error) => {
+        if (error) {
+          console.log(error);
+          setErrorMessage('Description was not set: ', error);
+        } else {
+          this.setState({ editingDescription: false, savingDescription: false, lastSavedDescription: this.state.descriptionText.replace(/\n/g, ' ') });
+        }
+      },
+    );
+  }
+
+  /**
+    *  @param {}
+    *  fires setlabbookdescription mutation
+  */
+  _saveDescription() {
+    const { owner, labbookName } = store.getState().routes;
+    this.setState({ savingDescription: true });
+    if (this.props.sectionType === 'labbook') {
+      this._saveLabbookDescription(owner, labbookName);
+    } else {
+      this._saveDatasetDescription(owner, labbookName);
+    }
   }
   /**
     *  @param {}
