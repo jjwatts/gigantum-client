@@ -11,6 +11,7 @@
     cursor: pointer;
     border: 1px solid $romanSilver;
     padding: 10px;
+    font-size: 14px;
     &--current {
         cursor: auto;
         padding: 5px 10px;
@@ -20,6 +21,20 @@
         .Branches__branchname {
             font-size: 20px;
         }
+        &--selected{
+            z-index: index($elements, modalCover) + 1;
+            pointer-events: none;
+            position: relative;
+            background: $white !important;
+            border: 2px solid $azure;
+        }
+    }
+    &--selected {
+        z-index: index($elements, modalCover) + 1;
+        pointer-events: none;
+        position: relative;
+        background: $fileBrowserHover;
+        border: 1px solid $azure;
     }
 }
 
@@ -32,12 +47,183 @@
 }
 
 .Branches__btn{
-    border: 1px solid $white;
-    margin-right: 2px;
-    background: $grey;
+    border: 2px solid $white;
+    margin-right: 5px;
+    background: $background-color;
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    position: relative;
     &--create {
         margin: 0;
-        background: $grey url('~Images/icons/add-azure.svg') no-repeat center center;
+        background: $background-color url('~Images/icons/add-azure.svg') no-repeat center center;
+        background-size: 15px;
+        border: 2px solid $white;
+    }
+    &--reset {
+        margin: 0;
+        background: $background-color url('~Images/icons/sidepanel/create.svg') no-repeat center center;
+        background-size: 20px;
+        &:hover, &:focus {
+            background: $azure url('~Images/icons/sidepanel/create-hover.svg') no-repeat center center;
+            background-size: 20px;
+            border: 2px solid $white;
+        }
+    }
+    &--switch {
+        margin: 0;
+        background: $background-color url('~Images/icons/sidepanel/switch.svg') no-repeat center center;
+        background-size: 20px;
+        &:hover, &:focus {
+            background: $azure url('~Images/icons/sidepanel/switch-hover.svg') no-repeat center center;
+            background-size: 20px;
+            border: 2px solid $white;
+        }
+    }
+    &--merge {
+        margin: 0;
+        background: $background-color url('~Images/icons/sidepanel/merge.svg') no-repeat center center;
+        background-size: 20px;
+        &:hover, &:focus {
+            background: $azure url('~Images/icons/sidepanel/merge-hover.svg') no-repeat center center;
+            background-size: 20px;
+            border: 2px solid $white;
+        }
+        &--selected {
+            background: $azure url('~Images/icons/sidepanel/merge-hover.svg') no-repeat center center;
+            background-size: 20px;
+            border: 2px solid $white;
+        }
+    }
+    &--delete {
+        margin: 0;
+        background: $background-color url('~Images/icons/sidepanel/trash.svg') no-repeat center center;
+        background-size: 15px;
+        &:hover, &:focus {
+            background: $azure url('~Images/icons/sidepanel/trash-hover.svg') no-repeat center center;
+            background-size: 15px;
+            border: 2px solid $white;
+        }
+        &--selected {
+            background: $azure url('~Images/icons/sidepanel/trash-hover.svg') no-repeat center center;
+            background-size: 15px;
+            border: 2px solid $white;
+        }
+    }
+    &--sync {
+        margin: 0;
+        background: $background-color url('~Images/icons/add-azure.svg') no-repeat center center;
         background-size: 15px;
     }
+}
+
+.Branches__branchname-container{
+    @include flex(space-between, row)
+}
+
+.Branches__status{
+    @include flex(flex-start, row);
+    cursor: auto;
+    &--local {
+        width: 27px;
+        height: 27px;
+        background: url('~Images/icons/download.svg') no-repeat center center;
+        background-size: 20px;
+    }
+    &--remote {
+        width: 27px;
+        height: 27px;
+        background: url('~Images/icons/download-check.svg') no-repeat center center;
+        background-size: 20px;
+    }
+}
+
+.Branches__actions-section{
+    position: relative;
+}
+
+.Branches__Modal-cover{
+    transition: all 0.25s;
+    position: absolute;
+    z-index: index($elements, modalCover);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+    background: $slateBlue;
+    &--coverall {
+        z-index: index($elements, modal) + 1;
+        text-align: center;
+        @include flex(flex-start, column);
+        div {
+            margin-top: 10px;
+            color: $white;
+        }
+    }
+}
+.Branches__Modal{
+    animation: slide-down-fade-in 0.25s;
+    &--merge {
+        &:before {
+            content: '';
+            @include triangle('up', 9px, $white);
+            position: absolute;
+            top: -9px;
+            left: 65px;
+          }
+    }
+    &--delete {
+        &:before {
+            content: '';
+            @include triangle('up', 9px, $white);
+            position: absolute;
+            top: -9px;
+            left: 90px;
+          }
+    }
+    font-size: 14px;
+    z-index: index($elements, modal);
+    top: 34px;
+    left: -15px;
+    border-radius: 10px;
+    color: $jet;
+    background: $white;
+    position: absolute;
+    width: 260px;
+    font-weight: 100;
+    text-align: center;
+    padding: 15px;
+    cursor: auto;
+    pointer-events: all;
+    @include boxShadow();
+    label {
+        margin: 0 5px;
+        input {
+            margin: 0 5px;
+        }
+    }
+
+}
+.Branches__Modal-header{
+    color: $azure;
+    font-size: 16px;
+    padding: 5px;
+}
+
+.Branches__close{
+    @include close();
+}
+
+.Branches__Modal-buttons {
+    margin-top: 20px;
+    .Btn--flat {
+        color: $azure;
+        font-weight: bold
+    }
+}
+
+.Branches__Modal-confirm {
+    padding: 0 30px;
 }

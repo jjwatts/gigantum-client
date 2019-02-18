@@ -1,0 +1,67 @@
+.Tooltip-data {
+
+    position: relative;
+
+    cursor: pointer;
+
+    font-weight: bolder;
+    &:hover::before{
+      position: absolute;
+      top: calc(100% - 0px);
+      left: calc(50% - 5px);
+
+      content: "";
+
+      border-width: 10px;
+
+      @include triangle('up', 7px, $slateBlue);
+    }
+    &--small {
+        &:hover::after{
+            padding: 5px !important;
+            width: auto !important;
+            min-width: 0 !important;
+            white-space: nowrap;
+            left: 50% !important;
+            transform: translate(-50%, 0);
+        }
+    }
+    &:hover::after{
+      z-index: index($elements, popup);
+      font-family: 'NunitoSans';
+      position: absolute;
+      top: calc(100% + 7px);
+      left: calc(50% - 70px);
+
+      width: 140px;
+      min-width: 100px;
+      margin: 0;
+      padding: 10px;
+
+      content: attr(data-tooltip);
+      word-wrap: normal;
+      word-break: break-word;
+      line-height: 18px;
+
+      color: $white;
+      background: $slateBlue;
+
+      font-size: 14px !important;
+      font-weight: 100 !important;
+
+      @extend .box-shadow;
+    }
+
+    &--right:hover::before {
+      top: calc(50% - 7px);
+      left: calc(100% + 2px);
+
+      @include triangle('left', 7px, $slateBlue);
+    }
+
+
+    &--right:hover::after {
+      top: calc(50% - 10px);
+      left: calc(100% + 16px);
+    }
+  }

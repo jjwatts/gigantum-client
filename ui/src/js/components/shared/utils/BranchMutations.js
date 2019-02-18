@@ -54,32 +54,6 @@ class BranchesMutations {
     );
    }
 
-
-   /**
-   *  @param {Object} data
-   *         {string} data.branchName
-   *         {string} data.labbookId
-   *  @param {function} callback
-   *  deletes a branch
-   */
-   deleteBranch(data, callback) {
-     const {
-       branchName,
-       revision,
-       description,
-     } = data;
-
-    const { owner, name } = this.state;
-
-    CreateExperimentalBranchMutation(
-      owner,
-      labbookName,
-      branchName,
-      labbookId,
-      callback,
-    );
-   }
-
    /**
    *  @param {Object} data
    *         {string} data.otherBranchName
@@ -213,6 +187,7 @@ class BranchesMutations {
    syncLabbook(data, callback) {
      const {
        overrideMethod,
+       pullOnly,
        successCall,
        failureCall,
      } = data;
@@ -222,6 +197,7 @@ class BranchesMutations {
       owner,
       name,
       overrideMethod,
+      pullOnly,
       successCall,
       failureCall,
       callback,
@@ -232,7 +208,7 @@ class BranchesMutations {
    *  @param {Object} data
    *         {string} data.branchName
    *  @param {function} callback
-   *  checksout branch
+   *  checkout branch
    */
    switchBranch(data, callback) {
      const {
@@ -247,6 +223,50 @@ class BranchesMutations {
       callback,
     );
    }
+    /**
+     *  @param {Object} data
+     *         {string} data.branchName
+     *         {string} data.overrideMethod
+     *  @param {function} callback
+     *  merge branch
+     */
+    mergeBranch(data, callback) {
+      const {
+        branchName,
+        overrideMethod,
+      } = data;
+    const { owner, name } = this.state;
+
+    MergeFromBranchMutation(
+      owner,
+      name,
+      branchName,
+      overrideMethod || null,
+      callback,
+    );
+    }
+      /**
+     *  @param {Object} data
+     *         {string} data.branchName
+     *         {string} data.labbookId
+     *  @param {function} callback
+     *  delete branch
+     */
+      deleteBranch(data, callback) {
+        const {
+          branchName,
+          labbookId,
+        } = data;
+      const { owner, name } = this.state;
+
+      DeleteExperimentalBranchMutation(
+        owner,
+        name,
+        branchName,
+        labbookId,
+        callback,
+      );
+      }
 }
 
 export default BranchesMutations;

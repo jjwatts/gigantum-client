@@ -29,13 +29,15 @@ export default function MergeFromBranchMutation(
       owner,
       labbookName,
       otherBranchName,
-      overrideMethod,
       clientMutationId,
     },
     first: 10,
     cursor: null,
     hasNext: false,
   };
+  if (overrideMethod) {
+    input.overrideMethod = overrideMethod;
+  }
 
   commitMutation(
     environment,

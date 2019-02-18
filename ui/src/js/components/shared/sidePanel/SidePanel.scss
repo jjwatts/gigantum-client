@@ -4,12 +4,13 @@
   position: fixed;
   z-index: index($elements, modal) - 1;
   background-color: $white;
+  animation: slide-left-fade-in .25s;
   @include spanColumns(3);
   margin: 0;
   right: 0px;
   top: 187px;
   bottom: 0px;
-
+  // @include boxShadow();
 
 
   &--sticky{

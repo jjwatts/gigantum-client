@@ -27,7 +27,7 @@ class BranchMenu extends Component {
   state = {
     switchMenuVisible: false,
     createBranchVisible: false,
-    brancMutations: new BranchMutations({
+    branchMutations: new BranchMutations({
       parentId: this.props.labbook.id,
       name: this.props.labbook.name,
       owner: this.props.labbook.owner,
@@ -65,7 +65,7 @@ class BranchMenu extends Component {
         switchingBranch: branch.branchName,
         switchMenuVisible: false,
       });
-      state.brancMutations.switchBranch(data, (response, error) => {
+      state.branchMutations.switchBranch(data, (response, error) => {
         self.setState({ switchingBranch: false });
       });
   }
@@ -178,6 +178,7 @@ class BranchMenu extends Component {
             activeBranch={activeBranch}
             toggleModal={this._setModalState}
             isSticky={props.isSticky}
+            branchMutations={this.state.branchMutations}
           />
       </div>
     );
