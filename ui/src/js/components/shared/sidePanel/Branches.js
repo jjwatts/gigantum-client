@@ -48,10 +48,9 @@ class Branches extends Component {
     @return {}
   */
   _toggleModal(modalName, branch) {
-    console.log(modalName)
-    if (modalName === 'mergeModal') {
+    if (modalName === 'mergeModal' && this.props.activeBranch.branchName !== branch) {
       this.setState({ mergeModalVisible: branch || !this.state.mergeModalVisible });
-    } else if (modalName === 'deleteModal') {
+    } else if (modalName === 'deleteModal' && this.props.activeBranch.branchName !== branch) {
       this.setState({ deleteModalVisible: branch || !this.state.deleteModalVisible, localSelected: false, remoteSelected: false });
     }
   }
@@ -85,7 +84,8 @@ class Branches extends Component {
     */
   @boundMethod
   _switchBranch(branch) {
-    const { props } = this,
+    if (!branch.isActive) {
+      const { props } = this,
           self = this,
           data = {
             branchName: branch.branchName,
@@ -96,6 +96,7 @@ class Branches extends Component {
       props.branchMutations.switchBranch(data, (response, error) => {
         self.setState({ action: null });
       });
+    }
   }
   /**
     @param {Object} branches
@@ -124,7 +125,8 @@ class Branches extends Component {
   */
   @boundMethod
   _syncBranch(branch) {
-    const { props } = this,
+    if (branch.isActive) {
+      const { props } = this,
           self = this,
           data = {
             successCall: () => {
@@ -142,6 +144,7 @@ class Branches extends Component {
           console.log(error)
         }
       });
+    }
   }
   /**
     @param {Object} branches
@@ -149,7 +152,10 @@ class Branches extends Component {
   */
   @boundMethod
   _resetBranch(branch) {
-    const self = this;
+    const upToDate = (branch.commitsAhead === 0) && (branch.commitsBehind === 0);
+
+    if (!branch.isRemote || upToDate) {
+      const self = this;
       this.setState({
         action: 'Syncing Branch',
       });
@@ -159,6 +165,7 @@ class Branches extends Component {
         }
         self.setState({ action: null, mergeModalVisible: null });
       });
+    }
   }
   /**
     @param {Object} branch
@@ -255,11 +262,13 @@ class Branches extends Component {
   _renderActions(branch) {
     const mergeModalVisible = this.state.mergeModalVisible === branch.branchName;
     const deleteModalVisible = this.state.deleteModalVisible === branch.branchName;
+    const upToDate = (branch.commitsAhead === 0) && (branch.commitsBehind === 0);
     const mergeButtonCSS = classNames({
       Branches__btn: true,
       'Tooltip-data': true,
      ' Tooltip-data--small': true,
       'Branches__btn--merge': true,
+      'Branches__btn--merge--disabled': branch.isActive,
       'Branches__btn--merge--selected': mergeModalVisible,
     }),
     deleteButtonCSS = classNames({
@@ -267,41 +276,61 @@ class Branches extends Component {
       'Tooltip-data': true,
      ' Tooltip-data--small': true,
       'Branches__btn--delete': true,
+      'Branches__btn--delete--disabled': branch.isActive || branch.branchName === 'master',
       'Branches__btn--delete--selected': deleteModalVisible,
+    }),
+    switchButtonCSS = classNames({
+      Branches__btn: true,
+      'Tooltip-data': true,
+     ' Tooltip-data--small': true,
+      'Branches__btn--switch': true,
+      'Branches__btn--switch--disabled': branch.isActive,
+    }),
+    resetButtonCSS = classNames({
+      Branches__btn: true,
+      'Tooltip-data': true,
+     ' Tooltip-data--small': true,
+      'Branches__btn--reset': true,
+      'Branches__btn--reset--disabled': !branch.isRemote || upToDate,
+    }),
+    syncButtonCSS = classNames({
+      Branches__btn: true,
+      'Tooltip-data': true,
+     ' Tooltip-data--small': true,
+      'Branches__btn--sync': true,
+      'Branches__btn--sync--disabled': !branch.isActive,
     });
-    const upToDate = (branch.commitsAhead === 0) && (branch.commitsBehind === 0);
     let resetTooltip = branch.isRemote ? upToDate ? 'Branch up to date' : 'Reset' : 'Branch must be remote';
+    let syncTooltip = branch.isActive ? 'Sync' : 'Syncing limited to active branch';
+    let mergeTooltip = branch.isActive ? 'Cannot merge active branch with itself' : 'Merge';
+    let deleteTooltip = branch.branchName === 'master' ? 'Cannot delete master branch' : branch.isActive ? 'Cannot delete Active branch' : 'Delete';
     return (
       <div className="Branches__actions-section">
         <button
-          className="Branches__btn Tooltip-data Tooltip-data--small Branches__btn--switch"
+          className={switchButtonCSS}
           data-tooltip="Switch"
-          disabled={branch.isActive}
           onClick={() => this._switchBranch(branch) }
         />
         <button
-          className="Branches__btn Tooltip-data Tooltip-data--small Branches__btn--reset"
+          className={resetButtonCSS}
           data-tooltip={resetTooltip}
-          disabled={!branch.isActive || upToDate}
           onClick={() => this._resetBranch(branch) }
         />
         <button
           className={mergeButtonCSS}
-          data-tooltip="Merge"
-          disabled={branch.isActive}
+          data-tooltip={mergeTooltip}
           onClick={() => this._toggleModal('mergeModal', branch.branchName) }
         />
         {mergeModalVisible && this._renderModal(branch, 'merge')}
         <button
           className={deleteButtonCSS}
-          data-tooltip="Delete"
+          data-tooltip={deleteTooltip}
           onClick={() => this._toggleModal('deleteModal', branch.branchName) }
         />
         {deleteModalVisible && this._renderModal(branch, 'delete')}
         <button
-          className="Branches__btn Tooltip-data Tooltip-data--small Branches__btn--sync"
-          data-tooltip="Sync"
-          disabled={!branch.isActive}
+          className={syncButtonCSS}
+          data-tooltip={syncTooltip}
           onClick={() => this._syncBranch(branch) }
 
         />

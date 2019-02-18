@@ -70,6 +70,13 @@
             background-size: 20px;
             border: 2px solid $white;
         }
+        &--disabled,
+        &--disabled:hover,
+        &--disabled:focus {
+            background: $background-color url('~Images/icons/sidepanel/create-disabled.svg') no-repeat center center;
+            background-size: 20px;
+            border: 2px solid $white;
+        }
     }
     &--switch {
         margin: 0;
@@ -78,6 +85,13 @@
         &:hover, &:focus {
             background: $azure url('~Images/icons/sidepanel/switch-hover.svg') no-repeat center center;
             background-size: 20px;
+            border: 2px solid $white;
+        }
+        &--disabled,
+        &--disabled:hover,
+        &--disabled:focus {
+            background: $background-color url('~Images/icons/sidepanel/switch-disabled.svg') no-repeat center center;
+            background-size: 20x;
             border: 2px solid $white;
         }
     }
@@ -95,6 +109,13 @@
             background-size: 20px;
             border: 2px solid $white;
         }
+        &--disabled,
+        &--disabled:hover,
+        &--disabled:focus {
+            background: $background-color url('~Images/icons/sidepanel/merge-disabled.svg') no-repeat center center;
+            background-size: 20px;
+            border: 2px solid $white;
+        }
     }
     &--delete {
         margin: 0;
@@ -107,6 +128,13 @@
         }
         &--selected {
             background: $azure url('~Images/icons/sidepanel/trash-hover.svg') no-repeat center center;
+            background-size: 15px;
+            border: 2px solid $white;
+        }
+        &--disabled,
+        &--disabled:hover,
+        &--disabled:focus {
+            background: $background-color url('~Images/icons/sidepanel/trash-disabled.svg') no-repeat center center;
             background-size: 15px;
             border: 2px solid $white;
         }
