@@ -4,114 +4,127 @@
   position: relative;
   overflow: visible;
   margin: 0 20px 0 0;
+
 }
 
-.DevTools-button {
-  transition: all 0.125s;
-  height: 24px;
-  width: 113px;
-  border-radius: 0 0 5px 5px;
-  background-color: #aaa;
-  bottom: -55px;
-  left: 13px;
-  color: white;
-  text-align: left;
-  line-height: 21px;
-  cursor: pointer;
-  font-size: 14px;
-  //@extend: .jupyter-icon;
-  background-size: 30px;
-  &.jupyter-icon:before {
-    margin: 6px 5px 0px 0px;
-  }
+.DevTools__flex {
+  @include flex(flex-end, row);
 }
 
-.ContainerStatus__selected-tool {
-  background: url('~Images/icons/offsite.svg') no-repeat right 4px center ;
-  background-size: 11px;
-  padding-left: 5px;
-  padding-top: 2px;
-  width: 90px;
-  height: 100%;
-  border-radius: 0 0 0 5px;
-  display: inline-block;
-  text-align: left;
-  &:hover {
-  background: rgba(237,97, 31, 0.8) url('~Images/icons/offsite.svg') no-repeat right 4px center ;
-  background-size: 11px;
-  }
-}
+.DevTools__btn {
+  height: 40px;
+  border-radius: 3px;
 
-.ContainerStatus__expand-tools {
-  transition: all 0.25s;
-  background: url('~Images/icons/down-arrow-white.svg') no-repeat center center ;
-  background-size: 10px;
-  position: absolute;
-  width: 23px;
-  display: inline-block;
-  border-left: 1px solid $white;
-  height: 12px;
-  top: 6px;
-  left: 0;
-  &:hover{
-    background: rgba(237,97, 31, 0.8) url('~Images/icons/down-arrow-white.svg') no-repeat center center ;
-    background-size: 10px;
-    height: 100%;
-    top: 0;
+  &--launch {
+    padding: 6px 30px 6px 20px;
+    text-align: left;
+    align-items: flex-start;
+    margin: 0 4px 0 0;
+
   }
-  &--open{
-    background: url('~Images/icons/up-arrow-white.svg') no-repeat center center ;
-    background-size: 10px;
-    &:hover{
-      background:rgba(237,97, 31, 0.8) url('~Images/icons/up-arrow-white.svg') no-repeat center center ;
-      background-size: 10px;
-      height: 100%;
-      top: 0;
+
+  &--dropdown {
+    height: 40px;
+    padding: 5px;
+    width: 20px;
+    background: $azure url('~Images/icons/down-arrow-white.svg') no-repeat center center;
+    background-size: 20px;
+
+    &:hover, &:focus:hover{
+      background: $turquise url('~Images/icons/down-arrow-white.svg') no-repeat center center;
+      background-size: 20px;
     }
 
+    &:focus{
+      background: $azure url('~Images/icons/down-arrow-white.svg') no-repeat center center;
+      background-size: 20px;
+    }
+  }
+
+  &--open {
+    background: $azure url('~Images/icons/up-arrow-white.svg') no-repeat center center;
+    background-size: 20px;
+
+    &:hover, &:focus:hover{
+      background: $turquise url('~Images/icons/up-arrow-white.svg') no-repeat center center;
+      background-size: 20px;
+    }
+
+    &:focus{
+      background: $azure url('~Images/icons/up-arrow-white.svg') no-repeat center center;
+      background-size: 20px;
+    }
   }
 }
 
-.DevTools-title {
-  text-align: center;
-  width: 100%;
-  border-bottom: 1px solid $romanSilver;
-}
-
-.jupyter-icon:before {
-  margin-right: 5px;
-}
-
-.DevTools-item:hover {
-  color: $turquise;
-}
-
-.DevTools-menu {
-  animation: slide-down-fade-in forwards .25s;
-  transition: all 0.25s;
+.DevTools__dropdown-menu {
   position: absolute;
-  padding: 3px !important;
-  top: 25px;
-  left: 0px;
-  width: 113px;
+  padding: 0 15px 10px;
+  
   background: $white;
-  color: $romanSilver;
-  height: auto;
-  border: 1px solid $grey;
-  @include boxShadow();
-  z-index: 2;
-  padding: 15px;
-}
-
-.DevTools-menu--hover{
-  top: 54px;
-  right: -129px;
-}
-
-.DevTools-menu-arrow {
+  top: calc(100% + 1px);
+  left: 0px;
+  width: 316px;
   z-index: index($elements, popup);
-  position: absolute;
-  top: 29px;
-  right: -3px;
-  @include triangle('up', 14px, $white);
+  animation: slide-down-fade-in forwards .25s;
+  @include boxShadow();
+}
+
+
+
+.DevTool__menu-title{
+  border-bottom: 2px solid $romanSilver;
+  color: $jet;
+  padding: 5px 0 5px 25px;
+  background: url('~Images/icons/offsite-grey.svg') no-repeat left center;
+  background-size: 16px;
+  font-size: 14px;
+}
+
+.DevTool__list {
+  @include flex(flex-start, row);
+  flex-wrap: wrap;
+  padding: 5px 0 0 0;
+}
+
+.DevTools__item {
+  height: 80px;
+  width: 80px;
+  text-align: center;
+  vertical-align: baseline;
+  align-items: center;
+  color: $jet;
+
+  @include flex(space-around, column);
+
+  cursor: pointer;
+
+  &--selected {
+    border: 1px solid $azure;
+  }
+
+  &:hover {
+    background: $azure;
+    color: $white;
+  }
+}
+
+.DevTools__icon {
+  height: 40px;
+  width: 40px;
+  font-size:30px;
+  text-align: center;
+  line-height: 50px;
+
+  &:before {
+    font-size:30px;
+    line-height: 50px;
+  }
+
+
+}
+
+.DevTools__text{
+  font-size: 12px;
+  text-align: center;
 }

@@ -98,6 +98,7 @@ export default class ClusterCardWrapper extends Component {
                toggleCluster={this._toggleCluster}
                {...props}
                record={record}
+               isLocked={props.isLocked}
           />)
         }
       </div>

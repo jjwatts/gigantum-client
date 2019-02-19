@@ -17,8 +17,39 @@ class DevTools extends Component {
 
   state = {
     isMouseOver: false,
-    selectedDevTool: 'jupyterLab',
+    selectedDevTool: 'jupyterlab',
     showDevList: false,
+  }
+
+  componentDidMount() {
+    window.addEventListener('click', this._closeDevtoolMenu);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('click', this._closeDevtoolMenu);
+  }
+
+  /**
+  *  @param {Object} evt
+  *  closes dev tool
+  *  @return {}
+  */
+  @boundMethod
+  _closeDevtoolMenu(evt) {
+    if (evt.target.className.indexOf('DevTool') < 0) {
+       this.setState({ showDevList: false });
+    }
+  }
+
+  /**
+  *  @param {Object} evt
+  *  upodates state if the conditions are met
+  *  @return {}
+  */
+  @boundMethod
+  _toggleDevtoolMenu(evt) {
+    const { state } = this;
+    this.setState({ showDevList: !state.showDevList });
   }
 
   /**
@@ -46,17 +77,35 @@ class DevTools extends Component {
     status = (imageStatus === 'DOES_NOT_EXIST') ? 'Rebuild' : status;
     status = ((imageStatus === 'DOES_NOT_EXIST') || (imageStatus === 'BUILD_IN_PROGRESS')) && (timeDifferenceMS < 15000) ? 'Building' : status;
 
-    if (status !== 'Stopped' && status !== 'Running') {
+    if ((status !== 'Stopped') && (status !== 'Running')) {
       setWarningMessage('Could not launch development environment as the project is not ready.');
     } else if (status === 'Stopped') {
-      this.props.setInfoMessage('Starting Project container. When done working, click Stop to shutdown the container.');
+      setInfoMessage('Starting Project container. When done working, click Stop to shutdown the container.');
       this.setState({
         status: 'Starting',
         contanerMenuRunning: false,
       });
       setMergeMode(false, false);
+      props.updateStatus('Starting');
+      props.containerMutations.startContainer({ devTool: developmentTool }, (response, error) => {
+        if (error) {
+          setErrorMessage('Error Starting Dev tool', error);
+        }
 
-      this._startContainerMutation(true);
+        if (response.startDevTool) {
+          const tabName = `${developmentTool}-${owner}-${name}`;
+          let path = `${window.location.protocol}//${window.location.hostname}${response.startDevTool.path}`;
+          if (developmentTool === 'Notebook') {
+            if (path.includes('/lab/tree')) {
+              path = path.replace('/lab/tree', '/tree');
+            } else {
+              path = `${path}/tree/code`;
+            }
+          }
+
+          window[tabName] = window.open(path, tabName);
+        }
+      });
 
     } else if (window[tabName] && !window[tabName].closed) {
       window[tabName].focus();
@@ -88,6 +137,17 @@ class DevTools extends Component {
     }
   }
 
+  /**
+  *  @param {string} developmentTool
+  *  mutation to trigger opening of development tool
+  *  @return {}
+  */
+  @boundMethod
+  _selectDevTool(developmentTool) {
+     this.setState({ selectedDevTool: developmentTool, showDevList: false });
+     this._openDevToolMuation(developmentTool);
+  }
+
   render() {
     const { props, state } = this,
           devTools = props.labbook.environment.base.developmentTools,
@@ -104,51 +164,56 @@ class DevTools extends Component {
             'ContainerStatus__expand-tools': true,
             'ContainerStatus__expand-tools--open': state.showDevList,
           }),
-          containerMenuIconCSS = classNames({
-            'DevTools-menu-arrow': true,
-            hidden: !state.pluginsMenu,
+          devtToolMenuCSS = classNames({
+            'DevTools__dropdown-menu': true,
+            hidden: !state.showDevList,
           }),
-          containerSelectCSS = classNames({
-            'ContainerStatus__selected-tool': true,
-            'ContainerStatus__selected-tool--long': devTools.length === 0,
+          buttonDropdownCSS = classNames({
+            'DevTools__btn DevTools__btn--dropdown': true,
+            'DevTools__btn--open': state.showDevList,
           });
 
     return (
         <div className="DevTools">
-          <div className={jupyterButtonCss}>
-            <div
-              className={containerSelectCSS}
+          <div className="DevTools__flex">
+            <button
+              type="submit"
+              className="DevTools__btn DevTools__btn--launch Btn--columns"
               onClick={() => { this._openDevToolMuation(state.selectedDevTool); }}>
-                {state.selectedDevTool}
-            </div>
-            {
-              devTools.length !== 0 &&
-              <div
-                className={expandToolsCSS}
-                onClick={() => this.setState({ showDevList: !state.showDevList })}>
-              </div>
-            }
+                <div className="Btn--label">Launch:</div>
+                <div className="Btn--text">{state.selectedDevTool}</div>
+            </button>
+
+            <button
+              data-id="DevToolDropdown"
+              className={buttonDropdownCSS}
+                 onClick={ evt => this._toggleDevtoolMenu(evt) }>
+            </button>
+
           </div>
 
-          <div className={containerMenuIconCSS} />
+          <div className={devtToolMenuCSS}>
+            <div className="DevTool__menu-title">Launch</div>
+            <ul className="DevTool__list">
+              {
 
-          <ul className={containerMenuCSS}>
-            {
+                devTools.map((developmentTool) => {
+                  const devToolsCss = classNames({
+                    DevTools__item: true,
+                    'DevTools__item--selected': (developmentTool === state.selectedDevTool),
+                  });
 
-              devTools.map(developmentTool => (
-
-                <li
-                  key={developmentTool}
-                  className="DevTools-list-item jupyter-icon"
-                  onClick={() => {
-                    this.setState({ selectedDevTool: developmentTool, showDevList: false });
-                    this._openDevToolMuation(developmentTool);
-                  }}>
-                  {developmentTool}
-                </li>
-                ))
-            }
-          </ul>
+                  return (<li
+                    key={developmentTool}
+                    className={devToolsCss}
+                    onClick={() => this._selectDevTool(developmentTool)}>
+                    <div className="DevTools__icon jupyter-icon"></div>
+                    <div className="DevTools__text">{developmentTool}</div>
+                  </li>);
+                })
+              }
+            </ul>
+          </div>
         </div>
     );
   }

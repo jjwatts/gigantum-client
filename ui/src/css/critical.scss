@@ -141,37 +141,61 @@ code {
   transform: translate(-50%, -50%);
 }
 
-.Tooltip{
+.Tooltip-data {
+
   position: relative;
-  font-weight: bolder;
+
   cursor: pointer;
+
+  font-weight: bolder;
   &:hover::before{
-    content: "";
-    border: solid transparent;
-    border-bottom-color: $white;
-    border-width: 10px;
     position: absolute;
-    right: 5px;
-    bottom: 0;
+    top: calc(100% - 0px);
+    left: calc(50% - 5px);
+
+    content: "";
+
+    border-width: 10px;
+
+    @include triangle('up', 7px, $slateBlue);
   }
 
   &:hover::after{
-    content: attr(data-tooltip);
-    @extend .box-shadow;
+    font-family: 'NunitoSans';
     position: absolute;
+    top: calc(100% + 7px);
+    left: calc(50% - 70px);
+
+    width: 140px;
     min-width: 100px;
-    font-weight: 100;
-    line-height: 1.3em;
-    font-size: 16px;
     margin: 0;
-    background: $azure;
+    padding: 10px;
+
+    content: attr(data-tooltip);
+    word-wrap: normal;
+    word-break: break-word;
+    line-height: 18px;
+
     color: $white;
-    padding: 5px;
-    border-radius: 5px;
-    right: 40px;
-    bottom: 10px;
-    z-index: 1;
-    font-size: .7em;
+    background: $slateBlue;
+
+    font-size: 14px !important;
+    font-weight: 100 !important;
+
+    @extend .box-shadow;
+  }
+
+  &--right:hover::before {
+    top: calc(50% - 7px);
+    left: calc(100% + 2px);
+
+    @include triangle('left', 7px, $slateBlue);
+  }
+
+
+  &--right:hover::after {
+    top: calc(50% - 10px);
+    left: calc(100% + 16px);
   }
 }
 

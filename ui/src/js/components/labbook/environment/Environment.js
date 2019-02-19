@@ -102,8 +102,9 @@ class Environment extends Component {
 
   render() {
     if (this.props.labbook) {
-      const env = this.props.labbook.environment;
-      const { base } = env;
+      const { props, state } = this;
+      const { environment } = props.labbook;
+      const { base } = environment;
       return (
         <div className="Environment">
           <div className="Base__headerContainer">
@@ -112,39 +113,43 @@ class Environment extends Component {
           <ErrorBoundary type="baseError" key="base">
             <Base
               ref="base"
-              environment={this.props.labbook.environment}
-              environmentId={this.props.labbook.environment.id}
+              environment={environment}
+              environmentId={environment.id}
               editVisible
-              containerStatus={this.props.containerStatus}
+              containerStatus={props.containerStatus}
               setComponent={this._setComponent}
               setBase={this._setBase}
               buildCallback={this._buildCallback}
               blockClass="Environment"
               base={base}
+              isLocked={props.isLocked}
             />
           </ErrorBoundary>
           <div className="Environment__headerContainer">
-            <h5 className="PackageDependencies__header">Packages <ToolTip section="packagesEnvironment" /></h5>
+            <h5 className="PackageDependencies__header">
+              Packages
+              <ToolTip section="packagesEnvironment" />
+            </h5>
           </div>
           <ErrorBoundary type="packageDependenciesError" key="packageDependencies">
             <PackageDependencies
               componentRef={ref => this.packageDependencies = ref}
-              environment={this.props.labbook.environment}
-              environmentId={this.props.labbook.environment.id}
-              labbookId={this.props.labbook.id}
-              containerStatus={this.props.containerStatus}
+              environment={props.labbook.environment}
+              environmentId={props.labbook.environment.id}
+              labbookId={props.labbook.id}
+              containerStatus={props.containerStatus}
               setBase={this._setBase}
               setComponent={this._setComponent}
               buildCallback={this._buildCallback}
-              overview={this.props.overview}
+              overview={props.overview}
               base={base}
-              isLocked={this.props.isLocked}
+              isLocked={props.isLocked}
             />
           </ErrorBoundary>
           <CustomDockerfile
-            dockerfile={this.props.labbook.environment.dockerSnippet}
+            dockerfile={props.labbook.environment.dockerSnippet}
             buildCallback={this._buildCallback}
-            isLocked={this.props.isLocked}
+            isLocked={props.isLocked}
           />
         </div>
       );

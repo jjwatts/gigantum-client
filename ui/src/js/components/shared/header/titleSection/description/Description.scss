@@ -1,15 +1,12 @@
 @import '~Styles/_imports.scss';
 
 .Description {
+  width: 100%;
     z-index: index($elements, popup) + 1;
     p {
       margin: 0;
 
       line-height: 24px;
-    }
-
-    button {
-      margin-top: 2px;
     }
 
     .empty {
@@ -30,17 +27,13 @@
 .Description__container{
     position: relative;
     z-index: index($elements, popup) + 1;
+    max-width: 780px;
 
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;
     flex-wrap: nowrap;
     justify-content: space-between;
-
-    min-width: 500px;
-    max-width: 500px;
-    max-height: 72px;
-
 
 
     cursor: pointer;
@@ -53,22 +46,23 @@
     -webkit-line-clamp: 3;
     &--hovered {
       @include boxShadow();
-        border: 1px solid $romanSilver;
-        .Description__text{
-          overflow: auto;
-          white-space: pre-line;
+      border: 1px solid $romanSilver;
+
+      .Description__text{
+          overflow: hidden;
+          white-space: nowrap;
           word-break: break-word;
           padding: 2px 5px 2px 5px;
           margin: 0 30px 0 0;
-          height: 70px;
+          height: 30px;
           background-color: $background-color;
         }
     }
 }
 
 .Description__input{
-    width: 470px;
-    min-height: 70px !important;
+    width: calc(100% - 60px);
+    height: 30px !important;
     margin: 0 30px 0 0;
     padding: 2px 5px;
     z-index: index($elements, popup) + 1;
@@ -99,10 +93,12 @@
 }
 
 .Description__input-buttons{
-    min-height: 70px !important;
+    height: 30px !important;
     background: $white;
-    @include flex(space-around, column);
+    @include flex(space-around, row);
+     align-items: center;
     position: absolute;
+    width: 60px;
     top: 0px;
     right: 0px;
     border-top: 1px solid $romanSilver;
@@ -163,13 +159,25 @@
     }
 }
 
-@media screen and (max-width: 1480px) and (min-width: 1140px) {
+@media screen and (max-width: 1438px) and (min-width: 1260px) {
     .Description__container{
-        max-width: 400px;
+        max-width: 700px;
     }
 }
-@media screen and (max-width: 1140px) and (min-width: 0) {
+@media screen and (max-width: 1260px) and (min-width: 1150px) {
     .Description__container{
-        max-width: 300px;
+        max-width: 600px;
+    }
+}
+
+@media screen and (max-width: 1150px) and (min-width: 1050px) {
+    .Description__container{
+        max-width: 500px;
+    }
+}
+
+@media screen and (max-width: 1050px) and (min-width:0px) {
+    .Description__container{
+        max-width: 400px;
     }
 }

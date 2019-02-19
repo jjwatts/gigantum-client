@@ -166,7 +166,6 @@ class Header extends Component {
   }
 
   render() {
-
     const { props, state } = this,
           {
             labbookName,
@@ -186,13 +185,15 @@ class Header extends Component {
           isLabbookSection = props.sectionType === 'labbook',
           headerCSS = classNames({
             Header: true,
-            'Header--sticky': this.props.isSticky,
-            'Header--branchesOpen': this.props.branchesOpen,
+            'Header--sticky': props.isSticky,
+            'Header--branchesOpen': props.branchesOpen,
           }),
-
           branchesErrorCSS = classNames({
-            BranchesError: this.props.branchesOpen,
-            hidden: !this.props.branchesOpen,
+            BranchesError: props.branchesOpen,
+            hidden: !props.branchesOpen,
+          }),
+          hiddenStickCSS = classNames({
+            hidden: props.isStick,
           });
 
     return (
@@ -227,7 +228,7 @@ class Header extends Component {
 
               </div>
 
-              <div className="Header__columnContainer">
+              <div className="Header__columnContainer Header__columnContainer--fixed-width">
                 <ActionsSection
                   visibility={visibility}
                   description={description}
@@ -239,6 +240,7 @@ class Header extends Component {
                   setPublishingState={this._setPublishingState}
                   setExportingState={this._setExportingState}
                   branchName={branchName}
+                  isSticky={props.isSticky}
                   {...props}
                 />
                 { isLabbookSection && <Container {...props} /> }

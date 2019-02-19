@@ -13,12 +13,11 @@ ReactDOM.createPortal = node => node
 const fixtures = {
   closeLinkModal: jest.fn(),
 }
+
 test('Test LinkModal', () => {
   const wrapper = renderer.create(
      <LinkModal {...fixtures}/>
   );
-  console.log(wrapper)
   const tree = wrapper.toJSON();
-  console.log(tree)
   expect(tree).toMatchSnapshot();
 });

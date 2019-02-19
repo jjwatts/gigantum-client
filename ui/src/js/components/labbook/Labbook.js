@@ -77,6 +77,7 @@ class Labbook extends Component {
     containerStatus: this.props.labbook.environment.containerStatus,
     imageStatus: this.props.labbook.environment.imageStatus,
     isBuilding: false,
+    isLocked: (this.props.labbook.environment.containerStatus !== 'NOT_RUNNING'),
   }
 
   UNSAFE_componentWillMount() {
@@ -143,13 +144,16 @@ class Labbook extends Component {
             self.setState({
               isBuilding: false,
             });
-            this.props.setBuildingState(false);
+
+            setBuildingState(false);
           }
           // only updates state if container or imageStatus has changed
           if ((state.containerStatus !== environment.containerStatus) || (state.imageStatus !== environment.imageStatus)) {
+            const isLocked = (environment.containerStatus !== 'NOT_RUNNING');
             self.setState({
               imageStatus: environment.imageStatus,
               containerStatus: environment.containerStatus,
+              isLocked,
             });
           }
         }
@@ -229,8 +233,7 @@ class Labbook extends Component {
       isExporting: props.isExporting,
       isSyncing: props.isSyncing,
     };
-    const isLockedEnvironment = props.isBuilding || props.isSyncing || props.isPublishing;
-
+    const isLocked = props.isBuilding || props.isSyncing || props.isPublishing || state.isLocked;
     if (props.labbook) {
       const { labbook, branchesOpen } = props;
       const branchName = props.labbook.activeBranchName;
@@ -256,6 +259,7 @@ class Labbook extends Component {
               sectionType={'labbook'}
               containerStatus={state.containerStatus}
               imageStatus={state.imageStatus}
+              isLocked={isLocked}
             />
 
             <div className="Labbook__routes flex flex-1-0-auto">
@@ -325,6 +329,7 @@ class Labbook extends Component {
                                isMainWorkspace={branchName === 'workspace'}
                                setBuildingState={this._setBuildingState}
                                sectionType={'labbook'}
+                               isLocked={isLocked}
                                {...props}
                              />
                         </ErrorBoundary>
@@ -344,7 +349,7 @@ class Labbook extends Component {
                                setBuildingState={this._setBuildingState}
                                containerStatus={this.refs.ContainerStatus}
                                overview={labbook.overview}
-                               isLocked={isLockedEnvironment}
+                               isLocked={isLocked}
                                {...props}
                              />
                         </ErrorBoundary>)}

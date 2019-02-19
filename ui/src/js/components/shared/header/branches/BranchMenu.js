@@ -93,6 +93,10 @@ class BranchMenu extends Component {
   render() {
     const { props, state } = this,
           { branches } = props.labbook,
+          branchMenuCSS = classNames({
+            BranchMenu: true,
+            hidden: props.isSticky,
+          }),
           switchDropdownCSS = classNames({
             'BranchMenu__dropdown-menu': true,
             hidden: !state.switchMenuVisible,
@@ -111,7 +115,7 @@ class BranchMenu extends Component {
           }),
           { activeBranch, filteredBranches } = extraxtActiveBranch(branches);
     return (
-      <div className="BranchMenu">
+      <div className={branchMenuCSS}>
           <div className="BranchMenu__dropdown">
                 <div
                 onClick={() => this._toggleBranchSwitch() }

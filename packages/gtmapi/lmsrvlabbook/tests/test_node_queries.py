@@ -42,9 +42,7 @@ class TestNodeQueries(object):
                         ... on Labbook {
                             name
                             description
-                            activeBranchName {
-                                refName
-                            }
+                            activeBranchName
                         }
                         id
                     }
@@ -104,9 +102,8 @@ class TestNodeQueries(object):
         """
         r = fixture_working_dir[2].execute(env_query)
         assert r['data']['node']['description'] ==  'Example labbook by mutation.'
-        assert r['data']['node']['id'] == 'RW52aXJvbm1lbnQ6ZGVmYXVsdCZub2RlLWVudi10ZXN0LWxi'
-        assert r['data']['node']['containerStatus'] == 'NOT_RUNNING'
-        assert r['data']['node']['imageStatus'] == 'DOES_NOT_EXIST'
+        assert r['data']['node']['environment']['containerStatus'] == 'NOT_RUNNING'
+        assert r['data']['node']['environment']['imageStatus'] == 'DOES_NOT_EXIST'
         assert r['data']['node']['name'] == 'node-env-test-lb'
 
         env_id = r['data']['node']['environment']['id']
@@ -218,7 +215,7 @@ class TestNodeQueries(object):
         assert 'errors' not in r
         assert r['data']['node']['isDir'] is False
         assert r['data']['node']['key'] == 'test1.txt'
-        assert r['data']['node']['size'] == 5
+        assert r['data']['node']['size'] == '5'
 
     def test_activity_record_node(self, fixture_working_dir, fixture_test_file):
         """Test getting an activity record by node ID"""

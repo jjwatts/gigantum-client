@@ -16,11 +16,12 @@ export default class CardWrapper extends Component {
           record = props.record,
           rollbackableDetails = record.edge.node.detailObjects.filter(detailObjs => detailObjs.type !== 'RESULT' && detailObjs.type !== 'CODE_EXECUTED'),
           hasRollback = ((props.indexItem.i !== 0) || (props.indexItem.timestampIndex !== 0))
-            && (props.isMainWorkspace && !!rollbackableDetails.length && (props.sectionType === 'labbook')),
+            && (!!rollbackableDetails.length && (props.sectionType === 'labbook')),
           activityCardWrapperCSS = classNames({
             CardWrapper: true,
            'CardWrapper--rollback': hasRollback,
          });
+
     return (
       <Fragment key={record.edge.node.id}>
         <div className={activityCardWrapperCSS}>
@@ -30,6 +31,7 @@ export default class CardWrapper extends Component {
                 toggleRollbackMenu={props.toggleRollbackMenu}
                 record={record}
                 sectionType={props.sectionType}
+                isLocked={props.isLocked}
               />
           }
 
@@ -42,6 +44,7 @@ export default class CardWrapper extends Component {
                   position={record.flatIndex}
                   key={`${record.edge.node.id}_activity-card`}
                   edge={record.edge}
+                  isLocked={props.isLocked}
                 />
           </ErrorBoundary>
 

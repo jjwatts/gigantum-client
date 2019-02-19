@@ -47,7 +47,6 @@ class LabbookQueryContainer extends Component {
               return (<div>{props.errors[0].message}</div>);
             }
 
-
               return (
                 <Labbook
                   key={parentProps.labbookName}
@@ -61,7 +60,7 @@ class LabbookQueryContainer extends Component {
                 />);
           }
 
-            return (<Loader />);
+          return (<Loader />);
         }
       }
     />);

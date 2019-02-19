@@ -14,10 +14,15 @@ import './ActionsSection.scss';
 
 class ActionsSection extends Component {
   render() {
-    const { props } = this;
+    const { props } = this,
+          actionsSectionCSS = classNames({
+            ActionsSection: true,
+            hidden: props.isSticky,
+          })
+
     return (
 
-      <div className="ActionsSection">
+      <div className={actionsSectionCSS}>
           <Collaborators {...props} />
           <ActionsMenu {...props} />
       </div>

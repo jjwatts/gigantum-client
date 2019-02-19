@@ -23,6 +23,7 @@ class ContainerMutations {
    *  starts container, starts dev tool if it is passed in the data object
    */
    startContainer(data, callback) {
+    const self = this;
     const devTool = data.devTool,
     { owner, name } = this.state;
 
@@ -31,7 +32,7 @@ class ContainerMutations {
       name,
       (response, error) => {
         if (response && devTool) {
-          this.startDevTool(data, callbackRoute);
+          self.startDevTool(data, callback);
         } else {
           callback(response, error);
         }
@@ -46,7 +47,6 @@ class ContainerMutations {
    */
    stopContainer(data, callback) {
     const { owner, name } = this.state;
-
     StopContainerMutation(
       owner,
       name,
@@ -63,7 +63,6 @@ class ContainerMutations {
    startDevTool(data, callback) {
      const { devTool } = data,
             { owner, name } = this.state;
-
      StartDevToolMutation(
         owner,
         name,

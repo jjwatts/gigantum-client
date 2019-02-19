@@ -705,17 +705,14 @@ class Activity extends Component {
             <div
               key={`${props.sectionType}_labbooks__labook-id-container`}
               className="Activity__sizer flex-1-0-auto">
-              { state.createBranchVisible
-                && <CreateBranch
+              <CreateBranch
                   ref="createBranch"
                   selected={state.selectedNode}
                   activeBranch={props.activeBranch}
                   modalVisible={state.createBranchVisible}
                   toggleModal={this._toggleCreateModal}
                   setBuildingState={props.setBuildingState}
-                />
-              }
-
+              />
               {
                 recordDates.map((timestamp, i) => {
                   let clusterElements = [];
@@ -776,6 +773,7 @@ class Activity extends Component {
                                     indexItem={{ i, timestampIndex, timestamp }}
                                     toggleSubmenu={this._toggleSubmenu}
                                     toggleRollbackMenu={this._toggleRollbackMenu}
+                                    isLocked={props.isLocked}
                                  />);
                             }
 
@@ -795,6 +793,7 @@ class Activity extends Component {
                                 key={`VisibileCardWrapper_${record.flatIndex}`}
                                 toggleSubmenu={this._toggleSubmenu}
                                 toggleRollbackMenu={this._toggleRollbackMenu}
+                                isLocked={props.isLocked}
                               />);
                           })
                         }

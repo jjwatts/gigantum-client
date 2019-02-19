@@ -29,6 +29,7 @@ import ToolTip from 'Components/common/ToolTip';
 import LoginPrompt from 'Components/shared/modals/LoginPrompt';
 import VisibilityModal from 'Components/shared/modals/VisibilityModal';
 import PublishDatasetsModal from 'Components/shared/modals/PublishDatasetsModal';
+import DeleteLabbook from 'Components/shared/modals/DeleteLabbook';
 // assets
 import './ActionsMenu.scss';
 
@@ -666,8 +667,6 @@ class ActionsMenu extends Component {
           className="ActionsMenu__btn">
         </button>
 
-        <div className={branchMenuArrowCSS} />
-
         <div className={branchMenuCSS}>
 
           <ul className="ActionsMenu__list">
@@ -679,6 +678,17 @@ class ActionsMenu extends Component {
                 disabled={this.state.exporting}
                 className="ActionsMenu__btn--flat">
                 Export
+              </button>
+
+            </li>
+
+
+            <li className="ActionsMenu__item ActionsMenu__item--delete">
+
+              <button
+                onClick={() => this._toggleDeleteModal()}
+                className="ActionsMenu__btn--flat">
+                {deleteText}
               </button>
 
             </li>
@@ -696,89 +706,10 @@ class ActionsMenu extends Component {
 
               </li>
             }
-
-            <li className="ActionsMenu__item ActionsMenu__item--delete">
-
-              <button
-                onClick={() => this._toggleDeleteModal()}
-                className="ActionsMenu__btn--flat">
-                {deleteText}
-              </button>
-
-            </li>
-
-          </ul>
-
-          <hr className="ActionsMenu__line" />
-
-          {!this.props.defaultRemote &&
-
-            <div className="ActionsMenu__publish">
-
-              <button
-                className="ActionsMenu__btn--remote"
-                onClick={() => this._togglePublishModal(this.props.sectionType === 'labbook')}>
-                Publish
-              </button>
-
-              {
-                this.state.publishWarningVisible &&
-
-                <Fragment>
-
-                  <div className="ActionsMenu__pointer" />
-
-                  <div className="ActionsMenu__message box-shadow">
-                    Publishing is disabled while Project is exporting.
-                  </div>
-
-                </Fragment>
-              }
-
-            </div>
-          }
-
-          {this.props.defaultRemote &&
-
-            <div className="ActionsMenu__sync">
-
-              <button
-                className="BranchMenu__btn--sync"
-                onClick={() => this._sync(false)}>
-                Sync Branch
-              </button>
-
-              {
-                this.state.syncWarningVisible &&
-
-                <Fragment>
-
-                  <div className="ActionsMenu__pointer" />
-
-                  <div className="ActionsMenu__message box-shadow">
-                    Syncing is disabled while Project is exporting.
-                  </div>
-
-                </Fragment>
-
-              }
-
-              <button
-                className="BranchMenu__btn--sync"
-                onClick={() => this._sync(true)}>
-                Pull-only
-              </button>
-
-            </div>
-            }
-
-          {
+            {
               this.state.remoteUrl &&
-
-              <div>
-
-                <hr className="ActionsMenu__line" />
-
+              <li className="ActionsMenu__item ActionsMenu__item--copy">
+                <div className="ActionsMenu__item--label">Get Share URL</div>
                 <div className="ActionsMenu__copyRemote">
 
                   <input
@@ -792,12 +723,11 @@ class ActionsMenu extends Component {
                     onClick={() => this._copyRemote()}
                     className="ActionsMenu__btn--copy fa fa-clone"
                   />
-
                 </div>
-
-              </div>
-
+              </li>
             }
+
+          </ul>
 
         </div>
 

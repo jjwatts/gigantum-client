@@ -2,6 +2,7 @@
 import React, { Component, Fragment } from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+import { boundMethod } from 'autobind-decorator';
 // store
 import store from 'JS/redux/store';
 import { setContainerState } from 'JS/redux/reducers/labbook/overview/overview';
@@ -32,6 +33,7 @@ class ContainerStatus extends Component {
       rebuildAttempts: 0,
       showDevList: false,
       showInitialMessage: false,
+      previousContainerStatus: props.containerStatus,
     };
 
     this._getContainerStatusText = this._getContainerStatusText.bind(this);
@@ -40,23 +42,14 @@ class ContainerStatus extends Component {
     this._rebuildContainer = this._rebuildContainer.bind(this);
   }
 
-
-  // /**
-  // *  @param {string} nextProps
-  // *  update container state before rendering new props
-  // */
-  // UNSAFE_componentWillReceiveProps(nextProps) {
-  //   const status = this._getContainerStatusText(nextProps.containerStatus, nextProps.imageStatus);
-  //   const hasLabbookId = store.getState().overview.containerStates[this.props.labbookId];
-  //
-  //   if (hasLabbookId) {
-  //     const storeStatus = store.getState().overview.containerStates[this.props.labbookId];
-  //
-  //     if (storeStatus !== status) {
-  //       this.props.setContainerState(this.props.labbookId, this._getContainerStatusText({ containerStatus: nextProps.containerStatus, image: nextProps.imageStatus }));
-  //     }
-  //   }
-  // }
+  static getDerivedStateFromProps(nextProps, state) {
+    // const status = (state.previousContainerStatus === nextProps.containerStatus) ? nextProps.status : '';
+    return ({
+      ...state,
+      status: nextProps.stateStatus,
+      previousContainerStatus: nextProps.containerStatus,
+    });
+  }
 
   /**
   *  @param {}
@@ -73,7 +66,8 @@ class ContainerStatus extends Component {
   *  @return {string}
   */
   componentDidMount() {
-    this.props.auth.isAuthenticated().then((response) => {
+    const { props } = this;
+    props.auth.isAuthenticated().then((response) => {
       const containerMessageShown = localStorage.getItem('containerMessageShown');
       if (!containerMessageShown && response) {
         this.setState({ showInitialMessage: true });
@@ -108,21 +102,6 @@ class ContainerStatus extends Component {
   _closePopupMenus(evt) {
     // TODO fix this implementation, this is not sustainable.
     const containerMenuClicked = evt.target.getAttribute('data-container-popup') === 'true';
-      // evt.target.className.indexOf('ContainerStatus__container-state') > -1) ||
-      // (evt.target.className.indexOf('BranchMenu') > -1) ||
-      // (evt.target.className.indexOf('BranchMenu__sync-button') > -1) ||
-      // (evt.target.className.indexOf('BranchMenu__remote-button') > -1) ||
-      // (evt.target.className.indexOf('CustomDockerfile__content-edit-button') > -1) ||
-      // (evt.target.className.indexOf('CustomDockerfile__content-save-button') > -1) ||
-      // (evt.target.className.indexOf('Labbook__name') > -1) ||
-      // (evt.target.className.indexOf('Labbook__branch-toggle') > -1) ||
-      // (evt.target.className.indexOf('Acitivty__rollback-button') > -1) ||
-      // (evt.target.className.indexOf('Activity__add-branch-button') > -1) ||
-      // (evt.target.className.indexOf('PackageDependencies__remove-button--full') > -1) ||
-      // (evt.target.className.indexOf('PackageDependencies__remove-button--half') > -1) ||
-      // (evt.target.className.indexOf('PackageDependencies__update-button') > -1) ||
-      // (evt.target.className.indexOf('BranchCard__delete-labbook') > -1) ||
-      // (evt.target.className.indexOf('Rollback') > -1);
 
     if (!containerMenuClicked &&
     this.props.containerMenuOpen) {
@@ -162,6 +141,7 @@ class ContainerStatus extends Component {
     @return {string}
   */
   _getContainerStatusText = ({ containerStatus, imageStatus }) => {
+    const { props, state } = this;
     const labbookCreationDate = Date.parse(`${this.props.creationDateUtc}Z`);
     const timeNow = Date.parse(new Date());
 
@@ -174,8 +154,8 @@ class ContainerStatus extends Component {
     status = (imageStatus === 'DOES_NOT_EXIST') ? 'Rebuild' : status;
     status = ((imageStatus === 'DOES_NOT_EXIST') || (imageStatus === 'BUILD_IN_PROGRESS')) && (timeDifferenceMS < 15000) ? 'Building' : status;
 
-    status = ((status === 'Stopped') && (this.state.status === 'Starting')) ? 'Starting' : status;
-    status = ((status === 'Running') && (this.state.status === 'Stopping')) ? 'Stopping' : status;
+    status = ((status === 'Stopped') && (state.status === 'Starting')) ? 'Starting' : status;
+    status = ((status === 'Running') && (state.status === 'Stopping')) ? 'Stopping' : status;
 
     if (store.getState().containerStatus.status !== status) {
       this.props.setContainerStatus(status);
@@ -206,7 +186,6 @@ class ContainerStatus extends Component {
         self.setState({
           imageStatus: 'EXISTS',
           containerStatus: 'NOT_RUNNING',
-          status: '',
         });
 
         if (error) {
@@ -235,7 +214,6 @@ class ContainerStatus extends Component {
         self.setState({
           imageStatus: 'EXISTS',
           containerStatus: 'RUNNING',
-          status: '',
         });
 
         if (error) {
@@ -261,17 +239,14 @@ class ContainerStatus extends Component {
     const { props, state } = this;
     if (!store.getState().labbook.isBuilding && !props.isLookingUpPackages) {
       if (status === 'Stop') {
-        this.setState({
-          status: 'Stopping',
-          contanerMenuRunning: false,
-        });
+        props.updateStatus('Stopping');
 
+        this.setState({ contanerMenuRunning: false });
         this._stopContainerMutation();
       } else if (status === 'Run') {
-        this.setState({
-          status: 'Starting',
-          contanerMenuRunning: false,
-        });
+        props.updateStatus('Starting');
+
+        this.setState({ contanerMenuRunning: false });
 
         props.setMergeMode(false, false);
         this._startContainerMutation();
@@ -364,7 +339,7 @@ class ContainerStatus extends Component {
           status = this._getContainerStatusText(props),
           key = 'setStatus',
           excludeStatuses = ['Stopping', 'Starting', 'Building', 'Publishing', 'Syncing'],
-          notExcluded = excludeStatuses.indexOf(state.status) === -1,
+          notExcluded = excludeStatuses.indexOf(status) === -1,
           textStatus = this._getStatusText(status);
 
     const containerStatusCss = classNames({
@@ -376,7 +351,7 @@ class ContainerStatus extends Component {
       Publishing: props.isPublishing,
       LookingUp: props.isLookingUpPackages,
       'ContainerStatus__container-state--expanded': state.isMouseOver && notExcluded && !props.isBuilding && !(state.imageStatus === 'BUILD_IN_PROGRESS'),
-      'ContainerStatus__container-remove-pointer': !notExcluded || props.isBuilding || (state.imageStatus === 'BUILD_IN_PROGRESS') || props.isSyncing || props.isPublishing,
+      'ContainerStatus__container-remove-pointer': !notExcluded || props.isBuilding || (props.imageStatus === 'BUILD_IN_PROGRESS') || props.isSyncing || props.isPublishing,
     });
 
     return (

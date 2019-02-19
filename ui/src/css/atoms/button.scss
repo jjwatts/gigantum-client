@@ -278,4 +278,20 @@ button:disabled {
   &--no-underline {
     text-decoration: none;
   }
+
+
+  &--columns {
+    @include flex(space-around, column);
+    align-items: flex-start;
+    line-height: 14px;
+    padding: 6px 40px 6px 20px;
+  }
+
+  &--label {
+    font-size: 12px;
+  }
+
+  &--text {
+    font-size: 16px;
+  }
 }

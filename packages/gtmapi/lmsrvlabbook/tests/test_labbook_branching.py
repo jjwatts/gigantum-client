@@ -101,8 +101,6 @@ class TestWorkflowsBranching(object):
                     branchName
                     isLocal
                     isRemote
-                    commitsAhead
-                    commitsBehind
                     isActive
                 }}
             }}
@@ -115,7 +113,6 @@ class TestWorkflowsBranching(object):
         assert r['data']['labbook']['branches'][0]['branchName'] == bm.workspace_branch
         assert r['data']['labbook']['branches'][0]['isLocal'] == True, "Should be local"
         assert r['data']['labbook']['branches'][0]['isRemote'] == False, "There should be no remote branches"
-        assert r['data']['labbook']['branches'][0]['commitsBehind'] == 0
         assert r['data']['labbook']['branches'][0]['isActive'] == True
 
     def test_query_mergeable_branches_from_main(self, mock_create_labbooks):

@@ -172,15 +172,11 @@
 
   &--flex-1{
     flex: 1;
-    max-width: 1235px;
+    max-width: 780px;
   }
-}
 
-@media screen and (max-width: 1580px) and (min-width: 0) {
-  .Header__columnContainer{
-      &--flex-1{
-        max-width: 83%;
-      }
+  &--fixed-width {
+    width: 316px;
   }
 }
 

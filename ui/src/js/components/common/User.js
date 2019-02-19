@@ -69,15 +69,13 @@ export default class User extends Component {
       <div
         id="user"
         className="User"
-        key="user"
-      >
+        key="user">
         <div className="User__image" />
         <h6
           id="username"
           onClick={() => { this._toggleDropdown(); }}
           className={usernameCSS}
-          data-tooltip={this.state.username}
-        >
+          data-tooltip={this.state.username}>
           {this.state.username}
 
         </h6>
