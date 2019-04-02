@@ -129,7 +129,7 @@ def import_labbook_from_remote(remote_url: str, username: str, config_file: str 
     try:
         toks = remote_url.split("/")
         if len(toks) > 1:
-            proj_path = f'{toks[-2]}/{toks[-1]}'
+            proj_path = f'{toks[-2]}/{toks[-1].replace(".git", "")}'
         else:
             proj_path = remote_url
         update_meta(f"Importing Project from {proj_path!r}...")
