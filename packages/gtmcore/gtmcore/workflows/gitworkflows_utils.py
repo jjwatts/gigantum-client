@@ -186,6 +186,7 @@ def sync_branch(repository: Repository, username: Optional[str], override: str,
     if branch_name not in bm.branches_remote:
         # Branch does not exist, so push it to remote.
         _set_upstream_branch(repository, bm.active_branch, feedback_callback)
+        feedback_callback("Synced current branch up to remote")
         return 0
     else:
         pulled_updates_count = bm.get_commits_behind()

@@ -88,10 +88,13 @@ def sync_repository(repository: Repository, username: str, override: MergeOverri
         job = get_current_job()
         if not job:
             return
+        if msg is None or (not msg.strip()):
+            return
+
         if 'feedback' not in job.meta:
-            job.meta['feedback'] = msg
+            job.meta['feedback'] = msg.strip()
         else:
-            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
+            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg.strip()}'
         job.save_meta()
 
     try:
