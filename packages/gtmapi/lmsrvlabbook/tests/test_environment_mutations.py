@@ -176,7 +176,11 @@ class TestEnvironmentMutations(object):
         # Build the image
         build_query = """
         mutation myBuildImage {
-          buildImage(input: {labbookName: "labbook-build2", owner: "default", noCache: true}) {
+          buildImage(input: {
+            labbookName: "labbook-build2",
+            owner: "default",
+            noCache: true
+          }) {
             environment {
               imageStatus
               containerStatus

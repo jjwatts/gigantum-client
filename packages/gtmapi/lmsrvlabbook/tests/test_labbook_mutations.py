@@ -17,11 +17,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import io
-import math
 import os
-import tempfile
-import pprint
 import json
 
 from gtmcore.fixtures import ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
@@ -30,17 +26,10 @@ from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped, fixture_working_dir
 
 import pytest
-from graphene.test import Client
-from mock import patch
-from werkzeug.datastructures import FileStorage
-
-from gtmcore.dispatcher.jobs import export_labbook_as_zip
 from gtmcore.files import FileOperations
 from gtmcore.fixtures import remote_labbook_repo, mock_config_file
 
 from gtmcore.inventory.inventory import InventoryManager
-
-from lmsrvcore.middleware import error_middleware, DataloaderMiddleware
 
 
 @pytest.fixture()
@@ -842,65 +831,6 @@ class TestLabBookServiceMutations(object):
 
         # Make sure favorite is gone now
         snapshot.assert_match(mock_create_labbooks[2].execute(fav_query))
-
-    def test_import_labbook(self, fixture_working_dir):
-        """Test batch uploading, but not full import"""
-        class DummyContext(object):
-            def __init__(self, file_handle):
-                self.labbook_loader = None
-                self.files = {'uploadChunk': file_handle}
-
-        client = Client(fixture_working_dir[3], middleware=[DataloaderMiddleware()])
-
-        # Create a temporary labbook
-        lb = InventoryManager(fixture_working_dir[0]).create_labbook("default", "default", "test-export",
-                                                                     description="Tester")
-
-        # Create a largeish file in the dir
-        with open(os.path.join(fixture_working_dir[1], 'testfile.bin'), 'wb') as testfile:
-            testfile.write(os.urandom(9000000))
-        FileOperations.insert_file(lb, 'input', testfile.name)
-
-        # Export labbook
-        zip_file = export_labbook_as_zip(lb.root_dir, tempfile.gettempdir())
-        lb_dir = lb.root_dir
-
-        # Get upload params
-        chunk_size = 4194304
-        file_info = os.stat(zip_file)
-        file_size = int(file_info.st_size / 1000)
-        total_chunks = int(math.ceil(file_info.st_size/chunk_size))
-
-        with open(zip_file, 'rb') as tf:
-            for chunk_index in range(total_chunks):
-                chunk = io.BytesIO()
-                chunk.write(tf.read(chunk_size))
-                chunk.seek(0)
-                file = FileStorage(chunk)
-
-                query = f"""
-                            mutation myMutation{{
-                              importLabbook(input:{{
-                                chunkUploadParams:{{
-                                  uploadId: "jfdjfdjdisdjwdoijwlkfjd",
-                                  chunkSize: {chunk_size},
-                                  totalChunks: {total_chunks},
-                                  chunkIndex: {chunk_index},
-                                  fileSizeKb: {file_size},
-                                  filename: "{os.path.basename(zip_file)}"
-                                }}
-                              }}) {{
-                                importJobKey
-                              }}
-                            }}
-                            """
-                result = client.execute(query, context_value=DummyContext(file))
-                assert "errors" not in result
-                if chunk_index == total_chunks - 1:
-                    assert type(result['data']['importLabbook']['importJobKey']) == str
-                    assert "rq:job:" in result['data']['importLabbook']['importJobKey']
-
-                chunk.close()
 
     def test_write_readme(self, mock_create_labbooks, snapshot):
         content = json.dumps('##Overview\n\nThis is my readme\n :df,a//3p49kasdf')

@@ -24,7 +24,6 @@ import pprint
 import time
 import json
 
-from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir
 
 from graphene.test import Client
@@ -108,7 +107,7 @@ class TestLabBookServiceQueries(object):
 
         w.terminate()
 
-    def test_query_failed_task(self, fixture_working_dir, snapshot, temporary_worker):
+    def test_query_failed_task(self, fixture_working_dir, temporary_worker):
         """Test listing labbooks"""
 
         w, d = temporary_worker
@@ -148,7 +147,7 @@ class TestLabBookServiceQueries(object):
 
         w.terminate()
 
-    def test_query_started_task(self, fixture_working_dir, snapshot, temporary_worker):
+    def test_query_started_task(self, fixture_working_dir, temporary_worker):
         """Test listing labbooks"""
 
         w, d = temporary_worker
@@ -187,7 +186,7 @@ class TestLabBookServiceQueries(object):
         time.sleep(3)
         w.terminate()
 
-    def test_query_queued_task(self, fixture_working_dir, snapshot, temporary_worker):
+    def test_query_queued_task(self, fixture_working_dir, temporary_worker):
         """Test listing labbooks"""
 
         w, d = temporary_worker

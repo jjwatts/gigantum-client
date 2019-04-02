@@ -55,7 +55,7 @@ jobs:
           name: Run Core unit and coverage tests
           command: |
             export SKIP_CONDA_TESTS=1
-            redis-server &
+            redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
             pytest --cov=gtmcore packages/gtmcore
             codecov -F core
@@ -75,7 +75,7 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:/home/circleci/repo/packages/gtmcore
             export SKIP_CONDA_TESTS=1
             cd /home/circleci/repo
-            redis-server &
+            redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
             python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
             pytest --cov=lmsrvlabbook --cov=lmsrvcore packages/gtmapi/lmsrvlabbook
@@ -97,7 +97,7 @@ jobs:
           command: |
             export PYTHONPATH=$PYTHONPATH:/home/circleci/repo/packages/gtmcore
             cd /home/circleci/repo
-            redis-server &
+            redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
             python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
             pytest --cov=gtmcore packages/gtmcore/gtmcore/environment/tests/test_conda.py

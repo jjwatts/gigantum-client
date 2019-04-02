@@ -1,7 +1,4 @@
-import shutil
-
 import pytest
-import getpass
 import os
 import shutil
 import yaml

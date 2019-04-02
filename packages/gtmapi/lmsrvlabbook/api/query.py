@@ -20,18 +20,16 @@
 import base64
 from typing import List
 import graphene
-import json
 import os
 
 from gtmcore.logging import LMLogger
 from gtmcore.configuration import Configuration
 from gtmcore.dispatcher import Dispatcher
 from gtmcore.environment import BaseRepository
-from gtmcore.environment.utils import get_package_manager
 from gtmcore.labbook.schemas import CURRENT_SCHEMA
 from gtmcore.dataset.storage import get_storage_backend_descriptions
 
-from lmsrvcore.auth.user import get_logged_in_username
+from lmsrvcore.api.objects.user import UserIdentity
 from lmsrvcore.api.connections import ListBasedConnection
 
 from lmsrvlabbook.api.objects.labbook import Labbook
@@ -45,29 +43,17 @@ from lmsrvlabbook.api.connections.jobstatus import JobStatusConnection
 from lmsrvlabbook.api.objects.datasettype import DatasetType
 from lmsrvlabbook.api.objects.dataset import Dataset
 
-from lmsrvcore.api.objects.user import UserIdentity
-
-
 logger = LMLogger.get_logger()
 
 
-class LabbookQuery(graphene.ObjectType):
-    """Entry point for all LabBook queryable fields"""
-    # Node Fields for Relay
-    node = graphene.relay.Node.Field()
-
-    # Retrieve multiple nodes for Relay
-    nodes = graphene.List(graphene.relay.Node, ids=graphene.List(graphene.String))
+class AppQueries(graphene.ObjectType):
+    """ Queries for the info about the running app instance. """
 
     # Return app build date and hash
     build_info = graphene.String()
 
     # Return whether this has CUDA installed and can run GPU-enabled projects
     cuda_available = graphene.Boolean()
-
-    labbook = graphene.Field(Labbook, owner=graphene.String(), name=graphene.String())
-
-    dataset = graphene.Field(Dataset, owner=graphene.String(), name=graphene.String())
 
     # This indicates the most-recent labbook schema version.
     # Nominal usage of this field is to see if any given labbook is behind this version.
@@ -81,34 +67,8 @@ class LabbookQuery(graphene.ObjectType):
     # All background jobs in the system: Queued, Completed, Failed, and Started.
     background_jobs = graphene.relay.ConnectionField(JobStatusConnection)
 
-    # A field to interact with listing labbooks locally and remote
-    labbook_list = graphene.Field(LabbookList)
-
-    # A field to interact with listing datasets locally and remote
-    dataset_list = graphene.Field(DatasetList)
-
-    # Base Image Repository Interface
-    available_bases = graphene.relay.ConnectionField(BaseComponentConnection)
-
-    # List available types of datasets
-    available_dataset_types = graphene.List(DatasetType)
-
-    # Currently not fully supported, but will be added in the future.
-    # available_base_image_versions = graphene.relay.ConnectionField(BaseImageConnection, repository=graphene.String(),
-    #                                                                namespace=graphene.String(),
-    #                                                                component=graphene.String())
-
-    # Package Query for validating packages and getting latest versions
-    package = graphene.Field(PackageComponent,
-                             manager=graphene.String(),
-                             package=graphene.String(),
-                             version=graphene.String(default_value=""))
-
     # Get the current logged in user identity, primarily used when running offline
     user_identity = graphene.Field(UserIdentity)
-
-    def resolve_nodes(self, info, ids):
-        return [graphene.relay.Node.get_node_from_global_id(info, x) for x in ids]
 
     def resolve_build_info(self, info):
         """Return this LabManager build info (hash, build timestamp, etc)"""
@@ -124,48 +84,9 @@ class LabbookQuery(graphene.ObjectType):
         else:
             return False
 
-    def resolve_labbook(self, info, owner: str, name: str):
-        """Method to return a graphene Labbook instance based on the name
-
-        Uses the "currently logged in" user
-
-        Args:
-            owner(str): Username of the owner (aka namespace)
-            name(str): Name of the LabBook
-
-        Returns:
-            Labbook
-        """
-        # Load the labbook data via a dataloader
-        return Labbook(id="{}&{}".format(owner, name),
-                       name=name, owner=owner)
-
-    def resolve_dataset(self, info, owner: str, name: str):
-        """Method to return a graphene Dataset instance based on the name
-
-        Uses the "currently logged in" user
-
-        Args:
-            owner(str): Username of the owner (aka namespace)
-            name(str): Name of the Dataset
-
-        Returns:
-            Labbook
-        """
-        return Dataset(id="{}&{}".format(owner, name),
-                       name=name, owner=owner)
-
     def resolve_current_labbook_schema_version(self, info):
         """Return the current LabBook schema version"""
         return CURRENT_SCHEMA
-
-    def resolve_labbook_list(self, info):
-        """Return a labbook list object, which is just a container so the id is empty"""
-        return LabbookList(id="")
-
-    def resolve_dataset_list(self, info):
-        """Return a dataset list object, which is just a container so the id is empty"""
-        return DatasetList(id="")
 
     def resolve_job_status(self, info, job_id: str):
         """Method to return a graphene Labbok instance based on the name
@@ -201,6 +122,93 @@ class LabbookQuery(graphene.ObjectType):
 
         return JobStatusConnection(edges=edge_objs, page_info=lbc.page_info)
 
+    def resolve_user_identity(self, info):
+        """Method to return a graphene UserIdentity instance based on the current logged (both on & offline) user
+
+        Returns:
+            UserIdentity
+        """
+        return UserIdentity()
+
+
+class LabbookQuery(AppQueries, graphene.ObjectType):
+    """Entry point for all LabBook queryable fields"""
+    # Node Fields for Relay
+    node = graphene.relay.Node.Field()
+
+    # Retrieve multiple nodes for Relay
+    nodes = graphene.List(graphene.relay.Node, ids=graphene.List(graphene.String))
+
+    labbook = graphene.Field(Labbook, owner=graphene.String(), name=graphene.String())
+
+    dataset = graphene.Field(Dataset, owner=graphene.String(), name=graphene.String())
+
+    # A field to interact with listing labbooks locally and remote
+    labbook_list = graphene.Field(LabbookList)
+
+    # A field to interact with listing datasets locally and remote
+    dataset_list = graphene.Field(DatasetList)
+
+    # Base Image Repository Interface
+    available_bases = graphene.relay.ConnectionField(BaseComponentConnection)
+
+    # List available types of datasets
+    available_dataset_types = graphene.List(DatasetType)
+
+    # Currently not fully supported, but will be added in the future.
+    # available_base_image_versions = graphene.relay.ConnectionField(BaseImageConnection, repository=graphene.String(),
+    #                                                                namespace=graphene.String(),
+    #                                                                component=graphene.String())
+
+    # Package Query for validating packages and getting latest versions
+    package = graphene.Field(PackageComponent,
+                             manager=graphene.String(),
+                             package=graphene.String(),
+                             version=graphene.String(default_value=""))
+
+
+    def resolve_nodes(self, info, ids):
+        return [graphene.relay.Node.get_node_from_global_id(info, x) for x in ids]
+
+    def resolve_labbook(self, info, owner: str, name: str):
+        """Method to return a graphene Labbook instance based on the name
+
+        Uses the "currently logged in" user
+
+        Args:
+            owner(str): Username of the owner (aka namespace)
+            name(str): Name of the LabBook
+
+        Returns:
+            Labbook
+        """
+        # Load the labbook data via a dataloader
+        return Labbook(id="{}&{}".format(owner, name),
+                       name=name, owner=owner)
+
+    def resolve_dataset(self, info, owner: str, name: str):
+        """Method to return a graphene Dataset instance based on the name
+
+        Uses the "currently logged in" user
+
+        Args:
+            owner(str): Username of the owner (aka namespace)
+            name(str): Name of the Dataset
+
+        Returns:
+            Labbook
+        """
+        return Dataset(id="{}&{}".format(owner, name),
+                       name=name, owner=owner)
+
+    def resolve_labbook_list(self, info):
+        """Return a labbook list object, which is just a container so the id is empty"""
+        return LabbookList(id="")
+
+    def resolve_dataset_list(self, info):
+        """Return a dataset list object, which is just a container so the id is empty"""
+        return DatasetList(id="")
+
     def resolve_available_bases(self, info, **kwargs):
         """Method to return a all graphene BaseImages that are available
 
@@ -224,14 +232,6 @@ class LabbookQuery(graphene.ObjectType):
                                                           cursor=cursor))
 
         return BaseComponentConnection(edges=edge_objs, page_info=lbc.page_info)
-
-    def resolve_user_identity(self, info):
-        """Method to return a graphene UserIdentity instance based on the current logged (both on & offline) user
-
-        Returns:
-            UserIdentity
-        """
-        return UserIdentity()
 
     def resolve_available_dataset_types(self, info):
         """Method to resolve a list of available dataset types

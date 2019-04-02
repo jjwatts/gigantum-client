@@ -20,7 +20,6 @@
 import os
 import pytest
 
-from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir
 from gtmcore.configuration import Configuration
 
@@ -30,7 +29,7 @@ from mock import patch
 
 
 class TestUserIdentityMutations(object):
-    def test_remove_user_identity(self, fixture_working_dir, snapshot):
+    def test_remove_user_identity(self, fixture_working_dir):
         query = """
                 {
                     userIdentity{
@@ -43,7 +42,19 @@ class TestUserIdentityMutations(object):
                 }
                 """
 
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
+        correct_response = {'data': {
+            'userIdentity': {
+                'email': 'jane@doe.com',
+                'familyName': 'Doe',
+                'givenName': 'Jane',
+                'id': 'VXNlcklkZW50aXR5OmRlZmF1bHQ=',
+                'username': 'default'
+            }
+        }}
+
+        r = fixture_working_dir[2].execute(query)
+        assert r == correct_response
+
 
         identity_file = os.path.join(fixture_working_dir[1], '.labmanager', 'identity', 'cached_id_jwt')
         assert os.path.exists(identity_file) is True
@@ -58,6 +69,8 @@ class TestUserIdentityMutations(object):
                 }
                 """
 
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
+        r = fixture_working_dir[2].execute(query)
+        assert 'errors' in r
+        assert r['data']['removeUserIdentity']['userIdentityEdge']['username'] is None
 
         assert os.path.exists(identity_file) is False

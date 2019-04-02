@@ -3,7 +3,7 @@
   "loggers": {
     "labmanager": {
       "level": "INFO",
-      "handlers": ["fileHandler", "consoleHandler"],
+      "handlers": ["fileHandler"],
       "propagate": 0
     }
   },

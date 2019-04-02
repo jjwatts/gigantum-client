@@ -21,11 +21,12 @@ import os
 import pprint
 import shutil
 import tempfile
-
+import pytest
 from mock import patch
 
 from gtmcore.configuration import get_docker_client
 from gtmcore.dispatcher import jobs
+from gtmcore.environment import RepositoryManager
 from gtmcore.workflows import GitWorkflow, LabbookWorkflow
 import gtmcore.fixtures
 from gtmcore.fixtures.datasets import helper_append_file, helper_compress_file
@@ -210,3 +211,63 @@ class TestJobs(object):
                 assert False, f"Should not be able to import LabBook from strange directory /t"
             except Exception as e:
                 pass
+
+    def test_publish_respository(self):
+        pass
+
+    def test_sync_repository(self):
+        pass
+
+    def test_download_dataset_files(self):
+        pass
+
+    def test_build_and_start_and_stop_labbook_container(self, mock_config_file):
+
+        erm = RepositoryManager(mock_config_file[0])
+        erm.update_repositories()
+        erm.index_repositories()
+
+        # Create a labbook
+        lb = InventoryManager(mock_config_file[0]).create_labbook('unittester', 'unittester',
+                                                                  'unittest-start-stop-job',
+                                                                  description="Testing docker building.")
+        cm = ComponentManager(lb)
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 2)
+
+        ib = ImageBuilder(lb)
+        ib.assemble_dockerfile(write=True)
+
+
+
+        client = get_docker_client()
+        img_list = client.images.list()
+
+        try:
+            from gtmcore.container.utils import infer_docker_image_name
+            owner = InventoryManager().query_owner(lb)
+            client.images.remove(infer_docker_image_name(labbook_name=lb.name, owner=owner,
+                                                         username='unittester'))
+        except:
+            pass
+
+        docker_kwargs = {
+            'path': lb.root_dir,
+            'nocache': True,
+            'username': 'unittester'
+        }
+        image_id = jobs.build_labbook_image(**docker_kwargs)
+
+        startc_kwargs = {
+            'root': lb.root_dir,
+            'config_path': lb.client_config.config_file,
+            'username': 'unittester'
+        }
+        # Start the docker container, and then wait till it's done.
+        container_id = jobs.start_labbook_container(**startc_kwargs)
+        assert get_docker_client().containers.get(container_id).status == 'running'
+
+        # Stop the docker container, and wait until that is done.
+        jobs.stop_labbook_container(container_id)
+        with pytest.raises(Exception):
+            # Should not be found because the stop job cleans up
+            get_docker_client().containers.get(container_id)

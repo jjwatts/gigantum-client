@@ -317,13 +317,13 @@ def start_labbook_container(root: str, config_path: str, username: Optional[str]
         raise
 
 
-def stop_labbook_container(container_id: str):
+def stop_labbook_container(container_id: str) -> int:
     """Return a dictionary of metadata pertaining to the given task's Redis key.
 
     TODO - Take labbook as argument rather than image tag.
 
     Args:
-        image_tag(str): Container to stop
+        container_id(str): Container to stop
 
     Returns:
         0 to indicate no failure
