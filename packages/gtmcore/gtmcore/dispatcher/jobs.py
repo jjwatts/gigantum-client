@@ -130,7 +130,12 @@ def import_labbook_from_remote(remote_url: str, username: str, config_file: str 
         job.save_meta()
 
     try:
-        update_meta(f"Importing Project from {remote_url}...")
+        toks = remote_url.split("/")
+        if len(toks) > 1:
+            proj_path = f'{toks[-2]}/{toks[-1].replace(".git", "")}'
+        else:
+            proj_path = remote_url
+        update_meta(f"Importing Project from {proj_path!r}...")
         wf = LabbookWorkflow.import_from_remote(remote_url, username, config_file)
         update_meta(f"Imported Project {wf.labbook.name}!")
         return wf.labbook.root_dir
