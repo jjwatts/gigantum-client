@@ -310,9 +310,18 @@ class Dispatcher(object):
         return jk
 
     def abort_task(self, job_key: JobKey) -> None:
-        """
+        """ Terminate an actively-running task.
+
+        Note: Only certain tasks (ones that write pid to metadata) are
+        cancellable.
 
         See discussion on: https://github.com/rq/rq/issues/684
+
+        Args:
+            job_key: Job key of task to cancel
+
+        Returns:
+            None
 
         """
         task = self.query_task(job_key)
@@ -321,10 +330,6 @@ class Dispatcher(object):
             return
 
         pid = task.meta.get('pid')
-
-
-        # TODO - PUT DECORATOR FOR ALL BACKGROUND JOBS!!! (Get to this afternoon)
-
         if pid:
             logger.info(f"Cancelling task {job_key} (pid {pid})")
             os.kill(int(pid), signal.SIGTERM)
