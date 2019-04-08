@@ -19,6 +19,8 @@
 # SOFTWARE.
 from datetime import datetime
 from typing import (Any, Callable, cast, Dict, List, Optional, Tuple)
+import signal
+import time
 import os
 
 import redis
@@ -27,6 +29,7 @@ import rq_scheduler
 
 import gtmcore.dispatcher.jobs
 from gtmcore.logging import LMLogger
+from gtmcore.exceptions import GigantumException
 
 logger = LMLogger.get_logger()
 
@@ -58,6 +61,10 @@ class JobKey(object):
     @property
     def key_str(self):
         return self._key_str
+
+
+class DispatcherException(GigantumException):
+    pass
 
 
 class JobStatus(object):
@@ -301,3 +308,26 @@ class Dispatcher(object):
             raise
 
         return jk
+
+    def abort_task(self, job_key: JobKey) -> None:
+        """
+
+        See discussion on: https://github.com/rq/rq/issues/684
+
+        """
+        task = self.query_task(job_key)
+        pid = task.meta.get('pid')
+
+        if pid:
+            logger.info(f"Cancelling task {job_key} (pid {pid})")
+            os.kill(int(pid), signal.SIGTERM)
+            time.sleep(0.1)
+
+            try:
+                # Code 0 used to check if pid exists.
+                os.kill(int(pid), 0)
+                raise DispatcherException(f"Job pid {pid} still exists.")
+            except OSError:
+                pass
+        else:
+            raise DispatcherException(f"Cannot abort task {job_key}: pid not found")
