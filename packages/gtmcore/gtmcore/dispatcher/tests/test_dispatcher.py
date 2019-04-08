@@ -157,7 +157,7 @@ class TestDispatcher(object):
 
         d.abort_task(job_ref_1)
 
-        time.sleep(3)
+        time.sleep(0.1)
         j = d.query_task(job_ref_1)
 
         # There should be no result, cause it was cancelled
