@@ -316,7 +316,14 @@ class Dispatcher(object):
 
         """
         task = self.query_task(job_key)
+        if not task:
+            logger.warning(f"No job found by {job_key}")
+            return
+
         pid = task.meta.get('pid')
+
+
+        # TODO - PUT DECORATOR FOR ALL BACKGROUND JOBS!!! (Get to this afternoon)
 
         if pid:
             logger.info(f"Cancelling task {job_key} (pid {pid})")
