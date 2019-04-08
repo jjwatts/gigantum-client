@@ -258,7 +258,7 @@ class TestEnvironmentMutations(object):
 
         check_query = """
         {
-            labbook(name: "labbook-build2", owner: "default") {
+            labbook(name: "labbook-build-cancel", owner: "default") {
                 environment {
                     imageStatus
                     containerStatus
@@ -267,4 +267,6 @@ class TestEnvironmentMutations(object):
         }
         """
         check_r = fixture_working_dir_env_repo_scoped[2].execute(check_query)
-        assert check_r['data']['labbook']['environment']['imageStatus'] == 'DOES_NOT_EXIST'
+        pprint.pprint(check_r)
+        assert 'errors' not in check_r
+        assert check_r['data']['labbook']['environment']['imageStatus'] == 'BUILD_FAILED'
