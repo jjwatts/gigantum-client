@@ -330,16 +330,19 @@ class Dispatcher(object):
             return
 
         pid = task.meta.get('pid')
-        if pid:
-            logger.info(f"Cancelling task {job_key} (pid {pid})")
-            os.kill(int(pid), signal.SIGTERM)
-            time.sleep(0.1)
-
-            try:
-                # Code 0 used to check if pid exists.
-                os.kill(int(pid), 0)
-                raise DispatcherException(f"Job pid {pid} still exists.")
-            except OSError:
-                pass
-        else:
+        if pid is None:
             raise DispatcherException(f"Cannot abort task {job_key}: pid not found")
+
+        logger.info(f"Cancelling task {job_key} (pid {pid})")
+        os.kill(int(pid), signal.SIGTERM)
+        time.sleep(0.1)
+
+        try:
+            # Code 0 used to check if pid exists.
+            os.kill(int(pid), 0)
+            raise DispatcherException(f"Job pid {pid} still exists.")
+        except OSError:
+            # This indicates the process with the given pid was not found
+            # This is what we expect to happen.
+            pass
+

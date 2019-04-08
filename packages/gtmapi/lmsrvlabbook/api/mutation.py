@@ -37,7 +37,8 @@ from lmsrvlabbook.api.mutations import (CreateLabbook, BuildImage, StartContaine
                                         DeleteDatasetFiles, MoveDatasetFile, MakeDatasetDirectory,
                                         FetchDatasetEdge, SetDatasetVisibility, SyncDataset,
                                         AddDatasetCollaborator, DeleteDatasetCollaborator, DownloadDatasetFiles,
-                                        ModifyDatasetLink, WriteDatasetReadme, SetDatasetDescription, ResetBranchToRemote)
+                                        ModifyDatasetLink, WriteDatasetReadme, SetDatasetDescription,
+                                        ResetBranchToRemote, CancelBuild)
 
 from lmsrvlabbook.api.mutations import (ImportDataset, ExportDataset)
 
@@ -61,6 +62,36 @@ class BranchMutations(object):
 
     # Work on a given feature branch (perform a git checkout).
     workon_experimental_branch = WorkonBranch.Field()
+
+
+class LabbookEnvironmentMutations(graphene.ObjectType):
+
+    # Build a docker image for a given Labbook.
+    build_image = BuildImage.Field()
+
+    # Abort a build-in-progress
+    cancel_build = CancelBuild.Field()
+
+    # Start a labbook's Docker container.
+    start_container = StartContainer.Field()
+
+    # Start a labbook's Docker container.
+    stop_container = StopContainer.Field()
+
+    # Start a tool such as Jupyer Lab
+    start_dev_tool = StartDevTool.Field()
+
+    # Add a package to a Labbook environment (e.g., pip package, apt)
+    add_package_components = AddPackageComponents.Field()
+
+    # Remove a package from a Labbook environment (e.g., pip package, apt)
+    remove_package_components = RemovePackageComponents.Field()
+
+    # Add an arbitrary docker snippet (supplement to custom dependency)
+    add_custom_docker = AddCustomDocker.Field()
+
+    # Delete the arbitrary docker snippet.
+    remove_custom_docker = RemoveCustomDocker.Field()
 
 
 class LabbookSharingMutations(graphene.ObjectType):
@@ -98,7 +129,7 @@ class LabbookSharingMutations(graphene.ObjectType):
 
 
 class LabbookMutations(BranchMutations, LabbookSharingMutations,
-                       graphene.ObjectType):
+                       LabbookEnvironmentMutations, graphene.ObjectType):
     """Entry point for all graphql mutations"""
 
     # Import a Dataset from the Gitlab repository
@@ -123,32 +154,8 @@ class LabbookMutations(BranchMutations, LabbookSharingMutations,
     # Perform a git reset to remote on current branch
     reset_branch_to_remote = ResetBranchToRemote.Field()
 
-    # Build a docker image for a given Labbook.
-    build_image = BuildImage.Field()
-
-    # Start a labbook's Docker container.
-    start_container = StartContainer.Field()
-
-    # Start a labbook's Docker container.
-    stop_container = StopContainer.Field()
-
-    # Start a tool such as Jupyer Lab
-    start_dev_tool = StartDevTool.Field()
-
     # Create a user note in the labbook's current working branch
     create_user_note = CreateUserNote.Field()
-
-    # Add a package to a Labbook environment (e.g., pip package, apt)
-    add_package_components = AddPackageComponents.Field()
-
-    # Remove a package from a Labbook environment (e.g., pip package, apt)
-    remove_package_components = RemovePackageComponents.Field()
-
-    # Add an arbitrary docker snippet (supplement to custom dependency)
-    add_custom_docker = AddCustomDocker.Field()
-
-    # Delete the arbitrary docker snippet.
-    remove_custom_docker = RemoveCustomDocker.Field()
 
     # Add a file to a labbook
     add_labbook_file = AddLabbookFile.Field()
