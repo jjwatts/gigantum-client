@@ -11,7 +11,7 @@ import FilePreview from 'Components/labbook/overview/FilePreview';
 import RecentActivity from 'Components/labbook/overview/RecentActivity';
 import Loader from 'Components/common/Loader';
 import CodeBlock from 'Components/labbook/renderers/CodeBlock';
-import ToolTip from 'Components/common/ToolTip';
+import Tooltip from 'Components/common/Tooltip';
 import Summary from 'Components/dataset/overview/Summary';
 // mutations
 import WriteLabbookReadmeMutation from 'Mutations/WriteLabbookReadmeMutation';
@@ -37,15 +37,15 @@ export default class Overview extends Component {
       simpleExists: false,
       editorFullscreen: false,
     };
-    this._handleClick = this._handleClick.bind(this);
   }
+
   /*
     runs state check when component mounts
   */
   componentDidMount() {
     this._setExpand();
-    window.addEventListener('click', this._handleClick);
   }
+
   /*
     runs state check when component updates
   */
@@ -64,8 +64,10 @@ export default class Overview extends Component {
         simple.value(sectionProps.overview.readme ? sectionProps.overview.readme : '');
         this.setState({ simpleExists: true });
 
-        let fullscreenButton = document.getElementsByClassName('fa-arrows-alt')[0],
-          sideBySideButton = document.getElementsByClassName('fa-columns')[0];
+        const fullscreenButton = document.getElementsByClassName('fa-arrows-alt')[0];
+
+
+        const sideBySideButton = document.getElementsByClassName('fa-columns')[0];
 
         fullscreenButton && fullscreenButton.addEventListener('click', () => this.setState({ editorFullscreen: !this.state.editorFullscreen }));
 
@@ -91,6 +93,7 @@ export default class Overview extends Component {
     el.style.overflow = curOverflow;
     return isOverflowing;
   }
+
   _setExpand() {
     const element = Array.prototype.slice.call(document.getElementsByClassName('ReadmeMarkdown'))[0];
     if (element && this.checkOverflow(element) && !this.state.overflowExists) {
@@ -99,15 +102,7 @@ export default class Overview extends Component {
       this.setState({ overflowExists: false });
     }
   }
-  /**
-   @param {event} evt
-   hides warning when not clicked on
-   */
-  _handleClick(evt) {
-    if ((evt.target.className.indexOf('Overview__readme-save') === -1) && this.state.readMeWarning) {
-      this.setState({ readMeWarning: null });
-    }
-  }
+
   /**
    @param {}
    reverts readme to have a max size
@@ -119,6 +114,7 @@ export default class Overview extends Component {
       window.scrollTo(0, 345);
     }
   }
+
   /**
    @param {}
    sets readmeExpanded as true in state
@@ -126,6 +122,7 @@ export default class Overview extends Component {
   _expandReadme() {
     this.setState({ readmeExpanded: true });
   }
+
   /**
    @param {Boolean} editingReadme
    sets state for editing readme
@@ -133,6 +130,7 @@ export default class Overview extends Component {
   _setEditingReadme(editingReadme) {
     this.setState({ editingReadme });
   }
+
   /**
    @param {}
    sets readme state to false
@@ -140,6 +138,7 @@ export default class Overview extends Component {
   _closeReadme() {
     this.setState({ editingReadme: false, simpleExists: false });
   }
+
   /**
    @param {String} owner
    @param {String} labbookName
@@ -160,6 +159,7 @@ export default class Overview extends Component {
       },
     );
   }
+
   /**
    @param {String} owner
    @param {String} labbookName
@@ -180,24 +180,20 @@ export default class Overview extends Component {
       },
     );
   }
+
   /**
    @param {}
    handles calling mutation functions to save readme
    */
   _saveReadme() {
-    if (this.props.isPublishing) {
-      this.setState({ readMeWarning: 'publishing' });
-    } else if (this.props.isSyncing) {
-      this.setState({ readMeWarning: 'syncing' });
+    const { owner, labbookName } = store.getState().routes;
+    if (this.props.sectionType === 'labbook') {
+      this._saveLabbookReadme(owner, labbookName);
     } else {
-      const { owner, labbookName } = store.getState().routes;
-      if (this.props.sectionType === 'labbook') {
-        this._saveLabbookReadme(owner, labbookName);
-      } else {
-        this._saveDatasetReadme(owner, labbookName);
-      }
+      this._saveDatasetReadme(owner, labbookName);
     }
   }
+
   /**
     @param {String} section
     handles redirect and scrolling to top
@@ -211,125 +207,117 @@ export default class Overview extends Component {
 
   render() {
     const { props, state } = this;
+
+
     const overviewCSS = classNames({
-        Overview: true,
-        'Overview--fullscreen': state.editorFullscreen,
-      }),
+      Overview: true,
+      'Overview--fullscreen': state.editorFullscreen,
+    });
 
-      readmeCSS = classNames({
-        'ReadmeMarkdown--expanded': state.readmeExpanded,
-        ReadmeMarkdown: !state.readmeExpanded,
-      }),
 
-      overviewReadmeEditingCSS = classNames({
-        'Overview__readme--editing column-1-span-12': state.editingReadme,
-        hidden: !state.editingReadme,
-      }),
+    const readmeCSS = classNames({
+      'ReadmeMarkdown--expanded': state.readmeExpanded,
+      ReadmeMarkdown: !state.readmeExpanded,
+    });
 
-      overviewReadmeCSS = classNames({
-        'Overview__readme Card Card--auto Card--no-hover column-1-span-12': !state.editingReadme,
-        hidden: state.editingReadme,
-      }),
 
-      overviewReadmeButtonCSS = classNames({
-        'Overview__readme-edit-button': true,
-        hidden: state.editingReadme,
-      });
-    const sectionProps = props[props.sectionType],
-          typeText = props.sectionType === 'labbook' ? 'Environment' : 'Type';
+    const overviewReadmeEditingCSS = classNames({
+      'Overview__readme--editing column-1-span-12': state.editingReadme,
+      hidden: !state.editingReadme,
+    });
+
+
+    const overviewReadmeCSS = classNames({
+      'Overview__readme Readme Card Card--auto Card--no-hover column-1-span-12': !state.editingReadme,
+      hidden: state.editingReadme,
+    });
+
+
+    const overviewReadmeButtonCSS = classNames({
+      'Btn Btn--feature Btn__edit': true,
+      hidden: state.editingReadme,
+    });
+
+
+    const sectionProps = props[props.sectionType];
+
+
+    const isLabbook = (props.sectionType === 'labbook');
+
+
+    const typeText = isLabbook ? 'Environment' : 'Type';
+
+
+    const overViewComponent = isLabbook
+      ? (
+        <RecentActivity
+          recentActivity={sectionProps.overview.recentActivity}
+          scrollToTop={props.scrollToTop}
+          history={props.history}
+        />
+      )
+      : (
+        <Summary
+          isManaged={props.isManaged}
+          {...sectionProps.overview}
+        />
+      );
 
     if (sectionProps) {
       const { owner, labbookName } = store.getState().routes;
       return (
 
         <div className={overviewCSS}>
-          {
-            props.sectionType === 'labbook' ?
-            <div>
-              <RecentActivity
-                recentActivity={sectionProps.overview.recentActivity}
-                scrollToTop={props.scrollToTop}
-                history={props.history}
-              />
-
-            </div>
-            :
-            <Fragment>
-              <div className="Overview__container">
-                <h5 className="Overview__title">
-                  Summary <ToolTip section="summary" />
-                </h5>
-
-              </div>
-              <div>
-                <Summary
-                  isManaged={props.isManaged}
-                  {...sectionProps.overview}
-                />
-              </div>
-            </Fragment>
-          }
+          { overViewComponent }
 
           <div className="Overview__container">
 
-            <h5 className="Overview__title">
-              Readme <ToolTip section="readMe" />
-            </h5>
+            <h2 className="Overview__title">
+              Readme
+              <Tooltip section="readMe" />
+            </h2>
 
-            </div>
+          </div>
 
-            {
-            state.editingReadme &&
-            <div className="grid">
-              <div className={overviewReadmeEditingCSS}>
+          { state.editingReadme
+              && (
+              <div className="grid">
+                <div className={overviewReadmeEditingCSS}>
 
-                <textarea
-                  ref="markdown"
-                  className="Overview__readme-editor"
-                  id="markDown"
-                />
+                  <textarea
+                    ref="markdown"
+                    className="Overview__readme-editor"
+                    id="markDown"
+                  />
 
-                <div className="Overview__readme--editing-buttons">
-
-                  <button
-                    className="Overview__readme-save"
-                    disabled={false}
-                    onClick={() => { this._saveReadme(); }}
-                  >
-                    Save
-                  </button>
-
-                  {
-                    state.readMeWarning &&
-
-                    <Fragment>
-
-                      <div className="BranchMenu__menu-pointer" />
-
-                      <div className="BranchMenu__button-menu">
-                        Readme cannot be edited while project is
-                        {state.readMeWarning}
-                        .
-                      </div>
-                    </Fragment>
-                  }
-                  <button
-                    className="Overview__readme-cancel"
-                    onClick={() => { this._closeReadme(); }}
-                  >
+                  <div className="Overview__readme--editing-buttons">
+                    <button
+                      className="Overview__readme-cancel Btn--flat"
+                      onClick={() => { this._closeReadme(); }}
+                    >
                     Cancel
-                  </button>
+                    </button>
+
+                    <button
+                      className="Overview__readme-save"
+                      disabled={false}
+                      onClick={() => { this._saveReadme(); }}
+                    >
+                    Save
+                    </button>
+                  </div>
                 </div>
               </div>
-             </div>
+              )
             }
-            {
-            sectionProps.overview.readme ?
+          { sectionProps.overview.readme
+            ? (
               <div className="grid">
                 <div className={overviewReadmeCSS}>
                   <button
                     className={overviewReadmeButtonCSS}
-                    onClick={() => this._setEditingReadme(true)}>
+                    onClick={() => this._setEditingReadme(true)}
+                  >
                     <span>Edit Readme</span>
                   </button>
                   <ReactMarkdown
@@ -338,72 +326,70 @@ export default class Overview extends Component {
                     renderers={{ code: props => <CodeBlock {...props} /> }}
                   />
 
-                  {
-                    state.overflowExists && !state.readmeExpanded &&
-
-                    <div className="Overview__readme-fadeout" />
-                  }
+                  { (state.overflowExists && !state.readmeExpanded)
+                      && <div className="Overview__readme-fadeout" />
+                    }
 
                   <div className="Overview__readme-buttons">
-                    {
-                      state.overflowExists && (state.readmeExpanded ?
+                    { (state.overflowExists && state.readmeExpanded)
+                      ? (
                         <div className="Overview__readme-bar-less">
                           <button
-                            className="Overview__readme-less"
-                            onClick={() => this._shrinkReadme()}>
-                            Collapse
-                          </button>
+                            className="Btn__loadMore Btn__loadMore--up"
+                            onClick={() => this._shrinkReadme()}
+                          />
                         </div>
-                        :
+                      )
+                      : (
                         <div className="Overview__readme-bar-more">
                           <button
-                            className="Overview__readme-more"
+                            className="Btn__loadMore Btn__loadMore--down"
                             onClick={() => this._expandReadme()}
-                          >
-                            Expand
-                          </button>
-                        </div>)
-                    }
+                          />
+                        </div>
+                      )
+                      }
                   </div>
-
                 </div>
               </div>
-              :
-              !state.editingReadme &&
-                <div className="grid">
-                  <div className="Overview__empty column-1-span-12">
-                    <button
-                      className={overviewReadmeButtonCSS}
+            )
+            : !state.editingReadme
+              && (
+              <div className="grid">
+                <div className="Overview__empty column-1-span-12">
+                  <button
+                    className={overviewReadmeButtonCSS}
+                    onClick={() => this._setEditingReadme(true)}
+                  >
+                    <span>Edit Readme</span>
+                  </button>
+                  <div className="Overview__empty-content">
+                    <p>This Project Has No Readme</p>
+                    <p
+                      className="Overview__empty-action"
                       onClick={() => this._setEditingReadme(true)}
                     >
-                      <span>Edit Readme</span>
-                    </button>
-                    <div className="Overview__empty-content">
-                      <p>This Project Has No Readme</p>
-                      <p
-                        className="Overview__empty-action"
-                        onClick={() => this._setEditingReadme(true)}
-                      >
                         Create a Readme
-                      </p>
-                    </div>
+                    </p>
                   </div>
-                 </div>
+                </div>
+              </div>
+              )
             }
-              <div className="Overview__container">
 
-              <h5 className="Overview__title">
-                {typeText}
-                <ToolTip section="environmentOverview" />
-              </h5>
+          <div className="Overview__container">
+            <h2>
+              {typeText}
+              <Tooltip section="environmentOverview" />
+            </h2>
+          </div>
 
-            </div>
-            {
-              props.sectionType === 'labbook' ?
+          { isLabbook
+            ? (
               <div className="grid">
                 <div className="Overview__environment column-1-span-12">
                   <button
-                    className="Btn--redirect"
+                    className="Btn Btn--feature Btn__redirect Btn__overview"
                     onClick={() => this._handleRedirect('environment')}
                   >
                     <span>View Environment Details</span>
@@ -417,29 +403,25 @@ export default class Overview extends Component {
 
                 </div>
               </div>
-              :
+            )
+            : (
               <div className="Overview__environment">
-
                 <Type
                   type={props.datasetType}
                   isManaged={props.isManaged}
                 />
-
               </div>
-            }
-          {
-            props.sectionType === 'labbook' &&
-            <div>
-
-              <FilePreview
-                ref="filePreview"
-                scrollToTop={props.scrollToTop}
-                history={props.history}
-              />
-
-            </div>
+            )
           }
-
+          { isLabbook
+            && (
+            <FilePreview
+              ref="filePreview"
+              scrollToTop={props.scrollToTop}
+              history={props.history}
+            />
+            )
+          }
         </div>
       );
     }

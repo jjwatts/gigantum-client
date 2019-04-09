@@ -16,24 +16,27 @@
   border-radius: 3px;
 
   &--launch {
-    padding: 6px 30px 6px 20px;
+    width: auto;
+    padding: 8px 30px 8px 20px;
     text-align: left;
     align-items: flex-start;
     margin: 0 2px 0 0;
-    border-radius: 3px 0 0 3px;
+    border-radius: 4px 0 0 4px;
 
   }
 
   &--dropdown {
     height: 40px;
-    padding: 5px;
-    width: 24px;
-    border-radius: 0 3px 3px 0;
+    padding: 8px;
+    width: 34px;
+
     background: $azure url('~Images/icons/down-arrow-white.svg') no-repeat center center;
     background-size: 20px;
+    margin: 0;
+    border-radius: 0 4px 4px 0;
 
     &:hover, &:focus:hover{
-      background: $turquise url('~Images/icons/down-arrow-white.svg') no-repeat center center;
+      background: $azure url('~Images/icons/down-arrow-white.svg') no-repeat center center;
       background-size: 20px;
     }
 
@@ -48,7 +51,7 @@
     background-size: 20px;
 
     &:hover, &:focus:hover{
-      background: $turquise url('~Images/icons/up-arrow-white.svg') no-repeat center center;
+      background: $azure url('~Images/icons/up-arrow-white.svg') no-repeat center center;
       background-size: 20px;
     }
 

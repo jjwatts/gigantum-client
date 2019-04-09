@@ -5,7 +5,7 @@
   transition: all 0.125s;
   margin: 0;
   padding: 0px 10px;
-  color: $romanSilver;
+  color: $mineShaft;
   z-index: index($elements, card);
   position: relative;
   background: white;
@@ -31,7 +31,7 @@
 }
 
 .ActivityCard__loader {
-  margin: 20px 0px;
+  margin: 20px 0px !important;
   height: 40px;
   background: $white url('~Images/icons/paragraph.svg') repeat-X 10px center;
   padding: 0 5px;
@@ -51,7 +51,7 @@
     z-index: index($elements, pseudoCard);
     top: 100%;
     left: 40px;
-    border: 3px solid $romanSilver;
+    border: 3px solid $mineShaft;
     border-width: 0 0 0 4px;
     width: 1px;
     height: 30px;
@@ -67,7 +67,7 @@
      z-index: index($elements, pseudoCard);
      top: 100%;
      left: 38px;
-     border: 3px solid $romanSilver;
+     border: 3px solid $mineShaft;
      border-width: 0 0 0 4px;
      width: 1px;
      height: 11px;
@@ -97,6 +97,15 @@
     cursor: pointer;
     background: url('~Images/icons/down-arrow-silver.svg') no-repeat 98% center;
     background-size: 20px;
+    .ActivityCard__commit-message {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      white-space: pre-line;
+      text-overflow: ellipsis;
+      -webkit-line-clamp: 2;
+      line-height: 24px;
+    }
   }
 
   &.closed:hover {
@@ -111,7 +120,7 @@
 .ActivityCard__row {
   p {
     padding: 5px 15px;
-    border-left: 1px solid $romanSilver;
+    border-left: 1px solid $mineShaft;
     flex: 1 1 auto;
     word-wrap: break-word;
     word-break: break-all;
@@ -141,7 +150,7 @@
   align-self: center;
   max-width: 120px;
   margin: 2px 0;
-  color: $romanSilver;
+  color: $mineShaft;
   font-size: 14px;
   font-weight: bold;
   position: absolute;
@@ -187,13 +196,13 @@
   background: none;
   width: 200px;
   border: 0;
-  color: $romanSilver;
+  color: $mineShaft;
 }
 
 .ActivityCard__toggle-button:focus {
   background: none;
   border: 0;
-  color: $romanSilver;
+  color: $mineShaft;
 }
 
 .ActivityCard__toggle-icon {
@@ -233,6 +242,7 @@
   flex: 1 0 auto;
   font-size: 16px;
   margin: 18px 40px 18px 15px;
+  line-height: 24px;
 }
 
 .ActivityCard__tags-list {
@@ -372,7 +382,7 @@
 }
 
 .ActivityDetail__details-title {
-  border-top: 1px solid $romanSilver;
+  border-top: 1px solid $mineShaft;
   padding: 5px;
   cursor: pointer;
 
@@ -523,7 +533,7 @@
 
 .ActivityCard--cluster {
   margin: 0;
-  color: $romanSilver;
+  color: $mineShaft;
   z-index: index($elements, card);
   position: relative;
   cursor: pointer;

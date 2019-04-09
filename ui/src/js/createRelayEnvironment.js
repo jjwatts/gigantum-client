@@ -5,10 +5,16 @@ const {
 } = require('relay-runtime');
 
 const parseParams = (str) => {
-  let pieces = str.split('&'),
-    data = {},
-    i,
-    parts;
+  const pieces = str.split('&');
+
+
+  const data = {};
+
+
+  let i;
+
+
+  let parts;
   // process each query pair
   for (i = 0; i < pieces.length; i++) {
     parts = pieces[i].split('=');
@@ -84,14 +90,12 @@ const network = Network.create(fetchQuery);
 
 const handlerProvider = function handlerProvider(handle) {
   switch (handle) {
-    // Augment (or remove from) this list:
+    // Augment (or remove from) this list
     case 'connection': return ConnectionHandler;
     case 'viewer': return ViewerHandler;
+    default: return ConnectionHandler;
   }
-  throw new Error(
-    `handlerProvider: No handler provided for ${handle}`
-  );
-}
+};
 
 const source = new RecordSource();
 const store = new Store(source);

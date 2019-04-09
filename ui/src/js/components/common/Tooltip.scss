@@ -1,0 +1,283 @@
+@import '~Styles/_imports.scss';
+
+.Tooltip {
+  position: relative;
+}
+
+.Tooltip__toggle{
+  position: absolute;
+
+  width: 15px;
+  height: 15px;
+
+  cursor: pointer;
+  transition: all 0.125s;
+
+  border-radius: 50%;
+  background: url('~Images/icons/feature.svg') no-repeat center center;
+  background-size: 30px;
+
+  &:hover,
+  &--active {
+    transform: scale(1.3);
+  }
+}
+
+.Tooltip__message {
+  position: absolute;
+  z-index: index($elements, popup);
+
+  width: 350px;
+  padding: 15px;
+
+  user-select: none;
+  text-align: center;
+  white-space: pre-line;
+  word-break: normal;
+
+  color: $jet;
+  color: $white;
+  border-radius: 8px;
+  background: $slateBlue;
+
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 22px;
+
+  @include boxShadow();
+  @include animation('slide-down-fade-in forwards .25s');
+}
+
+.Tooltip__pointer{
+  position: absolute;
+  z-index: index($elements, popup) + 1;
+
+  @include triangle('up', 14px, $slateBlue);
+  @include animation('slide-down-fade-in forwards .25s');
+}
+
+.Tooltip__glow-ring-outer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.Tooltip__glow-ring-inner {
+  position: absolute;
+
+  width: 15px;
+  height: 15px;
+  margin-top: -8px;
+  margin-left: -8px;
+
+  pointer-events: none;
+
+  opacity: 0;
+  border: 2px solid #FCD430;
+  border-radius: 50%;
+
+  @include animation('expand-ring 2s 0s ease-out infinite');
+}
+
+.Tooltip.recentActivity,
+.Tooltip.readMe,
+.Tooltip.environmentOverview,
+.Tooltip.codeOverview,
+.Tooltip.inputDataOverview,
+.Tooltip.outputDataOverview,
+.Tooltip.baseEnvironment,
+.Tooltip.packagesEnvironment,
+.Tooltip.dockerInstructionsEnvironment,
+.Tooltip.codeFiles,
+.Tooltip.codeBrowser,
+.Tooltip.inputDataFiles,
+.Tooltip.inputDataBrowser,
+.Tooltip.outputDataFiles,
+.Tooltip.outputDataBrowser{
+  .Tooltip__toggle{
+    top: -20px;
+    right: -20px;
+  }
+  .Tooltip__pointer{
+    top: -1px;
+    right: -27px;
+  }
+  .Tooltip__message{
+    top: 11px;
+    right: -268px;
+  }
+}
+
+.Tooltip.containerStatus{
+  .Tooltip__toggle{
+    top: -23px;
+    right: -12px;
+  }
+  .Tooltip__pointer{
+    top: -6px;
+    right: -18px;
+  }
+  .Tooltip__message{
+    top: 5px;
+    right: -20px;
+  }
+}
+
+.Tooltip.descriptionOverview{
+  .Tooltip__toggle{
+    top: -58px;
+    right: -18px;
+  }
+  .Tooltip__pointer{
+    top: -40px;
+    right: -24px;
+  }
+  .Tooltip__message{
+    top: -26px;
+    right: -50px;
+  }
+}
+
+.Tooltip.branchView{
+  .Tooltip__toggle{
+    right: 12px;
+    bottom: 13px;
+  }
+  .Tooltip__pointer{
+    right: 5px;
+    bottom: -6px;
+  }
+  .Tooltip__message{
+    top: 61px;
+    right: -78px;
+  }
+}
+
+.Tooltip.actionMenu{
+  .Tooltip__toggle{
+    top: 27px;
+    right: 46px;
+  }
+  .Tooltip__pointer{
+    top: 48px;
+    right: 40px;
+  }
+  .Tooltip__message{
+    top: 62px;
+    right: -7px;
+  }
+}
+
+.Tooltip.actionMenu.isSticky{
+  .Tooltip__toggle{
+    right: 21px;
+  }
+  .Tooltip__pointer{
+    right: 15px;
+  }
+}
+
+.Tooltip.userNote{
+  .Tooltip__toggle{
+    top: calc(50% - 7.5px);
+    left: 7px;
+  }
+  .Tooltip__pointer{
+    top: 39px;
+    left: 0;
+  }
+  .Tooltip__message{
+    top: 51px;
+    left: -7px;
+  }
+}
+
+.Tooltip.activitySubmenu{
+  .Tooltip__toggle{
+    top: calc(50% - 7.5px);
+    left: 7px;
+  }
+  .Tooltip__pointer{
+    top: calc(50% + 13px);
+    left: 0;
+  }
+  .Tooltip__message{
+    top: calc(50% + 21px);
+    left: -7px;
+  }
+}
+
+.Tooltip.activityCluster{
+  .Tooltip__toggle{
+    z-index: index($elements, popup);
+    top: 6px;
+    left: 583px;
+  }
+  .Tooltip__pointer{
+    top: 24px;
+    left: 576px;
+  }
+  .Tooltip__message{
+    top: 38px;
+    left: 446px;
+  }
+}
+
+.Tooltip.labbookListing{
+  .Tooltip__toggle{
+    right: 20px;
+    bottom: 60px;
+  }
+  .Tooltip__pointer{
+    right: 14px;
+    bottom: 38px;
+  }
+  .Tooltip__message{
+    top: -38px;
+    left: 10px;
+  }
+}
+
+.Tooltip.dataSets{
+  .Tooltip__toggle{
+    right: 20px;
+    bottom: 60px;
+  }
+  .Tooltip__pointer{
+    right: 14px;
+    bottom: 38px;
+  }
+  .Tooltip__message{
+    bottom: -35px;
+    left: 10px;
+  }
+}
+
+.Tooltip.createLabbook,
+.Tooltip.importLabbook{
+  .Tooltip__toggle{
+    right: 0;
+    bottom: 25px;
+  }
+  .Tooltip__pointer{
+    right: -30px;
+    bottom: 18px;
+
+    @include triangle('left', 14px, $white);
+  }
+  .Tooltip__message{
+    top: -100px;
+    left: 300px;
+  }
+}
+
+.Tooltip.cloudLocal{
+  .Tooltip__pointer{
+    top: 20px;
+    left: -7px;
+  }
+  .Tooltip__message{
+    top: 33px;
+    left: -100px;
+  }
+}

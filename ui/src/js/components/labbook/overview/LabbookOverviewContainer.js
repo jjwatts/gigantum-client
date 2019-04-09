@@ -1,15 +1,15 @@
 // vendor
 import {
-    createFragmentContainer,
-    graphql,
-  } from 'react-relay';
+  createFragmentContainer,
+  graphql,
+} from 'react-relay';
 // components
 import Overview from 'Components/shared/overview/Overview';
 
 
 export default createFragmentContainer(
-    Overview,
-    graphql`fragment LabbookOverviewContainer_labbook on Labbook {
+  Overview,
+  graphql`fragment LabbookOverviewContainer_labbook on Labbook {
       overview{
         id
         owner
@@ -42,4 +42,4 @@ export default createFragmentContainer(
         ...Base_environment
       }
     }`,
-  );
+);

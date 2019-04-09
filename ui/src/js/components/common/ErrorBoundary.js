@@ -1,5 +1,7 @@
 // vendor
 import React, { Component } from 'react';
+// assets
+import './ErrorBoundary.scss';
 
 export default class ErrorBoundary extends Component {
   constructor() {
@@ -21,7 +23,7 @@ export default class ErrorBoundary extends Component {
     }
     if (this.state.hasError) {
       return (
-        <div className={`ComponentError ${this.props.type}`}>
+        <div className={`ErrorBoundary ${this.props.type}`}>
           <p>{text}</p>
         </div>
       );

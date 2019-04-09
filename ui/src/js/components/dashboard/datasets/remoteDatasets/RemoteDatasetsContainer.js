@@ -1,8 +1,10 @@
-import Datasets from './../Datasets';
+// vendor
 import {
   createFragmentContainer,
   graphql,
 } from 'react-relay';
+// components
+import Datasets from '../Datasets';
 
 export default createFragmentContainer(
   Datasets,

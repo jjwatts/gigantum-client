@@ -49,7 +49,6 @@ export default (
     };
   }
   if (action.type === UPDATE_CONTAINER_MENU_VISIBILITY) {
-
     return {
       ...state,
       containerMenuOpen: action.payload.containerMenuOpen,

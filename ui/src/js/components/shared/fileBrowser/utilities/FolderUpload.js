@@ -55,11 +55,9 @@ const fileExistenceQuery = graphql`
 *  checks if a folder or file exists
 *  @return {promise}
 */
-const checkIfFolderExists = (variables, section, type) => {
-  return new Promise((resolve, reject) => {
-    resolve({ labbook: null, variables });
-  });
-};
+const checkIfFolderExists = (variables, section, type) => new Promise((resolve, reject) => {
+  resolve({ labbook: null, variables });
+});
 
 /**
 *  @param {string} connectionKey

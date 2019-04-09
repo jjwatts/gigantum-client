@@ -6,10 +6,10 @@ import Favorites from 'Components/shared/filesShared/favorites/Favorites';
 import store from 'JS/redux/store';
 
 export default createPaginationContainer(
-    Favorites,
-    {
+  Favorites,
+  {
 
-      code: graphql`
+    code: graphql`
         fragment CodeFavorites_code on LabbookSection{
           favorites(after: $cursor, first: $first)@connection(key: "CodeFavorites_favorites"){
             edges{
@@ -34,28 +34,28 @@ export default createPaginationContainer(
             }
           }
         }`,
+  },
+  {
+    direction: 'forward',
+    getConnectionFromProps(props) {
+      return props.code && props.code.favorites;
     },
-    {
-      direction: 'forward',
-      getConnectionFromProps(props) {
-        return props.code && props.code.favorites;
-      },
-      getFragmentVariables(prevVars, totalCount) {
-        return {
-          ...prevVars,
-          first: totalCount,
-        };
-      },
-      getVariables(props, { count, cursor }, fragmentVariables) {
-        const { owner, labbookName } = store.getState().routes;
-        return {
-          first: count,
-          cursor,
-          owner,
-          name: labbookName,
-        };
-      },
-      query: graphql`
+    getFragmentVariables(prevVars, totalCount) {
+      return {
+        ...prevVars,
+        first: totalCount,
+      };
+    },
+    getVariables(props, { count, cursor }, fragmentVariables) {
+      const { owner, labbookName } = store.getState().routes;
+      return {
+        first: count,
+        cursor,
+        owner,
+        name: labbookName,
+      };
+    },
+    query: graphql`
         query CodeFavoritesPaginationQuery(
           $first: Int
           $cursor: String
@@ -72,6 +72,6 @@ export default createPaginationContainer(
           }
         }
       `,
-    },
+  },
 
-  );
+);

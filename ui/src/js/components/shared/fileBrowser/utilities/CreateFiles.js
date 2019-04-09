@@ -1,11 +1,5 @@
 // vendor
 import uuidv4 from 'uuid/v4';
-// utilities
-import ChunkUploader from 'JS/utils/ChunkUploader';
-import config from 'JS/config';
-import FolderUpload from './FolderUpload';
-import ignore from 'ignore';
-import gitIgnoreJson from 'JS/data/gitignore.json';
 // store
 import {
   setErrorMessage,
@@ -22,6 +16,12 @@ import {
 } from 'JS/redux/reducers/labbook/fileBrowser/fileBrowserWrapper';
 import { setUpdateDetailView } from 'JS/redux/reducers/labbook/labbook';
 import store from 'JS/redux/store';
+// utilities
+import ChunkUploader from 'JS/utils/ChunkUploader';
+import config from 'JS/config';
+import ignore from 'ignore';
+import gitIgnoreJson from 'JS/data/gitignore.json';
+import FolderUpload from './FolderUpload';
 
 const ig = ignore().add(gitIgnoreJson.gitIgnore);
 /**
@@ -31,28 +31,28 @@ const ig = ignore().add(gitIgnoreJson.gitIgnore);
 *  @return {}
 */
 const createFiles = (files, prefix, mutationData, dropZoneProps, fileSizeData) => {
-    let filenames = files.map((file) => {
-      let filename = file.entry ? `D:/${file.entry.fullPath}` : file.name;
-      return filename;
-    });
-    let filteredFileNames = ig.filter(filenames);
-    let filteredFiles = files.filter((file) => {
-      let filename = file.entry ? `D:/${file.entry.fullPath}` : file.name;
-      return (filteredFileNames.indexOf(filename) > -1);
-    });
+  const filenames = files.map((file) => {
+    const filename = file.entry ? `D:/${file.entry.fullPath}` : file.name;
+    return filename;
+  });
+  const filteredFileNames = ig.filter(filenames);
+  const filteredFiles = files.filter((file) => {
+    const filename = file.entry ? `D:/${file.entry.fullPath}` : file.name;
+    return (filteredFileNames.indexOf(filename) > -1);
+  });
 
-    if (mutationData.section !== 'dataset') {
-      startFileUpload(filteredFiles, prefix, fileSizeData, mutationData, dropZoneProps);
-    } else {
-      const fileSizeData = checkFileSize(files, true);
-      startFileUpload(filteredFiles, prefix, fileSizeData, mutationData, dropZoneProps);
-    }
+  if (mutationData.section !== 'dataset') {
+    startFileUpload(filteredFiles, prefix, fileSizeData, mutationData, dropZoneProps);
+  } else {
+    const fileSizeData = checkFileSize(files, true);
+    startFileUpload(filteredFiles, prefix, fileSizeData, mutationData, dropZoneProps);
+  }
 
-    if (filenames.length !== filteredFiles.length) {
-      let ignoredFiles = filenames.filter(filename => filteredFileNames.indexOf(filename) < 0);
-      let ignoredFilesString = ignoredFiles.join(', ').replace(/D:\//g, '');
-      setWarningMessage(`The following files have been ignored: ${ignoredFilesString}`);
-    }
+  if (filenames.length !== filteredFiles.length) {
+    const ignoredFiles = filenames.filter(filename => filteredFileNames.indexOf(filename) < 0);
+    const ignoredFilesString = ignoredFiles.join(', ').replace(/D:\//g, '');
+    setWarningMessage(`The following files have been ignored: ${ignoredFilesString}`);
+  }
 };
 /**
 *  @param {Array:[Object]} folderFiles
@@ -112,12 +112,22 @@ const startFolderUpload = (folderFiles, prefix, totalFiles, mutationData) => {
 *  @return {}
 */
 const startFileUpload = (files, prefix, fileSizeData, mutationData, dropZoneProps) => {
-  let fileMetaData = getTotalFileLength(files),
-    transactionId = uuidv4(),
-    totalFiles = fileMetaData.fileCount - fileSizeData.fileSizeNotAllowed,
-    hasDirectoryUpload = fileMetaData.hasDirectoryUpload,
-    self = this,
-    folderFiles = [];
+  const fileMetaData = getTotalFileLength(files);
+
+
+  const transactionId = uuidv4();
+
+
+  const totalFiles = fileMetaData.fileCount - fileSizeData.fileSizeNotAllowed;
+
+
+  const hasDirectoryUpload = fileMetaData.hasDirectoryUpload;
+
+
+  const self = this;
+
+
+  const folderFiles = [];
 
   createFilesFooterMessage(totalFiles, hasDirectoryUpload, fileSizeData, mutationData);
   // loop through files and upload if file is a file;
@@ -231,7 +241,7 @@ const createFilesFooterMessage = (totalFiles, hasDirectoryUpload, fileSizeData, 
     const fileSizeNotAllowedString = fileSizeNotAllowedNames.join(', ');
 
     if (fileSizeNotAllowedString.length > 0) {
-      let size = (mutationData.section === 'code') ? '100 MB' : (mutationData.section === 'data') ? '4 GB' : '500 MB';
+      const size = (mutationData.section === 'code') ? '100 MB' : (mutationData.section === 'data') ? '4 GB' : '500 MB';
 
       const inputOutputDatasetMessage = (mutationData.section === 'input') || (mutationData.section === 'output') ? 'Please use datasets for large files.' : '';
       const message = `Cannot upload files over ${size} to the ${mutationData.section} directory. The following files have not been added ${fileSizeNotAllowedString}. ${inputOutputDatasetMessage}`;
@@ -243,51 +253,51 @@ const createFilesFooterMessage = (totalFiles, hasDirectoryUpload, fileSizeData, 
   }
 };
 
- /**
+/**
   * @param {Array:[Object]} files
   * @param {boolean} noPrompt
   *
   * @return {number} totalFiles
   */
-  const checkFileSize = (files, noPrompt) => {
-    const tenMB = 10 * 1000 * 1000;
-    const oneHundredMB = 100 * 1000 * 1000;
-    const eighteenHundredMB = oneHundredMB * 18;
-    const fileSizePrompt = [];
-    const fileSizeNotAllowed = [];
+const checkFileSize = (files, noPrompt) => {
+  const tenMB = 10 * 1000 * 1000;
+  const oneHundredMB = 100 * 1000 * 1000;
+  const eighteenHundredMB = oneHundredMB * 18;
+  const fileSizePrompt = [];
+  const fileSizeNotAllowed = [];
 
-    function filesRecursionCount(file) {
-      if (Array.isArray(file)) {
-        file.forEach((nestedFile) => {
-          filesRecursionCount(nestedFile);
-        });
-      } else if (file && file.file && Array.isArray(file.file) && (file.file.length > 0)) {
-        file.file.forEach((nestedFile) => {
-          filesRecursionCount(nestedFile);
-        });
-      } else {
-        const extension = file.name ? file.name.replace(/.*\./, '') : file.entry.fullPath.replace(/.*\./, '');
+  function filesRecursionCount(file) {
+    if (Array.isArray(file)) {
+      file.forEach((nestedFile) => {
+        filesRecursionCount(nestedFile);
+      });
+    } else if (file && file.file && Array.isArray(file.file) && (file.file.length > 0)) {
+      file.file.forEach((nestedFile) => {
+        filesRecursionCount(nestedFile);
+      });
+    } else {
+      const extension = file.name ? file.name.replace(/.*\./, '') : file.entry.fullPath.replace(/.*\./, '');
 
-        if ((config.fileBrowser.excludedFiles.indexOf(extension) < 0) && ((file.entry && file.entry.isFile) || (typeof file.type === 'string'))) {
-          if (!noPrompt) {
-            if (file.size > oneHundredMB) {
-              fileSizeNotAllowed.push(file);
-            }
-
-            if ((file.size > tenMB) && (file.size < oneHundredMB)) {
-              fileSizePrompt.push(file);
-            }
-          } else if (file.size > eighteenHundredMB) {
+      if ((config.fileBrowser.excludedFiles.indexOf(extension) < 0) && ((file.entry && file.entry.isFile) || (typeof file.type === 'string'))) {
+        if (!noPrompt) {
+          if (file.size > oneHundredMB) {
             fileSizeNotAllowed.push(file);
           }
+
+          if ((file.size > tenMB) && (file.size < oneHundredMB)) {
+            fileSizePrompt.push(file);
+          }
+        } else if (file.size > eighteenHundredMB) {
+          fileSizeNotAllowed.push(file);
         }
       }
     }
+  }
 
-    filesRecursionCount(files);
+  filesRecursionCount(files);
 
-    return { fileSizeNotAllowed, fileSizePrompt };
- };
+  return { fileSizeNotAllowed, fileSizePrompt };
+};
 
 export default {
   createFiles,

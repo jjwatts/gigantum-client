@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import Moment from 'moment';
 // components
 import CodeBlock from 'Components/labbook/renderers/CodeBlock';
-import ToolTip from 'Components/common/ToolTip';
+import Tooltip from 'Components/common/Tooltip';
 import Lightbox from 'Components/common/Lightbox';
 // store
 import store from 'JS/redux/store';
@@ -13,7 +13,6 @@ import store from 'JS/redux/store';
 import './RecentActivity.scss';
 
 export default class RecentActivity extends Component {
-
   state = {
     imageExpanded: false,
   }
@@ -22,6 +21,7 @@ export default class RecentActivity extends Component {
     this._setLinks();
     window.addEventListener('resize', this._setLinks.bind(this));
   }
+
   componentWillUnmount() {
     window.removeEventListener('resize', this._setLinks.bind(this));
   }
@@ -39,9 +39,11 @@ export default class RecentActivity extends Component {
       // TODO: remove switch and use if else to match an image vs text
       switch (item[0]) {
         case 'text/plain':
-          return (<div className="ReactMarkdown">
-            <p>{item[1]}</p>
-          </div>);
+          return (
+            <div className="ReactMarkdown">
+              <p>{item[1]}</p>
+            </div>
+          );
         case 'image/png':
           return (<p className="ReactMarkdown"><img alt="detail" src={item[1]} /></p>);
         case 'image/jpg':
@@ -53,13 +55,15 @@ export default class RecentActivity extends Component {
         case 'image/gif':
           return (<p className="ReactMarkdown"><img alt="detail" src={item[1]} /></p>);
         case 'text/markdown':
-          return (<ReactMarkdown
-            renderers={{
-              code: props => <CodeBlock {...props} />,
-            }}
-            className="ReactMarkdown"
-            source={item[1]}
-          />);
+          return (
+            <ReactMarkdown
+              renderers={{
+                code: props => <CodeBlock {...props} />,
+              }}
+              className="ReactMarkdown"
+              source={item[1]}
+            />
+          );
         default:
           return (<b>{item[1]}</b>);
       }
@@ -67,6 +71,7 @@ export default class RecentActivity extends Component {
       return (<div>no result</div>);
     }
   }
+
   /** *
     @param {object} element
     checks if element is too large for card area
@@ -123,6 +128,7 @@ export default class RecentActivity extends Component {
       }
     }
   }
+
   /*
     @param {object}
     returns formated date
@@ -132,6 +138,7 @@ export default class RecentActivity extends Component {
     const date = new Date(edge.timestamp);
     return Moment((date)).format('hh:mm a');
   }
+
   /**
     @param {String} section
     handles redirect and scrolling to top
@@ -153,21 +160,22 @@ export default class RecentActivity extends Component {
       return (<div className="RecentActivity">
         <div className="RecentActivity__title-container">
 
-          <h5 className="RecentActivity__header">
+          <h2>
             Recent Activity
-            <ToolTip section="recentActivity" />
-          </h5>
+            <Tooltip section="recentActivity" />
+          </h2>
         </div>
 
         <div className="RecentActivity__list grid">
           <div key={edge.id} className="RecentActivity__card Card Card--auto Card--no-hover column-1-span-12">
             <button
-              className="Btn--redirect"
+              className="Btn Btn--feature Btn__redirect"
               onClick={() => this._handleRedirect('activity')}
             >
               <span>View more in Activity Feed</span>
             </button>
-            <div className={`ActivityCard__badge ActivityCard__badge--${edge.type.toLowerCase()}`}
+            <div
+              className={`ActivityCard__badge ActivityCard__badge--${edge.type.toLowerCase()}`}
               title={edge.type}
             />
             <div className="RecentActivityCard__content">
@@ -183,26 +191,31 @@ export default class RecentActivity extends Component {
                 </p>
               </div>
               {
-                imageMetadata && state.imageExpanded &&
+                imageMetadata && state.imageExpanded
+                && (
                 <Lightbox
                   imageMetadata={imageMetadata}
                   onClose={() => this.setState({ imageExpanded: false })}
                 />
+                )
               }
               <div className="RecentActivity__img-container">
                 {
-                  isImage &&
+                  isImage
+                  && (
                   <img
                     onClick={() => this.setState({ imageExpanded: true })}
-                    src={imageMetadata} alt="detail"
+                    src={imageMetadata}
+                    alt="detail"
                   />
+                  )
                 }
                 <div className="RecentActivity__expand">
                   Expand
                 </div>
               </div>
             </div>
-            </div>
+          </div>
         </div>
               </div>
       );
@@ -210,7 +223,7 @@ export default class RecentActivity extends Component {
 
     return (
       <div className="RecentActivity">
-        <h5 className="RecentActivity__header">Activity</h5>
+        <h2 className="RecentActivity__header">Activity</h2>
         <div className="RecentActivity__list grid">
           <div className="RecentActivity__card--loading" />
           <div className="RecentActivity__card--loading" />

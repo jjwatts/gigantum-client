@@ -159,6 +159,12 @@
 }
 .RecentActivity__message{
   margin-top: 5px;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  white-space: pre-line;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 4;
 }
 
 .RecentActivityCard__content{

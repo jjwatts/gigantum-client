@@ -2,7 +2,7 @@
 
 exports[`Activity renders a snapshot 1`] = `
 <div
-  className="ActivityCard__container column-1-span-10"
+  className="ActivityCard__container column-1-span-9"
   data-selenium-id="ActivityCard"
 >
   <div

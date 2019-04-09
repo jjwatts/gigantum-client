@@ -1,27 +1,19 @@
 @import '~Styles/_imports.scss';
 
 .LinkCard__dataset img {
-    align-self: center;
-    margin: 0 20px;
+    align-self: flex-start;
+    margin: 10px 20px 0;
 }
 
 .LinkCard__text{
-    @include flex(center, column);
-    word-break: break-word;
-    padding: 5px;
+
     flex: 1;
-    h6 {
-      padding: 10px 0 0;
-      font-weight: 400;
-      font-size: 14px;
-    }
+
+    @include flex(flex-start, column);
     p {
-      align-self: flex-end;
-      padding: 5px 0;
-      word-break: break-word;
+      align-self: flex-start;
       min-width: 375px;
       max-width: 375px;
-      margin: 0;
     }
     ul {
       margin: 0;
@@ -29,33 +21,28 @@
 }
 
 .LinkCard__details{
-    padding: 20px 10px;
-    color: $slateBlue;
-    @include flex(space-around, column);
-    h6 {
-      font-size: 16px;
-    }
 
+    color: $slateBlue;
+    margin: 0 40px 10px 0;
+
+    @include flex(space-around, column);
+
+    p {
+        margin: 2px 0;
+    }
   }
 
 .LinkCard__dataset {
-    @include flex(center, row);
 
     min-width: calc(50% - 10px);
     margin: 10px 0;
-    height: 100px;
+    height: auto;
 
     cursor: pointer;
+
+    @include flex(flex-start, row);
+
     &--selected {
       border: 2px solid $azure;
     }
   }
-
-.LinkCard__name{
-    color: $jet;
-    font-weight: 1000;
-  }
-
-.LinkCard__type{
-    font-size: 12px !important;
-}

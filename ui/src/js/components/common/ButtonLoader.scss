@@ -1,0 +1,45 @@
+@import '~Styles/_imports.scss';
+
+.ButtonLoader{
+
+  transition: all 0.5s;
+  &--loading,
+  &--loading:focus,
+  &--loading:hover,
+  &--loading:disabled {
+    color: transparent;
+
+    @include flex(center, row);
+
+  }
+  &--finished,
+  &--finished:focus,
+  &--finished:hover,
+  &--finished:disabled {
+    color: $white;
+    background: none !important;
+    background-color: $azure !important;
+  }
+  &--error,
+  &--error:focus,
+  &--error:hover,
+  &--error:disabled {
+    color: transparent !important;
+    background: $crimson url(~Images/icons/close-white.svg) no-repeat 50% 50% !important;
+    background-size: 14px !important;
+  }
+}
+
+.ButtonLoader__icon{
+   height: 20px;
+   width: 20px;
+   background-size: 22px;
+   margin: 0 auto;
+   border: 1px solid $white;
+   border-left: 1px solid $turquise;
+   border-radius: 10px;
+
+   position: absolute;
+
+   @include animation('spin 1s infinite linear');
+}

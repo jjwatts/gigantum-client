@@ -16,6 +16,7 @@ export default class DeleteBranch extends Component {
       eneteredBranchName: '',
     };
   }
+
   /**
   *  @param {object} event
   *  updates state of eneteredBranchName
@@ -26,6 +27,7 @@ export default class DeleteBranch extends Component {
       eneteredBranchName: evt.target.value,
     });
   }
+
   /**
   *  @param {}
   *  triggers DeleteExperimentalBranchMutation
@@ -66,14 +68,17 @@ export default class DeleteBranch extends Component {
         handleClose={() => this.props.toggleModal('deleteModalVisible')}
         size="medium"
         header="Delete Branch"
-        renderContent={() =>
-          (<Fragment>
+        icon="delete"
+        renderContent={() => (
+          <Fragment>
             <p className="DeleteBranch__text DeleteBranch__text--red">
-              You are going to delete {owner}/{cleanBranchName}. Deleted branches cannot be restored. Are you sure?
+              {`You are going to delete ${owner}/${cleanBranchName}. Deleted branches cannot be restored. Are you sure?`}
             </p>
 
             <p className="DeleteBranch__text">
-              This action can lead to data loss. Please type <b>{cleanBranchName}</b> to proceed.
+              This action can lead to data loss. Please type
+              <b>{cleanBranchName}</b>
+              to proceed.
             </p>
 
             <input
@@ -91,7 +96,8 @@ export default class DeleteBranch extends Component {
                 Confirm
               </button>
             </div>
-           </Fragment>)
+          </Fragment>
+        )
         }
       />
     );

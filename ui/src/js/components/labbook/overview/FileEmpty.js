@@ -7,32 +7,36 @@ import './FileEmpty.scss';
 
 export default class FileEmpty extends Component {
   render() {
-    const { owner, labbookName } = store.getState().routes;
-    const mainText = this.props.mainText;
-    const subText = this.props.subText;
-    return (
-      <div className="FileEmpty">
-        <div className={`FileEmpty__container FileEmpty__container--${this.props.section}`}>
+    const { props } = this;
 
-          <p className="FileEmpty__text FileEmpty__text--main">{mainText}</p>
-          {!this.props.callback ?
+
+    const {
+      owner,
+      name,
+      sectionType,
+      sectionLink,
+    } = props;
+
+    return (
+      (
+        <div className="FilePreview__empty column-1-span-12">
+          <button
+            className="Btn Btn--feature Btn__redirect"
+            onClick={() => props.handleRedirect(sectionLink)}
+          >
+            <span>{`View ${sectionType} Files`}</span>
+          </button>
+          <div className="FilePreview__empty-content">
+            <p className="FilePreview__empty-header">This Project has No Input Favorites</p>
             <Link
-              className="FileEmpty__text FileEmpty__text--sub"
-              to={{ pathname: `../../../../projects/${owner}/${labbookName}/${this.props.section}` }}
-              replace
+              className="FilePreview__empty-action"
+              to={{ pathname: `/projects/${owner}/${name}/${sectionLink}` }}
             >
-              {subText}
+              {`View and manage ${sectionType} Files`}
             </Link>
-                    :
-            <p
-              className="FileEmpty__text--sub"
-              onClick={() => { this.props.callback(); }}
-            >
-              {subText}
-            </p>
-                    }
+          </div>
         </div>
-      </div>
+      )
     );
   }
 }

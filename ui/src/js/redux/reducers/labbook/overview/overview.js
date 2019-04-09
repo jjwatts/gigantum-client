@@ -25,7 +25,7 @@ export default (
       ...state,
       containerStates,
     };
-  } else if (action.type === RESET_OVERVIEW_STORE) {
+  } if (action.type === RESET_OVERVIEW_STORE) {
     return {
       ...state,
       containerStates: {},

@@ -26,7 +26,7 @@ export default (
       ...state,
       isVisible: action.payload.isVisible,
     };
-  } else if (action.type === RESIZE_HELPER) {
+  } if (action.type === RESIZE_HELPER) {
     return {
       ...state,
       resize: uuidv4(),

@@ -2,28 +2,34 @@
 
 
 .VisibilityModal{
-  @include flex(space-between, column);
   height: 100%;
+
+  @include flex(space-between, column);
 }
 
 .VisibilityModal__buttons{
-  @include flex(space-between, row);
-
-  width: 340px;
+  width: 100%;
   margin: 0 auto;
+
+  @include flex(flex-end, row);
 }
 
 .VisibilityModal__private{
-  @include flex(space-between, row);
   align-items: center;
+
+  @include flex(space-between, row);
   label{
     min-width: 110px;
+    padding-left: 60px;
+    height: 36px;
+    line-height: 39px;
+    
+    cursor: pointer;
     text-align: left;
+
+    color: $slateBlue;
     background: url(~Images/icons/lock.svg) no-repeat 30px center;
     background-size: 20px;
-    color: $slateBlue;
-    padding-left: 60px;
-    cursor: pointer;
   }
   input{
     cursor: pointer;
@@ -31,16 +37,21 @@
 }
 
 .VisibilityModal__public{
-  @include flex(space-between, row);
   align-items: center;
+
+  @include flex(space-between, row);
   label{
     min-width: 110px;
+    padding-left: 60px;
+    height: 36px;
+    line-height: 39px;
+
+    cursor: pointer;
     text-align: left;
+
+    color: $slateBlue;
     background: url(~Images/icons/earth.svg) no-repeat 30px center;
     background-size: 20px;
-    color: $slateBlue;
-    padding-left: 60px;
-    cursor: pointer;
   }
   input{
     cursor: pointer;
@@ -48,8 +59,9 @@
 }
 
 .VisibilityModal__paragraph{
-  max-width: 640px;
   min-width: 640px;
+  max-width: 640px;
   padding: 0 0 0 80px;
+
   color: $romanSilver;
 }

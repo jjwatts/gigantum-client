@@ -73,8 +73,11 @@ export default class ActivityDefaultList extends Component {
 
   render() {
     const { props, state } = this;
-    let keys = this.props.categorizedDetails.detailKeys[this.props.itemKey],
-      type = this.props.categorizedDetails.detailObjects[this.props.itemKey][0].type.toLowerCase();
+    console.log(props.categorizedDetails.detailObjects[this.props.itemKey][0].type, props.categorizedDetails.detailObjects);
+    const keys = this.props.categorizedDetails.detailKeys[this.props.itemKey];
+
+
+    const type = this.props.categorizedDetails.detailObjects[this.props.itemKey][0].type.toLowerCase();
     const activityDetailsCSS = classNames({
       ActivityDetail__details: true,
       note: type === 'note',
@@ -83,33 +86,37 @@ export default class ActivityDefaultList extends Component {
 
       <div className={activityDetailsCSS}>
         {
-            state.showDetails && type !== 'note' ?
-              <div
-                onClick={() => { this._toggleDetailsList(); }}
-                className={state.show ? 'ActivityDetail__details-title ActivityDetail__details-title--open' : 'ActivityDetail__details-title ActivityDetail__details-title--closed'}>
-                <div className="ActivityDetail__header">
-                  <div className={`ActivityDetail__badge ActivityDetail__badge--${type}`} />
-                  <div className="ActivityDetail__content">
-                    <p>{this._formatTitle(props.itemKey)}</p>
+            state.showDetails && type !== 'note'
+              ? (
+                <div
+                  onClick={() => { this._toggleDetailsList(); }}
+                  className={state.show ? 'ActivityDetail__details-title ActivityDetail__details-title--open' : 'ActivityDetail__details-title ActivityDetail__details-title--closed'}
+                >
+                  <div className="ActivityDetail__header">
+                    <div className={`ActivityDetail__badge ActivityDetail__badge--${type}`} />
+                    <div className="ActivityDetail__content">
+                      <p>{this._formatTitle(props.itemKey)}</p>
+                    </div>
                   </div>
-                </div>
 
-              </div>
-            :
-              <hr />
+                </div>
+              )
+              : <hr />
           }
-        {state.show &&
+        {state.show
+        && (
         <div className="ActivtyDetail_list">
           <DetailRecords
             keys={keys}
             sectionType={props.sectionType}
           />
         </div>
+        )
           }
 
-        {props.showEllipsis &&
+        {props.showEllipsis
 
-        <div className="ActivityCard__ellipsis ActivityCard__ellipsis-detail" onClick={() => { this._toggleDetailsView(); }} />
+        && <div className="ActivityCard__ellipsis ActivityCard__ellipsis-detail" onClick={() => { this._toggleDetailsView(); }} />
 
           }
       </div>

@@ -1,47 +1,46 @@
+// vendor
 import React, { Component } from 'react';
 import classNames from 'classnames';
-
+// assets
+import './FooterUploadBar.scss';
 
 export default class FooterUploadBar extends Component {
   render() {
+    const { props } = this;
     const footerUploadClass = classNames({
-      hidden: !this.props.parentState.uploadOpen,
-      'Footer__upload-status': this.props.parentState.uploadOpen,
-      'Footer__upload-error': this.props.parentState.uploadError,
+      hidden: !props.parentState.uploadOpen,
+      'FooterUploadBar--status': props.parentState.uploadOpen,
+      'FooterUploadBar--error': props.parentState.uploadError,
     });
 
     return (
       <div className={footerUploadClass}>
-        <div className="Footer__upload-message">
-          {this.props.parentState.uploadMessage}
+        <div className="FooterUploadBar__message">
+          {props.parentState.uploadMessage}
         </div>
 
         <div
           id="footerProgressBar"
-          style={{
-            width: `${this.props.parentState.progessBarPercentage}%`,
-          }}
-          className="Footer__progress-bar"
+          style={{ width: `${props.parentState.progessBarPercentage}%` }}
+          className="FooterUploadBar__progressBar"
         />
 
-        {/* <button // commented out until backend bugs are fixed
-              onClick={() =>{ self._pauseUpload() }}
-              className="Footer__button Footer__button--cancel">
-              Cancel
-            </button> */
-        }
         {
-          this.props.parentState.uploadError && <div
-            onClick={() => {
-                this.props.closeFooter();
-              }}
+          props.parentState.uploadError
+          && (
+          <div
+            onClick={() => { props.closeFooter(); }}
             className="Footer__close"
           />
+          )
         }
         {
-          this.props.parentState.labbookSuccess && <button className="Footer__button" onClick={() => this.props.openLabbook()}>
+          props.parentState.labbookSuccess
+          && (
+          <button onClick={() => props.openLabbook()}>
               Open Project
           </button>
+          )
         }
       </div>
     );

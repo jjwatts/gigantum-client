@@ -45,18 +45,18 @@ export default function SetLabbookDescriptionMutation(
       },
       onError: err => console.error(err),
       optimisticUpdater: (store) => {
-         const node = store.get(sectionId);
-         if (node) {
-           node.setValue(description, 'description');
-         }
+        const node = store.get(sectionId);
+        if (node) {
+          node.setValue(description, 'description');
+        }
       },
       updater: (store, response) => {
-          if (response.setLabbookDescription.success) {
-            const node = store.get(sectionId);
-            if (node) {
-              node.setValue(description, 'description');
-            }
+        if (response.setLabbookDescription.success) {
+          const node = store.get(sectionId);
+          if (node) {
+            node.setValue(description, 'description');
           }
+        }
       },
     },
   );

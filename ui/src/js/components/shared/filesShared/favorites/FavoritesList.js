@@ -47,6 +47,7 @@ class FavoriteList extends Component {
       favorites: newFavorites,
     };
   }
+
   /**
   *  @param {number} dragIndex
   *  @param {number} hoverIndex
@@ -58,6 +59,7 @@ class FavoriteList extends Component {
 
     this.setState({ favorites: newFavoritesList });
   }
+
   /**
   *  @param {Array:[Object]} arr
   *  @param {number} oldIndex

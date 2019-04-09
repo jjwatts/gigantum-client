@@ -12,44 +12,21 @@
 @import '_fonts';
 @import '_base';
 @import '_grid';
+@import '_animations';
 //atoms
 @import 'atoms/button.scss';
 @import 'atoms/loader.scss';
 @import 'atoms/download.scss';
 @import 'atoms/tooltip.scss';
-@import 'atoms/_input-text.scss';
+@import 'atoms/inputText.scss';
+@import 'atoms/tabs.scss';
 @import 'atoms/textarea.scss';
 @import 'atoms/table.scss';
-@import 'atoms/_radio-button.scss';
+@import 'atoms/radio.scss';
 @import 'atoms/card.scss';
 @import 'atoms/containerStatus.scss';
 @import 'atoms/dropdown.scss';
-
-//shared components
-@import 'components/shared/sideBar';
-@import 'components/shared/prompt';
-@import 'components/shared/loader';
-@import 'components/shared/buttonLoader';
-@import 'components/shared/user';
-@import 'components/shared/header';
-@import 'components/shared/helper';
-@import 'components/shared/tooltip';
-@import 'components/shared/componentError';
-  //footer
-@import 'components/shared/footer/footer';
-@import 'components/shared/footer/footerNotificationList';
-@import 'components/shared/footer/footerUploadBar';
-//root
-@import 'components/routes.scss';
-@import 'components/login.scss';
-@import 'components/home.scss';
-//labbook components
-@import 'components/labbook/dataBrowser.scss';
-//wizard components
-@import 'components/wizard/wizardModal';
-@import 'components/wizard/selectBase';
-@import 'components/wizard/baseDetails';
-@import 'components/wizard/trackingToggle';
+@import 'atoms/readme.scss';
 
 body * {
   font-family: "NunitoSans";
@@ -59,6 +36,11 @@ body .fa {
   font-family: "Font Awesome 5 Free";
 }
 
+@include keyframes(fade-in-modal) {
+  0% { opacity: 0; }
+  100% { opacity: 0.5; }
+}
+
 .modal__cover{
   position: fixed;
   top: 0px;
@@ -66,18 +48,10 @@ body .fa {
   right: 0px;
   left: 0px;
   background-color: $slateBlueOpaque;
-  animation: fade-in-modal forwards .25s;
+  @include animation('fade-in-modal forwards 0.25s');
+  //animation: fade-in-modal forwards .25s;
   opacity: 0.5;
   z-index: index($elements, modalCover);
-}
-
-@keyframes fade-in-modal{
-  0% {
-    opacity:0;
-  }
-  100% {
-    opacity:0.5;
-  }
 }
 
 .rendered-react-keyed-file-browser{
@@ -139,4 +113,35 @@ code {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.InfoTooltip {
+  &:before {
+    content: '';
+    @include triangle('up', 8px, $slateBlue);
+    position: absolute;
+    right: 100px;
+    top: -8px;
+  }
+  box-shadow: 0 0px 12px 0 rgba(0,0,0,.30);
+  user-select: none;
+  animation: slide-down-fade-in 0.25s;
+  position: absolute;
+  font-size: 14px;
+  background: $slateBlue;
+  color: white;
+  padding: 15px;
+  width: 250px;
+  top: 25px;
+  right: -100px;
+  word-break: break-word;
+  a {
+    text-decoration: underline;
+  }
+  &.summary {
+    &:before {
+      right: 9px;
+    }
+    right: -10px;
+  }
 }

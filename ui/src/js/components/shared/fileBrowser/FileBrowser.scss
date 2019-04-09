@@ -165,7 +165,7 @@
   text-align: center;
   z-index: index($elements, popup);
 
-  .ToolTip__pointer {
+  .Tooltip__pointer {
     top: -10px;
     right: 55px;
   }
@@ -282,17 +282,17 @@
 }
 
 @media screen and (max-width: 1021px) and (min-width: 0px) {
- .FileBrowser .ActionsMenu,
- .File__cell.File__cell--menu,
- .FileBrowser__header--menu {
-   width: 130px !important;
- }
- .FileBrowser__header--date,
- .File__cell--date {
-   width: 100px !important;
- }
+//  .FileBrowser .ActionsMenu,
+//  .File__cell.File__cell--menu,
+//  .FileBrowser__header--menu {
+//    width: 130px !important;
+//  }
+//  .FileBrowser__header--date,
+//  .File__cell--date {
+//    width: 100px !important;
+//  }
 
- .SectionWrapper {
-   width: calc(100% - 40px);
- }
+//  .SectionWrapper {
+//    width: calc(100% - 40px);
+//  }
 }

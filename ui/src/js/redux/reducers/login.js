@@ -25,12 +25,12 @@ export default (
       ...state,
       error: action.payload.error,
     };
-  } else if (action.type === LOGIN_CLEAR) {
+  } if (action.type === LOGIN_CLEAR) {
     return {
       ...state,
       error: false,
     };
-  } else if (action.type === LOGOUT) {
+  } if (action.type === LOGOUT) {
     return {
       ...state,
       logout: action.payload.logout,

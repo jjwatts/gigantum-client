@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import { Link } from 'react-router-dom';
-// components
-import User from './User';
-import ToolTip from 'Components/common/ToolTip';
 // store
 import { setCallbackRoute } from 'JS/redux/reducers/routes';
 // config
 import config from 'JS/config';
+// components
+import Tooltip from 'Components/common/Tooltip';
+import User from './User';
+// assets
+import './SideBar.scss';
 
 export default class SideBar extends Component {
   constructor(props) {
@@ -16,6 +18,7 @@ export default class SideBar extends Component {
       authenticated: null,
     };
   }
+
   /*
     sets authentication response to the state
   */
@@ -30,6 +33,7 @@ export default class SideBar extends Component {
       }
     });
   }
+
   /**
     @param {}
     logout through Auth0
@@ -37,29 +41,37 @@ export default class SideBar extends Component {
   logout() {
     this.props.auth.logout();
   }
+
   render() {
+    const { props, state } = this;
     const isLabbooks = (window.location.href.indexOf('projects') > 0) || (window.location.href.indexOf('datasets') === -1);
 
     const sidebarCSS = classNames({
       'SideBar col-sm-1': this.state.authenticated || this.state.authenticated === null,
       hidden: !(this.state.authenticated || this.state.authenticated === null),
-      'is-demo': window.location.hostname === config.demoHostName,
+      'SideBar--demo': window.location.hostname === config.demoHostName,
     });
     const projectsCSS = classNames({
       SideBar__icon: true,
       'SideBar__icon--labbooks-selected': isLabbooks,
       'SideBar__icon SideBar__icon--labbooks': !isLabbooks,
-    }),
-    datasetCSS = classNames({
+    });
+
+
+    const datasetCSS = classNames({
       SideBar__icon: true,
       'SideBar__icon SideBar__icon--datasets': isLabbooks,
       'SideBar__icon SideBar__icon--datasets-selected': !isLabbooks,
-    }),
-    labbookSideBarItemCSS = classNames({
+    });
+
+
+    const labbookSideBarItemCSS = classNames({
       'SideBar__nav-item SideBar__nav-item--labbooks': true,
       'SideBar__nav-item--selected': isLabbooks,
-    }),
-    datasetSideBarItemCSS = classNames({
+    });
+
+
+    const datasetSideBarItemCSS = classNames({
       'SideBar__nav-item SideBar__nav-item--datasets': true,
       'SideBar__nav-item--selected': !isLabbooks,
     });
@@ -69,7 +81,7 @@ export default class SideBar extends Component {
           <div className="SideBar__logo" />
           <ul className="SideBar__nav">
             <li
-              className="SideBar__list-item Tooltip-data Tooltip-data--right"
+              className="SideBar__list-item Tooltip-data Tooltip-data--right relative"
               data-tooltip="View Project listing page"
             >
               <Link
@@ -77,33 +89,29 @@ export default class SideBar extends Component {
                 className={labbookSideBarItemCSS}
                 to={{ pathname: '/projects/local' }}
               >
-                <div
-                  className={projectsCSS}
-                />
+                <div className={projectsCSS} />
                 Projects
               </Link>
-              <ToolTip section="labbookListing" />
+              <Tooltip section="labbookListing" />
             </li>
-            <li className="SideBar__list-item Tooltip-data Tooltip-data--right"
-                data-tooltip="View Dataset listing page"
+            <li
+              className="SideBar__list-item Tooltip-data Tooltip-data--right relative"
+              data-tooltip="View Dataset listing page"
             >
               <Link
                 onClick={() => setCallbackRoute('/datasets/local')}
                 className={datasetSideBarItemCSS}
                 to={{ pathname: '/datasets/local' }}
               >
-                <div className={datasetCSS}
-                />
+                <div className={datasetCSS} />
                 Datasets
               </Link>
-              <ToolTip section="dataSets" />
+              <Tooltip section="dataSets" />
             </li>
           </ul>
 
           {
-            this.state.authenticated && (
-            <User {...this.props} />
-              )
+            state.authenticated && (<User {...this.props} />)
           }
         </div>
       </div>

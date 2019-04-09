@@ -21,24 +21,24 @@ export default class Lightbox extends Component {
     const { imageMetadata, onClose } = this.props;
     return (
       ReactDom
-      .createPortal(
-        <div className="Lightbox">
+        .createPortal(
+          <div className="Lightbox">
             <div
-                className="Lightbox__cover"
-                onClick={onClose}
+              className="Lightbox__cover"
+              onClick={onClose}
             />
             <div className="Lightbox__container">
-                <button
-                    className="Btn--expandable-close"
-                    onClick={onClose}>
-                    <span>Close</span>
-                </button>
-                <img src={imageMetadata} alt="detail">
-            </img>
-        </div>
-      </div>,
-    document.getElementById('lightbox'),
-  )
-  );
+              <button
+                className="Btn__expandable-close"
+                onClick={onClose}
+              >
+                <span>Close</span>
+              </button>
+              <img src={imageMetadata} alt="detail" />
+            </div>
+          </div>,
+          document.getElementById('lightbox'),
+        )
+    );
   }
 }

@@ -39,7 +39,7 @@ exports[`Test LocalLabbooks rendering 1`] = `
     className="LocalLabbooks__row--text"
   >
     <div>
-      <h6
+      <h5
         className="LocalLabbooks__panel-title"
         onClick={[Function]}
       >
@@ -50,7 +50,7 @@ exports[`Test LocalLabbooks rendering 1`] = `
             ui-test-remote
           </span>
         </span>
-      </h6>
+      </h5>
     </div>
     <p
       className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner "

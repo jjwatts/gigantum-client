@@ -25,7 +25,7 @@ import UserIdentity from 'JS/Auth/UserIdentity';
 import LinkedLocalDatasetsQuery from 'Components/shared/header/actionsSection/queries/LinkedLocalDatasetsQuery';
 // components
 import CreateBranch from 'Components/shared/modals/CreateBranch';
-import ToolTip from 'Components/common/ToolTip';
+import Tooltip from 'Components/common/Tooltip';
 import LoginPrompt from 'Components/shared/modals/LoginPrompt';
 import VisibilityModal from 'Components/shared/modals/VisibilityModal';
 import DeleteLabbook from 'Components/shared/modals/DeleteLabbook';
@@ -81,6 +81,7 @@ class ActionsMenu extends Component {
   componentDidMount() {
     window.addEventListener('click', this._closeMenu);
   }
+
   /**
    * detach window listener evetns here
   */
@@ -93,8 +94,8 @@ class ActionsMenu extends Component {
     closes menu
   */
   _closeMenu(evt) {
-    const isActionsMenu = (evt.target.className.indexOf('ActionsMenu') > -1) || (evt.target.className.indexOf('CollaboratorsModal') > -1) || (evt.target.className.indexOf('ActionsMenu__message') > -1) ||
-    (evt.target.className.indexOf('TrackingToggle') > -1);
+    const isActionsMenu = (evt.target.className.indexOf('ActionsMenu') > -1) || (evt.target.className.indexOf('CollaboratorsModal') > -1) || (evt.target.className.indexOf('ActionsMenu__message') > -1)
+    || (evt.target.className.indexOf('TrackingToggle') > -1);
 
     if (!isActionsMenu && this.state.menuOpen) {
       this.setState({ menuOpen: false, justOpened: true });
@@ -168,7 +169,7 @@ class ActionsMenu extends Component {
       this.setState({ syncWarningVisible: true });
     } else {
       const status = store.getState().containerStatus.status;
-      this.setState({ pullOnly })
+      this.setState({ pullOnly });
       if (this.state.owner !== 'gigantum-examples') {
         this.setState({ menuOpen: false });
       }
@@ -181,7 +182,6 @@ class ActionsMenu extends Component {
           if (navigator.onLine) {
             if (response.data && response.data.userIdentity) {
               if (response.data.userIdentity.isSessionValid) {
-
                 const failureCall = (errorMessage) => {
                   this.props.setSyncingState(false);
                   if (errorMessage.indexOf('Merge conflict') > -1) {
@@ -231,7 +231,7 @@ class ActionsMenu extends Component {
                     } else {
                       this.setState({ localDatasets, publishDatasetsModalVisible: !this.state.publishDatasetsModalVisible, publishDatasetsModalAction: 'Sync' });
                     }
-                });
+                  });
                 } else {
                   this.props.setSyncingState(true);
 
@@ -248,7 +248,7 @@ class ActionsMenu extends Component {
                       }
                     },
                   );
-                  }
+                }
               } else {
                 this.props.auth.renewToken(true, () => {
                   self.setState({ showLoginPrompt: true });
@@ -291,6 +291,7 @@ class ActionsMenu extends Component {
   _checkSessionIsValid() {
     return (UserIdentity.getUserIdentity());
   }
+
   /**
   *  @param {}
   *  closes login prompt modal
@@ -299,6 +300,7 @@ class ActionsMenu extends Component {
   _closeLoginPromptModal() {
     this.setState({ showLoginPrompt: false });
   }
+
   /**
   *  @param {}
   *  copies remote
@@ -518,30 +520,34 @@ class ActionsMenu extends Component {
       <div className="ActionsMenu flex flex--column'">
 
         {
-          this.state.showLoginPrompt &&
+          this.state.showLoginPrompt
 
-          <LoginPrompt closeModal={this._closeLoginPromptModal} />
+          && <LoginPrompt closeModal={this._closeLoginPromptModal} />
         }
 
         {
-          this.state.deleteModalVisible &&
-          (this.props.sectionType === 'labbook' ?
-          <DeleteLabbook
-            handleClose={() => this._toggleDeleteModal()}
-            remoteAdded={this.props.defaultRemote}
-            history={this.props.history}
-          />
-          :
-          <DeleteDataset
-            handleClose={() => this._toggleDeleteModal()}
-            remoteAdded={this.props.defaultRemote}
-            history={this.props.history}
-          />)
+          this.state.deleteModalVisible
+          && (this.props.sectionType === 'labbook'
+            ? (
+              <DeleteLabbook
+                handleClose={() => this._toggleDeleteModal()}
+                remoteAdded={this.props.defaultRemote}
+                history={this.props.history}
+              />
+            )
+            : (
+              <DeleteDataset
+                handleClose={() => this._toggleDeleteModal()}
+                remoteAdded={this.props.defaultRemote}
+                history={this.props.history}
+              />
+            ))
         }
 
         {
-          this.state.visibilityModalVisible &&
+          this.state.visibilityModalVisible
 
+          && (
           <VisibilityModal
             sectionType={this.props.sectionType}
             owner={this.state.owner}
@@ -555,6 +561,7 @@ class ActionsMenu extends Component {
             resetState={this._resetState}
             visibility={this.props.visibility}
           />
+          )
         }
 
         <CreateBranch
@@ -565,8 +572,8 @@ class ActionsMenu extends Component {
 
         <button
           onClick={() => { this._toggleMenu(); }}
-          className="ActionsMenu__btn">
-        </button>
+          className="ActionsMenu__btn Btn--last"
+        />
 
         <div className={branchMenuCSS}>
 
@@ -576,7 +583,8 @@ class ActionsMenu extends Component {
               <button
                 onClick={evt => this._exportLabbook(evt)}
                 disabled={this.state.exporting}
-                className="ActionsMenu__btn--flat">
+                className="ActionsMenu__btn--flat"
+              >
                 Export to Zip
               </button>
 
@@ -592,27 +600,32 @@ class ActionsMenu extends Component {
 
               <button
                 onClick={() => this._toggleDeleteModal()}
-                className="ActionsMenu__btn--flat">
+                className="ActionsMenu__btn--flat"
+              >
                 {deleteText}
               </button>
 
             </li>
 
             {
-              this.props.defaultRemote &&
+              this.props.defaultRemote
 
+              && (
               <li className={`ActionsMenu__item ActionsMenu__item--visibility-${this.props.visibility}`}>
 
                 <button
                   onClick={evt => this._toggleModal('visibilityModalVisible')}
-                  className="ActionsMenu__btn--flat">
+                  className="ActionsMenu__btn--flat"
+                >
                   Change Visibility
                 </button>
 
               </li>
+              )
             }
             {
-              (this.state.remoteUrl || this.props.defaultRemote) &&
+              (this.state.remoteUrl || this.props.defaultRemote)
+              && (
               <li className="ActionsMenu__item ActionsMenu__item--copy">
                 <div className="ActionsMenu__item--label">Get Share URL</div>
                 <div className="ActionsMenu__copyRemote">
@@ -630,13 +643,14 @@ class ActionsMenu extends Component {
                   />
                 </div>
               </li>
+              )
             }
 
           </ul>
 
         </div>
 
-        <ToolTip section="actionMenu" />
+        <Tooltip section="actionMenu" />
 
       </div>
     );

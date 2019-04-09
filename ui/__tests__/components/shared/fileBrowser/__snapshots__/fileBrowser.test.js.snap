@@ -32,18 +32,18 @@ exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
       className="FileBrowser__multiselect flex justify--start"
     >
       <button
-        className="Btn--multiSelect Btn Btn--round Btn--uncheck"
+        className="Btn--multiSelect Btn Btn--round Btn--medium Btn__uncheck"
         onClick={[Function]}
       />
       <button
-        className="Btn Btn--round Btn--delete hidden"
+        className="Btn Btn--round Btn__delete hidden"
         onClick={[Function]}
       />
       <div
-        className="FileBrowser__popup hidden ToolTip__message"
+        className="FileBrowser__popup hidden Tooltip__message"
       >
         <div
-          className="ToolTip__pointer"
+          className="Tooltip__pointer"
         />
         <p>
           Are you sure?

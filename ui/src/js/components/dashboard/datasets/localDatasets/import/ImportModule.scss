@@ -47,8 +47,8 @@
 
 .Import__dataset-add-icon{
   position: absolute;
-  top: 44px;
-  left: 40px;
+  top: 46px;
+  left: 49px;
 
   width: 20px;
   height: 20px;
@@ -215,82 +215,7 @@ input.Import__input--paste{
   }
 }
 
-/************************
-  DropZone section
-************************/
-.Import__dropzone {
-  margin-bottom: 15px;
-}
 
-.Import__h4 {
-  margin-bottom: 0px;
-
-  color: $white;
-
-  font-size: 26px;
-  font-weight: 400;
-
-  &--margin{
-    margin: 10px 30px 0 30px;
-  }
-}
-
-.Import_paragraph{
-  color: $grey;
-
-  font-size: 16px;
-  line-height: 2;
-}
-
-.Import__label--file-system {
-  padding: 0 0 0 3px;
-
-  cursor: pointer;
-  text-decoration: underline;
-
-  font-size: 16px;
-}
-
-.Import__section--paste{
-  position: relative;
-}
-
-.Import__dataset-title h4{
-  font-size: 2rem;
-}
-
-.ImportModal{
-  color: $jet;
-  word-break: break-word;
-  line-height: 20px;
-  @include flex(space-around, column);
-  height: 100%;
-  width: 80%;
-  align-self: center;
-}
-
-.ImportDropzone{
-  @include flex(center, column);
-  align-self: center;
-  width: 350px;
-  height: 150px;
-  border: 1px dashed $jet;
-  line-height: 20px;
-  word-break: break-word;
-  text-align: center;
-  padding: 10px;
-  hr {
-    margin-bottom: 30px;
-    align-self: center;
-  }
-
-}
-
-.Import__buttonContainer {
-  button {
-    margin: 0 10px;
-  }
-}
 
 .ImportModule__drop-area-highlight{
   border: 2px dashed $azure;
@@ -298,7 +223,7 @@ input.Import__input--paste{
 }
 
 .Import__buttonContainer {
-  justify-content: space-between;
+  justify-content: flex-end;
   width: 300px;
   display: flex;
   margin-top: 10px;

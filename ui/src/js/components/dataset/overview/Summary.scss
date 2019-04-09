@@ -1,6 +1,6 @@
 @import '~Styles/_imports.scss';
 
-.Summary {
+.Summary__card {
     @include flex(flex-start, row);
     padding: 15px 5px;
     cursor: auto !important;

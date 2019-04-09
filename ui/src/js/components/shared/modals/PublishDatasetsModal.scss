@@ -9,11 +9,6 @@
 .PublishDatasetsModal__buttons{
   @include flex(space-between, row);
   margin: 0 50px 0 450px;
-  button {
-    white-space: nowrap;
-    width: 200px;
-    overflow: visible;
-  }
 }
 
 .PublishDatasetsModal__private{

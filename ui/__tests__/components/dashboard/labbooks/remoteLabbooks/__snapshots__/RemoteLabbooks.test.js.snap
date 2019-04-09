@@ -82,32 +82,32 @@ exports[`Test RemoteLabbooks rendering 1`] = `
       />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>

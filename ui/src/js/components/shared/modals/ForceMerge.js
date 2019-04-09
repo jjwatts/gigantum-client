@@ -24,34 +24,29 @@ export default class ForceMerge extends Component {
         handleClose={() => this.props.toggleModal()}
         header="Merge Conflict"
         size="medium"
-        renderContent={() =>
-
-          (<Fragment>
+        icon="merge"
+        renderContent={() => (
+          <Fragment>
             <p className="ForceMege__text">Merge failed due to conflicts. Which changes would you like to use?</p>
 
             <div className="ForceMege__buttonContainer">
 
-              <button
-                onClick={() => this._forceMerge('ours')}
-              >
+              <button onClick={() => this._forceMerge('ours')}>
                 Use Mine
               </button>
 
-              <button
-                onClick={() => this._forceMerge('theirs')}
-              >
+              <button onClick={() => this._forceMerge('theirs')}>
                 Use Theirs
               </button>
 
-              <button
-                onClick={() => this.props.toggleModal('forceMergeVisible')}
-              >
+              <button onClick={() => this.props.toggleModal('forceMergeVisible')}>
                 Abort
               </button>
 
             </div>
 
-           </Fragment>)
+          </Fragment>
+        )
         }
       />
     );

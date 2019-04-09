@@ -1,8 +1,6 @@
+// vendor
 import React, { Component } from 'react';
 import classNames from 'classnames';
-// components
-import FooterNotificationList from './FooterNotificationList';
-import FooterUploadBar from './FooterUploadBar';
 import { connect } from 'react-redux';
 // store
 import {
@@ -15,7 +13,11 @@ import {
   setToggleMessageList,
 } from 'JS/redux/reducers/footer';
 import { setPauseUpload } from 'JS/redux/reducers/labbook/fileBrowser/fileBrowserWrapper';
-
+// // components
+import FooterNotificationList from './FooterNotificationList';
+import FooterUploadBar from './FooterUploadBar';
+// assets
+import './Footer.scss';
 
 class Footer extends Component {
   constructor(props) {
@@ -27,18 +29,21 @@ class Footer extends Component {
     this._resize = this._resize.bind(this);
     this._openLabbook = this._openLabbook.bind(this);
   }
+
   /**
     subscribe to store to update state
   */
   componentDidMount() {
     window.addEventListener('resize', this._resize);
   }
+
   /**
     unsubscribe from event listeners
   */
   componentWillUnmount() {
     window.removeEventListener('resize', this._resize);
   }
+
   /**
    hides messages in stack after 15 seconds
   */
@@ -59,6 +64,7 @@ class Footer extends Component {
     this._clearState();
     this.props.history.replace(`/projects/${this.props.labbookName}`);
   }
+
   /**
     @param {}
     add scroll listener to pop up footer
@@ -82,6 +88,7 @@ class Footer extends Component {
   _pauseUpload() {
     setPauseUpload(true);
   }
+
   /**
   @param {}
   gets upload message which tracks progess
@@ -89,6 +96,7 @@ class Footer extends Component {
   _closeFooter() {
     setUploadMessageRemove('', '', 0);
   }
+
   /**
   @param {object} messageItem
   gets upload message which tracks progess
@@ -106,6 +114,7 @@ class Footer extends Component {
   _toggleMessageList() {
     this.props.setToggleMessageList(!this.props.messageListOpen, true);
   }
+
   /**
   @param {number}
   toggles view of message body for a stack item
@@ -119,6 +128,7 @@ class Footer extends Component {
       this.props.setUpdateHistoryStackItemVisibility(index);
     }
   }
+
   /**
     * @param {}
     * update store to risize component

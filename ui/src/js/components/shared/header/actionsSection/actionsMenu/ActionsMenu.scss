@@ -53,6 +53,9 @@
       padding: 0px;
       color: $romanSilver;
       font-size: 15px;
+      &:hover {
+        box-shadow: none;
+      }
     }
   }
 
@@ -236,6 +239,7 @@
      }
 
      &--copy{
+       margin: 0;
        height: 32px;
        width: 40px;
        padding: 0px;

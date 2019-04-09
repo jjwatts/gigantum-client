@@ -1,0 +1,74 @@
+@import '~Styles/_imports.scss';
+
+.Routes {
+  width: 100%;
+  min-width: 960px;
+  max-width: 1440px;
+  height: calc(100% - 10px);
+
+  @include flex(flex-start, row);
+}
+
+.HeaderBar {
+  position: fixed;
+  z-index: index($elements, headerStrip);
+  top: 0px;
+
+  width: 100%;
+  height: 10px;
+
+  background-color: $jet;
+}
+
+.HeaderBar.is-demo{
+  top: 50px;
+}
+
+.Routes__main {
+  flex: 1 0;
+
+  max-width: 100%;
+  margin-left: $sideBarWidth;
+}
+
+.Routes__main-no-auth {
+  flex: 1 0;
+
+  max-width: 100%;
+}
+
+.Callback {
+  position: absolute;
+  z-index: 101;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+  margin-left: $sideBarWidth;
+
+  background: #f0f1f5;
+}
+
+.Callback__loader {
+  position: absolute;
+  z-index: 102;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+  margin-left: -$sideBarWidth;
+}
+
+.Routes__error {
+  align-items: center;
+
+  height: 100%;
+  padding: 280px 0 0 0;
+
+  background: url('~Images/icons/warning-triangle.svg') no-repeat center center;
+  background-size: 256px;
+
+  @include flex(center, column);
+}

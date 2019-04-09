@@ -4,13 +4,14 @@
 }
 
 .LinkModal__flex{
-  height: 100%;
+  height: calc(100% - 50px);
 }
+
 .LinkModal__container {
   @include flex(flex-start, row);
   flex-wrap: wrap;
-  overflow: auto;
-  height: 600px;
+  overflow: hidden;
+  height: calc(100% - 50px);
   border-bottom: 1px solid $slateBlue;
 }
 
@@ -35,7 +36,7 @@
 
 .LinkModal__dataset-container{
   margin-top: 100px;
-  height: 376px;
+  height: calc(100% - 70px);
   overflow: auto;
   width: 100%;
 }

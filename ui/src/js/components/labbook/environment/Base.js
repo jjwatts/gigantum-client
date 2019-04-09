@@ -24,6 +24,7 @@ class Base extends Component {
   _editVisible() {
     return false;// this.props.editVisible //alwasys false until api can support rebuilding base image
   }
+
   /**
   *  @param {none}
   *   open modal window
@@ -31,6 +32,7 @@ class Base extends Component {
   _openModal = () => {
     this.setState({ modal_visible: true });
   }
+
   /**
   *  @param {none}
   *   hide modal window
@@ -38,6 +40,7 @@ class Base extends Component {
   _hideModal = () => {
     this.setState({ modal_visible: false });
   }
+
   /**
   *  @param {Object}
   *  hidemodal

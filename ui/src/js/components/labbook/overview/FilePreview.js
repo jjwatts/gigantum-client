@@ -5,14 +5,15 @@ import {
   graphql,
 } from 'react-relay';
 import { Link } from 'react-router-dom';
-// components
-import Loader from 'Components/common/Loader';
-import FileCard from './FileCard';
-import ToolTip from 'Components/common/ToolTip';
 // utilites
 import environment from 'JS/createRelayEnvironment';
 // store
 import store from 'JS/redux/store';
+// components
+import Loader from 'Components/common/Loader';
+import Tooltip from 'Components/common/Tooltip';
+import FileCard from './FileCard';
+import FileEmpty from './FileEmpty';
 // assets
 import './FilePreview.scss';
 
@@ -85,120 +86,113 @@ export default class FilePreview extends Component {
     return (
       <QueryRenderer
         variables={{
-        name: labbookName,
-        owner,
-        first: 3,
-      }}
+          name: labbookName,
+          owner,
+          first: 3,
+        }}
         query={filePreviewQuery}
         environment={environment}
         render={(response) => {
-        const queryProps = response.props;
-        const error = response.error;
-        if (queryProps) {
-          return (
-            <div className="FilePreview">
-              <div className="FilePreview__section">
-                <div className="FilePreview__container">
-                  <h5>
-                    Code
-                    &nbsp;
-                    &nbsp;
-                    <ToolTip section="codeOverview" />
-                  </h5>
-                </div>
-                <div className="FilePreview__list grid">
-                  {
-                    queryProps.labbook.code.favorites && queryProps.labbook.code.favorites.edges.length ?
-                    queryProps.labbook.code.favorites.edges.map(edge => <FileCard key={edge.node.id} edge={edge} />) :
-                      <div className="FilePreview__empty column-1-span-12">
-                        <button
-                          className="Btn--redirect"
-                          onClick={() => this._handleRedirect('code')}
-                        >
-                          <span>View Code Files</span>
-                        </button>
-                        <div className="FilePreview__empty-content">
-                          <p className="FilePreview__empty-header">This Project has No Code Favorites</p>
-                          <Link
-                            className="FilePreview__empty-action"
-                            to={{ pathname: `/projects/${owner}/${labbookName}/code` }}
-                          >
-                            View and manage Code Files
-                          </Link>
-                        </div>
-                      </div>
-                  }
-                </div>
+          const queryProps = response.props;
+          const error = response.error;
+          if (queryProps) {
+            return (
+              <div className="FilePreview">
+
+                <FilePreviewSection
+                  self={this}
+                  owner={owner}
+                  name={labbookName}
+                  sectionData={{
+                    section: queryProps.labbook.code,
+                    sectionType: 'code',
+                    sectionLink: 'Code',
+                    sectionTitle: 'Code',
+                    sectionTooltip: 'codeOverview',
+                  }}
+                />
+
+                <FilePreviewSection
+                  self={this}
+                  owner={owner}
+                  name={labbookName}
+                  sectionData={{
+                    section: queryProps.labbook.input,
+                    sectionType: 'intput',
+                    sectionLink: 'InputData',
+                    sectionTitle: 'Input Data',
+                    sectionTooltip: 'inputDataOverview',
+                  }}
+                />
+
+                <FilePreviewSection
+                  self={this}
+                  owner={owner}
+                  name={labbookName}
+                  sectionData={{
+                    section: queryProps.labbook.output,
+                    sectionType: 'output',
+                    sectionLink: 'OutputData',
+                    sectionTitle: 'Output Data',
+                    sectionTooltip: 'outputDataOverview',
+                  }}
+                />
               </div>
-              <div className="FilePreview__section">
-                <div className="FilePreview__container">
-                  <h5>
-                    Input Data
-                    <ToolTip section="inputDataOverview" />
-                  </h5>
-                </div>
-                <div className="FilePreview__list grid">
-                  {
-                    queryProps.labbook.input.favorites &&
-                    queryProps.labbook.input.favorites.edges.length ? queryProps.labbook.input.favorites.edges.map(edge => <FileCard key={edge.node.id} edge={edge} />) :
-                    <div className="FilePreview__empty column-1-span-12">
-                    <button
-                      className="Btn--redirect"
-                      onClick={() => this._handleRedirect('inputData')}
-                      >
-                      <span>View Input Files</span>
-                    </button>
-                    <div className="FilePreview__empty-content">
-                      <p className="FilePreview__empty-header">This Project has No Input Favorites</p>
-                      <Link
-                        className="FilePreview__empty-action"
-                        to={{ pathname: `/projects/${owner}/${labbookName}/inputData` }}
-                      >
-                        View and manage Input Files
-                      </Link>
-                    </div>
-                  </div>
-                  }
-                </div>
-              </div>
-              <div className="FilePreview__section">
-                <div className="FilePreview__container">
-                  <h5>
-                    Output Data
-                    <ToolTip section="outputDataOverview" />
-                  </h5>
-                </div>
-                <div className="FilePreview__list grid">
-                  {
-                    queryProps.labbook.output.favorites &&
-                    queryProps.labbook.output.favorites.edges.length ? queryProps.labbook.output.favorites.edges.map(edge => <FileCard key={edge.node.id} edge={edge} />) :
-                    <div className="FilePreview__empty column-1-span-12">
-                    <button
-                      className="Btn--redirect"
-                      onClick={() => this._handleRedirect('outputData')}
-                      >
-                      <span>View Output Files</span>
-                    </button>
-                    <div className="FilePreview__empty-content">
-                      <p className="FilePreview__empty-header">This Project has No Output Favorites</p>
-                      <Link
-                        className="FilePreview__empty-action"
-                        to={{ pathname: `/projects/${owner}/${labbookName}/outputData` }}
-                      >
-                        View and manage Output Files
-                      </Link>
-                    </div>
-                  </div>
-                  }
-                </div>
-              </div>
-            </div>
-          );
-        } else if (error) {
-          return (<div>{error.message}</div>);
-        }
+            );
+          } if (error) {
+            return (<div>{error.message}</div>);
+          }
           return (<Loader />);
-      }}
+        }}
       />);
   }
 }
+
+
+const FilePreviewSection = ({
+  self,
+  owner,
+  name,
+  sectionData,
+}) => {
+  const {
+    section,
+    sectionType,
+    sectionLink,
+    sectionTitle,
+    sectionTooltip,
+  } = sectionData;
+
+
+  const hasFavorites = section.favorites && section.favorites.edges.length;
+  return (
+    <div className="FilePreview__section">
+      <div className="FilePreview__container">
+        <h2>
+          {sectionTitle}
+          <Tooltip section={sectionTooltip} />
+        </h2>
+      </div>
+      <div className="FilePreview__list grid">
+        {
+          hasFavorites
+            ? section.favorites.edges.map(edge => (
+              <FileCard
+                key={edge.node.id}
+                edge={edge}
+              />
+            ))
+            : (
+              <FileEmpty
+                owner={owner}
+                name={name}
+                sectionType={sectionType}
+                sectionLink={sectionLink}
+                handleRedirect={self._handleRedirect}
+              />
+            )
+        }
+      </div>
+    </div>
+  );
+};

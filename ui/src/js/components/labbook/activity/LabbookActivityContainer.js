@@ -8,8 +8,8 @@ import {
   activity pagination container
   contains activity fragment and for query consumption
 */
-let counter = 5;
-let pagination = false;
+const counter = 5;
+const pagination = false;
 
 
 export default createPaginationContainer(

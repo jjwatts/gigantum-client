@@ -22,6 +22,7 @@ export default class DeleteLabbook extends Component {
     };
     this._deleteLabbook = this._deleteLabbook.bind(this);
   }
+
   /**
     @param {object} evt
     sets state of labbookName
@@ -29,6 +30,7 @@ export default class DeleteLabbook extends Component {
   _setLabbookName(evt) {
     this.setState({ labbookName: evt.target.value });
   }
+
   /**
     @param {}
     fires appropriate delete labbook mutation
@@ -109,27 +111,53 @@ export default class DeleteLabbook extends Component {
     *  determines the warning text to be displayed to the user
   */
   _getExplanationText() {
+    const { props } = this;
     const { labbookName, owner } = store.getState().routes;
     if (this.props.remoteDelete) {
       if (this.props.existsLocally) {
         return (
           <div>
-            <p>This will delete <b>{this.props.remoteLabbookName}</b> from the cloud.</p>
+            <p>
+              This will delete
+              {' '}
+              <b>{props.remoteLabbookName}</b>
+              {' '}
+              from the cloud.
+            </p>
             <p>The Project will still exist locally.</p>
           </div>
         );
       }
       return (
-        <p>This will delete <b>{this.props.remoteLabbookName}</b> from the cloud. All data will be removed and can not be recovered.</p>
+        <p>
+          This will delete
+          {' '}
+          <b>{props.remoteLabbookName}</b>
+          {' '}
+          from the cloud. All data will be removed and can not be recovered.
+        </p>
       );
-    } else if (this.props.remoteAdded) {
+    } if (props.remoteAdded) {
       return (
         <div>
-          <p>This will delete <b>{labbookName}</b> from this Gigantum client.</p>
-          <p>You can still download it from gigantum.com/{owner}/{labbookName}.</p>
+          <p>
+            This will delete
+            {' '}
+            <b>{labbookName}</b>
+            {' '}
+            from this Gigantum client.
+          </p>
+          <p>{`You can still download it from gigantum.com/${owner}/${labbookName}.`}</p>
         </div>);
     }
-    return (<p>This will delete <b>{labbookName}</b> from this Gigantum instance. All data will be removed and can not be recovered.</p>);
+    return (
+      <p>
+        This will delete
+        {' '}
+        <b>{labbookName}</b>
+        {' '}
+        from this Gigantum instance. All data will be removed and can not be recovered.
+      </p>);
   }
 
   render() {
@@ -140,9 +168,11 @@ export default class DeleteLabbook extends Component {
         header={deleteText}
         handleClose={() => this.props.handleClose()}
         size="medium"
-        renderContent={() =>
-          (<div className="DeleteLabbook">
+        icon="delete"
+        renderContent={() => (
+          <div className="DeleteLabbook">
             {this._getExplanationText()}
+
             <input
               id="deleteInput"
               placeholder={`Enter ${labbookName} to delete`}
@@ -151,16 +181,24 @@ export default class DeleteLabbook extends Component {
               type="text"
             />
 
-
-            <ButtonLoader
-              buttonState={this.state.deleteLabbookButtonState}
-              buttonText={deleteText}
-              className=""
-              params={{}}
-              buttonDisabled={this.state.deletePending || labbookName !== this.state.labbookName}
-              clicked={this._deleteLabbook}
-            />
-           </div>)
+            <div className="DeleteProject__buttons">
+              <button
+                className="Btn Btn--flat"
+                onClick={() => this.props.handleClose()}
+              >
+                Cancel
+              </button>
+              <ButtonLoader
+                className="Btn--last"
+                buttonState={this.state.deleteLabbookButtonState}
+                buttonText={deleteText}
+                params={{}}
+                buttonDisabled={this.state.deletePending || labbookName !== this.state.labbookName}
+                clicked={this._deleteLabbook}
+              />
+            </div>
+          </div>
+        )
         }
       />
     );

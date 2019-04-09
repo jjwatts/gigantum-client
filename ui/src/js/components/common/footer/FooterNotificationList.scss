@@ -1,0 +1,148 @@
+@import '~Styles/_imports.scss';
+
+.Footer__messageContainer {
+    position: relative;
+    z-index: index($footerElements, section);
+
+    width: 100%;
+    margin: 0 20px;
+
+    transition: height 0.25s, max-height 0.25s, opacity 0.1s, width 0.25s;
+    text-align: left;
+
+    border-top: 4px solid #007ea8;
+    border-radius: 8px 8px 0 0;
+    background: $azure;
+
+    @include boxShadow();
+
+    &--collapsed{
+        border-width: 0;
+    }
+
+    // &--helper-open{
+    //   width: calc(100% - 280px);
+    // }
+}
+
+
+.Footer__messageList {
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    max-height: 75vh;
+    height: auto;
+    min-height: 80px;
+    padding: 0 20px;
+
+    transition: height 0.25s, max-height 0.25s, opacity 0.25s;
+
+    opacity: 1;
+
+    &--collapsed {
+        overflow: hidden;
+
+        height: 0px !important;
+        min-height: 0px !important;
+
+        opacity: 0 !important;
+    }
+
+    &::-webkit-scrollbar {
+      	width: 8px;
+
+      	background-color: rgba(255,255,255,0.5);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      	background-color: #fff;
+    }
+}
+
+.Footer__message{
+  height: 60px;
+
+  border-bottom: 1px solid $white;
+
+  &:last-child {
+    border-bottom: 0px solid $white;
+  }
+}
+
+
+.Footer__message-body-content{
+    margin: 20px;
+    padding: 20px;
+
+    color: $mineShaft;
+    border-radius: 8px;
+    background: $white;
+
+    &--text {
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+}
+
+.Footer__flex-container {
+    align-content: center;
+    flex-wrap: nowrap;
+    @include flex(flex-start, row);
+}
+
+
+.Footer__message-item {
+    align-self: center;
+
+    width: calc(100% - 100px);
+    margin: 0 20px;
+}
+
+.Footer__message-time{
+  align-content: center;
+  align-self: center;
+
+  min-width: 150px;
+  padding: 0 10px;
+
+  color: $white;
+}
+
+.Footer__message-expand{
+    align-self: center;
+}
+
+.Footer__message-dismiss {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    margin-left: 30px;
+
+    cursor: pointer;
+    text-align: center;
+
+    border: 1px solid white;
+    border-radius: 15px;
+    background: url('~Images/icons/close-white.svg') no-repeat center center;
+    background-size: 10px;
+
+    line-height: 18px;
+
+    &:hover {
+        color: $turquise;
+    }
+}
+
+.Footer__message-title{
+    word-break: break-all;
+
+    &--collapsed{
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+
+        text-overflow: ellipsis;
+
+        -webkit-line-clamp: 2;
+    }
+}

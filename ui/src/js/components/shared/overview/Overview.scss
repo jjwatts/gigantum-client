@@ -299,37 +299,6 @@
   margin-top: 0;
 }
 
-.Overview__readme-edit-button {
-  transition: all 0.125s ease, background-position 1ms;
-  font-weight: light;
-  height: 30px;
-  width: 30px;
-  border-radius: 30px;
-  top: -20px;
-  right: 15px;
-  padding: 5px;
-  border: 0px;
-  background: $azure url('~Images/icons/edit-azure.svg') no-repeat center center;
-  background-size: 18px;
-  position: absolute;
-  span {
-    display: none;
-  }
-
-  &:hover,
-  &:focus {
-    border: none;
-    width: auto;
-    padding: 0 40px 0 15px;
-    background: $azure url('~Images/icons/edit-azure.svg') no-repeat right 7px center;
-    background-size: 18px;
-
-    span {
-      display: block;
-    }
-  }
-}
-
 .Overview__readme-more,
 .Overview__readme-less{
   position: absolute;
@@ -407,7 +376,4 @@
 }
 .Overview__environment{
   position: relative;
-  .Btn--redirect {
-    top: -8px;
-  }
 }

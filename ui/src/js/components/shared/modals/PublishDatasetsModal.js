@@ -34,6 +34,7 @@ export default class PublishDatasetsModal extends Component {
 
     },
   }
+
   /**
     @param {object} nextProps
     @param {object} nextState
@@ -143,7 +144,6 @@ export default class PublishDatasetsModal extends Component {
                   );
                   self.props.setSyncingState(false);
                 }
-
               };
 
               let datasetsToPublish = this.props.localDatasets.length;
@@ -165,55 +165,55 @@ export default class PublishDatasetsModal extends Component {
                     'unlink',
                     null,
                     (response, error) => {
-                        if (error) {
-                            setErrorMessage('Unable to unlink dataset', error);
-                        } else {
-                          const updatedProgress = Object.assign({}, this.state.progress);
-                          updatedProgress[`${owner}/${name}`] = { step: 3 };
-                          this.setState({ progress: updatedProgress });
-                          LocalDatasetsQuery.getLocalDatasets({ owner, name }).then((res) => {
-                            ModifyDatasetLinkMutation(
-                              this.props.owner,
-                              this.props.labbookName,
-                              owner,
-                              name,
-                              'link',
-                              res.data.dataset.defaultRemote,
-                              (response, error) => {
-                                  if (error) {
-                                      setErrorMessage('Unable to relink dataset', error);
+                      if (error) {
+                        setErrorMessage('Unable to unlink dataset', error);
+                      } else {
+                        const updatedProgress = Object.assign({}, this.state.progress);
+                        updatedProgress[`${owner}/${name}`] = { step: 3 };
+                        this.setState({ progress: updatedProgress });
+                        LocalDatasetsQuery.getLocalDatasets({ owner, name }).then((res) => {
+                          ModifyDatasetLinkMutation(
+                            this.props.owner,
+                            this.props.labbookName,
+                            owner,
+                            name,
+                            'link',
+                            res.data.dataset.defaultRemote,
+                            (response, error) => {
+                              if (error) {
+                                setErrorMessage('Unable to relink dataset', error);
+                              } else {
+                                datasetsToPublish -= 1;
+                                const finalProgress = Object.assign({}, this.state.progress);
+                                finalProgress[`${owner}/${name}`] = { step: 4 };
+                                if (datasetsToPublish === 0) {
+                                  finalProgress.project = { step: 2 };
+                                }
+                                this.setState({ progress: finalProgress });
+                                if (datasetsToPublish === 0) {
+                                  if (isPublishing) {
+                                    PublishLabbookMutation(
+                                      this.props.owner,
+                                      this.props.labbookName,
+                                      labbookId,
+                                      this.state.visibilityStatus.project,
+                                      successCall,
+                                      failureCall,
+                                      (response, error) => {
+                                        if (error) {
+                                          failureCall();
+                                        }
+                                      },
+                                    );
                                   } else {
-                                    datasetsToPublish -= 1;
-                                    const finalProgress = Object.assign({}, this.state.progress);
-                                    finalProgress[`${owner}/${name}`] = { step: 4 };
-                                    if (datasetsToPublish === 0) {
-                                      finalProgress.project = { step: 2 };
-                                    }
-                                    this.setState({ progress: finalProgress });
-                                    if (datasetsToPublish === 0) {
-                                      if (isPublishing) {
-                                        PublishLabbookMutation(
-                                          this.props.owner,
-                                          this.props.labbookName,
-                                          labbookId,
-                                          this.state.visibilityStatus.project,
-                                          successCall,
-                                          failureCall,
-                                          (response, error) => {
-                                            if (error) {
-                                              failureCall();
-                                            }
-                                          },
-                                        );
-                                      } else {
-                                        this.props.handleSync(false, true, true, passedSuccessCall);
-                                      }
-                                    }
+                                    this.props.handleSync(false, true, true, passedSuccessCall);
                                   }
-                              },
-                            );
-                          });
-                        }
+                                }
+                              }
+                            },
+                          );
+                        });
+                      }
                     },
                   );
                 };
@@ -261,14 +261,14 @@ export default class PublishDatasetsModal extends Component {
 
 
   render() {
-    const { props } = this;
-    const moreInfoText = this.state.moreInfo ? 'Hide' : 'More Info';
-    const isDisabled = Object.keys(this.state.visibilityStatus).filter(key => this.state.visibilityStatus[key] === null).length;
+    const { props, state } = this;
+    const moreInfoText = state.moreInfo ? 'Hide' : 'More Info';
+    const isDisabled = Object.keys(state.visibilityStatus).filter(key => state.visibilityStatus[key] === null).length;
     const containerCSS = classNames({
       PublishDatasetsModal__container: true,
-      'PublishDatasetsModal__container--processing': this.state.isProcessing,
+      'PublishDatasetsModal__container--processing': state.isProcessing,
     });
-    const currentStep = this.state.progress.project ? this.state.progress.project.step : 1;
+    const currentStep = state.progress.project ? state.progress.project.step : 1;
     const firstProjectStepCSS = classNames({
       'is-active': currentStep === 1,
       'is-completed': currentStep > 1,
@@ -280,33 +280,35 @@ export default class PublishDatasetsModal extends Component {
     const thirdProjectStepCSS = classNames({
       'is-completed': currentStep === 3,
     });
-    const action = this.props.header === 'Publish' ? 'Publishing' : 'Syncing';
+    const action = props.header === 'Publish' ? 'Publishing' : 'Syncing';
 
     return (
-        <Modal
-          header={props.header}
-          handleClose={this.state.isProcessing ? null : () => props.toggleModal(false, true)}
-          size="large"
-          icon="project"
-          renderContent={() => (
-            <div className="PublishDatasetsModal">
-              {
-                this.state.showPrompt ?
+      <Modal
+        header={props.header}
+        handleClose={this.state.isProcessing ? null : () => props.toggleModal(false, true)}
+        size="large"
+        icon="dataset"
+        renderContent={() => (
+          <div className="PublishDatasetsModal">
+            { state.showPrompt
+              ? (
                 <div>
                   <div className="PublishDatasetsModal__container">
                     <div className="PublishDatasetsModal__header-text">
                       <p>This Project is linked to unpublished (local-only) Datasets</p>
                       <p>
                         In order to publish a Project, all linked Datasets must also be published.
-                         <button className="button--flat" onClick={() => this.setState({ moreInfo: !this.state.moreInfo })}>{moreInfoText}</button>
-                        </p>
+                        <button className="Btn--flat" onClick={() => this.setState({ moreInfo: !this.state.moreInfo })}>{moreInfoText}</button>
+                      </p>
                     </div>
                     {
-                      this.state.moreInfo &&
+                      this.state.moreInfo
+                      && (
                       <Fragment>
                         <p>Click  “Continue” to publish the Dataset(s) listed below along with the Project. You will be able to set the visibility (public or private) for each Dataset and the Project.</p>
                         <p>If you do not want to publish any of the Dataset(s) listed below, click “Cancel” and then unlink the Dataset(s) before attempting to publish the Project.</p>
                       </Fragment>
+                      )
                     }
                     <p className="PublishDatasetsModal__ul-label">Local Datasets:</p>
                     <ul className="PublishDatasetsModal__list">
@@ -324,73 +326,70 @@ export default class PublishDatasetsModal extends Component {
                   </div>
 
                   <div className="PublishDatasetsModal__buttons">
-                    <button className="button--flat" onClick={() => { props.toggleModal(false, true); }}>Cancel</button>
+                    <button className="Btn--flat" onClick={() => { props.toggleModal(false, true); }}>Cancel</button>
                     <button onClick={() => { this.setState({ showPrompt: false }); }}>Continue</button>
                   </div>
                 </div>
-              :
-              <div>
+              )
+              : (
+                <div>
                   <div className={containerCSS}>
-                    {
-                      this.props.header === 'Publish' || this.state.isProcessing ?
-                      <Fragment>
-                        <p>Select the visibility for the project and datasets to be published.</p>
+                    { (this.props.header === 'Publish') || this.state.isProcessing
+                      ? (
+                        <Fragment>
+                          <p>Select the visibility for the project and datasets to be published.</p>
 
-                        <h5 className="PublishDatasetsModal__Label">Project</h5>
-                        <div className="PublishDatasetsModal__radio-container">
-                        {`${this.props.owner}/${this.props.labbookName}`}
-                          <div className="PublishDatasetsModal__radio-subcontainer">
-                          {
-                            !this.state.isProcessing ?
-                              <Fragment>
-                                  <div className="PublishDatasetsModal__private">
-                                    <input
-                                      type="radio"
-                                      name="publishProject"
-                                      id="project_private"
-                                      onClick={() => { this._setPublic('project', false); }}
-                                    />
+                          <h5 className="PublishDatasetsModal__Label">Project</h5>
+                          <div className="PublishDatasetsModal__radio-container">
+                            {`${this.props.owner}/${this.props.labbookName}`}
 
-                                    <label htmlFor="project_private">
-                                      <b>Private</b>
-                                    </label>
-
-                                    {/* <p className="PublishDatasetsModal__paragraph">Private projects are only visible to collaborators. Users that are added as a collaborator will be able to view and edit.</p> */}
+                            <div className="PublishDatasetsModal__radio-subcontainer">
+                              { !this.state.isProcessing
+                                ? (
+                                  <Fragment>
+                                    <div className="PublishDatasetsModal__private">
+                                      <label htmlFor="project_private">
+                                        <input
+                                          type="radio"
+                                          name="publishProject"
+                                          id="project_private"
+                                          onClick={() => { this._setPublic('project', false); }}
+                                        />
+                                        <b>Private</b>
+                                      </label>
 
                                     </div>
 
                                     <div className="PublishDatasetsModal__public">
-
-                                    <input
-                                      name="publishProject"
-                                      type="radio"
-                                      id="project_public"
-                                      onClick={() => { this._setPublic('project', true); }}
-                                    />
-
-                                    <label htmlFor="project_public">
-                                      <b>Public</b>
-                                    </label>
-
-                                    {/* <p className="PublishDatasetsModal__paragraph">Public projects are visible to everyone. Users will be able to import a copy. Only users that are added as a collaborator will be able to edit.</p> */}
+                                      <label htmlFor="project_public">
+                                        <input
+                                          name="publishProject"
+                                          type="radio"
+                                          id="project_public"
+                                          onClick={() => { this._setPublic('project', true); }}
+                                        />
+                                        <b>Public</b>
+                                      </label>
 
                                     </div>
-                              </Fragment>
-                            :
-                            <div className="container-fluid">
-                              <ul className="list-unstyled multi-steps project">
-                                <li className={firstProjectStepCSS}>Waiting</li>
-                                <li className={secondProjectStepCSS}>{action}</li>
-                                <li className={thirdProjectStepCSS}>Finished</li>
-                              </ul>
-                            </div>
+                                  </Fragment>
+                                )
+                                : (
+                                  <div className="container-fluid">
+                                    <ul className="list-unstyled multi-steps project">
+                                      <li className={firstProjectStepCSS}>Waiting</li>
+                                      <li className={secondProjectStepCSS}>{action}</li>
+                                      <li className={thirdProjectStepCSS}>Finished</li>
+                                    </ul>
+                                  </div>
+                                )
                           }
 
+                            </div>
                           </div>
-                        </div>
-                      </Fragment>
-                      :
-                      <p>Select the visibility for the datasets to be published.</p>
+                        </Fragment>
+                      )
+                      : <p>Select the visibility for the datasets to be published.</p>
                     }
                     <h5 className="PublishDatasetsModal__Label">Datasets</h5>
                     <ul>
@@ -414,79 +413,91 @@ export default class PublishDatasetsModal extends Component {
                             'is-completed': currentStep === 4,
                           });
                           return (
-                          <li
-                            key={name}
-                            className="flex"
-                          >
-                            {name}
-                            <div className="PublishDatasetsModal__Datasets-radio-container">
-                            {
-                              !this.state.isProcessing ?
-                              <Fragment>
-                                <div>
-                                  <input
-                                    type="radio"
-                                    name={name}
-                                    id={`${name}_private`}
-                                    onClick={() => { this._setPublic(name, false); }}
-                                  />
-                                  <label
-                                    htmlFor={`${name}_private`}
-                                    className="PublishDatasetsModal__private-label"
-                                  >
-                                    <b>Private</b>
-                                  </label>
-                                </div>
-                                <div>
-                                  <input
-                                    type="radio"
-                                    name={name}
-                                    id={`${name}_public`}
-                                    onClick={() => { this._setPublic(name, true); }}
-                                  />
-                                  <label
-                                    htmlFor={`${name}_public`}
-                                    className="PublishDatasetsModal__public-label"
-                                  >
-                                    <b>Public</b>
-                                  </label>
-                                </div>
-                              </Fragment>
-                              :
-                            <div className="container-fluid">
-                              <ul className="list-unstyled multi-steps">
-                                <li className={firstStepCSS}>Publishing</li>
-                                <li className={secondStepCSS}>Unlinking</li>
-                                <li className={thirdStepCSS}>Relinking</li>
-                                <li className={fourthStepCSS}>Finished</li>
-                              </ul>
-                            </div>
-                            }
+                            <li
+                              key={name}
+                              className="flex"
+                            >
+                              {name}
+                              <div className="PublishDatasetsModal__Datasets-radio-container">
+                                { (!this.state.isProcessing)
+                                  ? (
+                                    <Fragment>
+                                      <div>
+                                        <label
+                                          htmlFor={`${name}_private`}
+                                          className="PublishDatasetsModal__private-label"
+                                        >
+                                          <input
+                                            type="radio"
+                                            name={name}
+                                            id={`${name}_private`}
+                                            onClick={() => { this._setPublic(name, false); }}
+                                          />
+                                          <b>Private</b>
+                                        </label>
+                                      </div>
+                                      <div>
+                                        <label
+                                          htmlFor={`${name}_public`}
+                                          className="PublishDatasetsModal__public-label"
+                                        >
+                                          <input
+                                            type="radio"
+                                            name={name}
+                                            id={`${name}_public`}
+                                            onClick={() => { this._setPublic(name, true); }}
+                                          />
+                                          <b>Public</b>
+                                        </label>
+                                      </div>
+                                    </Fragment>
+                                  )
+                                  : (
+                                    <div className="container-fluid">
+                                      <ul className="list-unstyled multi-steps">
+                                        <li className={firstStepCSS}>Publishing</li>
+                                        <li className={secondStepCSS}>Unlinking</li>
+                                        <li className={thirdStepCSS}>Relinking</li>
+                                        <li className={fourthStepCSS}>Finished</li>
+                                      </ul>
+                                    </div>
+                                  )}
 
-                            </div>
-                          </li>
-                        );
-                      })
+                              </div>
+                            </li>
+                          );
+                        })
                       }
                     </ul>
 
-                    </div>
-                    {
-                      !this.state.isProcessing &&
+                  </div>
+                  { (!this.state.isProcessing)
+                      && (
                       <div className="PublishDatasetsModal__buttons">
-                        <button className="button--flat" onClick={() => { props.toggleModal(false, true); }}>Cancel</button>
-                        <button disabled={isDisabled} onClick={() => { this._publishLabbook(); }}>
+                        <button
+                          className="Btn--flat"
+                          onClick={() => { props.toggleModal(false, true); }}
+                        >
+                        Cancel
+                        </button>
+                        <button
+                          disabled={isDisabled}
+                          onClick={() => { this._publishLabbook(); }}
+                        >
                           {props.buttonText}
                           {this.props.header === 'Sync' && ' And Sync'}
                         </button>
 
                       </div>
+                      )
                     }
-              </div>
+                </div>
+              )
               }
-            </div>)
+          </div>
+        )
           }
-        />
+      />
     );
   }
 }

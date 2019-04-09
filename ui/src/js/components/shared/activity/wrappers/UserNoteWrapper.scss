@@ -41,61 +41,8 @@
 }
 
 .UserNote__button{
-  position: relative;
-  z-index: 3;
-  top: -5px;
-  left: 26px;
-
-  overflow: hidden;
-  align-items: center;
-
-  width: 12px;
-  width: 120px;
-  height: 12px;
-  height: 26px;
-  padding: 2px;
-
-  cursor: pointer;
-  transition: all 0.125s ease;
-
-  color: $white;
-  border-radius: 15px;
-  background: $azure;
-  background: $azure url('~Images/icons/note-white.svg') no-repeat 8px center;
-  background-size: 20px;
+  background: $azure url('~Images/icons/note-white.svg') no-repeat 14px center;
   background-size: 16px;
-
-  line-height: 24px;
-
-  @include flex(flex-end, flex-row);
-
-  .UserNote__add-icon {
-    position: absolute;
-    top: 12px;
-    left: 18px;
-
-    width: 12px;
-    height: 12px;
-
-    transition: transform 0.125s;
-
-    border: 1px solid $white;
-    border-radius: 20px;
-    background: $azure url('~Images/icons/add.svg') no-repeat center center;
-    background-size: 8px;
-  }
-
-
-  .UserNote__text {
-    margin: 0 10px 0 0;
-  }
-
-  &:hover {
-    background-color: $turquise;
-    .UserNote__add-icon{
-      background-color: $turquise;
-    }
-  }
 }
 
 .UserNote__container.fullscreen {

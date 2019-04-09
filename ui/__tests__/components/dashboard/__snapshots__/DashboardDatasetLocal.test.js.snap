@@ -10,68 +10,70 @@ exports[`DashbboardDatasetsLocal Renders a snapshot 1`] = `
   >
     <div
       className="ImportModule Card Card--line-50 Card--text-center Card--add Card--import column-4-span-3"
+      data-selenium-id="ImportModule"
     >
       <div
-        className="Import__dataset-main"
+        className="Import__main"
+      />
+      <div
+        className="Import__header"
       >
         <div
-          className="Import__dataset-header"
+          className="Import__icon Import__icon--dataset"
         >
           <div
-            className="Import__dataset-icon"
+            className="Import__add-icon"
+          />
+        </div>
+        <div
+          className="Import__title"
+        >
+          <h2
+            className="Import__h2 Import__h2--azure"
+          >
+            Add Dataset
+          </h2>
+        </div>
+      </div>
+      <div
+        className="btn--import"
+        onClick={[Function]}
+      >
+        Create New
+      </div>
+      <div
+        className="btn--import"
+        onClick={[Function]}
+      >
+        Import Existing
+      </div>
+      <div
+        className="hidden createLabbook"
+        data-selenium-id="Tooltip"
+      >
+        <div
+          className="Tooltip__toggle createLabbook"
+          onClick={[Function]}
+        >
+          <div
+            className="Tooltip__glow-container"
           >
             <div
-              className="Import__dataset-add-icon"
-            />
+              className="Tooltip__glow-ring-outer"
+            >
+              <div
+                className="Tooltip__glow-ring-inner"
+              />
+            </div>
           </div>
-          <div
-            className="Import__dataset-title"
-          >
-            <h4>
-              Add Dataset
-            </h4>
-          </div>
-        </div>
-        <div
-          className="btn--import"
-          onClick={[Function]}
-        >
-          Create New
-        </div>
-        <div
-          className="btn--import"
-          onClick={[Function]}
-        >
-          Import Existing
         </div>
         <div
           className="hidden createLabbook"
-          data-selenium-id="ToolTip"
+        />
+        <div
+          className="hidden createLabbook"
         >
-          <div
-            className="ToolTip__toggle createLabbook"
-            onClick={[Function]}
-          >
-            <div
-              className="ToolTip__glow-container"
-            >
-              <div
-                className="ToolTip__glow-ring-outer"
-              >
-                <div
-                  className="ToolTip__glow-ring-inner"
-                />
-              </div>
-            </div>
-          </div>
-          <div
-            className="hidden createLabbook"
-          />
-          <div
-            className="hidden createLabbook"
-          >
-            Clicking on the 'Create New' button will open the new Project window, letting you name and select a Base for the new Project.
-          </div>
+          Clicking on the 'Create New' button will open the new Project window, letting you name and select a Base for the new Project.
         </div>
       </div>
       <div
@@ -79,32 +81,32 @@ exports[`DashbboardDatasetsLocal Renders a snapshot 1`] = `
       />
     </div>
     <div
-      className="DatasetPaginationLoader--hidden"
-      data-selenium-id="datasetsPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="DatasetPaginationLoader--hidden"
-      data-selenium-id="datasetsPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="DatasetPaginationLoader--hidden"
-      data-selenium-id="datasetsPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="DatasetPaginationLoader--hidden"
-      data-selenium-id="datasetsPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="DatasetPaginationLoader--hidden"
-      data-selenium-id="datasetsPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>

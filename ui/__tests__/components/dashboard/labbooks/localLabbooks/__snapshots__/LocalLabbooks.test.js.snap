@@ -10,68 +10,70 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
   >
     <div
       className="ImportModule Card Card--line-50 Card--text-center Card--add Card--import column-4-span-3"
+      data-selenium-id="ImportModule"
     >
       <div
-        className="Import__labbook-main"
+        className="Import__main"
+      />
+      <div
+        className="Import__header"
       >
         <div
-          className="Import__labbook-header"
+          className="Import__icon Import__icon--labbook"
         >
           <div
-            className="Import__labbook-icon"
+            className="Import__add-icon"
+          />
+        </div>
+        <div
+          className="Import__title"
+        >
+          <h2
+            className="Import__h2 Import__h2--azure"
+          >
+            Add Project
+          </h2>
+        </div>
+      </div>
+      <div
+        className="btn--import"
+        onClick={[Function]}
+      >
+        Create New
+      </div>
+      <div
+        className="btn--import"
+        onClick={[Function]}
+      >
+        Import Existing
+      </div>
+      <div
+        className="hidden createLabbook"
+        data-selenium-id="Tooltip"
+      >
+        <div
+          className="Tooltip__toggle createLabbook"
+          onClick={[Function]}
+        >
+          <div
+            className="Tooltip__glow-container"
           >
             <div
-              className="Import__labbook-add-icon"
-            />
+              className="Tooltip__glow-ring-outer"
+            >
+              <div
+                className="Tooltip__glow-ring-inner"
+              />
+            </div>
           </div>
-          <div
-            className="Import__labbook-title"
-          >
-            <h4>
-              Add Project
-            </h4>
-          </div>
-        </div>
-        <div
-          className="btn--import"
-          onClick={[Function]}
-        >
-          Create New
-        </div>
-        <div
-          className="btn--import"
-          onClick={[Function]}
-        >
-          Import Existing
         </div>
         <div
           className="hidden createLabbook"
-          data-selenium-id="ToolTip"
+        />
+        <div
+          className="hidden createLabbook"
         >
-          <div
-            className="ToolTip__toggle createLabbook"
-            onClick={[Function]}
-          >
-            <div
-              className="ToolTip__glow-container"
-            >
-              <div
-                className="ToolTip__glow-ring-outer"
-              >
-                <div
-                  className="ToolTip__glow-ring-inner"
-                />
-              </div>
-            </div>
-          </div>
-          <div
-            className="hidden createLabbook"
-          />
-          <div
-            className="hidden createLabbook"
-          >
-            Clicking on the 'Create New' button will open the new Project window, letting you name and select a Base for the new Project.
-          </div>
+          Clicking on the 'Create New' button will open the new Project window, letting you name and select a Base for the new Project.
         </div>
       </div>
       <div
@@ -116,7 +118,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
         className="LocalLabbooks__row--text"
       >
         <div>
-          <h6
+          <h5
             className="LocalLabbooks__panel-title"
             onClick={[Function]}
           >
@@ -127,7 +129,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
                 ui-test-remote
               </span>
             </span>
-          </h6>
+          </h5>
         </div>
         <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner "
@@ -197,7 +199,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
         className="LocalLabbooks__row--text"
       >
         <div>
-          <h6
+          <h5
             className="LocalLabbooks__panel-title"
             onClick={[Function]}
           >
@@ -208,7 +210,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
                 ui-test-project
               </span>
             </span>
-          </h6>
+          </h5>
         </div>
         <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner "
@@ -281,7 +283,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
         className="LocalLabbooks__row--text"
       >
         <div>
-          <h6
+          <h5
             className="LocalLabbooks__panel-title"
             onClick={[Function]}
           >
@@ -292,7 +294,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
                 test-tt
               </span>
             </span>
-          </h6>
+          </h5>
         </div>
         <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner "
@@ -362,7 +364,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
         className="LocalLabbooks__row--text"
       >
         <div>
-          <h6
+          <h5
             className="LocalLabbooks__panel-title"
             onClick={[Function]}
           >
@@ -373,7 +375,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
                 new-project
               </span>
             </span>
-          </h6>
+          </h5>
         </div>
         <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner "
@@ -443,7 +445,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
         className="LocalLabbooks__row--text"
       >
         <div>
-          <h6
+          <h5
             className="LocalLabbooks__panel-title"
             onClick={[Function]}
           >
@@ -454,7 +456,7 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
                 awful-intersections-demo
               </span>
             </span>
-          </h6>
+          </h5>
         </div>
         <p
           className="LocalLabbooks__paragraph LocalLabbooks__paragraph--owner "
@@ -489,32 +491,32 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
       />
     </a>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
-      className="LabbookPaginationLoader--hidden"
-      data-selenium-id="LabbookPaginationLoader"
+      className="CardLoader--hidden"
+      data-selenium-id="CardLoader"
     >
       <div />
     </div>

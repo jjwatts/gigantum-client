@@ -3,7 +3,7 @@ import React, { Component, Fragment } from 'react';
 import classNames from 'classnames';
 // components
 import ErrorBoundary from 'Components/common/ErrorBoundary';
-import ToolTip from 'Components/common/ToolTip';
+import Tooltip from 'Components/common/Tooltip';
 import ActivityCard from '../ActivityCard';
 import CardWrapper from './CardWrapper';
 // Styles
@@ -50,29 +50,38 @@ export default class ClusterCardWrapper extends Component {
   }
 
   render() {
-    const { props, state } = this,
-        { record } = props,
-        shouldBeFaded = props.hoveredRollback > props.record.flatIndex,
-        clusterCSS = classNames({
-          'ActivityCard--cluster': true,
-          'column-1-span-10': true,
-          faded: shouldBeFaded,
-        }),
-        clusterWrapperCSS = classNames({
-          'ClusterCardWrapper flex justify--space-between flex--column': true,
-          'ClusterCardWrapper--shrink': state.shrink,
-        });
+    const { props, state } = this;
+
+
+    const { record } = props;
+
+
+    const shouldBeFaded = props.hoveredRollback > props.record.flatIndex;
+
+
+    const clusterCSS = classNames({
+      'ActivityCard--cluster': true,
+      'column-1-span-9': true,
+      faded: shouldBeFaded,
+    });
+
+
+    const clusterWrapperCSS = classNames({
+      'ClusterCardWrapper flex justify--space-between flex--column': true,
+      'ClusterCardWrapper--shrink': state.shrink,
+    });
 
     if (!state.expanded) {
       return (
         <div className="CardWrapper CardWrapper--cluster">
 
-          <ToolTip section="activityCluster" />
+          <Tooltip section="activityCluster" />
 
           <div
             className={clusterCSS}
             ref={`cluster--${props.record.flatindex}`}
-            onClick={() => this._toggleCluster(true)}>
+            onClick={() => this._toggleCluster(true)}
+          >
             <div className="ActivityCard__cluster--layer1 box-shadow">
               {`${props.record.cluster.length} Minor Activities`}
             </div>
@@ -90,17 +99,20 @@ export default class ClusterCardWrapper extends Component {
           ref="expanded"
           onMouseEnter={(evt) => { this._toggleShrink(evt, true); }}
           onMouseLeave={(evt) => { this._toggleShrink(evt, false); }}
-          onClick={() => this._toggleCluster(false)}>
-          <div className="ClusterCard__sidebar"></div>
-         </div>
+          onClick={() => this._toggleCluster(false)}
+        >
+          <div className="ClusterCard__sidebar" />
+        </div>
         {
-          props.record.cluster.map(record => <CardWrapper
-               key={`CardWrapper__${record.edge.node.id}`}
-               toggleCluster={this._toggleCluster}
-               {...props}
-               record={record}
-               isLocked={props.isLocked}
-          />)
+          props.record.cluster.map(record => (
+            <CardWrapper
+              key={`CardWrapper__${record.edge.node.id}`}
+              toggleCluster={this._toggleCluster}
+              {...props}
+              record={record}
+              isLocked={props.isLocked}
+            />
+          ))
         }
       </div>
     );

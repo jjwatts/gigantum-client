@@ -32,6 +32,7 @@ class DetailPanel extends Component {
       }
     }
   }
+
   /*
     opens or closes the detail panel
   */
@@ -51,6 +52,7 @@ class DetailPanel extends Component {
   _closePanel() {
     setUpdateDetailView(false);
   }
+
   render() {
     // added hidden to className to prevent dialogue from showing until this feature is fully implemented
     return (

@@ -2,14 +2,17 @@
 import React, { Component } from 'react';
 import Moment from 'moment';
 import TextTruncate from 'react-text-truncate';
-// Mutations
-import RemoveFavoriteMutation from 'Mutations/fileBrowser/RemoveFavoriteMutation';
-import AddFavoriteMutation from 'Mutations/fileBrowser/AddFavoriteMutation';
+// config
+import config from 'JS/config';
 // store
 import { setErrorMessage } from 'JS/redux/reducers/footer';
 import store from 'JS/redux/store';
-// config
-import config from 'JS/config';
+// Mutations
+import RemoveFavoriteMutation from 'Mutations/fileBrowser/RemoveFavoriteMutation';
+import AddFavoriteMutation from 'Mutations/fileBrowser/AddFavoriteMutation';
+// assets
+import '../FileCard.scss';
+
 
 export default class RecentCard extends Component {
   constructor(props) {
@@ -26,7 +29,12 @@ export default class RecentCard extends Component {
     this._handleFileFavoriting = this._handleFileFavoriting.bind(this);
   }
 
-  _handleFileFavoriting(evt, file) {
+  /**
+    @param {Object} file
+    handles favoriting of files
+    @return {}
+  */
+  _handleFileFavoriting(file) {
     if (!file.node.isFavorite) {
       AddFavoriteMutation(
         this.props.favoriteConnection,
@@ -70,35 +78,18 @@ export default class RecentCard extends Component {
     const filename = fileDirectories[fileDirectories.length - 1];
     const path = `${this.props.section}/${this.props.file.node.key.replace(filename, '')}`;
     return (
-      <div
-        className="Recent__card-wrapper"
-      >
+      <div className="FileCard Card column-3-span-4--shrink">
         <div
-          className="Recent__card Card"
-        >
-          <div
-            onClick={evt => this._handleFileFavoriting(evt, this.props.file)}
-            className={this.props.file.node.isFavorite ? 'Favorite__star' : 'Favorite__star--off'}
-          />
-          <div className="Recent__header-section">
-            <h6 className="Recent__card-header">
-              <TextTruncate
-                 className="Favorite__card-header"
-                 line={1}
-                 truncateText="…"
-                 text={filename}
-               />
-              </h6>
-          </div>
+          onClick={() => this._handleFileFavoriting(this.props.file)}
+          className={this.props.file.node.isFavorite ? 'FileCard__star' : 'FileCard__star FileCard__star--off'}
+        />
+        <h6 className="FileCard__header">{filename}</h6>
 
-          <div className="Recent__path-section">
-            <p className="Recent__path">{path}</p>
-          </div>
+        <div className="FileCard__path">{path}</div>
 
-          <div className="Recent__description-section">
-            <p>Last Modified: {Moment(this.props.file.node.modifiedAt * 1000).fromNow()}</p>
-            <p>Size: {config.humanFileSize(this.props.file.node.size)} </p>
-          </div>
+        <div className="FileCard__description">
+          <p>{`Last Modified: ${Moment(this.props.file.node.modifiedAt * 1000).fromNow()}`}</p>
+          <p>{`Size: ${config.humanFileSize(this.props.file.node.size)}`}</p>
         </div>
       </div>
     );

@@ -1,28 +1,25 @@
 @import '~Styles/_imports.scss';
 
 .PackageDependencies__card {
-
   padding: 20px;
-}
-.PackageDependencies__header {
-  color: $romanSilver;
 }
 
 .PackageDependencies__tab {
-  line-height: 30px;
   width: calc(25% - 20px);
+
+  color: $jet;
   background-color: $grey-light;
-  color: $romanSilver;
+
+  line-height: 30px;
 
   &:hover {
     background-color: $white;
-    color: $turquise;
   }
 
   &--selected {
-    background-color: $white;
-    color: $romanSilver;
+    color: $jet;
     border-bottom: 1px solid $white;
+    background-color: $white;
   }
 }
 
@@ -41,9 +38,11 @@
   margin: 20px 0 0 0;
   &--border {
     position: relative;
-    padding: 20px 20px 35px;
-    border: 1px solid $grey;
+
     margin-bottom: 45px;
+    padding: 20px 20px 35px;
+
+    border: 1px solid $grey;
   }
 
   &--no-right-padding {
@@ -51,51 +50,59 @@
   }
 
   &-row{
-    padding: 10px 0 5px;
     height: 50px;
+    padding: 10px 0 5px;
   }
 }
 
 .PackageDependencies__menu {
-  transition: min-height 0.5s, height 0.5s;
   min-height: 0px;
   max-height: auto;
 
+  transition: min-height 0.5s, height 0.5s;
+
   &--min-height {
-    min-height: 0px;
-    height: 0px;
     overflow: hidden;
+
+    height: 0px;
+    min-height: 0px;
   }
 }
 
 
 
 .PackageDependencies__btn {
-  padding: 5px 0;
-  background-color: $grey-light;
-  border: 0;
-  color: $azure;
   width: 100%;
+  padding: 5px 0;
+
+  box-shadow: none !important;
+
+  color: $azure;
+  border: 0;
+  background-color: $grey-light;
 
   &:hover {
-    background-color: $grey-light;
     color: $turquise;
     border: 0;
+    background-color: $grey-light;
+
     font-weight: bold;
 
   }
 
   &:focus {
-    padding: 5px 0;
-    background-color: $grey-light;
-    border: 0;
-    color: $azure;
     width: 100%;
+    padding: 5px 0;
+
+    color: $azure;
+    border: 0;
+    background-color: $grey-light;
   }
 
   &:disabled {
-    background-color: $grey-light;
     border: 0;
+    background-color: $grey-light;
+
     font-weight: bold;
 
     &:hover {
@@ -106,28 +113,13 @@
 
   &--absolute {
     position: absolute;
-    height: 40px;
-    left: 50%;
     bottom: -20px;
+    left: 50%;
+
+    height: 40px;
     margin: 0 0 0 -117px;
   }
 
-  &--absolute.ButtonLoader--loading,
-  &--absolute.ButtonLoader--finished,
-  &--absolute.ButtonLoader--error {
-    margin: 0 0 0 -13px;
-    bottom: -13px;
-  }
-
-  &--add {
-    background: $azure url('~Images/icons/add.svg') no-repeat 50% 50%;
-    background-size: 16px;
-
-    &:hover {
-      background: $turquise url('~Images/icons/add.svg') no-repeat 50% 50%;
-      background-size: 16px;
-    }
-  }
 
   &--remove--adder,
   &--remove-adder:focus {
@@ -137,8 +129,8 @@
 
 
   &--remove{
-    background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
     border: none;
+    background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
 
     &:disabled{
       opacity: 0.2;
@@ -146,19 +138,19 @@
     }
 
     &:hover {
+      border: none;
       background: $azure url('~Images/icons/check-selected.svg') no-repeat 50% 50% !important;
       background-size: 44px !important;
-      border: none;
     }
 
     &:focus {
-      background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
       border: none;
+      background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
     }
 
     &:disabled:hover {
-      background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
       border: none;
+      background: url('~Images/icons/check-unselected.svg') no-repeat 50% 50% !important;
     }
   }
 
@@ -170,19 +162,20 @@
   &--remove--selected,
   &--remove--selected:hover,
   &--remove--selected:focus {
+    border: none;
     background: $azure url('~Images/icons/check-selected.svg') no-repeat 50% 50% !important;
     background-size: 44px !important;
-    border: none;
   }
 
   &--line-18 {
+      height: 50px;
 
-      font-size: 20px;
-      line-height: 18px;
-      font-weight: bold;
       background: url('~Images/icons/down-arrow-azure.svg') no-repeat calc(50% + 90px) 50%;
       background-size: 25px;
-      height: 50px;
+
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 18px;
 
       &:hover{
         color: $turquise !important;
@@ -217,8 +210,9 @@
   &--round {
     width: 30px;
     height: 30px;
-    border-radius: 15px;
     padding: 0;
+
+    border-radius: 15px;
   }
 
   &--margin{
@@ -229,54 +223,66 @@
 
 .PackageDependencies__addPackage {
   position: relative;
-  background-color: $grey-light;
+
   margin: 20px 0 10px 0;
   padding: 5px 20px;
-  border-radius: 8px;
+
   border: 1px solid $romanSilver;
+  border-radius: 8px;
+  background-color: $grey-light;
 }
 
 .PackageDependencies__packageMenu {
-  padding: 15px 0 20px 0;
-  margin-bottom: 20px;
-  @include flex(space-around, row);
   align-items: center;
+
+  margin-bottom: 20px;
+  padding: 15px 0 20px 0;
+
+  @include flex(space-around, row);
 }
 
 .PackageDependencies__input {
   &[type="text"] {
     flex: 2;
+
     margin: 0 20px 0 0 !important;
   }
 
   &--version[type="text"] {
     flex: 1 1;
+
     margin: 0 20px 0 0 !important;
   }
 }
 
 
 .PackageDependencies__versionLoading {
+  position: absolute;
+
+  display: inline-block;
+
   width: 20px;
   height: 20px;
+  margin-left: 10px;
+
+  animation: spin 2s linear infinite;
+
   border: 3px solid $grey;
   border-top: 3px solid $turquise;
   border-radius: 50%;
-  position: absolute;
-  margin-left: 10px;
-  display: inline-block;
-  animation: spin 2s linear infinite;
 }
 
 .PackageDependencies__th{
   height: 30px;
   &--remove {
     position:relative;
+
     width: 90px;
     div{
       position:absolute;
       top: 0px;
       right: 0px;
+
       width: 150px;
     }
   }
@@ -284,6 +290,7 @@
   &--last {
     width: 90px;
     height: 26px;
+
     text-align: center;
   }
 
@@ -296,8 +303,9 @@
   }
 
   &--latest-column{
-    height: 66px;
     flex-grow: 1;
+
+    height: 66px;
 
     @include flex(space-between, row);
 
@@ -311,30 +319,35 @@
   }
 
   &--optimistic-updating {
-    opacity: 0.1;
     animation: fluxuateLoad 3s infinite;
+
+    opacity: 0.1;
   }
 }
 
 .PackageDependencies__updateAvailable {
-  margin-left: 5px;
+  position: relative;
+  right: 50%;
+
+  display: inline-block;
+  align-self: center;
+
   width: 25px;
   height: 25px;
+  margin-left: 5px;
+
   border-radius: 25px;
   background: $azure url('~Images/icons/update-version.svg') no-repeat 50% 50% ;
   background-size: 25px;
-  display: inline-block;
-  position: relative;
-  align-self: center;
-  right: 50%;
 }
 
 
 
 .PackageDependencies__remove-button--full,
 .PackageDependencies__remove-button--full:focus {
-  padding-left: 40px;
   width: 140px;
+  padding-left: 40px;
+
   background: $azure url('~Images/icons/trash-white.svg') no-repeat 30px center;
   background-size: 18px;
 }
@@ -345,9 +358,9 @@
 }
 
 .PackageDependencies__remove-button--full:disabled{
+  border: 0px;
   background: $grey-light url('~Images/icons/trash.svg') no-repeat 30px center;
   background-size: 18px;
-  border: 0px;
   &:hover{
     background: $grey-light url('~Images/icons/trash.svg') no-repeat 30px center;
     background-size: 18px;
@@ -356,55 +369,66 @@
 
 .PackageDependencies__remove-button--half,
 .PackageDependencies__remove-button--half:focus {
-  background: $azure url('~Images/icons/trash-white.svg') no-repeat 2px center;
   width: 70px;
-  border-radius: 0 10px 10px 0;
-  background-size: 14px;
-  font-size: 14px;
+
   word-break: normal;
+
+  border-radius: 0 10px 10px 0;
+  background: $azure url('~Images/icons/trash-white.svg') no-repeat 2px center;
+  background-size: 14px;
+
+  font-size: 14px;
 }
 
 .PackageDependencies__remove-button--half:hover{
+  word-break: normal;
+
   background: $turquise url('~Images/icons/trash-white.svg') no-repeat 2px center;
   background-size: 14px;
-  word-break: normal;
 }
 
 .PackageDependencies__remove-button--half:disabled{
-  background: $grey-light url('~Images/icons/trash.svg') no-repeat 2px center;
-  background-size: 14px;
-  border: 0px;
   word-break: normal;
 
+  border: 0px;
+  background: $grey-light url('~Images/icons/trash.svg') no-repeat 2px center;
+  background-size: 14px;
+
   &:hover{
+    word-break: normal;
+
+    border: 0px;
     background: $grey-light url('~Images/icons/trash.svg') no-repeat 2px center;
     background-size: 14px;
-    border: 0px;
-    word-break: normal;
   }
 }
 
 .PackageDependencies__update-button,
 .PackageDependencies__update-button:focus{
-  background: $azure url('~Images/icons/update-version.svg') no-repeat 2px 50% ;
   width: 70px;
-  border-radius: 10px 0 0 10px;
-  background-size: 18px;
-  font-size: 14px;
+
   word-break: normal;
+
+  border-radius: 10px 0 0 10px;
+  background: $azure url('~Images/icons/update-version.svg') no-repeat 2px 50% ;
+  background-size: 18px;
+
+  font-size: 14px;
 }
 
 .PackageDependencies__update-button:hover{
+  word-break: normal;
+
   background: $turquise url('~Images/icons/update-version.svg') no-repeat 2px 50% ;
   background-size: 18px;
-  word-break: normal;
 }
 
 .PackageDependencies__update-button:disabled {
+  word-break: normal;
+
+  border: 0px;
   background: $grey-light url('~Images/icons/update-version-silver.svg') no-repeat 2px 50% ;
   background-size: 18px;
-  word-break: normal;
-  border: 0px;
 
   &:hover {
     background: $grey-light url('~Images/icons/update-version-silver.svg') no-repeat 2px 50% ;
@@ -414,14 +438,17 @@
 .PackageDependencies__table thead,
 .PackageDependencies__table tbody tr {
   display: table;
+
   width: 100%;
+
   table-layout: fixed;
 }
 
 .PackageDependencies__table tbody {
   display: block;
-  max-height: 402px;
   overflow-y: auto;
+
+  max-height: 402px;
 }
 
 

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import classNames from 'classnames';
 // Components
 import CodeBlock from 'Components/labbook/renderers/CodeBlock';
-import ToolTip from 'Components/common/ToolTip';
+import Tooltip from 'Components/common/Tooltip';
 // mutations
 import AddCustomDockerMutation from 'Mutations/AddCustomDockerMutation';
 // store
@@ -46,10 +46,16 @@ export default class CustomDockerfile extends Component {
   *  @return {}
   */
   _saveDockerfile() {
-    const { props, state } = this,
-          { status } = store.getState().containerStatus,
-          canEditEnvironment = config.containerStatus.canEditEnvironment(status) && !props.isLocked,
-          { owner, labbookName } = store.getState().routes;
+    const { props, state } = this;
+
+
+    const { status } = store.getState().containerStatus;
+
+
+    const canEditEnvironment = config.containerStatus.canEditEnvironment(status) && !props.isLocked;
+
+
+    const { owner, labbookName } = store.getState().routes;
 
     if (navigator.onLine) {
       if (canEditEnvironment) {
@@ -117,32 +123,33 @@ export default class CustomDockerfile extends Component {
 
 
   render() {
-    const { props, state } = this,
-          dockerfileCSS = classNames({
-            'column-1-span-11': true,
-            empty: !this.state.dockerfileContent,
-          }),
-          dockerSnippetsCSS = classNames({
-            CustomDockerfile__header: true,
-          }),
-          editDockerfileButtonCSS = classNames({
-            'CustomDockerfile__edit-button': true,
-            hidden: state.editingDockerfile,
-            'Tooltip-data': props.isLocked,
-          }),
-          renderedContent = state.dockerfileContent ? `\`\`\`\n${state.dockerfileContent}\n\`\`\`` : 'No commands provided.';
+    const { props, state } = this;
+
+
+    const dockerfileCSS = classNames({
+      'column-1-span-11': true,
+      empty: !this.state.dockerfileContent,
+    });
+
+
+    const editDockerfileButtonCSS = classNames({
+      'Btn Btn--feature Btn--feature Btn__edit absolute--important': true,
+      hidden: state.editingDockerfile,
+      'Tooltip-data': props.isLocked,
+    });
+
+
+    const renderedContent = state.dockerfileContent ? `\`\`\`\n${state.dockerfileContent}\n\`\`\`` : 'No commands provided.';
 
     return (
-      <div className="CustomDockerfile">
+      <div className="CustomDockerfile column-1-span-12">
 
         <div className="Environment__headerContainer">
 
-          <h5
-            className={dockerSnippetsCSS}
-          >
+          <h2>
             Custom Docker Instructions
-            <ToolTip section="dockerInstructionsEnvironment" />
-          </h5>
+            <Tooltip section="dockerInstructionsEnvironment" />
+          </h2>
 
         </div>
 
@@ -161,60 +168,65 @@ export default class CustomDockerfile extends Component {
             <button
               className={editDockerfileButtonCSS}
               data-tooltip="Container must be turned off to edit docker snippets"
-              onClick={() => this._editDockerfile()}>
+              onClick={() => this._editDockerfile()}
+            >
               <span>Edit Dockerfile</span>
             </button>
             {
-              this.state.editingDockerfile ?
+              this.state.editingDockerfile
 
-                <Fragment>
+                ? (
+                  <Fragment>
 
-                  <textarea
-                    className="CustomDockerfile__textarea"
-                    type="text"
-                    onChange={(evt) => { this.setState({ dockerfileContent: evt.target.value }); }}
-                    placeholder="Enter dockerfile commands here"
-                    defaultValue={state.dockerfileContent ? state.dockerfileContent : ''}
-                  />
+                    <textarea
+                      className="CustomDockerfile__textarea"
+                      type="text"
+                      onChange={(evt) => { this.setState({ dockerfileContent: evt.target.value }); }}
+                      placeholder="Enter dockerfile commands here"
+                      defaultValue={state.dockerfileContent ? state.dockerfileContent : ''}
+                    />
 
-                  <div className="CustomDockerfile__buttonContainer">
+                    <div className="CustomDockerfile__buttonContainer">
 
-                    <div className="column-1-span-2">
+                      <div className="column-1-span-2">
 
-                      <button
-                        onClick={() => this.setState({ editingDockerfile: false, dockerfileContent: state.lastSavedDockerfileContent })}
-                        className="CustomDockerfile__content-cancel-button button--flat">
+                        <button
+                          onClick={() => this.setState({ editingDockerfile: false, dockerfileContent: state.lastSavedDockerfileContent })}
+                          className="CustomDockerfile__content-cancel-button Btn--flat"
+                        >
                       Cancel
-                      </button>
+                        </button>
 
-                      <button
-                        disabled={state.savingDockerfile}
-                        onClick={() => this._saveDockerfile()}
-                        className="CustomDockerfile__content-save-button">
+                        <button
+                          disabled={state.savingDockerfile}
+                          onClick={() => this._saveDockerfile()}
+                          className="CustomDockerfile__content-save-button"
+                        >
                       Save
-                      </button>
+                        </button>
+
+                      </div>
 
                     </div>
 
-                  </div>
+                  </Fragment>
+                )
 
-                </Fragment>
+                : (
+                  <Fragment>
 
-              :
+                    <div className={dockerfileCSS}>
 
-                <Fragment>
+                      <ReactMarkdown
+                        renderers={{ code: props => <CodeBlock {...props} language="dockerfile" /> }}
+                        className="ReactMarkdown"
+                        source={renderedContent}
+                      />
 
-                  <div className={dockerfileCSS}>
+                    </div>
 
-                    <ReactMarkdown
-                      renderers={{ code: props => <CodeBlock {...props} language="dockerfile" /> }}
-                      className="ReactMarkdown"
-                      source={renderedContent}
-                    />
-
-                  </div>
-
-                </Fragment>
+                  </Fragment>
+                )
             }
 
           </div>

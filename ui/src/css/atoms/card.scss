@@ -5,11 +5,10 @@
   cursor: pointer;
   transition: box-shadow 0.5s;
   text-align: left;
-  word-break: break-all;
 
   color: $jet;
   background: $white;
-  background-size: 50px;
+  // background-size: 50px;
 
   &:empty {
     height: 0;
@@ -26,21 +25,25 @@
   }
 
   @include boxShadow();
-}
 
-.Card--300 {
-  height: 300px;
-}
+  &:hover {
+    transition: box-shadow 0.5s;
 
+    box-shadow: 0 0px 12px 0 rgba(0,0,0,.50);
+  }
 
-.Card:hover {
-  transition: box-shadow 0.5s;
+  &--300 {
+    height: 300px;
+  }
 
-  box-shadow: 0 0px 12px 0 rgba(0,0,0,.50);
-}
+  &--import {
+    padding: 0px;
+  }
 
-.Card--import {
-  padding: 0px;
+  &:before,
+  &:after {
+    padding: 0 10px;
+  }
 }
 
 .Card--auto{
@@ -51,9 +54,4 @@
 .Card--no-hover:hover{
   cursor: default;
   box-shadow: 0 0px 12px 0 rgba(0,0,0,.10);
-}
-
-.Card:before,
-.Card:after {
-  padding: 0 10px;
 }

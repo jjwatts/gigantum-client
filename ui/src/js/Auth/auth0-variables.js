@@ -4,3 +4,5 @@ export const AUTH_CONFIG = {
   callbackUrl: `${window.location.origin}/projects/local`,
   audience: 'api.gigantum.io',
 };
+
+export default AUTH_CONFIG;

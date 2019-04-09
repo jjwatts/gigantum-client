@@ -4,18 +4,18 @@
 .CollaboratorsModal__add {
   position: relative;
   @include flex(flex-start, row);
-  button {
-     margin: 0 0 0 20px;
+  // button {
+  //    margin: 0 0 0 20px;
 
-     width: 35px;
-     height: 35px;
+  //    width: 35px;
+  //    height: 35px;
 
-     cursor: pointer;
+  //    cursor: pointer;
 
-     border: none;
-     background: $white url('~Images/icons/plus-big.svg');
-     background-size: 35px;
-  }
+  //    border: none;
+  //    background: $white url('~Images/icons/plus-big.svg');
+  //    background-size: 35px;
+  // }
 }
 
 .CollaboratorsModal__h5 {
@@ -25,15 +25,6 @@
 .CollaboratorsModal__container {
   padding: 20px 100px;
 }
-
-.CollaboratorsModal__btn--add {
-  align-self: center;
-
-  width: 100px;
-  height: 30px;
-  padding: 0;
-}
-
 
 .CollaboratorsModal__input--collaborators[type="text"] {
   width: 480px !important;
@@ -110,30 +101,30 @@
       background-size: 25px;
     }
 
-    &--add {
-      z-index: index($elements, modal);
+    // &--add {
+    //   z-index: index($elements, modal);
 
-      overflow: visible;
-      align-self: center;
+    //   overflow: visible;
+    //   align-self: center;
 
-      width: 100px;
-      height: 30px;
-      max-height: 40px;
-      padding: 0;
+    //   width: 100px;
+    //   height: 30px;
+    //   max-height: 40px;
+    //   padding: 0;
 
-      &:hover {
-        background: $white url('~Images/icons/plus-big-turquise.svg');
-        background-size: 35px;
-      }
+      // &:hover {
+      //   background: $white url('~Images/icons/plus-big-turquise.svg');
+      //   background-size: 35px;
+      // }
 
-      &:disabled,
-      &:disabled:hover {
-        cursor: default;
+      // &:disabled,
+      // &:disabled:hover {
+      //   cursor: default;
 
-        background: $white url('~Images/icons/plus-big-gray.svg');
-        background-size: 35px;
-      }
-    }
+      //   background: $white url('~Images/icons/plus-big-gray.svg');
+      //   background-size: 35px;
+      // }
+    // }
 }
 
 .CollaboratorsModal__listItem{

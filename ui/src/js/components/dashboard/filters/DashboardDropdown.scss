@@ -1,0 +1,39 @@
+@import '~Styles/_imports.scss';
+
+.DashboardDropdown {
+  color: $mineShaft;
+  position: relative;
+  align-items: center;
+  cursor: pointer;
+  @include flex(space-between, row);
+
+  .Dropdown__menu {
+    top: 35px;
+  }
+}
+
+.DashboardDropdown__selector {
+   width: 208px;
+}
+
+.DashboardDropdown__list-item{
+
+  height: 40px;
+  padding: 10px 5px !important;
+  padding-top: 2px;
+
+  user-select: none;
+
+  border-bottom: 1px solid $mineShaft;
+
+  &:last-child{
+    border-bottom: none;
+  }
+
+  &:hover {
+    transition: background-color 0.25s ease-in-out;
+
+    background: $azure;
+    color: $white;
+  }
+}

@@ -40,7 +40,7 @@ mutation LabbookLookupMutation($input: FetchLabbookEdgeInput!){
 }
 `;
 
-let tempID = 0;
+const tempID = 0;
 
 
 export default function LabbookLookupMutation(

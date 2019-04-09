@@ -1,15 +1,15 @@
 // vendor
 import {
-    createFragmentContainer,
-    graphql,
-  } from 'react-relay';
+  createFragmentContainer,
+  graphql,
+} from 'react-relay';
 // components
 import Overview from 'Components/shared/overview/Overview';
 
 
 export default createFragmentContainer(
-    Overview,
-    graphql`fragment DatasetOverviewContainer_dataset on Dataset {
+  Overview,
+  graphql`fragment DatasetOverviewContainer_dataset on Dataset {
       overview{
         id
         owner
@@ -21,4 +21,4 @@ export default createFragmentContainer(
         readme
       }
     }`,
-  );
+);

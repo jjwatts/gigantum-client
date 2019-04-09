@@ -25,8 +25,9 @@ export default class LoginPrompt extends Component {
       <Modal
         size="small"
         handleClose={() => this.props.closeModal()}
-        renderContent={() =>
-          (navigator.onLine ?
+        icon="login"
+        renderContent={() => (navigator.onLine
+          ? (
             <div className="LoginPrompt">
               <div>
                 <p>Your authentication token has expired and must be renewed to perform this action.</p>
@@ -37,12 +38,14 @@ export default class LoginPrompt extends Component {
                 <button onClick={() => { this._dontLogin(); }}>no</button>
               </div>
             </div>
-          :
+          )
+          : (
             <div className="LoginPrompt">
               <div className="LoginPrompt__container">
                 <p>A valid internet connection is required to perform this action.</p>
               </div>
-            </div>)
+            </div>
+          ))
         }
       />
     );

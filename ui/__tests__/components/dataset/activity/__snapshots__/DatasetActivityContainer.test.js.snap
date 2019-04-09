@@ -46,20 +46,20 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
         >
           <div
             className="hidden userNote"
-            data-selenium-id="ToolTip"
+            data-selenium-id="Tooltip"
           >
             <div
-              className="ToolTip__toggle userNote"
+              className="Tooltip__toggle userNote"
               onClick={[Function]}
             >
               <div
-                className="ToolTip__glow-container"
+                className="Tooltip__glow-container"
               >
                 <div
-                  className="ToolTip__glow-ring-outer"
+                  className="Tooltip__glow-ring-outer"
                 >
                   <div
-                    className="ToolTip__glow-ring-inner"
+                    className="Tooltip__glow-ring-inner"
                   />
                 </div>
               </div>
@@ -74,19 +74,13 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
  The note editor supports markdown.
             </div>
           </div>
-          <div
-            className="UserNote__button"
+          <button
+            className="Btn Btn--feature Btn--feature--expanded--paddingLeft relative UserNote__button"
             onClick={[Function]}
+            type="submit"
           >
-            <div
-              className="UserNote__add-icon"
-            />
-            <div
-              className="UserNote__text"
-            >
-              Add Note
-            </div>
-          </div>
+            Add Note
+          </button>
           <div
             className="UserNote__add UserNote__card column-1-span-10 hidden"
           />
@@ -98,7 +92,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
             className="CardWrapper"
           >
             <div
-              className="ActivityCard__container column-1-span-10"
+              className="ActivityCard__container column-1-span-9"
               data-selenium-id="ActivityCard"
             >
               <div
@@ -145,7 +139,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
             className="CardWrapper"
           >
             <div
-              className="ActivityCard__container column-1-span-10"
+              className="ActivityCard__container column-1-span-9"
               data-selenium-id="ActivityCard"
             >
               <div
@@ -192,7 +186,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
             className="CardWrapper"
           >
             <div
-              className="ActivityCard__container column-1-span-10"
+              className="ActivityCard__container column-1-span-9"
               data-selenium-id="ActivityCard"
             >
               <div
@@ -239,7 +233,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
             className="CardWrapper"
           >
             <div
-              className="ActivityCard__container column-1-span-10"
+              className="ActivityCard__container column-1-span-9"
               data-selenium-id="ActivityCard"
             >
               <div
@@ -286,7 +280,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
             className="CardWrapper"
           >
             <div
-              className="ActivityCard__container column-1-span-10"
+              className="ActivityCard__container column-1-span-9"
               data-selenium-id="ActivityCard"
             >
               <div
@@ -332,23 +326,23 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
         </div>
       </div>
       <div
-        className="ActivityCard ActivityCard__loader ActivityCard__loader--0 card column-1-span-10"
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--0 card column-1-span-9"
         data-selenium-id="PaginationLoader"
       />
       <div
-        className="ActivityCard ActivityCard__loader ActivityCard__loader--1 card column-1-span-10"
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--1 card column-1-span-9"
         data-selenium-id="PaginationLoader"
       />
       <div
-        className="ActivityCard ActivityCard__loader ActivityCard__loader--2 card column-1-span-10"
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--2 card column-1-span-9"
         data-selenium-id="PaginationLoader"
       />
       <div
-        className="ActivityCard ActivityCard__loader ActivityCard__loader--3 card column-1-span-10"
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--3 card column-1-span-9"
         data-selenium-id="PaginationLoader"
       />
       <div
-        className="ActivityCard ActivityCard__loader ActivityCard__loader--4 card column-1-span-10"
+        className="ActivityCard ActivityCard__loader ActivityCard__loader--4 card column-1-span-9"
         data-selenium-id="PaginationLoader"
       />
     </div>

@@ -25,7 +25,7 @@ export default (
       ...state,
       collaborators: action.payload.collaborators,
     };
-  } else if (action.type === SET_CANMANAGECOLLABORATORS) {
+  } if (action.type === SET_CANMANAGECOLLABORATORS) {
     return {
       ...state,
       canManageCollaborators: action.payload.canManageCollaborators,

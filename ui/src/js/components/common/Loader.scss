@@ -1,0 +1,16 @@
+@import '~Styles/_imports.scss';
+
+.Loader {
+  position: absolute;
+  z-index: index($elements, loader);
+  top: calc(50% - 75px);
+  left: calc(50% - 75px);
+
+  width: 150px;
+  height: 150px;
+
+  background: url(~Images/loaders/load.svg) no-repeat 50% 50%;
+  background-size: 100px;
+
+  @include animation('spin 2s linear infinite');
+}

@@ -1,10 +1,12 @@
+// vendor
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import SyntaxHighlighterHLJS from 'react-syntax-highlighter';
 import { githubGist } from 'react-syntax-highlighter/dist/styles/hljs';
+// json
 import customizedStyling from './CodeBlockStyle';
-import classNames from 'classnames';
 // assets
 import './CodeBlock.scss';
 

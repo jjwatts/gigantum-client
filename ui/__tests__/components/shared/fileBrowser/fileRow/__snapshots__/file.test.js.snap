@@ -18,7 +18,7 @@ exports[`Project File component File Snapshot 1`] = `
     }
   >
     <button
-      className="Btn Btn--round Btn--check"
+      className="Btn Btn--round Btn--medium Btn__check"
       onClick={[Function]}
     />
     <div
@@ -89,10 +89,10 @@ exports[`Project File component File Snapshot 1`] = `
           onClick={[Function]}
         >
           <div
-            className="ActionsMenu__popup hidden ToolTip__message"
+            className="ActionsMenu__popup hidden Tooltip__message"
           >
             <div
-              className="ToolTip__pointer"
+              className="Tooltip__pointer"
             />
             <p>
               Are you sure?

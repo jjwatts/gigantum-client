@@ -1,8 +1,10 @@
-import Labbooks from './../Labbooks';
+// vendor
 import {
   createFragmentContainer,
   graphql,
 } from 'react-relay';
+// components
+import Labbooks from '../Labbooks';
 
 export default createFragmentContainer(
   Labbooks,

@@ -1,4 +1,4 @@
- import uuidv4 from 'uuid/v4';
+import uuidv4 from 'uuid/v4';
 import config from 'JS/config';
 // utilities
 import ChunkUploader from 'JS/utils/ChunkUploader';
@@ -11,13 +11,23 @@ import ChunkUploader from 'JS/utils/ChunkUploader';
  * @return {number} totalFiles
  */
 const createFiles = (files, prefix, mutationData) => {
-  const fileSizeData = checkFileSize(files),
-        fileMetaData = getTotalFileLength(files),
-        transactionId = uuidv4(),
-        totalFiles = fileMetaData.fileCount - fileSizeData.fileSizeNotAllowed,
-        hasDirectoryUpload = fileMetaData.hasDirectoryUpload,
-        self = this;
-  let folderFiles = [];
+  const fileSizeData = checkFileSize(files);
+
+
+  const fileMetaData = getTotalFileLength(files);
+
+
+  const transactionId = uuidv4();
+
+
+  const totalFiles = fileMetaData.fileCount - fileSizeData.fileSizeNotAllowed;
+
+
+  const hasDirectoryUpload = fileMetaData.hasDirectoryUpload;
+
+
+  const self = this;
+  const folderFiles = [];
 
   // loop through files and upload if file is a file
   files.forEach((file, index) => {

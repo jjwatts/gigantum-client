@@ -25,7 +25,7 @@ mutation FetchLabbookEdgeMutation($input: FetchLabbookEdgeInput!, $first: Int!, 
 }
 `;
 
-let tempID = 0;
+const tempID = 0;
 
 
 export default function FetchLabbookEdgeMutation(

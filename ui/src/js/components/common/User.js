@@ -1,5 +1,8 @@
+// vendor
 import React, { Component } from 'react';
 import classNames from 'classnames';
+// assets
+import './User.scss';
 
 export default class User extends Component {
   constructor(props) {
@@ -33,6 +36,7 @@ export default class User extends Component {
     this.props.auth.logout();
     this._toggleDropdown();
   }
+
   /**
       @param {}
       handles click to update state
@@ -59,9 +63,21 @@ export default class User extends Component {
 
   render() {
     const usernameCSS = classNames({
-      User__name: !this.state.dropdownVisible,
+      User__name: true,
       'User__name--active': this.state.dropdownVisible,
       'User__name--long': this.state.username.length >= 10,
+    });
+
+
+    const userDropdownCSS = classNames({
+      User__dropdown: true,
+      hidden: !this.state.dropdownVisible,
+    });
+
+
+    const arrowCSS = classNames({
+      'User__dropdown--arrow': true,
+      hidden: !this.state.dropdownVisible,
     });
 
 
@@ -69,20 +85,21 @@ export default class User extends Component {
       <div
         id="user"
         className="User"
-        key="user">
+        key="user"
+      >
         <div className="User__image" />
         <h6
           id="username"
           onClick={() => { this._toggleDropdown(); }}
           className={usernameCSS}
-          data-tooltip={this.state.username}>
+          data-tooltip={this.state.username}
+        >
           {this.state.username}
-
         </h6>
 
-        <div className={this.state.dropdownVisible ? 'User__dropdown--arrow' : 'hidden'} />
+        <div className={arrowCSS} />
 
-        <div className={this.state.dropdownVisible ? 'User__dropdown' : 'hidden'}>
+        <div className={userDropdownCSS}>
           <a
             id="profile"
             href="http://gigantum.com/profile"
@@ -94,7 +111,7 @@ export default class User extends Component {
           </a>
           <button
             id="logout"
-            className="User__button btn-margin"
+            className="User__button btn-margin Btn Btn--flat"
             onClick={this.logout.bind(this)}
           >
             Logout

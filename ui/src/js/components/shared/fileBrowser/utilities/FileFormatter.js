@@ -1,9 +1,9 @@
 export default class FileFormatter {
-    constructor(worker) {
-        const code = worker.toString();
-        const blob = new Blob([`(${code})()`]);
-        return new Worker(URL.createObjectURL(blob));
-    }
+  constructor(worker) {
+    const code = worker.toString();
+    const blob = new Blob([`(${code})()`]);
+    return new Worker(URL.createObjectURL(blob));
+  }
 }
 /**
 *  @param {}
@@ -11,7 +11,7 @@ export default class FileFormatter {
 *  @return {}
 */
 export const fileHandler = () => {
-    /* eslint-disable */
+  /* eslint-disable */
     self.addEventListener('message', (evt) => {
         let edges = evt.data.files;
         let edgesToSort = JSON.parse(JSON.stringify(edges));

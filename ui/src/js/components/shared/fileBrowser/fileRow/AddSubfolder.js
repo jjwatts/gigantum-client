@@ -2,29 +2,32 @@ import React, { Component } from 'react';
 import classNames from 'classnames';
 import { DragSource, DropTarget } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
+// components
+import Connectors from '../utilities/Connectors';
 // assets
 import './AddSubfolder.scss';
-// components
-import Connectors from './../utilities/Connectors';
 
 
 class AddSubfolder extends Component {
   constructor(props) {
-      super(props);
+    super(props);
 
-      this.state = {
-        editMode: false,
-        folderName: '',
-      };
+    this.state = {
+      editMode: false,
+      folderName: '',
+    };
 
-      this._clickedOffInput = this._clickedOffInput.bind(this);
+    this._clickedOffInput = this._clickedOffInput.bind(this);
   }
+
   componentDidMount() {
     window.addEventListener('click', this._clickedOffInput);
   }
+
   componentWillUnmount() {
     window.removeEventListener('click', this._clickedOffInput);
   }
+
   /*
     sets auto focus on visibility change
   */
@@ -123,62 +126,71 @@ class AddSubfolder extends Component {
     };
 
     this.props.mutations.makeLabbookDirectory(data, (response) => {
-       this._clearState();
-       if (this.props.setAddFolderVisible) {
+      this._clearState();
+      if (this.props.setAddFolderVisible) {
         this.props.setAddFolderVisible(false);
-       }
+      }
     });
   }
 
   render() {
     const subfolderInputCSS = classNames({
-            AddSubfolder__edit: true,
-            hidden: !this.state.editMode && !this.props.addFolderVisible,
-          }),
-          addFolderCSS = classNames({
-            AddSubfolder: true,
-            hidden: !this.props.addFolderVisible,
-          }),
-          subfolderTextCSS = classNames({
-            AddSubfolder__text: true,
-            hidden: (this.state.editMode) || this.props.addFolderVisible,
-          });
+      AddSubfolder__edit: true,
+      hidden: !this.state.editMode && !this.props.addFolderVisible,
+    });
+
+
+    const addFolderCSS = classNames({
+      AddSubfolder: true,
+      hidden: !this.props.addFolderVisible,
+    });
+
+
+    const subfolderTextCSS = classNames({
+      AddSubfolder__text: true,
+      hidden: (this.state.editMode) || this.props.addFolderVisible,
+    });
 
     return (
       <div
-          onClick={() => { this._updateStateBoolean('editMode', true); }}
-          style={this.props.rowStyle}
-          className={addFolderCSS}>
-          <div className={subfolderTextCSS}>
+        onClick={() => { this._updateStateBoolean('editMode', true); }}
+        style={this.props.rowStyle}
+        className={addFolderCSS}
+      >
+        <div className={subfolderTextCSS}>
             Add Folder
-          </div>
-           <div className={subfolderInputCSS}>
-             <div className="AddSubfolder__container">
-               <input
-                 ref={(input) => { this.subfolderInput = input; }}
-                 placeholder="Enter Folder Name"
-                 type="text"
-                 className="AddSubfolder__input"
-                 onKeyUp={(evt) => { this._updateFolderName(evt); }}
-               />
-               { (this.state.folderName.length > 0) &&
+        </div>
+        <div className={subfolderInputCSS}>
+          <div className="AddSubfolder__container">
+            <input
+              ref={(input) => { this.subfolderInput = input; }}
+              placeholder="Enter Folder Name"
+              type="text"
+              className="AddSubfolder__input"
+              onKeyUp={(evt) => { this._updateFolderName(evt); }}
+            />
+            { (this.state.folderName.length > 0)
+                   && (
                    <button
                      className="AddSubfolder__btn AddSubfolder__btn--clear"
-                     onClick={() => { this._clearInput(); }}>
+                     onClick={() => { this._clearInput(); }}
+                   >
                      Clear
                    </button>
+                   )
                  }
-            </div>
-            <div className="flex justify--space-around">
-              <button
-                className="File__btn--round File__btn--cancel"
-                onClick={(evt) => { this._clearInput(); }} />
-              <button
-                className="File__btn--round File__btn--add"
-                onClick={(evt) => { this._triggerMutation(); }}
-              />
-            </div>
           </div>
+          <div className="flex justify--space-around">
+            <button
+              className="File__btn--round File__btn--cancel"
+              onClick={(evt) => { this._clearInput(); }}
+            />
+            <button
+              className="File__btn--round File__btn--add"
+              onClick={(evt) => { this._triggerMutation(); }}
+            />
+          </div>
+        </div>
       </div>
     );
   }

@@ -59,7 +59,7 @@ export const setUpdateHistoryStackItemVisibility = index => dispatcher(UPDATE_HI
 let tempId = 0;
 const messageStackHistory = sessionStorage.getItem('messageStackHistory') ? JSON.parse(sessionStorage.getItem('messageStackHistory')) : [];
 
-export default(state = {
+export default (state = {
   open: false,
   uploadOpen: false,
   currentMessage: '',
@@ -90,20 +90,26 @@ export default(state = {
   };
   const date = new Date();
   if (action.type === ERROR_MESSAGE) {
-    let id = ERROR_MESSAGE + tempId++,
-      messageStack = state.messageStack,
-      messageStackHistory = state.messageStackHistory,
-      message = {
-        message: action.payload.message,
-        id,
-        error: true,
-        date,
-        messageBodyOpen: false,
-        className: 'Footer__message--error',
-        messageBody: action.payload.messageBody
-          ? action.payload.messageBody
-          : [],
-      };
+    const id = ERROR_MESSAGE + tempId++;
+
+
+    const messageStack = state.messageStack;
+
+
+    let messageStackHistory = state.messageStackHistory;
+
+
+    const message = {
+      message: action.payload.message,
+      id,
+      error: true,
+      date,
+      messageBodyOpen: false,
+      className: 'Footer__message--error',
+      messageBody: action.payload.messageBody
+        ? action.payload.messageBody
+        : [],
+    };
 
     messageStack.unshift(message);
     messageStackHistory.unshift(message);
@@ -123,22 +129,28 @@ export default(state = {
       messageListOpen: true,
       viewHistory: false,
     };
-  } else if (action.type === INFO_MESSAGE) { // this is for only updating a single message
-    let id = INFO_MESSAGE + tempId++,
-      messageStack = state.messageStack,
-      messageStackHistory = state.messageStackHistory,
-      message = {
-        message: action.payload.message,
-        id,
-        error: false,
-        className: 'Footer__message',
-        messageBody: action.payload.messageBody
-          ? action.payload.messageBody
-          : [],
-        isMultiPart: false,
-        messageBodyOpen: false,
-        date,
-      };
+  } if (action.type === INFO_MESSAGE) { // this is for only updating a single message
+    const id = INFO_MESSAGE + tempId++;
+
+
+    const messageStack = state.messageStack;
+
+
+    let messageStackHistory = state.messageStackHistory;
+
+
+    const message = {
+      message: action.payload.message,
+      id,
+      error: false,
+      className: 'Footer__message',
+      messageBody: action.payload.messageBody
+        ? action.payload.messageBody
+        : [],
+      isMultiPart: false,
+      messageBodyOpen: false,
+      date,
+    };
 
     messageStack.unshift(message);
     messageStackHistory.unshift(message);
@@ -159,7 +171,7 @@ export default(state = {
       messageListOpen: true,
       viewHistory: false,
     };
-  } else if (action.type === WARNING_MESSAGE) { // this is for only updating a single message
+  } if (action.type === WARNING_MESSAGE) { // this is for only updating a single message
     const id = INFO_MESSAGE + tempId++;
     const messageStack = state.messageStack;
     let messageStackHistory = state.messageStackHistory;
@@ -195,7 +207,7 @@ export default(state = {
       messageListOpen: true,
       viewHistory: false,
     };
-  } else if (action.type === REMOVE_MESSAGE) { // this is for only updating a single message
+  } if (action.type === REMOVE_MESSAGE) { // this is for only updating a single message
     const messageStack = [];
 
     state.messageStack.forEach((messageItem) => {
@@ -218,7 +230,7 @@ export default(state = {
       messageListOpen,
 
     };
-  } else if (action.type === UPLOAD_MESSAGE_SETTER) {
+  } if (action.type === UPLOAD_MESSAGE_SETTER) {
     const message = {
       message: action.payload.currentMessage,
       id: action.payload.id,
@@ -245,7 +257,7 @@ export default(state = {
         : 0,
       viewHistory: false,
     };
-  } else if (action.type === UPLOAD_MESSAGE_UPDATE) {
+  } if (action.type === UPLOAD_MESSAGE_UPDATE) {
     const message = {
       message: action.payload.uploadMessage,
       id: action.payload.id,
@@ -278,7 +290,7 @@ export default(state = {
       uploadError,
       success: false,
     };
-  } else if (action.type === UPLOAD_MESSAGE_REMOVE) {
+  } if (action.type === UPLOAD_MESSAGE_REMOVE) {
     const message = {
       message: action.payload.uploadMessage,
       id: action.payload.id,
@@ -306,7 +318,7 @@ export default(state = {
       labbookName: '',
       labbookSuccess: false,
     };
-  } else if (action.type === IMPORT_MESSAGE_SUCCESS) {
+  } if (action.type === IMPORT_MESSAGE_SUCCESS) {
     const message = {
       message: action.payload.uploadMessage,
       id: action.payload.id,
@@ -332,7 +344,7 @@ export default(state = {
       success: true,
       labbookSuccess: true,
     };
-  } else if (action.type === TOGGLE_MESSAGE_LIST) {
+  } if (action.type === TOGGLE_MESSAGE_LIST) {
     const messageStack = [];
 
     const messageStackHistory = state.messageStackHistory.map((message) => {
@@ -347,18 +359,28 @@ export default(state = {
       messageStack,
       messageStackHistory,
     };
-  } else if (action.type === HIDE_MESSAGE_LIST) {
+  } if (action.type === HIDE_MESSAGE_LIST) {
     return {
       ...state,
       messageListOpen: false,
     };
-  } else if (action.type === MULTIPART_INFO_MESSAGE) {
-    let messageStackHistory = state.messageStackHistory,
-      messageStack = state.messageStack,
-      previousHistoryIndex = 0,
-      previousIndex = 0,
-      messageBodyOpen = false,
-      messageListOpen = state.messageListOpen;
+  } if (action.type === MULTIPART_INFO_MESSAGE) {
+    let messageStackHistory = state.messageStackHistory;
+
+
+    const messageStack = state.messageStack;
+
+
+    let previousHistoryIndex = 0;
+
+
+    let previousIndex = 0;
+
+
+    let messageBodyOpen = false;
+
+
+    let messageListOpen = state.messageListOpen;
 
     const doesMessageExist = messageStack.filter((message, index) => {
       if (message.id === action.payload.id) {
@@ -441,7 +463,7 @@ export default(state = {
       messageListOpen,
       viewHistory: ((doesHistoryMessageExist.length > 0) && doesHistoryMessageExist[0].dismissed && state.viewHistory),
     };
-  } else if (action.type === RESET_FOOTER_STORE) {
+  } if (action.type === RESET_FOOTER_STORE) {
     return {
       ...state,
       open: false,
@@ -455,7 +477,7 @@ export default(state = {
       messageListOpen: false,
       viewHistory: false,
     };
-  } else if (action.type === UPDATE_MESSAGE_STACK_ITEM_VISIBILITY) {
+  } if (action.type === UPDATE_MESSAGE_STACK_ITEM_VISIBILITY) {
     const messageStack = state.messageStack;
 
     messageStack[action.payload.index].messageBodyOpen = !messageStack[action.payload.index].messageBodyOpen;
@@ -465,7 +487,7 @@ export default(state = {
       messageStack,
       uuid: uuidv4(),
     };
-  } else if (action.type === UPDATE_HISTORY_STACK_ITEM_VISIBILITY) {
+  } if (action.type === UPDATE_HISTORY_STACK_ITEM_VISIBILITY) {
     const messageStackHistory = state.messageStackHistory;
     const messageStackItem = messageStackHistory[action.payload.index];
 
@@ -478,12 +500,12 @@ export default(state = {
       messageStackHistory,
       uuid: uuidv4(),
     };
-  } else if (action.type === RESIZE_FOOTER) {
+  } if (action.type === RESIZE_FOOTER) {
     return {
       ...state,
       resize: uuidv4(),
     };
-  } else if (action.type === UPDATE_HISTORY_VIEW) {
+  } if (action.type === UPDATE_HISTORY_VIEW) {
     const messageStack = [];
 
     const messageStackHistory = state.messageStackHistory.map((message) => {
@@ -497,7 +519,7 @@ export default(state = {
       messageStack,
       messageStackHistory,
     };
-  } else if (action.type === HELPER_VISIBLE) {
+  } if (action.type === HELPER_VISIBLE) {
     return {
       ...state,
       helperVisible: action.payload.helperVisible,
