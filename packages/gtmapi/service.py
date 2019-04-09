@@ -21,6 +21,7 @@ import shutil
 import os
 import base64
 import asyncio
+import threading
 
 from confhttpproxy import ProxyRouter
 from flask import Flask, jsonify, request, abort
@@ -38,7 +39,7 @@ from gtmcore.auth.identity import AuthenticationError, get_identity_manager
 from gtmcore.labbook.lock import reset_all_locks
 from gtmcore.inventory.inventory import InventoryManager
 from lmsrvcore.auth.user import get_logged_in_author
-
+from lmsrvcore import service_telemetry
 
 logger = LMLogger.get_logger()
 
@@ -233,6 +234,7 @@ if config.config["lock"]["reset_on_start"]:
     logger.info("Resetting ALL distributed locks")
     reset_all_locks(config.config['lock'])
 
+threading.Thread(target=service_telemetry).start()
 
 def main(debug=False) -> None:
     try:
@@ -247,6 +249,8 @@ def main(debug=False) -> None:
         else:
             # If debug arg is not explicitly given then it is loaded from config
             app.run(host="0.0.0.0", port=10001)
+
+
     except Exception as e:
         logger.exception(e)
         raise
