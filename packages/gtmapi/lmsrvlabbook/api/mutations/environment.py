@@ -43,6 +43,7 @@ class CancelBuild(graphene.relay.ClientIDMutation):
 
         if len(jobs) == 1:
             d.abort_task(jobs[0].job_key)
+            ContainerOperations.delete_image(lb)
             return CancelBuild(build_stopped=True, message="Stopped build")
         elif len(jobs) == 0:
             logger.warning(f"No build_image tasks found for {str(lb)}")
