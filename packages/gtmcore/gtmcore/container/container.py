@@ -87,11 +87,13 @@ class ContainerOperations(object):
                                                                    owner=owner,
                                                                    username=username)
         # We need to remove any images pertaining to this labbook before triggering a build.
+        logger.info(f"Deleting docker image for {str(labbook)}")
         try:
             get_docker_client().images.get(name=image_name)
             get_docker_client().images.remove(image_name)
+            logger.info(f"Deleted docker image for {str(labbook)}: {image_name}")
         except docker.errors.ImageNotFound:
-            pass
+            logger.warning(f"Could not delete docker image for {str(labbook)}: {image_name} not found")
         except Exception as e:
             logger.error("Error deleting docker images for {str(lb)}: {e}")
             return labbook, False
