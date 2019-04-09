@@ -35,11 +35,11 @@ export default function DeleteDatasetFilesMutation(
       clientMutationId: `${tempID++}`,
     },
   };
-  const recentConnectionKey = section === 'code' ?
-        'MostRecentCode_allFiles' :
-        section === 'input' ?
-        'MostRecentInput_allFiles' :
-        'MostRecentOutput_allFiles';
+  const recentConnectionKey = section === 'code'
+    ? 'MostRecentCode_allFiles'
+    : section === 'input'
+      ? 'MostRecentInput_allFiles'
+      : 'MostRecentOutput_allFiles';
 
   function sharedUpdater(store, datasetID, deletedID, connectionKey) {
     const userProxy = store.get(datasetID);
@@ -85,14 +85,14 @@ export default function DeleteDatasetFilesMutation(
       onError: err => console.error(err),
 
       updater: (store) => {
-          edgesToDelete.forEach((edge) => {
-            if (edge) {
-              sharedUpdater(store, datasetId, edge.node.id, connectionKey);
-              sharedUpdater(store, datasetId, edge.node.id, recentConnectionKey);
+        edgesToDelete.forEach((edge) => {
+          if (edge) {
+            sharedUpdater(store, datasetId, edge.node.id, connectionKey);
+            sharedUpdater(store, datasetId, edge.node.id, recentConnectionKey);
 
-              store.delete(edge.node.id);
-            }
-          });
+            store.delete(edge.node.id);
+          }
+        });
       },
       optimisticUpdater: (store) => {
         edgesToDelete.forEach((edge) => {

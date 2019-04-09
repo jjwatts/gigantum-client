@@ -81,7 +81,7 @@
 
 .Branches__btn{
     border: 1px solid $azure;
-    margin-right: 5px;
+    margin: 0 5px 0 0;
     background: $background-color;
     border-radius: 4px;
     width: 24px;
@@ -102,6 +102,13 @@
           border: 1px solid $azure;
           margin-left: -4px;
         }
+        &:disabled{
+            background: $background-color url(~Images/icons/branches/chevron-disabled.svg) no-repeat center center;
+            background-size: 20px !important;
+            border: 1px solid $romanSilver;
+            color: $romanSilver;
+            cursor: auto;
+        }
     }
 
 
@@ -114,6 +121,12 @@
             background-size: cover;
             border: 1px solid $azure;
         }
+        &:disabled{
+            background: $background-color url('~Images/icons/branches/create-disabled.svg') no-repeat center center !important;
+            background-size: cover !important;
+            border: 1px solid $romanSilver !important;
+            cursor: auto !important;
+        }
     }
     &--reset {
         background: $white url('~Images/icons/branches/reset.svg') no-repeat center center;
@@ -123,6 +136,12 @@
             background-size: cover;
             border: 1px solid $azure;
         }
+        &:disabled{
+            background: $background-color url('~Images/icons/branches/reset-disabled.svg') no-repeat center center !important;
+            background-size: cover !important;
+            border: 1px solid $romanSilver !important;
+            cursor: auto !important;
+        }
     }
     &--switch {
         background: $white url('~Images/icons/branches/switch.svg') no-repeat center center;
@@ -131,6 +150,12 @@
             background: $azure url('~Images/icons/branches/switch-hover.svg') no-repeat center center;
             background-size: cover;
             border: 1px solid $azure;
+        }
+        &:disabled{
+            background: $background-color url('~Images/icons/branches/switch-disabled.svg') no-repeat center center !important;
+            background-size: 22x !important;
+            border: 1px solid $romanSilver !important;
+            cursor: auto !important;
         }
     }
     &--merge {
@@ -146,6 +171,12 @@
             background-size: cover;
             border: 1px solid $azure;
         }
+        &:disabled{
+            background: $background-color url('~Images/icons/branches/merge-disabled.svg') no-repeat center center !important;
+            background-size: cover !important;
+            border: 1px solid $romanSilver !important;
+            cursor: auto !important;
+        }
     }
     &--delete {
         background: $white url('~Images/icons/branches/delete.svg') no-repeat center center;
@@ -160,6 +191,12 @@
             background-size: cover;
             border: 1px solid $azure;
         }
+        &:disabled{
+            background: $background-color url('~Images/icons/branches/delete-disabled.svg') no-repeat center center !important;
+            background-size: cover !important;
+            border: 1px solid $romanSilver !important;
+            cursor: auto !important;
+        }
     }
     &--sync {
         background: $white url('~Images/icons/branches/sync.svg') no-repeat center center;
@@ -169,6 +206,12 @@
             background: $azure url('~Images/icons/branches/sync-hover.svg') no-repeat center center;
             background-size: cover;
             border: 1px solid $azure;
+        }
+        &:disabled{
+            background: $background-color url('~Images/icons/branches/sync-disabled.svg') no-repeat center center !important;
+            background-size: cover !important;
+            border: 1px solid $romanSilver !important;
+            cursor: auto !important;
         }
     }
     &--push {
@@ -180,6 +223,12 @@
             background-size: cover;
             border: 1px solid $azure;
         }
+        &:disabled{
+            background: $background-color url('~Images/icons/branches/push-disabled.svg') no-repeat center center !important;
+            background-size: cover !important;
+            border: 1px solid $romanSilver !important;
+            cursor: auto !important;
+        }
     }
     &--pull {
         background: $white url('~Images/icons/branches/pull.svg') no-repeat center center;
@@ -190,79 +239,12 @@
             background-size: cover;
             border: 1px solid $azure;
         }
-    }
-    &--sync-dropdown--disabled,
-    &--sync-dropdown--disabled:hover,
-    &--sync-dropdown--disabled:focus {
-        background: $background-color url(~Images/icons/branches/chevron-disabled.svg) no-repeat center center;
-        background-size: 20px !important;
-        border: 1px solid $romanSilver;
-        color: $romanSilver;
-        cursor: auto;
-    }
-    &--create--disabled,
-    &--create--disabled:hover,
-    &--create--disabled:focus {
-        background: $background-color url('~Images/icons/branches/create-disabled.svg') no-repeat center center !important;
-        background-size: cover !important;
-        border: 1px solid $romanSilver !important;
-        cursor: auto !important;
-    }
-    &--reset--disabled,
-    &--reset--disabled:hover,
-    &--reset--disabled:focus {
-        background: $background-color url('~Images/icons/branches/reset-disabled.svg') no-repeat center center !important;
-        background-size: cover !important;
-        border: 1px solid $romanSilver !important;
-        cursor: auto !important;
-    }
-    &--switch--disabled,
-    &--switch--disabled:hover,
-    &--switch--disabled:focus {
-        background: $background-color url('~Images/icons/branches/switch-disabled.svg') no-repeat center center !important;
-        background-size: 22x !important;
-        border: 1px solid $romanSilver !important;
-        cursor: auto !important;
-    }
-    &--merge--disabled,
-    &--merge--disabled:hover,
-    &--merge--disabled:focus {
-        background: $background-color url('~Images/icons/branches/merge-disabled.svg') no-repeat center center !important;
-        background-size: cover !important;
-        border: 1px solid $romanSilver !important;
-        cursor: auto !important;
-    }
-    &--delete--disabled,
-    &--delete--disabled:hover,
-    &--delete--disabled:focus {
-        background: $background-color url('~Images/icons/branches/delete-disabled.svg') no-repeat center center !important;
-        background-size: cover !important;
-        border: 1px solid $romanSilver !important;
-        cursor: auto !important;
-    }
-    &--sync--disabled,
-    &--sync--disabled:hover,
-    &--sync--disabled:focus {
-        background: $background-color url('~Images/icons/branches/sync-disabled.svg') no-repeat center center !important;
-        background-size: cover !important;
-        border: 1px solid $romanSilver !important;
-        cursor: auto !important;
-    }
-    &--pull--disabled,
-    &--pull--disabled:hover,
-    &--pull--disabled:focus {
-        background: $background-color url('~Images/icons/branches/pull-disabled.svg') no-repeat center center !important;
-        background-size: cover !important;
-        border: 1px solid $romanSilver !important;
-        cursor: auto !important;
-    }
-    &--push--disabled,
-    &--push--disabled:hover,
-    &--push--disabled:focus {
-        background: $background-color url('~Images/icons/branches/push-disabled.svg') no-repeat center center !important;
-        background-size: cover !important;
-        border: 1px solid $romanSilver !important;
-        cursor: auto !important;
+        &:disabled{
+            background: $background-color url('~Images/icons/branches/pull-disabled.svg') no-repeat center center !important;
+            background-size: cover !important;
+            border: 1px solid $romanSilver !important;
+            cursor: auto !important;
+        }
     }
 }
 

@@ -67,10 +67,12 @@ function fetchQuery(
   };
 
   rp(
-    options, response =>
+    options, response => (
     // POST succeeded..
       response.json()
-    , error => error,
+      )
+             )
+    , error => ( error,
   );
 }
 

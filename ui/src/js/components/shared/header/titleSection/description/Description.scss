@@ -110,26 +110,16 @@
     width: 20px;
     height: 20px;
     background: url('~Images/icons/x-close-azure.svg') no-repeat center center;
-    background-size: 26px;
+    background-size: 28px;
     border: none;
-    &:hover {
-        background: url('~Images/icons/x-close-turquise.svg') no-repeat center center;
-        background-size: 26px;
-        border: none;
-    }
 }
 .Description__input-save{
     padding: 0;
     width: 20px;
     height: 20px;
     background: url('~Images/icons/check-selected.svg') no-repeat center center;
-    background-size: 27px;
+    background-size: 30px;
     border: none;
-    &:hover {
-        background: url('~Images/icons/check-selected-turquise.svg') no-repeat center center;
-        background-size: 26px;
-        border: none;
-    }
 }
 
 @-moz-document url-prefix() {

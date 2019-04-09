@@ -4,14 +4,14 @@ import queryString from 'querystring';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 // components
-import WizardModal from 'Components/wizard/WizardModal';
+import WizardModal from 'Components/shared/modals/wizard/WizardModal';
 import Loader from 'Components/common/Loader';
 import LocalLabbooksContainer, { LocalLabbooks } from 'Components/dashboard/labbooks/localLabbooks/LocalLabbooks';
 import RemoteLabbooks from 'Components/dashboard/labbooks/remoteLabbooks/RemoteLabbooks';
 import LoginPrompt from 'Components/shared/modals/LoginPrompt';
-import ToolTip from 'Components/common/ToolTip';
-import LabbookFilterBy from './filters/LabbookFilterBy';
-import LabbookSort from './filters/LabbookSort';
+import Tooltip from 'Components/common/Tooltip';
+import FilterByDropdown from 'Components/dashboard/filters/FilterByDropdown';
+import SortByDropdown from 'Components/dashboard/filters/SortByDropdown';
 // utils
 import Validation from 'JS/utils/Validation';
 // queries
@@ -127,7 +127,7 @@ class Labbooks extends Component {
   */
 
   _closeSortMenu(evt) {
-    const isSortMenu = evt && evt.target && evt.target.className && (evt.target.className.indexOf('LabbookSort__selector') > -1);
+    const isSortMenu = evt && evt.target && evt.target.className && (evt.target.className.indexOf('Dropdown__sort-selector') > -1);
 
     if (!isSortMenu && this.state.sortMenuOpen) {
       this.setState({ sortMenuOpen: false });
@@ -140,7 +140,7 @@ class Labbooks extends Component {
     * hides the filter menu dropdown from the view
   */
   _closeFilterMenu(evt) {
-    const isFilterMenu = evt.target.className.indexOf('LabbookFilterBy__selector') > -1;
+    const isFilterMenu = evt.target.className.indexOf('Dropdown__filter-selector') > -1;
 
     if (!isFilterMenu && this.state.filterMenuOpen) {
       this.setState({ filterMenuOpen: false });
@@ -222,12 +222,14 @@ class Labbooks extends Component {
   _toggleFilterMenu() {
     this.setState({ filterMenuOpen: !this.state.filterMenuOpen });
   }
+
   /**
    sets state for sort menu
   */
   _toggleSortMenu() {
     this.setState({ sortMenuOpen: !this.state.sortMenuOpen });
   }
+
   /**
    * @param {string} section
    replaces history and checks session
@@ -239,6 +241,7 @@ class Labbooks extends Component {
       this.props.history.replace(`../projects/${section}${this.props.history.location.search}`);
     }
   }
+
   /**
    * @param {object} labbook
    * returns true if labbook's name or description exists in filtervalue, else returns false
@@ -249,14 +252,17 @@ class Labbooks extends Component {
     }
     return false;
   }
+
   /**
    * @param {array, string} localLabbooks.edges,filter
    * @return {array} filteredLabbooks
   */
   _filterLabbooks(labbooks, filter) {
     const username = localStorage.getItem('username');
-    let self = this,
-      filteredLabbooks = [];
+    const self = this;
+
+
+    let filteredLabbooks = [];
 
 
     if (filter === 'owner') {
@@ -381,15 +387,15 @@ class Labbooks extends Component {
 
     if (props.labbookList !== null || props.loading) {
       const localNavItemCSS = classNames({
-        'Labbooks__nav-item': true,
-        'Labbooks__nav-item--local': true,
-        'Labbooks__nav-item--selected': this.state.selectedSection === 'local',
+        Tab: true,
+        'Tab--local': true,
+        'Tab--selected': this.state.selectedSection === 'local',
       });
 
       const cloudNavItemCSS = classNames({
-        'Labbooks__nav-item': true,
-        'Labbooks__nav-item--cloud': true,
-        'Labbooks__nav-item--selected': this.state.selectedSection === 'cloud',
+        Tab: true,
+        'Tab--cloud': true,
+        'Tab--selected': this.state.selectedSection === 'cloud',
       });
       return (
 
@@ -404,13 +410,11 @@ class Labbooks extends Component {
 
           <div className="Labbooks__panel-bar">
             <h6 className="Labbooks__username">{localStorage.getItem('username')}</h6>
-            <h2 className="Labbooks__title">
-                Projects
-            </h2>
+            <h1>Projects</h1>
 
           </div>
           <div className="Labbooks__menu  mui-container flex-0-0-auto">
-            <ul className="Labbooks__nav  flex flex--row">
+            <ul className="Tabs">
               <li className={localNavItemCSS}>
                 <a onClick={() => this._setSection('local')}>Local</a>
               </li>
@@ -420,15 +424,16 @@ class Labbooks extends Component {
 
               <hr className={`Labbooks__navigation-slider Labbooks__navigation-slider--${this.state.selectedSection}`} />
 
-              <ToolTip section="cloudLocal" />
+              <Tooltip section="cloudLocal" />
             </ul>
 
           </div>
           <div className="Labbooks__subheader grid">
             <div className="Labbooks__search-container column-2-span-6 padding--0">
               {
-                  this.state.showSearchCancel &&
-                  (this.props.filterText.length !== 0) &&
+                  this.state.showSearchCancel
+                  && (this.props.filterText.length !== 0)
+                  && (
                   <Fragment>
                     <div
                       className="Labbooks__search-cancel"
@@ -436,11 +441,11 @@ class Labbooks extends Component {
                     />
                     <div className="Labbooks__search-cancel--text">Clear</div>
                   </Fragment>
+                  )
                 }
               <input
                 type="text"
                 ref="labbookSearch"
-                className="Labbooks__search no--margin"
                 placeholder="Filter Projects by name or description"
                 defaultValue={this.props.filterText}
                 onKeyUp={evt => this._setFilterValue(evt)}
@@ -448,12 +453,13 @@ class Labbooks extends Component {
               />
             </div>
 
-            <LabbookFilterBy
+            <FilterByDropdown
               {...this.state}
+              type="Project"
               toggleFilterMenu={() => this.setState({ filterMenuOpen: !this.state.filterMenuOpen })}
               setFilter={this._setFilter}
             />
-            <LabbookSort
+            <SortByDropdown
               {...this.state}
               toggleSortMenu={this._toggleSortMenu}
               setSortFilter={this._setSortFilter}
@@ -461,68 +467,72 @@ class Labbooks extends Component {
 
           </div>
           {
-              props.loading ?
-                <LocalLabbooks
-                  loading
-                  showModal={this._showModal}
-                  section={this.props.section}
-                  history={this.props.history}
-                />
-              :
-              this.state.selectedSection === 'local' ?
-                <LocalLabbooksContainer
-                  labbookListId={props.labbookList.id}
-                  localLabbooks={props.labbookList.labbookList}
-                  showModal={this._showModal}
-                  goToLabbook={this._goToLabbook}
-                  filterLabbooks={this._filterLabbooks}
-                  filterState={this.state.filter}
-                  setFilterValue={this._setFilterValue}
-                  changeRefetchState={bool => this.setState({ refetchLoading: bool })}
-                  {...props}
-                />
-              :
-                <RemoteLabbooks
-                  labbookListId={props.labbookList.labbookList.id}
-                  remoteLabbooks={props.labbookList.labbookList}
-                  showModal={this._showModal}
-                  goToLabbook={this._goToLabbook}
-                  filterLabbooks={this._filterLabbooks}
-                  filterState={this.state.filter}
-                  setFilterValue={this._setFilterValue}
-                  forceLocalView={() => {
-                  this.setState({ selectedSection: 'local' });
-                  this.setState({ showLoginPrompt: true });
-}
+              props.loading
+                ? (
+                  <LocalLabbooks
+                    loading
+                    showModal={this._showModal}
+                    section={this.props.section}
+                    history={this.props.history}
+                  />
+                )
+                : this.state.selectedSection === 'local'
+                  ? (
+                    <LocalLabbooksContainer
+                      labbookListId={props.labbookList.id}
+                      localLabbooks={props.labbookList.labbookList}
+                      showModal={this._showModal}
+                      goToLabbook={this._goToLabbook}
+                      filterLabbooks={this._filterLabbooks}
+                      filterState={this.state.filter}
+                      setFilterValue={this._setFilterValue}
+                      changeRefetchState={bool => this.setState({ refetchLoading: bool })}
+                      {...props}
+                    />
+                  )
+                  : (
+                    <RemoteLabbooks
+                      labbookListId={props.labbookList.labbookList.id}
+                      remoteLabbooks={props.labbookList.labbookList}
+                      showModal={this._showModal}
+                      goToLabbook={this._goToLabbook}
+                      filterLabbooks={this._filterLabbooks}
+                      filterState={this.state.filter}
+                      setFilterValue={this._setFilterValue}
+                      forceLocalView={() => {
+                        this.setState({ selectedSection: 'local' });
+                        this.setState({ showLoginPrompt: true });
+                      }
                 }
-                  changeRefetchState={bool => this.setState({ refetchLoading: bool })}
-                  {...props}
-                />
+                      changeRefetchState={bool => this.setState({ refetchLoading: bool })}
+                      {...props}
+                    />
+                  )
           }
           {
-            this.state.showLoginPrompt &&
-            <LoginPrompt closeModal={this._closeLoginPromptModal} />
+            this.state.showLoginPrompt
+            && <LoginPrompt closeModal={this._closeLoginPromptModal} />
           }
         </div>
       );
-    } else if (props.labbookList === null) {
+    } if (props.labbookList === null) {
       UserIdentity.getUserIdentity().then((response) => {
         if (response.data && response.data.userIdentity.isSessionValid) {
           setErrorMessage('Failed to fetch Projects.', [{ message: 'There was an error while fetching Projects. This likely means you have a corrupted Project directory.' }]);
           return (
             <div className="Labbooks__fetch-error">
                 There was an error attempting to fetch Projects.
-                <br />
+              <br />
                 Try restarting Gigantum and refresh the page.
-                <br />
+              <br />
                 If the problem persists
-                <a
-                  target="_blank"
-                  href="https://spectrum.chat/gigantum"
+              <a
+                target="_blank"
+                href="https://spectrum.chat/gigantum"
                 rel="noopener noreferrer"
-                >
+              >
                 request assistance here.
-                </a>
+              </a>
             </div>
           );
         }

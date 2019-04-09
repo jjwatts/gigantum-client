@@ -91,6 +91,7 @@ export default class RemoteLabbookPanel extends Component {
       isImporting: false,
     });
   }
+
   /**
     *  @param {}
     *  changes state of isImporting to true
@@ -120,28 +121,28 @@ export default class RemoteLabbookPanel extends Component {
            this._importingState();
            setMultiInfoMessage(id, 'Importing Project please wait', false, false);
            const successCall = () => {
-            this._clearState();
+             this._clearState();
 
-            setMultiInfoMessage(id, `Successfully imported remote Project ${labbookName}`, true, false);
+             setMultiInfoMessage(id, `Successfully imported remote Project ${labbookName}`, true, false);
 
 
-            BuildImageMutation(
-              owner,
-              labbookName,
-              false,
-              (response, error) => {
-                if (error) {
-                  console.error(error);
-                  setMultiInfoMessage(id, `ERROR: Failed to build ${labbookName}`, null, true, error);
-                }
-              },
-            );
+             BuildImageMutation(
+               owner,
+               labbookName,
+               false,
+               (response, error) => {
+                 if (error) {
+                   console.error(error);
+                   setMultiInfoMessage(id, `ERROR: Failed to build ${labbookName}`, null, true, error);
+                 }
+               },
+             );
 
-            self.props.history.replace(`/projects/${owner}/${labbookName}`);
+             self.props.history.replace(`/projects/${owner}/${labbookName}`);
            };
            const failureCall = (error) => {
-            this._clearState();
-            setMultiInfoMessage(id, 'ERROR: Could not import remote Project', null, true, error);
+             this._clearState();
+             setMultiInfoMessage(id, 'ERROR: Could not import remote Project', null, true, error);
            };
            self.setState({ isImporting: true });
 
@@ -190,30 +191,37 @@ export default class RemoteLabbookPanel extends Component {
    return (
      <div
        key={edge.node.name}
-       className="Card Card--300 column-4-span-3 flex flex--column justify--space-between">
+       className="Card Card--300 column-4-span-3 flex flex--column justify--space-between"
+     >
 
        <div className="RemoteLabbooks__row RemoteLabbooks__row--icon">
          {
-          this.props.existsLocally ?
-            <button
-              className="RemoteLabbooks__icon RemoteLabbooks__icon--cloud Tooltip-data Tooltip-data--small"
-              data-tooltip="Project exists locally"
-              disabled>
+          this.props.existsLocally
+            ? (
+              <button
+                className="RemoteLabbooks__icon RemoteLabbooks__icon--cloud Tooltip-data Tooltip-data--small"
+                data-tooltip="Project exists locally"
+                disabled
+              >
               Imported
-            </button>
-          :
-            <button
-              disabled={state.isImporting}
-              className="RemoteLabbooks__icon RemoteLabbooks__icon--cloud-download"
-              onClick={() => this.importLabbook(edge.node.owner, edge.node.name)}>
+              </button>
+            )
+            : (
+              <button
+                disabled={state.isImporting}
+                className="RemoteLabbooks__icon RemoteLabbooks__icon--cloud-download"
+                onClick={() => this.importLabbook(edge.node.owner, edge.node.name)}
+              >
               Import
-            </button>
+              </button>
+            )
         }
          <button
            className={deleteCSS}
            data-tooltip={localStorage.getItem('username') !== edge.node.owner ? 'Can only delete remote projects created by you' : ''}
            disabled={this.state.isImporting || localStorage.getItem('username') !== edge.node.owner}
-           onClick={() => this._handleDelete(edge)}>
+           onClick={() => this._handleDelete(edge)}
+         >
            Delete
          </button>
 
@@ -241,32 +249,40 @@ export default class RemoteLabbookPanel extends Component {
          <p className="RemoteLabbooks__paragraph RemoteLabbooks__paragraph--description">
            {
             (edge.node.description && edge.node.description.length)
-            ? <Highlighter
-                 highlightClassName="LocalLabbooks__highlighted"
-                 searchWords={[store.getState().labbookListing.filterText]}
-                 autoEscape={false}
-                 caseSensitive={false}
-                 textToHighlight={edge.node.description}
-                 />
-            : <span className="RemoteDatasets__description--blank">
+              ? (
+                <Highlighter
+                  highlightClassName="LocalLabbooks__highlighted"
+                  searchWords={[store.getState().labbookListing.filterText]}
+                  autoEscape={false}
+                  caseSensitive={false}
+                  textToHighlight={edge.node.description}
+                />
+              )
+              : (
+                <span className="RemoteDatasets__description--blank">
               No description provided
-             </span>
+                </span>
+              )
            }
          </p>
        </div>
 
        { !(edge.node.visibility === 'local')
-          && <div
-              data-tooltip={`${edge.node.visibility}`}
-              className={`Tooltip-Listing RemoteLabbooks__${edge.node.visibility}   Tooltip-data Tooltip-data--small`}>
-            </div>
+          && (
+          <div
+            data-tooltip={`${edge.node.visibility}`}
+            className={`Tooltip-Listing RemoteLabbooks__${edge.node.visibility}   Tooltip-data Tooltip-data--small`}
+          />
+          )
        }
 
        {
           state.isImporting
-          && <div className="RemoteLabbooks__loader">
-                <Loader />
-             </div>
+          && (
+          <div className="RemoteLabbooks__loader">
+            <Loader />
+          </div>
+          )
         }
 
        {

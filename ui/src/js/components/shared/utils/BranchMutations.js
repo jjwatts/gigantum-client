@@ -16,7 +16,7 @@ import { setErrorMessage } from 'JS/redux/reducers/footer';
 import { setIsProcessing } from 'JS/redux/reducers/dataset/dataset';
 
 class BranchesMutations {
-   /**
+  /**
     * @param {Object} props
     *        {string} props.owner
     *        {string} props.name
@@ -24,11 +24,11 @@ class BranchesMutations {
     *        {string} props.parentId
     * pass above props to state
     */
-   constructor(props) {
+  constructor(props) {
     this.state = props;
-   }
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *         {string} data.branchName
    *         {string} data.revision
@@ -36,14 +36,14 @@ class BranchesMutations {
    *  @param {function} callback
    *  creates a new branch and checks it out
    */
-   createBranch(data, callback) {
-     const {
-       branchName,
-       revision,
-       description,
-     } = data;
+  createBranch(data, callback) {
+    const {
+      branchName,
+      revision,
+      description,
+    } = data;
 
-     const { owner, name } = this.state;
+    const { owner, name } = this.state;
 
     CreateExperimentalBranchMutation(
       owner,
@@ -53,22 +53,22 @@ class BranchesMutations {
       description,
       callback,
     );
-   }
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *         {string} data.otherBranchName
    *         {boolean} data.overrideMethod
    *  @param {function} callback
    *  merges an elected branch into current active branch
    */
-   merge(data, callback) {
-     const {
-       otherBranchName,
-       overrideMethod,
-     } = data;
+  merge(data, callback) {
+    const {
+      otherBranchName,
+      overrideMethod,
+    } = data;
 
-     const { owner, name } = this.state;
+    const { owner, name } = this.state;
 
     CreateExperimentalBranchMutation(
       owner,
@@ -77,9 +77,9 @@ class BranchesMutations {
       overrideMethod,
       callback,
     );
-   }
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *         {string} data.setPublic
    *         {function} data.successCall
@@ -87,12 +87,12 @@ class BranchesMutations {
    *  @param {function} callback
    *  publishes dataset to a repository
    */
-   publishDataset(data, callback) {
-     const {
-       setPublic,
-       successCall,
-       failureCall,
-     } = data;
+  publishDataset(data, callback) {
+    const {
+      setPublic,
+      successCall,
+      failureCall,
+    } = data;
 
     const { owner, name } = this.state;
 
@@ -104,9 +104,9 @@ class BranchesMutations {
       failureCall,
       callback,
     );
-   }
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *         {string} data.labbookId
    *         {string} data.setPublic
@@ -115,13 +115,13 @@ class BranchesMutations {
    *  @param {function} callback
    *  publishes labbook (project) to a repository
    */
-   publishLabbook(data, callback) {
-     const {
-       labbookId,
-       setPublic,
-       successCall,
-       failureCall,
-     } = data;
+  publishLabbook(data, callback) {
+    const {
+      labbookId,
+      setPublic,
+      successCall,
+      failureCall,
+    } = data;
 
     const { owner, name } = this.state;
 
@@ -134,14 +134,14 @@ class BranchesMutations {
       failureCall,
       callback,
     );
-   }
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *  @param {function} callback
    *  resets branch to remote HEAD
    */
-   resetBranch(callback) {
+  resetBranch(callback) {
     const { owner, name } = this.state;
 
     ResetBranchToRemoteMutation(
@@ -149,9 +149,9 @@ class BranchesMutations {
       name,
       callback,
     );
-   }
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *         {boolean} data.force
    *         {function} data.successCall
@@ -159,14 +159,14 @@ class BranchesMutations {
    *  @param {function} callback
    *  pulls and pushes branch
    */
-   syncDataset(data, callback) {
-     const {
-       overrideMethod,
-       pullOnly,
-       force,
-       successCall,
-       failureCall,
-     } = data;
+  syncDataset(data, callback) {
+    const {
+      overrideMethod,
+      pullOnly,
+      force,
+      successCall,
+      failureCall,
+    } = data;
     const { owner, name } = this.state;
 
     SyncDatasetMutation(
@@ -178,9 +178,9 @@ class BranchesMutations {
       failureCall,
       callback,
     );
-   }
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *         {boolean} data.overrideMethod
    *         {function} data.successCall
@@ -188,13 +188,13 @@ class BranchesMutations {
    *  @param {function} callback
    *  pulls and pushes branch
    */
-   syncLabbook(data, callback) {
-     const {
-       overrideMethod,
-       pullOnly,
-       successCall,
-       failureCall,
-     } = data;
+  syncLabbook(data, callback) {
+    const {
+      overrideMethod,
+      pullOnly,
+      successCall,
+      failureCall,
+    } = data;
     const { owner, name } = this.state;
 
     SyncLabbookMutation(
@@ -206,9 +206,9 @@ class BranchesMutations {
       failureCall,
       callback,
     );
-   }
+  }
 
-    /**
+  /**
      *  @param {Object} data
      *         {boolean} data.overrideMethod
      *         {function} data.successCall
@@ -216,29 +216,29 @@ class BranchesMutations {
      *  @param {function} callback
      *  pulls and pushes branch
      */
-    buildImage(callback) {
+  buildImage(callback) {
     const { owner, name } = this.state;
 
-      BuildImageMutation(
-        owner,
-        name,
-        false,
-        (response, error) => {
-          callback(response, error);
-        },
-      );
-    }
+    BuildImageMutation(
+      owner,
+      name,
+      false,
+      (response, error) => {
+        callback(response, error);
+      },
+    );
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *         {string} data.branchName
    *  @param {function} callback
    *  checkout branch
    */
-   switchBranch(data, callback) {
-     const {
-       branchName,
-     } = data;
+  switchBranch(data, callback) {
+    const {
+      branchName,
+    } = data;
     const { owner, name } = this.state;
 
     WorkonExperimentalBranchMutation(
@@ -247,19 +247,20 @@ class BranchesMutations {
       branchName,
       callback,
     );
-   }
-    /**
+  }
+
+  /**
      *  @param {Object} data
      *         {string} data.branchName
      *         {string} data.overrideMethod
      *  @param {function} callback
      *  merge branch
      */
-    mergeBranch(data, callback) {
-      const {
-        branchName,
-        overrideMethod,
-      } = data;
+  mergeBranch(data, callback) {
+    const {
+      branchName,
+      overrideMethod,
+    } = data;
     const { owner, name } = this.state;
 
     MergeFromBranchMutation(
@@ -269,31 +270,32 @@ class BranchesMutations {
       overrideMethod || null,
       callback,
     );
-    }
-      /**
+  }
+
+  /**
      *  @param {Object} data
      *         {string} data.branchName
      *         {string} data.labbookId
      *  @param {function} callback
      *  delete branch
      */
-      deleteBranch(data, callback) {
-        const {
-          branchName,
-          deleteLocal,
-          deleteRemote,
-        } = data;
-      const { owner, name } = this.state;
+  deleteBranch(data, callback) {
+    const {
+      branchName,
+      deleteLocal,
+      deleteRemote,
+    } = data;
+    const { owner, name } = this.state;
 
-      DeleteExperimentalBranchMutation(
-        owner,
-        name,
-        branchName,
-        deleteLocal,
-        deleteRemote,
-        callback,
-      );
-      }
+    DeleteExperimentalBranchMutation(
+      owner,
+      name,
+      branchName,
+      deleteLocal,
+      deleteRemote,
+      callback,
+    );
+  }
 }
 
 export default BranchesMutations;

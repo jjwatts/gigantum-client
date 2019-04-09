@@ -93,7 +93,7 @@ describe('FileBrowser component', () => {
 
 
    it('Shows delete popup', () => {
-     component.find('.Btn--delete').simulate('click');
+     component.find('.Btn__delete').simulate('click');
      expect(component.state('popupVisible')).toEqual(true);
    });
 
@@ -103,7 +103,7 @@ describe('FileBrowser component', () => {
    });
 
    it('Delete Files', () => {
-     component.find('.Btn--delete').simulate('click');
+     component.find('.Btn__delete').simulate('click');
      component.find('.File__btn--delete-files').simulate('click');
      expect(component.state('popupVisible')).toEqual(false);
    });

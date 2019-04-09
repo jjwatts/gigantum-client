@@ -6,10 +6,10 @@ import SectionBrowser from 'Components/shared/filesShared/sectionBrowser/Section
 import store from 'JS/redux/store';
 
 export default createPaginationContainer(
-    SectionBrowser,
-    {
+  SectionBrowser,
+  {
 
-      code: graphql`
+    code: graphql`
         fragment CodeBrowser_code on LabbookSection{
           allFiles(after: $cursor, first: $first)@connection(key: "CodeBrowser_allFiles", filters: []){
             edges{
@@ -32,29 +32,29 @@ export default createPaginationContainer(
           }
 
         }`,
+  },
+  {
+    direction: 'forward',
+    getConnectionFromProps(props) {
+      return props.code && props.code.allFiles;
     },
-    {
-      direction: 'forward',
-      getConnectionFromProps(props) {
-        return props.code && props.code.allFiles;
-      },
-      getFragmentVariables(prevVars, totalCount) {
-        return {
-          ...prevVars,
-          first: totalCount,
-        };
-      },
-      getVariables(props, { count, cursor }, fragmentVariables) {
-        const { owner, labbookName } = store.getState().routes;
+    getFragmentVariables(prevVars, totalCount) {
+      return {
+        ...prevVars,
+        first: totalCount,
+      };
+    },
+    getVariables(props, { count, cursor }, fragmentVariables) {
+      const { owner, labbookName } = store.getState().routes;
 
-        return {
-          first: count,
-          cursor,
-          owner,
-          name: labbookName,
-        };
-      },
-      query: graphql`
+      return {
+        first: count,
+        cursor,
+        owner,
+        name: labbookName,
+      };
+    },
+    query: graphql`
         query CodeBrowserPaginationQuery(
           $first: Int
           $cursor: String
@@ -73,6 +73,6 @@ export default createPaginationContainer(
           }
         }
       `,
-    },
+  },
 
-  );
+);

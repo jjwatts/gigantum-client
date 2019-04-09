@@ -14,7 +14,6 @@ import { setErrorMessage, setInfoMessage, setWarningMessage } from 'JS/redux/red
 import './DevTools.scss';
 
 class DevTools extends Component {
-
   state = {
     isMouseOver: false,
     selectedDevTool: 'jupyterlab',
@@ -37,7 +36,7 @@ class DevTools extends Component {
   @boundMethod
   _closeDevtoolMenu(evt) {
     if (evt.target.className.indexOf('DevTool') < 0) {
-       this.setState({ showDevList: false });
+      this.setState({ showDevList: false });
     }
   }
 
@@ -60,10 +59,16 @@ class DevTools extends Component {
   */
   @boundMethod
   _openDevToolMuation(developmentTool) {
-    const { props, state } = this,
-          { containerStatus, imageStatus } = props,
-          { owner, name } = props.labbook,
-          tabName = `${developmentTool}-${owner}-${name}`;
+    const { props, state } = this;
+
+
+    const { containerStatus, imageStatus } = props;
+
+
+    const { owner, name } = props.labbook;
+
+
+    const tabName = `${developmentTool}-${owner}-${name}`;
 
     const labbookCreationDate = Date.parse(`${this.props.creationDateUtc}Z`);
     const timeNow = Date.parse(new Date());
@@ -106,7 +111,6 @@ class DevTools extends Component {
           window[tabName] = window.open(path, tabName);
         }
       });
-
     } else if (window[tabName] && !window[tabName].closed) {
       window[tabName].focus();
     } else {
@@ -144,58 +148,71 @@ class DevTools extends Component {
   */
   @boundMethod
   _selectDevTool(developmentTool) {
-     this.setState({ selectedDevTool: developmentTool, showDevList: false });
-     this._openDevToolMuation(developmentTool);
+    this.setState({ selectedDevTool: developmentTool, showDevList: false });
+    this._openDevToolMuation(developmentTool);
   }
 
   render() {
-    const { props, state } = this,
-          devTools = props.labbook.environment.base ? props.labbook.environment.base.developmentTools : [],
-          jupyterButtonCss = classNames({
-            'DevTools-button': true,
-            'ContainerStatus__button--bottom': state.isMouseOver,
-          }),
-          containerMenuCSS = classNames({
-            'DevTools-menu': true,
-            hidden: !state.showDevList,
-            'DevTools-menu--hover': state.isMouseOver,
-          }),
-          expandToolsCSS = classNames({
-            'ContainerStatus__expand-tools': true,
-            'ContainerStatus__expand-tools--open': state.showDevList,
-          }),
-          devtToolMenuCSS = classNames({
-            'DevTools__dropdown-menu': true,
-            hidden: !state.showDevList,
-          }),
-          buttonDropdownCSS = classNames({
-            'DevTools__btn DevTools__btn--dropdown': true,
-            'DevTools__btn--open': state.showDevList,
-          });
+    const { props, state } = this;
+
+
+    const devTools = props.labbook.environment.base ? props.labbook.environment.base.developmentTools : [];
+
+
+    const jupyterButtonCss = classNames({
+      'DevTools-button': true,
+      'ContainerStatus__button--bottom': state.isMouseOver,
+    });
+
+
+    const containerMenuCSS = classNames({
+      'DevTools-menu': true,
+      hidden: !state.showDevList,
+      'DevTools-menu--hover': state.isMouseOver,
+    });
+
+
+    const expandToolsCSS = classNames({
+      'ContainerStatus__expand-tools': true,
+      'ContainerStatus__expand-tools--open': state.showDevList,
+    });
+
+
+    const devtToolMenuCSS = classNames({
+      'DevTools__dropdown-menu': true,
+      hidden: !state.showDevList,
+    });
+
+
+    const buttonDropdownCSS = classNames({
+      'DevTools__btn DevTools__btn--dropdown': true,
+      'DevTools__btn--open': state.showDevList,
+    });
 
     return (
-        <div className="DevTools">
-          <div className="DevTools__flex">
-            <button
-              type="submit"
-              className="DevTools__btn DevTools__btn--launch Btn--columns"
-              onClick={() => { this._openDevToolMuation(state.selectedDevTool); }}>
-                <div className="Btn--label">Launch:</div>
-                <div className="Btn--text">{state.selectedDevTool}</div>
-            </button>
+      <div className="DevTools">
+        <div className="DevTools__flex">
+          <button
+            type="submit"
+            className="DevTools__btn DevTools__btn--launch Btn--columns Btn-last"
+            onClick={() => { this._openDevToolMuation(state.selectedDevTool); }}
+          >
+            <div className="Btn--label">Launch:</div>
+            <div className="Btn--text">{state.selectedDevTool}</div>
+          </button>
 
-            <button
-              data-id="DevToolDropdown"
-              className={buttonDropdownCSS}
-                 onClick={ evt => this._toggleDevtoolMenu(evt) }>
-            </button>
+          <button
+            data-id="DevToolDropdown"
+            className={buttonDropdownCSS}
+            onClick={evt => this._toggleDevtoolMenu(evt)}
+          />
 
-          </div>
+        </div>
 
-          <div className={devtToolMenuCSS}>
-            <div className="DevTool__menu-title">Launch</div>
-            <ul className="DevTool__list">
-              {
+        <div className={devtToolMenuCSS}>
+          <div className="DevTool__menu-title">Launch</div>
+          <ul className="DevTool__list">
+            {
 
                 devTools.map((developmentTool) => {
                   const devToolsCss = classNames({
@@ -203,18 +220,21 @@ class DevTools extends Component {
                     'DevTools__item--selected': (developmentTool === state.selectedDevTool),
                   });
 
-                  return (<li
-                    key={developmentTool}
-                    className={devToolsCss}
-                    onClick={() => this._selectDevTool(developmentTool)}>
-                    <div className="DevTools__icon jupyter-icon"></div>
-                    <div className="DevTools__text">{developmentTool}</div>
-                  </li>);
+                  return (
+                    <li
+                      key={developmentTool}
+                      className={devToolsCss}
+                      onClick={() => this._selectDevTool(developmentTool)}
+                    >
+                      <div className="DevTools__icon jupyter-icon" />
+                      <div className="DevTools__text">{developmentTool}</div>
+                    </li>
+                  );
                 })
               }
-            </ul>
-          </div>
+          </ul>
         </div>
+      </div>
     );
   }
 }

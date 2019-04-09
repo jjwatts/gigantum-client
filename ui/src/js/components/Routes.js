@@ -15,10 +15,11 @@ import history from 'JS/history';
 import SideBar from 'Components/common/SideBar';
 import Footer from 'Components/common/footer/Footer';
 import Prompt from 'Components/common/Prompt';
-import Profile from 'Components/profile/Profile';
 import Helper from 'Components/common/Helper';
 // config
 import config from 'JS/config';
+// assets
+import './Routes.scss';
 
 const Loading = () => <div />;
 
@@ -52,6 +53,7 @@ class Routes extends Component {
     this._setForceLoginScreen = this._setForceLoginScreen.bind(this);
     this._flipDemoHeaderText = this._flipDemoHeaderText.bind(this);
   }
+
   /**
     @param {}
     calls flip header text function
@@ -59,6 +61,7 @@ class Routes extends Component {
   componentDidMount() {
     this._flipDemoHeaderText();
   }
+
   /**
     @param {Error, Object} error, info
     shows error message when runtime error occurs
@@ -66,6 +69,7 @@ class Routes extends Component {
   componentDidCatch(error, info) {
     this.setState({ hasError: true });
   }
+
   /**
     @param {}
     changes text of demo header message
@@ -85,6 +89,7 @@ class Routes extends Component {
   login() {
     this.props.auth.login();
   }
+
   /**
     @param{}
     logs user out using auth0
@@ -126,41 +131,50 @@ class Routes extends Component {
               render={location => (
                 <div className="Routes">
                   {
-                    window.location.hostname === config.demoHostName &&
-                    (this.state.showDefaultMessage ?
-                      <div
-                        id="demo-header"
-                        className="demo-header">
-                        {demoText}
-                        <a
-                          href="http://gigantum.com/download"
-                          rel="noopener noreferrer"
-                          target="_blank">
+                    window.location.hostname === config.demoHostName
+                    && (this.state.showDefaultMessage
+                      ? (
+                        <div
+                          id="demo-header"
+                          className="demo-header"
+                        >
+                          {demoText}
+                          <a
+                            href="http://gigantum.com/download"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          >
                         download the Gigantum client.
-                        </a>
-                      </div>
-                    :
-                      <div
-                        id="demo-header"
-                        className="demo-header">
+                          </a>
+                        </div>
+                      )
+                      : (
+                        <div
+                          id="demo-header"
+                          className="demo-header"
+                        >
                       Curious what can Gigantum do for you? &nbsp;
-                        <a onClick={() => this.setState({ showYT: true })}>
+                          <a onClick={() => this.setState({ showYT: true })}>
                          Watch this overview video.
-                        </a>
-                      </div>)
+                          </a>
+                        </div>
+                      ))
                   }
                   {
-                    this.state.showYT &&
+                    this.state.showYT
+                      && (
                       <div
                         id="yt-lightbox"
                         className="yt-lightbox"
-                        onClick={() => this.setState({ showYT: false })}>
+                        onClick={() => this.setState({ showYT: false })}
+                      >
                         <YouTube
                           opts={{ height: '576', width: '1024' }}
                           className="yt-frame"
                           videoId="S4oW2CtN500"
                         />
                       </div>
+                      )
                   }
                   <div className={headerCSS} />
                   <SideBar
@@ -172,48 +186,54 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/"
-                      render={props => (<Home
-                        loadingRenew={this.state.loadingRenew}
-                        history={history}
-                        auth={this.props.auth}
-                        {...props}
-                      />)
+                      render={props => (
+                        <Home
+                          loadingRenew={this.state.loadingRenew}
+                          history={history}
+                          auth={this.props.auth}
+                          {...props}
+                        />
+                      )
                     }
                     />
 
                     <Route
                       exact
                       path="/login"
-                      render={props => (<Home
-                        loadingRenew={this.state.loadingRenew}
-                        history={history}
-                        auth={this.props.auth}
-                        {...props}
-                        />)
+                      render={props => (
+                        <Home
+                          loadingRenew={this.state.loadingRenew}
+                          history={history}
+                          auth={this.props.auth}
+                          {...props}
+                        />
+                      )
                       }
                     />
                     <Route
                       exact
                       path="/:id"
-                      render={props => <Redirect to="/projects/local" /> }
+                      render={props => <Redirect to="/projects/local" />}
                     />
 
                     <Route
                       exact
                       path="/labbooks/:section"
-                      render={props => <Redirect to="/projects/local" /> }
+                      render={props => <Redirect to="/projects/local" />}
                     />
 
 
                     <Route
                       exact
                       path="/datasets/:labbookSection"
-                      render={props => (<Home
-                        loadingRenew={this.state.loadingRenew}
-                        history={history}
-                        auth={this.props.auth}
-                        {...props}
-                      />)
+                      render={props => (
+                        <Home
+                          loadingRenew={this.state.loadingRenew}
+                          history={history}
+                          auth={this.props.auth}
+                          {...props}
+                        />
+                      )
                       }
                     />
 
@@ -221,12 +241,14 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/projects/:labbookSection"
-                      render={props => (<Home
-                        loadingRenew={this.state.loadingRenew}
-                        history={history}
-                        auth={this.props.auth}
-                        {...props}
-                      />)
+                      render={props => (
+                        <Home
+                          loadingRenew={this.state.loadingRenew}
+                          history={history}
+                          auth={this.props.auth}
+                          {...props}
+                        />
+                      )
                       }
                     />
 
@@ -234,19 +256,19 @@ class Routes extends Component {
                       path="/datasets/:owner/:datasetName"
                       auth={this.props.auth}
                       render={(parentProps) => {
-                          if (this.state.forceLoginScreen) {
-                            return <Redirect to="/login" />;
-                          }
+                        if (this.state.forceLoginScreen) {
+                          return <Redirect to="/login" />;
+                        }
 
-                          return (
-                            <DatasetQueryContainer
-                              datasetName={parentProps.match.params.datasetName}
-                              owner={parentProps.match.params.owner}
-                              auth={this.props.auth}
-                              history={history}
-                              {...this.props}
-                              {...parentProps}
-                            />);
+                        return (
+                          <DatasetQueryContainer
+                            datasetName={parentProps.match.params.datasetName}
+                            owner={parentProps.match.params.owner}
+                            auth={this.props.auth}
+                            history={history}
+                            {...this.props}
+                            {...parentProps}
+                          />);
                       }
 
                       }
@@ -256,29 +278,22 @@ class Routes extends Component {
                       path="/projects/:owner/:labbookName"
                       auth={this.props.auth}
                       render={(parentProps) => {
-                          if (this.state.forceLoginScreen) {
-                            return <Redirect to="/login" />;
-                          }
+                        if (this.state.forceLoginScreen) {
+                          return <Redirect to="/login" />;
+                        }
 
-                          return (
-                            <LabbookQueryContainer
-                              labbookName={parentProps.match.params.labbookName}
-                              owner={parentProps.match.params.owner}
-                              auth={this.props.auth}
-                              history={history}
-                              {...this.props}
-                              {...parentProps}
-                            />);
+                        return (
+                          <LabbookQueryContainer
+                            labbookName={parentProps.match.params.labbookName}
+                            owner={parentProps.match.params.owner}
+                            auth={this.props.auth}
+                            history={history}
+                            {...this.props}
+                            {...parentProps}
+                          />);
                       }
 
                       }
-                    />
-
-                    <Route
-                      path="/profile"
-                      render={props => (
-                        <Profile />
-                        )}
                     />
 
                     <Helper

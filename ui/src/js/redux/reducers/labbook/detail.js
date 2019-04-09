@@ -17,7 +17,7 @@ export default (
       ...state,
       detailMode: false, // action.payload.detailMode
     };
-  } else if (action.type === RESET_DETAIL_STORE) {
+  } if (action.type === RESET_DETAIL_STORE) {
     return {
       ...state,
       detailMode: false,

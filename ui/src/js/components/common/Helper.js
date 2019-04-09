@@ -7,6 +7,8 @@ import {
   setResizeHelper,
 } from 'JS/redux/reducers/helper';
 import { setHelperVisible } from 'JS/redux/reducers/footer';
+// assets
+import './Helper.scss';
 
 
 class Helper extends Component {
@@ -46,6 +48,7 @@ class Helper extends Component {
   _toggleIsVisible() {
     this.props.setHelperVisibility(!this.props.isVisible);
   }
+
   /**
     * @param {}
     * toggles menu view
@@ -75,14 +78,14 @@ class Helper extends Component {
     const helperButtonCSS = classNames({
       Helper__button: true,
       'Helper__button--open': this.state.helperMenuOpen,
-      'Helper__button--side-view': bodyWidth < 1600,
       'Helper__button--bottom': this.props.uploadOpen && !this.state.helperMenuOpen,
     });
 
     return (
       <div className="Helper">
-      {
-        this.state.showPopup &&
+        {
+        this.state.showPopup
+        && (
         <Fragment>
           <div className="Helper__prompt">
             <div>
@@ -92,13 +95,15 @@ class Helper extends Component {
             <div>
               <button
                 className="button--green"
-                onClick={() => this.setState({ showPopup: false })}>
+                onClick={() => this.setState({ showPopup: false })}
+              >
                 Got it!
               </button>
             </div>
           </div>
-          <div className="Helper__prompt-pointer"/>
+          <div className="Helper__prompt-pointer" />
         </Fragment>
+        )
       }
 
         <div
@@ -129,16 +134,16 @@ class Helper extends Component {
             onClick={() => window.open('https://docs.gigantum.com/docs')}
           >
             <h5>Docs</h5>
-            <div
-              className="Helper__docs-button"
-            />
+            <div className="Helper__docs-button" />
           </div>
-          <div
-            className="Helper__menu-guide"
-          >
+          <div className="Helper__menu-guide">
             <h5>Guide</h5>
-            <label className="Helper-guide-switch">
+            <label
+              htmlFor="guideShown"
+              className="Helper-guide-switch"
+            >
               <input
+                id="guideShown"
                 type="checkbox"
                 defaultChecked={!localStorage.getItem('guideShown')}
                 onClick={() => this._toggleIsVisible()}

@@ -53,14 +53,22 @@ class Activity extends Component {
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const section = nextProps[nextProps.sectionType],
-          activityRecords = nextProps[nextProps.sectionType].activityRecords,
-          {
-            state,
-            props,
-          } = this,
-          currentActivityRecords = JSON.stringify(this._transformActivity(activityRecords)),
-          previousActivityRecords = JSON.stringify(state.activityRecords);
+    const section = nextProps[nextProps.sectionType];
+
+
+    const activityRecords = nextProps[nextProps.sectionType].activityRecords;
+
+
+    const {
+      state,
+      props,
+    } = this;
+
+
+    const currentActivityRecords = JSON.stringify(this._transformActivity(activityRecords));
+
+
+    const previousActivityRecords = JSON.stringify(state.activityRecords);
 
     if (activityRecords && (currentActivityRecords !== previousActivityRecords)) {
       const previousSection = props[props.sectionType];
@@ -77,7 +85,7 @@ class Activity extends Component {
     if (activityRecords.pageInfo.hasNextPage) {
       const stateActivityRecords = state.activityRecords;
 
-      let keys = Object.keys(stateActivityRecords);
+      const keys = Object.keys(stateActivityRecords);
       let activityCardCount = 0;
       keys.forEach((key) => {
         activityCardCount += stateActivityRecords[key].length;
@@ -98,9 +106,13 @@ class Activity extends Component {
   */
   componentDidMount() {
     this._isMounted = true;
-    const { props } = this,
-          section = props[props.sectionType],
-          activityRecords = section.activityRecords;
+    const { props } = this;
+
+
+    const section = props[props.sectionType];
+
+
+    const activityRecords = section.activityRecords;
 
     window.addEventListener('scroll', this._handleScroll);
     window.addEventListener('visibilitychange', this._handleVisibilityChange);
@@ -141,10 +153,16 @@ class Activity extends Component {
   @boundMethod
   _scrollTo(evt) {
     if (document.documentElement.scrollTop === 0) {
-      const { props } = this,
-            { relay } = props,
-            store = relay.environment.getStore(),
-            section = props[props.sectionType];
+      const { props } = this;
+
+
+      const { relay } = props;
+
+
+      const store = relay.environment.getStore();
+
+
+      const section = props[props.sectionType];
 
       section.activityRecords.edges.forEach((edge) => {
         store._recordSource.delete(edge.node.id);
@@ -191,6 +209,7 @@ class Activity extends Component {
       behavior: 'smooth',
     });
   }
+
   /**
    * @param {}
    * sets hovered rollback position
@@ -198,7 +217,7 @@ class Activity extends Component {
    */
   @boundMethod
   _setHoveredRollback(position) {
-    this.setState({ hoveredRollback : position });
+    this.setState({ hoveredRollback: position });
   }
 
   /**
@@ -228,8 +247,10 @@ class Activity extends Component {
    */
    @boundMethod
   _stopRefetch() {
-    const self = this,
-          { state, props } = this;
+    const self = this;
+
+
+    const { state, props } = this;
     if (!state.newActivityPolling) {
       this.setState({
         refetchEnabled: false,
@@ -268,30 +289,38 @@ class Activity extends Component {
   * @return {}
   */
   @boundMethod
-  _refetch() {
-    const self = this,
-          { props } = this,
-          { relay } = props,
-          section = props[props.sectionType],
-          activityRecords = section.activityRecords;
+   _refetch() {
+     const self = this;
 
-    const cursor = activityRecords.edges.node ? activityRecords.edges[activityRecords.edges.length - 1].node.cursor : null;
-    relay.refetchConnection(
-      counter,
-      (response, error) => {
-        self.refetchTimeout = setTimeout(() => {
-          if (self.state.refetchEnabled && self._isMounted && (document.visibilityState === 'visible')) {
-            self._refetch();
-          } else if (self.state.refetchEnabled && self.isMounted && (document.visibilityState !== 'visible')) {
-            self.setState({ refetchForcePaused: true });
-          }
-        }, 5000);
-      },
-      {
-        cursor,
-      },
-    );
-  }
+
+     const { props } = this;
+
+
+     const { relay } = props;
+
+
+     const section = props[props.sectionType];
+
+
+     const activityRecords = section.activityRecords;
+
+     const cursor = activityRecords.edges.node ? activityRecords.edges[activityRecords.edges.length - 1].node.cursor : null;
+     relay.refetchConnection(
+       counter,
+       (response, error) => {
+         self.refetchTimeout = setTimeout(() => {
+           if (self.state.refetchEnabled && self._isMounted && (document.visibilityState === 'visible')) {
+             self._refetch();
+           } else if (self.state.refetchEnabled && self.isMounted && (document.visibilityState !== 'visible')) {
+             self.setState({ refetchForcePaused: true });
+           }
+         }, 5000);
+       },
+       {
+         cursor,
+       },
+     );
+   }
 
   /**
   *  @param {}
@@ -299,10 +328,16 @@ class Activity extends Component {
   */
   @boundMethod
   _loadMore() {
-    const self = this,
-          { props, state } = this,
-          section = props[props.sectionType],
-          activityRecords = section.activityRecords;
+    const self = this;
+
+
+    const { props, state } = this;
+
+
+    const section = props[props.sectionType];
+
+
+    const activityRecords = section.activityRecords;
 
     pagination = true;
 
@@ -338,11 +373,17 @@ class Activity extends Component {
   */
   @boundMethod
   _countUnexpandedRecords() {
-    const { props } = this,
-          section = props[props.sectionType];
-    let records = section.activityRecords.edges,
-        hiddenCount = 0,
-        recordCount = 0;
+    const { props } = this;
+
+
+    const section = props[props.sectionType];
+    const records = section.activityRecords.edges;
+
+
+    let hiddenCount = 0;
+
+
+    let recordCount = 0;
 
     const visibleRecords = records.filter((record) => {
       if (record) {
@@ -372,11 +413,17 @@ class Activity extends Component {
   @boundMethod
   _setStickyDate() {
     let offsetAmount = window.location.hostname === config.demoHostName ? 50 : 0;
-      offsetAmount = this.props.isDeprecated ? offsetAmount + 70 : offsetAmount;
-    let upperBound = offsetAmount + 120,
-    lowerBound = offsetAmount + 80,
-    stickyDate = null,
-    { state } = this;
+    offsetAmount = this.props.isDeprecated ? offsetAmount + 70 : offsetAmount;
+    const upperBound = offsetAmount + 120;
+
+
+    const lowerBound = offsetAmount + 80;
+
+
+    let stickyDate = null;
+
+
+    const { state } = this;
 
     this.offsetDistance = window.pageYOffset;
 
@@ -408,13 +455,25 @@ class Activity extends Component {
   @boundMethod
   _handleScroll(evt) {
     this._setStickyDate();
-    const { props, state } = this,
-       { isPaginating } = state,
-       section = props[props.sectionType],
-       activityRecords = section.activityRecords,
-       root = document.getElementById('root'),
-       distanceY = window.innerHeight + document.documentElement.scrollTop + 1000,
-       expandOn = root.scrollHeight;
+    const { props, state } = this;
+
+
+    const { isPaginating } = state;
+
+
+    const section = props[props.sectionType];
+
+
+    const activityRecords = section.activityRecords;
+
+
+    const root = document.getElementById('root');
+
+
+    const distanceY = window.innerHeight + document.documentElement.scrollTop + 1000;
+
+
+    const expandOn = root.scrollHeight;
 
     if ((distanceY > expandOn) && !isPaginating && activityRecords.pageInfo.hasNextPage) {
       this._loadMore(evt);
@@ -434,18 +493,32 @@ class Activity extends Component {
   @boundMethod
   _transformActivity(activityRecords) {
     const { state } = this;
-    let activityTime = {},
-        count = 0,
-        previousTimeHash = null,
-        clusterIndex = 0;
+    const activityTime = {};
+
+
+    let count = 0;
+
+
+    let previousTimeHash = null;
+
+
+    let clusterIndex = 0;
 
     activityRecords.edges.forEach((edge, index) => {
       if (edge && edge.node) {
-         const date = (edge.node && edge.node.timestamp) ? new Date(edge.node.timestamp) : new Date(),
-              year = date.getFullYear(),
-              month = date.getMonth(),
-              day = date.getDate(),
-              timeHash = `${year}_${month}_${day}`;
+        const date = (edge.node && edge.node.timestamp) ? new Date(edge.node.timestamp) : new Date();
+
+
+        const year = date.getFullYear();
+
+
+        const month = date.getMonth();
+
+
+        const day = date.getDate();
+
+
+        const timeHash = `${year}_${month}_${day}`;
 
         count = (edge.node.show || (previousTimeHash && (timeHash !== previousTimeHash))) ? 0 : count + 1;
         if (count === 0) {
@@ -470,13 +543,13 @@ class Activity extends Component {
 
         if (count > 2 && ((this.state && !state.expandedClusterObject.has(index)) || (!state))) {
           if (count === 3) {
-            let activityOne = activityTime[timeHash][activityTime[timeHash].length - 1];
+            const activityOne = activityTime[timeHash][activityTime[timeHash].length - 1];
             activityTime[timeHash][activityTime[timeHash].length - 1].collapsed = true;
 
-           let activityTwo = activityTime[timeHash][activityTime[timeHash].length - 2];
+            const activityTwo = activityTime[timeHash][activityTime[timeHash].length - 2];
             activityTime[timeHash][activityTime[timeHash].length - 2].collapsed = true;
 
-            let clusterObject = {
+            const clusterObject = {
               cluster: [activityTwo, activityOne, newActivityObject],
               attachedCluster,
               expanded: false,
@@ -538,9 +611,9 @@ class Activity extends Component {
     const canEditEnvironment = config.containerStatus.canEditEnvironment(status);
     if (canEditEnvironment) {
       const selectedNode = {
-         activityNode: node,
-         activeBranch: props.activeBranch,
-         description: props.description,
+        activityNode: node,
+        activeBranch: props.activeBranch,
+        description: props.description,
       };
       this.setState({ selectedNode, createBranchVisible: true });
     } else {
@@ -598,7 +671,7 @@ class Activity extends Component {
   @boundMethod
   _expandCluster(indexItem) {
     const { props, state } = this;
-    let activityRecords = state.activityRecords;
+    const activityRecords = state.activityRecords;
     activityRecords[indexItem.timestamp][indexItem.j].cluster = true;
 
     this.setState({ activityRecords });
@@ -611,9 +684,13 @@ class Activity extends Component {
   */
   @boundMethod
   _addCluster(clusterElements) {
-    const { props, state } = this,
-          section = props[props.sectionType],
-          newExpandedClusterObject = new Map(state.expandedClusterObject);
+    const { props, state } = this;
+
+
+    const section = props[props.sectionType];
+
+
+    const newExpandedClusterObject = new Map(state.expandedClusterObject);
 
     if (newExpandedClusterObject !== {}) {
       clusterElements.forEach((val) => {
@@ -635,8 +712,10 @@ class Activity extends Component {
   */
   @boundMethod
   _compressExpanded(clusterElements, remove) {
-    const { compressedElements } = this.state,
-          newCompressedElements = new Set(compressedElements);
+    const { compressedElements } = this.state;
+
+
+    const newCompressedElements = new Set(compressedElements);
 
     if (remove) {
       clusterElements.forEach((val) => {
@@ -657,8 +736,10 @@ class Activity extends Component {
   */
   @boundMethod
   _toggleSubmenu(evt) {
-    const submenu = evt.target.parentElement,
-          wrapper = submenu && submenu.parentElement;
+    const submenu = evt.target.parentElement;
+
+
+    const wrapper = submenu && submenu.parentElement;
 
     if (wrapper.previousSibling) {
       wrapper.previousSibling.className.indexOf('ActivityExtended') !== -1 ? wrapper.previousSibling.classList.remove('ActivityExtended') : wrapper.previousSibling.classList.add('ActivityExtended');
@@ -669,44 +750,57 @@ class Activity extends Component {
   }
 
   render() {
-    const { props, state } = this,
-          section = props[props.sectionType],
-          activityCSS = classNames({
-            Activity: true,
-            fullscreen: state.editorFullscreen,
-          }),
-          newActivityCSS = classNames({
-            'Activity__new-record box-shadow': true,
-            'is-demo': window.location.hostname === config.demoHostName,
-            'is-deprecated': this.props.isDeprecated,
-            'is-demo-deprecated': window.location.hostname === config.demoHostName && this.props.isDeprecated,
-          });
+    const { props, state } = this;
+
+
+    const section = props[props.sectionType];
+
+
+    const activityCSS = classNames({
+      Activity: true,
+      fullscreen: state.editorFullscreen,
+    });
+
+
+    const newActivityCSS = classNames({
+      'Activity__new-record box-shadow': true,
+      'is-demo': window.location.hostname === config.demoHostName,
+      'is-deprecated': this.props.isDeprecated,
+      'is-demo-deprecated': window.location.hostname === config.demoHostName && this.props.isDeprecated,
+    });
     if (section) {
-      const recordDates = Object.keys(state.activityRecords),
-            stickyDateCSS = classNames({
-              'Activity__date-tab': true,
-              fixed: state.stickyDate,
-              'is-demo': window.location.hostname === config.demoHostName,
-              'is-deprecated': this.props.isDeprecated,
-              'is-demo-deprecated': window.location.hostname === config.demoHostName && this.props.isDeprecated,
-            });
+      const recordDates = Object.keys(state.activityRecords);
+
+
+      const stickyDateCSS = classNames({
+        'Activity__date-tab': true,
+        fixed: state.stickyDate,
+        'is-demo': window.location.hostname === config.demoHostName,
+        'is-deprecated': this.props.isDeprecated,
+        'is-demo-deprecated': window.location.hostname === config.demoHostName && this.props.isDeprecated,
+      });
       return (
         <div
           key={props.sectionType}
-          className={activityCSS}>
+          className={activityCSS}
+        >
           {
             (!state.refetchEnabled && state.newActivityAvailable)
-            && <div className="Activity__new-record-wrapper column-1-span-10">
+            && (
+            <div className="Activity__new-record-wrapper column-1-span-9">
               <div
                 onClick={() => this._getNewActivities()}
-                className={newActivityCSS}>
+                className={newActivityCSS}
+              >
                 New Activity
               </div>
-           </div>
+            </div>
+            )
           }
           {
             state.stickyDate
-            && <div className={stickyDateCSS}>
+            && (
+            <div className={stickyDateCSS}>
               <div className="Activity__date-day">{state.stickyDate.split('_')[2]}</div>
               <div className="Activity__date-sub">
 
@@ -719,26 +813,29 @@ class Activity extends Component {
                 <div className="Activity__date-year">{state.stickyDate.split('_')[0]}</div>
               </div>
             </div>
+            )
 
           }
 
           <div
             key={`${props.sectionType}_labbooks__container`}
-            className="Activity__inner-container flex flex--row flex--wrap justify--flex-start">
+            className="Activity__inner-container flex flex--row flex--wrap justify--flex-start"
+          >
             <div
               key={`${props.sectionType}_labbooks__labook-id-container`}
-              className="Activity__sizer flex-1-0-auto">
+              className="Activity__sizer flex-1-0-auto"
+            >
               <CreateBranch
-                  ref="createBranch"
-                  selected={state.selectedNode}
-                  activeBranch={props.activeBranch}
-                  modalVisible={state.createBranchVisible}
-                  toggleModal={this._toggleCreateModal}
-                  setBuildingState={props.setBuildingState}
+                ref="createBranch"
+                selected={state.selectedNode}
+                activeBranch={props.activeBranch}
+                modalVisible={state.createBranchVisible}
+                toggleModal={this._toggleCreateModal}
+                setBuildingState={props.setBuildingState}
               />
               {
                 recordDates.map((timestamp, i) => {
-                  let clusterElements = [];
+                  const clusterElements = [];
                   const ActivityDateCSS = classNames({
                     'Activity__date-tab': true,
                     note: (i === 0),
@@ -750,7 +847,9 @@ class Activity extends Component {
                   return (
                     <div className={`Activity__date-section Activity__date-section--${i}`} key={timestamp}>
                       <div
-                        ref={evt => this.dates[i] = { e: evt, time: timestamp }} className={ActivityDateCSS}>
+                        ref={evt => this.dates[i] = { e: evt, time: timestamp }}
+                        className={ActivityDateCSS}
+                      >
 
                         <div className="Activity__date-day">
                           { timestamp.split('_')[2] }
@@ -769,38 +868,42 @@ class Activity extends Component {
                       </div>
                       {
                         (i === 0)
-                        && <UserNoteWrapper
-                            modalVisible={state.modalVisible}
-                            hideLabbookModal={this._hideAddActivity}
-                            changeFullScreenState={this._changeFullscreenState}
-                            labbookId={section.id}
-                            editorFullscreen={state.editorFullscreen}
-                            {...props}
-                           />
+                        && (
+                        <UserNoteWrapper
+                          modalVisible={state.modalVisible}
+                          hideLabbookModal={this._hideAddActivity}
+                          changeFullScreenState={this._changeFullscreenState}
+                          labbookId={section.id}
+                          editorFullscreen={state.editorFullscreen}
+                          {...props}
+                        />
+                        )
                       }
                       <div
                         key={`${timestamp}__card`}
-                        className={ActivityContainerCSS}>
+                        className={ActivityContainerCSS}
+                      >
                         {
                           state.activityRecords[timestamp].map((record, timestampIndex) => {
                             if (record.cluster) {
                               return (
                                 <ClusterCardWrapper
-                                    sectionType={props.sectionType}
-                                    isMainWorkspace={props.isMainWorkspace}
-                                    section={section}
-                                    activityRecords={state.activityRecords}
-                                    key={`ClusterCardWrapper_${timestamp}_${record.id}`}
-                                    record={record}
-                                    hoveredRollback={state.hoveredRollback}
-                                    indexItem={{ i, timestampIndex, timestamp }}
-                                    toggleSubmenu={this._toggleSubmenu}
-                                    toggleRollbackMenu={this._toggleRollbackMenu}
-                                    isLocked={props.isLocked}
-                                 />);
+                                  sectionType={props.sectionType}
+                                  isMainWorkspace={props.isMainWorkspace}
+                                  section={section}
+                                  activityRecords={state.activityRecords}
+                                  key={`ClusterCardWrapper_${timestamp}_${record.id}`}
+                                  record={record}
+                                  hoveredRollback={state.hoveredRollback}
+                                  indexItem={{ i, timestampIndex, timestamp }}
+                                  toggleSubmenu={this._toggleSubmenu}
+                                  toggleRollbackMenu={this._toggleRollbackMenu}
+                                  isLocked={props.isLocked}
+                                />);
                             }
 
-                            return (<CardWrapper
+                            return (
+                              <CardWrapper
                                 section={section}
                                 isMainWorkspace={props.isMainWorkspace}
                                 activityRecords={state.activityRecords}
@@ -818,7 +921,8 @@ class Activity extends Component {
                                 toggleRollbackMenu={this._toggleRollbackMenu}
                                 isLocked={props.isLocked}
                                 setHoveredRollback={this._setHoveredRollback}
-                              />);
+                              />
+                            );
                           })
                         }
                       </div>
@@ -832,7 +936,7 @@ class Activity extends Component {
                     index={index}
                     isLoadingMore={state.isPaginating || ((state.activityCardCount < 10) && section.activityRecords.pageInfo.hasNextPage)}
                   />
-                  ))
+                ))
               }
             </div>
           </div>

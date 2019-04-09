@@ -28,18 +28,18 @@ export default (
       ...state,
       owner: action.payload.owner,
     };
-  } else if (action.type === UPDATE_LABBOOKNAME) {
+  } if (action.type === UPDATE_LABBOOKNAME) {
     return {
       ...state,
       labbookName: action.payload.labbookName,
     };
-  } else if (action.type === UPDATE_CALLBACK_ROUTE) {
+  } if (action.type === UPDATE_CALLBACK_ROUTE) {
     sessionStorage.setItem('CALLBACK_ROUTE', action.payload.callbackRoute);
     return {
       ...state,
       callbackRoute: action.payload.callbackRoute,
     };
-  } else if (action.type === UPDATE_ALL) {
+  } if (action.type === UPDATE_ALL) {
     return {
       ...state,
       labbookName: action.payload.labbookName,

@@ -131,12 +131,12 @@ describe('Project File component', () => {
   });
 
   it('Set File to unchecked', () => {
-    component.find('.Btn--check').simulate('click');
+    component.find('.Btn__check').simulate('click');
     expect(component.state('isSelected')).toEqual(false);
   });
 
   it('Set File to checked', () => {
-    component.find('.Btn--uncheck').simulate('click');
+    component.find('.Btn__uncheck').simulate('click');
     expect(component.state('isSelected')).toEqual(true);
   });
 });

@@ -1,0 +1,248 @@
+@import '~Styles/_imports.scss';
+
+
+.Helper__menu{
+  position: fixed;
+  z-index: index($elements, helper) - 1;
+  right: 20px;
+  bottom: 0;
+
+  width: 200px;
+  height: auto;
+  padding: 10px;
+
+  animation: slide-up-fade-in forwards .25s;
+
+  color: $white;
+  border-radius: 10px 10px 0 0;
+  background: $azure;
+
+  @include flex(center, column);
+
+  h5 {
+    margin: 5px 10px;
+    padding-left: 25px;
+
+    user-select: none;
+
+    color: $white;
+  }
+}
+
+.Helper__button {
+  position: fixed;
+  z-index: index($elements, helper);
+  right: 25px;
+  bottom: 25px;
+
+  width: 60px;
+  height: 60px;
+
+  cursor: pointer;
+  transition: all 0.25s;
+
+  border-radius: 50%;
+  background: $azure url('~Images/icons/help/helper.svg') no-repeat center center;
+  background-size: 60px;
+
+  &--open{
+    z-index: index($elements, helper);
+    right: 9px;
+    bottom: 232px;
+
+    width: 50px;
+    height: 50px;
+
+    cursor: pointer;
+    transition: all 0.25s;
+
+    border-radius: 50%;
+    background: url('~Images/icons/help/helper-close.svg') no-repeat center center;
+    background-size: 50px;
+  }
+
+  &--bottom{
+    bottom: 50px;
+  }
+
+}
+
+.Helper_menu.hidden{
+  right: 0;
+
+  transition: all 0.5s;
+}
+
+
+.Helper__menu-docs{
+  width: 100%;
+  padding: 15px;
+
+  cursor: pointer;
+
+  border-bottom: 1px dashed $white;
+  background: url('~Images/icons/docs.svg') no-repeat 15px center;
+
+  @include flex(space-between, row);
+
+  &:hover{
+    background: $turquise url('~Images/icons/docs.svg') no-repeat 15px center;
+  }
+
+  div {
+    width: 25px;
+    height: 25px;
+    padding-left: 25px;
+
+    border-radius: 0;
+    background: url('~Images/icons/offsite.svg') no-repeat center center;
+    background-size: 20px;
+  }
+
+}
+
+.Helper__menu-discussion{
+  width: 100%;
+  padding: 15px;
+
+  cursor: pointer;
+
+  border-bottom: 1px dashed $white;
+  background: url('~Images/icons/discuss.svg') no-repeat 15px center;
+
+  @include flex(space-between, row);
+
+  &:hover{
+    background: $turquise url('~Images/icons/discuss.svg') no-repeat 15px center;
+  }
+
+  div {
+    width: 25px;
+    height: 25px;
+
+    border-radius: 0;
+    background: url('~Images/icons/offsite.svg') no-repeat center center;
+    background-size: 20px;
+
+  }
+}
+
+
+.Helper__menu-guide{
+  width: 100%;
+  padding: 15px;
+
+  background: url('~Images/icons/guide.svg') no-repeat 15px center;
+
+  @include flex(space-between, row);
+}
+
+
+.Helper-guide-switch {
+  position: relative;
+
+  display: inline-block;
+
+  width: 50px;
+  height: 27px;
+  input {
+    display: none;
+  }
+  .Helper-guide-slider {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    cursor: pointer;
+    -webkit-transition: .4s;
+    transition: .4s;
+
+    border: 2px solid $white;
+    border-radius: 34px;
+    background-color: $azure;
+  }
+  .Helper-guide-slider:before {
+    position: absolute;
+    bottom: 3px;
+    left: 4px;
+
+    width: 18px;
+    height: 18px;
+
+    content: "";
+    -webkit-transition: .4s;
+    transition: .4s;
+
+    border-radius: 50%;
+    background-color: white;
+  }
+  input:checked + .Helper-guide-slider {
+    border: 2px solid $goldenLemon;
+    background: url('~Images/icons/check.svg') no-repeat -2px center;
+    background-size: 30px;
+  }
+  input:focus + .Helper-guide-slider {
+    box-shadow: 0 0 1px $slateBlueOpaque;
+  }
+  input:checked + .Helper-guide-slider:before {
+    -webkit-transform: translateX(20px);
+    -ms-transform: translateX(20px);
+    transform: translateX(20px);
+
+    background-color: $goldenLemon
+  }
+}
+
+.Helper__menu-feedback{
+  width: 100%;
+  padding: 15px;
+
+  cursor: pointer;
+
+  border-bottom: 1px dashed $white;
+  background: url('~Images/icons/feedback.svg') no-repeat 15px center;
+
+  @include flex(space-between, row);
+  div {
+    width: 25px;
+    height: 25px;
+
+    border-radius: 0;
+    background: url('~Images/icons/offsite.svg') no-repeat center center;
+    background-size: 20px;
+
+  }
+
+}
+
+.Helper__menu-feedback:hover{
+  background: $turquise url('~Images/icons/feedback.svg') no-repeat 15px center;
+}
+.Helper__prompt{
+  position: fixed;
+  z-index: index($elements, popup);
+  right: 100px;
+  bottom: 268px;
+
+  width: 500px;
+  padding: 20px;
+
+  text-align: center;
+  word-wrap: break-word;
+
+  color: $romanSilver;
+  border-radius: 8px;
+  background: $white;
+  box-shadow: 0 0px 12px 0 rgba(0,0,0,.20);
+}
+.Helper__prompt-pointer{
+  position: fixed;
+  z-index: index($elements, popup) + 1;
+  right: 134px;
+  bottom: 254px;
+
+  @include triangle('down', 14px, $white);
+
+}

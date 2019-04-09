@@ -1,12 +1,9 @@
 @import '~Styles/_imports.scss';
 
 .Base *{
-  font-weight: 100;
   text-align: left;
-}
 
-.Base__header{
-  color: $mineShaft;
+  font-weight: 100;
 }
 
 .Base__card{
@@ -31,13 +28,15 @@
 }
 
 .Base__paragraph{
+   word-break: normal;
+
    font-size: 14px;
    font-weight: 400;
-   word-break: normal;
  }
 
 .Base__name{
   word-break: break-word;
+
   font-weight: 400;
 }
 

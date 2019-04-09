@@ -99,6 +99,7 @@
     "moment": "^2.22.1",
     "parse-gitignore": "^1.0.1",
     "pretty-file-icons": "^2.2.1",
+    "prop-types": "^15.7.2",
     "react": "16.8.1",
     "react-addons-shallow-compare": "^15.6.2",
     "react-dnd": "^7.0.2",
@@ -144,6 +145,7 @@
     "polyfills": "babel-node ./config/polyfills.js",
     "lint-fix": "eslint ./.eslintrc --fix ./src",
     "rebuild-sass": "npm rebuild node-sass --force",
+    "generate-icons": "babel-node ./scripts/generateIcons.js",
     "update-globals": "npm install -g @babel/cli@7.2.3 @babel/core@7.2.2 jest@23.6.0 relay-compiler@2.0.0"
   },
   "eslint": {

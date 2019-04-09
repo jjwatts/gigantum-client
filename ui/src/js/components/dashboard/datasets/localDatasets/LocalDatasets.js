@@ -6,8 +6,8 @@ import {
 } from 'react-relay';
 // components
 import LocalDatasetPanel from 'Components/dashboard/datasets/localDatasets/LocalDatasetsPanel';
-import DatasetsPaginationLoader from '../datasetsLoaders/datasetsPaginationLoader';
-import ImportModule from './import/ImportModule';
+import CardLoader from 'Components/dashboard/loaders/CardLoader';
+import ImportModule from 'Components/dashboard/import/ImportModule';
 // helpers
 import DatasetVisibilityLookup from './lookups/DatasetVisibilityLookup';
 // assets
@@ -36,10 +36,10 @@ export class LocalDatasets extends Component {
     this.mounted = true;
     if (!this.props.loading) {
       this._visibilityLookup();
-      if (this.props.datasetList &&
-         this.props.localDatasets.localDatasets &&
-         this.props.localDatasets.localDatasets.edges &&
-         this.props.localDatasets.localDatasets.edges.length === 0) {
+      if (this.props.datasetList
+         && this.props.localDatasets.localDatasets
+         && this.props.localDatasets.localDatasets.edges
+         && this.props.localDatasets.localDatasets.edges.length === 0) {
         this._fetchDemo();
       }
     }
@@ -81,14 +81,18 @@ export class LocalDatasets extends Component {
     *  if nextPage exists and user is scrolled down, it will cause loadmore to fire
   */
   _captureScroll = () => {
-    let root = document.getElementById('root'),
-      distanceY = window.innerHeight + document.documentElement.scrollTop + 200,
-      expandOn = root.offsetHeight;
+    const root = document.getElementById('root');
+
+
+    const distanceY = window.innerHeight + document.documentElement.scrollTop + 200;
+
+
+    const expandOn = root.offsetHeight;
 
     if (this.props.localDatasets.localDatasets) {
-      if ((distanceY > expandOn) && !this.state.isPaginating &&
+      if ((distanceY > expandOn) && !this.state.isPaginating
 
-      this.props.localDatasets.localDatasets.pageInfo.hasNextPage) {
+      && this.props.localDatasets.localDatasets.pageInfo.hasNextPage) {
         this._loadMore();
       }
     }
@@ -131,9 +135,9 @@ export class LocalDatasets extends Component {
       const subsetIds = idArr.slice(index, index + 10);
 
       DatasetVisibilityLookup.query(subsetIds).then((res) => {
-        if (res && res.data &&
-          res.data.datasetList &&
-          res.data.datasetList.localById) {
+        if (res && res.data
+          && res.data.datasetList
+          && res.data.datasetList.localById) {
           const visibilityListCopy = new Map(self.state.visibilityList);
 
           res.data.datasetList.localById.forEach((node) => {
@@ -168,56 +172,65 @@ export class LocalDatasets extends Component {
 
           <div className="grid">
             {
-              importVisible &&
+              importVisible
 
+                && (
                 <ImportModule
                   ref="ImportModule_localLabooks"
                   {...this.props}
+                  section="dataset"
+                  title="Add Dataset"
                   showModal={this.props.showModal}
                   history={this.props.history}
                 />
+                )
 
             }
             {
               datasets.length ? datasets.map((edge, index) => {
                 const visibility = this.state.visibilityList.has(edge.node.id) ? this.state.visibilityList.get(edge.node.id).visibility : 'loading';
                 return (<LocalDatasetPanel
-                    key={`${edge.node.owner}/${edge.node.name}`}
-                    ref={`LocalDatasetPanel${edge.node.name}`}
-                    className="LocalDatasets__panel"
-                    edge={edge}
-                    visibility={visibility}
-                    history={this.props.history}
-                    filterText={this.props.filterText}
-                    goToDataset={this.props.goToDataset}
-                  />
+                  key={`${edge.node.owner}/${edge.node.name}`}
+                  ref={`LocalDatasetPanel${edge.node.name}`}
+                  className="LocalDatasets__panel"
+                  edge={edge}
+                  visibility={visibility}
+                  history={this.props.history}
+                  filterText={this.props.filterText}
+                  goToDataset={this.props.goToDataset}
+                />
                 );
               })
-              : !this.props.loading && this.props.filterText &&
+                : !this.props.loading && this.props.filterText
 
+                && (
                 <div className="Datasets__no-results">
 
                   <h3 className="Datasets__h3">No Results Found</h3>
 
-                  <p className="Datasets__paragraph--margin">Edit your filters above or <span
-                    className="Datasets__span"
-                    onClick={() => this.props.setFilterValue({ target: { value: '' } })}
-                  >clear
-
-                  </span> to try again.
+                  <p className="Datasets__paragraph--margin">
+                    Edit your filters above or
+                    <span
+                      className="Datasets__span"
+                      onClick={() => this.props.setFilterValue({ target: { value: '' } })}
+                    >
+                    clear
+                    </span>
+                    to try again.
                   </p>
 
                 </div>
+                )
             }
 
             {
               Array(5).fill(1).map((value, index) => (
-                <DatasetsPaginationLoader
+                <CardLoader
                   key={`LocalDatasets_paginationLoader${index}`}
                   index={index}
                   isLoadingMore={this.state.isPaginating || this.props.loading}
                 />
-                ))
+              ))
             }
 
           </div>

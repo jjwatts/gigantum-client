@@ -191,11 +191,11 @@ export default class UserNote extends Component {
         query={query}
         variables={variables}
         render={(response) => {
-            if (response && response.props) {
-                return (
-                  <div className="DetailsRecords">
-                    <ul className="DetailsRecords__list">
-                      {
+          if (response && response.props) {
+            return (
+              <div className="DetailsRecords">
+                <ul className="DetailsRecords__list">
+                  {
                       response.props[props.sectionType].detailRecords.map((detailRecord) => {
                         const liCSS = detailRecord.type === 'NOTE' ? 'DetailsRecords__item-note' : 'DetailsRecords__item';
                         const containerCSS = detailRecord.type === 'NOTE' ? 'DetailsRecords__container note' : 'DetailsRecords__container';
@@ -209,7 +209,8 @@ export default class UserNote extends Component {
                               detailRecord.data.map((item, index) => (
                                 <li
                                   key={`${detailRecord.id}_${index}`}
-                                  className={liCSS}>
+                                  className={liCSS}
+                                >
                                   {this._renderDetail(item)}
                                   <div className="DetailsRecords hidden" />
                                   <p className="DetailsRecords__link hidden" onClick={e => this._moreClicked(e.target)}>More...</p>
@@ -220,17 +221,17 @@ export default class UserNote extends Component {
                         );
                       })
                     }
-                    </ul>
-                  </div>
-                );
-            }
-                return (
-                  <div className="DetailsRecords__loader-group">
-                    <div className="DetailsRecords__loader" />
-                    <div className="DetailsRecords__loader" />
-                    <div className="DetailsRecords__loader" />
-                  </div>
-                );
+                </ul>
+              </div>
+            );
+          }
+          return (
+            <div className="DetailsRecords__loader-group">
+              <div className="DetailsRecords__loader" />
+              <div className="DetailsRecords__loader" />
+              <div className="DetailsRecords__loader" />
+            </div>
+          );
         }}
       />
     );

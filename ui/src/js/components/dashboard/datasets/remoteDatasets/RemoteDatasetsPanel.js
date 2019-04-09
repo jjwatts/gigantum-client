@@ -90,6 +90,7 @@ export default class RemoteDatasetPanel extends Component {
       isImporting: false,
     });
   }
+
   /**
     *  @param {}
     *  changes state of isImporting to true
@@ -187,22 +188,25 @@ export default class RemoteDatasetPanel extends Component {
         }
        <div className="RemoteDatasets__row RemoteDatasets__row--icon">
          {
-          this.props.existsLocally ?
-            <button
-              className="RemoteDatasets__icon RemoteDatasets__icon--cloud"
-              data-tooltip="Dataset exists locally"
-              disabled
-            >
+          this.props.existsLocally
+            ? (
+              <button
+                className="RemoteDatasets__icon RemoteDatasets__icon--cloud"
+                data-tooltip="Dataset exists locally"
+                disabled
+              >
               Imported
-            </button>
-          :
-            <button
-              disabled={this.state.isImporting}
-              className="RemoteDatasets__icon RemoteDatasets__icon--cloud-download"
-              onClick={() => this.importDataset(edge.node.owner, edge.node.name)}
-            >
+              </button>
+            )
+            : (
+              <button
+                disabled={this.state.isImporting}
+                className="RemoteDatasets__icon RemoteDatasets__icon--cloud-download"
+                onClick={() => this.importDataset(edge.node.owner, edge.node.name)}
+              >
               Import
-            </button>
+              </button>
+            )
         }
          <button
            className={deleteCSS}
@@ -211,7 +215,7 @@ export default class RemoteDatasetPanel extends Component {
            onClick={() => this._handleDelete(edge)}
          >
           Delete
-        </button>
+         </button>
 
        </div>
 
@@ -239,37 +243,42 @@ export default class RemoteDatasetPanel extends Component {
          <p
            className="RemoteDatasets__paragraph RemoteDatasets__paragraph--description"
          >
-         {
-          edge.node.description && edge.node.description.length ?
-           <Highlighter
-             highlightClassName="LocalDatasets__highlighted"
-             searchWords={[store.getState().datasetListing.filterText]}
-             autoEscape={false}
-             caseSensitive={false}
-             textToHighlight={edge.node.description}
-           />
-           :
-           <span
-           className="RemoteDatasets__description--blank"
-         >
+           {
+          edge.node.description && edge.node.description.length
+            ? (
+              <Highlighter
+                highlightClassName="LocalDatasets__highlighted"
+                searchWords={[store.getState().datasetListing.filterText]}
+                autoEscape={false}
+                caseSensitive={false}
+                textToHighlight={edge.node.description}
+              />
+            )
+            : (
+              <span
+                className="RemoteDatasets__description--blank"
+              >
             No description provided
-         </span>
+              </span>
+            )
          }
          </p>
        </div>
-       { !(edge.node.visibility === 'local') &&
-       <div data-tooltip={`${edge.node.visibility}`} className={`Tooltip-Listing RemoteDatasets__${edge.node.visibility} Tooltip-data Tooltip-data--small`} />
+       { !(edge.node.visibility === 'local')
+       && <div data-tooltip={`${edge.node.visibility}`} className={`Tooltip-Listing RemoteDatasets__${edge.node.visibility} Tooltip-data Tooltip-data--small`} />
         }
        {
-          this.state.isImporting &&
+          this.state.isImporting
+          && (
           <div className="RemoteDatasets__loader">
             <Loader />
           </div>
+          )
         }
 
        {
-          this.state.showLoginPrompt &&
-          <LoginPrompt closeModal={this._closeLoginPromptModal} />
+          this.state.showLoginPrompt
+          && <LoginPrompt closeModal={this._closeLoginPromptModal} />
         }
      </div>);
  }

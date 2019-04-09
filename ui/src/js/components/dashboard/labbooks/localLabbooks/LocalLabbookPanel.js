@@ -31,6 +31,7 @@ export default class LocalLabbookPanel extends Component {
     this._getContainerStatusText = this._getContainerStatusText.bind(this);
     this._stopStartContainer = this._stopStartContainer.bind(this);
   }
+
   /** *
   * @param {Object} nextProps
   * processes container lookup and assigns container status to labbook card
@@ -58,6 +59,7 @@ export default class LocalLabbookPanel extends Component {
 
     return { ...state };
   }
+
   /** *
   * @param {string, string} containerStatus, imageStatus
   * returns corrent container status by checking both container and imagestatus
@@ -73,6 +75,7 @@ export default class LocalLabbookPanel extends Component {
 
     return { status: textStatus, cssClass: newStatus };
   }
+
   /** *
   * @param {string} status
   * fires when a componet mounts
@@ -98,6 +101,7 @@ export default class LocalLabbookPanel extends Component {
   _rebuildContainer() {
 
   }
+
   /** *
   * @param {string} status
   * starts labbook conatainer
@@ -121,6 +125,7 @@ export default class LocalLabbookPanel extends Component {
       },
     );
   }
+
   /** *
   * @param {string} status
   * stops labbbok conatainer
@@ -146,12 +151,13 @@ export default class LocalLabbookPanel extends Component {
       },
     );
   }
+
   /** *
   * @param {object,string} evt,status
   * stops labbbok conatainer
   ** */
   _updateTextStatusOver(evt, isOver, status) {
-    let newStatus = status;
+    const newStatus = status;
     if (isOver) {
       if (status === 'Running') {
         this.setState({ textStatus: 'Stop' });
@@ -162,6 +168,7 @@ export default class LocalLabbookPanel extends Component {
       this.setState({ textStatus: status });
     }
   }
+
   /** *
   * @param {objectstring} evt,status
   * stops labbbok conatainer
@@ -173,24 +180,31 @@ export default class LocalLabbookPanel extends Component {
   }
 
   render() {
-    const { props, state } = this,
-          { edge } = props,
-          {
-            status,
-            textStatus,
-            cssClass,
-          } = state,
-          containerCSS = classNames({
-            [`ContainerStatus__container-state ContainerStatus__containerStatus--state ${cssClass} box-shadow`]: true,
-            'Tooltip-data': cssClass === 'Rebuild',
-          })
+    const { props, state } = this;
+
+
+    const { edge } = props;
+
+
+    const {
+      status,
+      textStatus,
+      cssClass,
+    } = state;
+
+
+    const containerCSS = classNames({
+      [`ContainerStatus__container-state ContainerStatus__containerStatus--state ${cssClass} box-shadow`]: true,
+      'Tooltip-data': cssClass === 'Rebuild',
+    });
 
     return (
       <Link
         to={`/projects/${edge.node.owner}/${edge.node.name}`}
         onClick={() => props.goToLabbook(edge.node.name, edge.node.owner)}
         key={`local${edge.node.name}`}
-        className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between">
+        className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
+      >
 
         <div className="LocalLabbooks__row--icons">
 
@@ -201,11 +215,12 @@ export default class LocalLabbookPanel extends Component {
               onClick={evt => this._stopStartContainer(evt, cssClass)}
               onMouseOver={evt => this._updateTextStatusOver(evt, true, status)}
               onMouseOut={evt => this._updateTextStatusOut(evt, false, status)}
-              className={containerCSS}>
-             <div className="ContainerStatus__text">{ textStatus }</div>
-             <div className="ContainerStatus__toggle">
-                <div className="ContainerStatus__toggle-btn"></div>
-             </div>
+              className={containerCSS}
+            >
+              <div className="ContainerStatus__text">{ textStatus }</div>
+              <div className="ContainerStatus__toggle">
+                <div className="ContainerStatus__toggle-btn" />
+              </div>
             </div>
 
           </div>
@@ -216,9 +231,10 @@ export default class LocalLabbookPanel extends Component {
 
           <div>
 
-            <h6
+            <h5
               className="LocalLabbooks__panel-title"
-              onClick={() => this.props.goToLabbook(edge.node.name, edge.node.owner)}>
+              onClick={() => this.props.goToLabbook(edge.node.name, edge.node.owner)}
+            >
 
               <Highlighter
                 highlightClassName="LocalLabbooks__highlighted"
@@ -228,7 +244,7 @@ export default class LocalLabbookPanel extends Component {
                 textToHighlight={edge.node.name}
               />
 
-            </h6>
+            </h5>
 
           </div>
 
@@ -238,30 +254,35 @@ export default class LocalLabbookPanel extends Component {
 
           <p className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description">
             {
-              edge.node.description && edge.node.description.length ?
-              <Highlighter
-                highlightClassName="LocalLabbooks__highlighted"
-                searchWords={[store.getState().labbookListing.filterText]}
-                autoEscape={false}
-                caseSensitive={false}
-                textToHighlight={edge.node.description}
-              />
-              :
-              <span
-                className="LocalLabbooks__description--blank"
-              >
+              edge.node.description && edge.node.description.length
+                ? (
+                  <Highlighter
+                    highlightClassName="LocalLabbooks__highlighted"
+                    searchWords={[store.getState().labbookListing.filterText]}
+                    autoEscape={false}
+                    caseSensitive={false}
+                    textToHighlight={edge.node.description}
+                  />
+                )
+                : (
+                  <span
+                    className="LocalLabbooks__description--blank"
+                  >
               No description provided
-              </span>
+                  </span>
+                )
             }
           </p>
 
         </div>
 
-        { !(this.props.visibility === 'local') &&
+        { !(this.props.visibility === 'local')
+          && (
           <div
             data-tooltip={`${this.props.visibility}`}
             className={`Tooltip-Listing LocalLabbookPanel__${this.props.visibility} Tooltip-data Tooltip-data--small`}
           />
+          )
         }
       </Link>);
   }

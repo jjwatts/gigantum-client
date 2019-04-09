@@ -1,8 +1,8 @@
 ## Gigantum CSS/SASS Style Guide
 
-CSS will be delivered in 2 separate style sheets. critical.css and app.css, critical.css consists of all css needed to render the dom on load. app.css consists of everything that is non-critical for loading, and will load after the website has rendered.
+CSS will be delivered in with a critical style sheet for first load. All other css should be imported by it's individual component.
 
-Stylesheets are compiled using SASS and the SASS library bourbon. Files prefixed with an underscore/_ are to be imported into critical.scss or app.scss.
+Stylesheets are compiled using SASS. Files prefixed with an underscore/_ are to be imported into critical.scss.
 
 classes are the only selectors that will be used for styling. ids are not be used.
 
@@ -69,7 +69,7 @@ In this CSS methodology a block is a top-level abstraction of a new component, f
 A “rule declaration” is the name given to a selector (or a group of selectors) with an accompanying group of properties. Here's an example:
 
 ```css
-.listing {
+.Activity {
   font-size: 18px;
   line-height: 1.2;
 }
@@ -119,7 +119,7 @@ Finally, properties are what give the selected elements of a rule declaration th
 **Bad**
 
 ```css
-.avatar{
+.avatar {
     border-radius:50%;
     border:2px solid white; }
 .no, .nope, .not_good {
@@ -218,7 +218,7 @@ Avoid binding to the same class in both your CSS and JavaScript. Conflating the 
 We recommend creating JavaScript-specific classes to bind to, prefixed with `.js-`:
 
 ```html
-<button class="btn btn-primary js-request-to-book">Request to Book</button>
+<button class="btn btn--flat js-request-to-book">Request to Book</button>
 ```
 
 ### Border
@@ -256,7 +256,7 @@ Use `0` instead of `none` to specify that a style has no border.
     List all standard property declarations, anything that isn't an `@include` or a nested selector.
 
     ```scss
-    .btn-green {
+    .btn--green {
       background: green;
       font-weight: bold;
       // ...
@@ -268,7 +268,7 @@ Use `0` instead of `none` to specify that a style has no border.
     Grouping `@include`s at the end makes it easier to read the entire selector.
 
     ```scss
-    .btn-green {
+    .btn--green {
       background: green;
       font-weight: bold;
       @include transition(background 0.5s ease);
@@ -278,7 +278,7 @@ Use `0` instead of `none` to specify that a style has no border.
 
 3. Nested selectors
 
-    Nested selectors, _if necessary_, go last, and nothing goes after them. Add whitespace between your rule declarations and nested selectors, as well as between adjacent nested selectors. Apply the same guidelines as above to your nested selectors.
+    Nested selectors, _if necessary_, go last, and nothing goes after them. Add whitespace between your rule declarations and nested selectors, as well as between adjacent nested selectors. Apply the same guidelines as above to your nested selectors. Nested selectors should only be used if there is no other option available.
 
     ```scss
     .btn {

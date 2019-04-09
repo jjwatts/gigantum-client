@@ -26,6 +26,7 @@ export default class PublishModal extends Component {
   state = {
     isPublic: (this.props.visibility === 'public'),
   }
+
   /**
   *  @param {boolean}
   *  sets public state
@@ -207,29 +208,25 @@ export default class PublishModal extends Component {
         header={props.header}
         handleClose={() => props.toggleModal(props.modalStateValue)}
         size="large"
-        renderContent={() =>
-
-          (<div className="VisibilityModal">
-
+        icon={props.visibility}
+        renderContent={() => (
+          <div className="VisibilityModal">
             <div>
-
               <p>You are about to change the visibility of the project.</p>
-
             </div>
 
             <div>
-
               <div className="VisibilityModal__private">
 
-                <input
-                  defaultChecked={(props.visibility === 'private') || !this.state.isPublic}
-                  type="radio"
-                  name="publish"
-                  id="publish_private"
-                  onClick={() => { this._setPublic(false); }}
-                />
 
                 <label htmlFor="publish_private">
+                  <input
+                    defaultChecked={(props.visibility === 'private') || !this.state.isPublic}
+                    type="radio"
+                    name="publish"
+                    id="publish_private"
+                    onClick={() => { this._setPublic(false); }}
+                  />
                   <b>Private</b>
                 </label>
 
@@ -239,15 +236,14 @@ export default class PublishModal extends Component {
 
               <div className="VisibilityModal__public">
 
-                <input
-                  defaultChecked={props.visibility === 'public'}
-                  name="publish"
-                  type="radio"
-                  id="publish_public"
-                  onClick={() => { this._setPublic(true); }}
-                />
-
                 <label htmlFor="publish_public">
+                  <input
+                    defaultChecked={props.visibility === 'public'}
+                    name="publish"
+                    type="radio"
+                    id="publish_public"
+                    onClick={() => { this._setPublic(true); }}
+                  />
                   <b>Public</b>
                 </label>
 
@@ -258,13 +254,12 @@ export default class PublishModal extends Component {
             </div>
 
             <div className="VisibilityModal__buttons">
-
-              <button onClick={() => { this._modifyVisibility(); }}>{props.buttonText}</button>
-              <button className="button--flat" onClick={() => { props.toggleModal(props.modalStateValue); }}>Cancel</button>
-
+              <button className="Btn--flat" onClick={() => { props.toggleModal(props.modalStateValue); }}>Cancel</button>
+              <button className="Btn--last" onClick={() => { this._modifyVisibility(); }}>{props.buttonText}</button>
             </div>
 
-           </div>)
+          </div>
+        )
         }
       />
     );

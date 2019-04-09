@@ -14,7 +14,7 @@ import {
 // config
 import Config from 'JS/config';
 // components
-import ToolTip from 'Components/common/ToolTip';
+import Tooltip from 'Components/common/Tooltip';
 import ErrorBoundary from 'Components/common/ErrorBoundary';
 import TitleSection from './titleSection/TitleSection';
 import ActionsSection from './actionsSection/ActionsSection';
@@ -122,7 +122,7 @@ class Header extends Component {
    }
  }
 
-  /** *
+ /** *
     @param {object} element
     checks if element is too large for card area
     @return {boolean}
@@ -154,6 +154,7 @@ class Header extends Component {
       setSyncingState(isSyncing);
     }
   }
+
   /** ***
   *  @param {boolean, event} hovered, evt
   *  sets hover state
@@ -166,43 +167,59 @@ class Header extends Component {
   }
 
   render() {
-    const { props, state } = this,
-          {
-            labbookName,
-            labbook,
-            branchesOpen,
-            branchName,
-            dataset,
-          } = props,
-          {
-            visibility,
-            description,
-            collaborators,
-            defaultRemote,
-            id,
-          } = labbook || dataset,
-          section = labbook || dataset,
-          selectedIndex = this._getSelectedIndex(),
-          isLabbookSection = props.sectionType === 'labbook',
-          headerCSS = classNames({
-            Header: true,
-            'Header--sticky': props.isSticky,
-            'Header--is-deprecated': props.isDeprecated,
-            'Header--branchesOpen': props.branchesOpen,
-          }),
-          branchesErrorCSS = classNames({
-            BranchesError: props.branchesOpen,
-            hidden: !props.branchesOpen,
-          }),
-          hiddenStickCSS = classNames({
-            hidden: props.isStick,
-          });
+    const { props, state } = this;
+
+
+    const {
+      labbookName,
+      labbook,
+      branchesOpen,
+      branchName,
+      dataset,
+    } = props;
+
+
+    const {
+      visibility,
+      description,
+      collaborators,
+      defaultRemote,
+      id,
+    } = labbook || dataset;
+
+
+    const section = labbook || dataset;
+
+
+    const selectedIndex = this._getSelectedIndex();
+
+
+    const isLabbookSection = props.sectionType === 'labbook';
+
+
+    const headerCSS = classNames({
+      Header: true,
+      'Header--sticky': props.isSticky,
+      'Header--is-deprecated': props.isDeprecated,
+      'Header--branchesOpen': props.branchesOpen,
+    });
+
+
+    const branchesErrorCSS = classNames({
+      BranchesError: props.branchesOpen,
+      hidden: !props.branchesOpen,
+    });
+
+
+    const hiddenStickCSS = classNames({
+      hidden: props.isStick,
+    });
     let branches = props.branches || [{
-            branchName: 'master',
-            isActive: true,
-            commitsBehind: 0,
-            commitsAhead: 0,
-          }];
+      branchName: 'master',
+      isActive: true,
+      commitsBehind: 0,
+      commitsAhead: 0,
+    }];
 
     branches = props.showMigrationButton ? branches.filter(({ branchName }) => branchName !== 'master') : branches;
 
@@ -211,61 +228,62 @@ class Header extends Component {
       <div className="Header__wrapper">
 
         <div className={headerCSS}>
-            <div className="Header__flex">
-              <div className="Header__columnContainer Header__columnContainer--flex-1">
+          <div className="Header__flex">
+            <div className="Header__columnContainer Header__columnContainer--flex-1">
 
-                <TitleSection
-                  self={this}
+              <TitleSection
+                self={this}
+                {...props}
+              />
+              <ErrorBoundary
+                type={branchesErrorCSS}
+                key="branches"
+              >
+                <BranchMenu
                   {...props}
-                />
-                <ErrorBoundary
-                  type={branchesErrorCSS}
-                  key="branches">
-                  <BranchMenu
-                    {...props}
-                    defaultRemote={section.defaultRemote}
-                    branchesOpen={props.branchesOpen}
-                    section={section}
-                    branches={branches}
-                    sectionId={section.id}
-                    activeBranch={section.activeBranchName || 'master'}
-                    toggleBranchesView={this.props.toggleBranchesView}
-                    mergeFilter={props.mergeFilter}
-                    isSticky={props.isSticky}
-                    visibility={props.visibility}
-                    sectionType={props.sectionType}
-                    auth={props.auth}
-                    setSyncingState={this._setSyncingState}
-                    setPublishingState={this._setPublishingState}
-                    setExportingState={this._setExportingState}
-                    isLocked={props.isLocked}
-                    setBranchUptodate={props.setBranchUptodate}
-                  />
-                </ErrorBoundary>
-
-              </div>
-
-              <div className="Header__columnContainer Header__columnContainer--fixed-width">
-                <ActionsSection
-                  visibility={visibility}
-                  description={description}
-                  collaborators={collaborators}
-                  defaultRemote={defaultRemote}
-                  labbookId={id}
-                  remoteUrl={defaultRemote}
-                  setSyncingState={this._setSyncingState}
-                  setExportingState={this._setExportingState}
-                  branchName={branchName}
+                  defaultRemote={section.defaultRemote}
+                  branchesOpen={props.branchesOpen}
+                  section={section}
+                  branches={branches}
+                  sectionId={section.id}
+                  activeBranch={section.activeBranchName || 'master'}
+                  toggleBranchesView={this.props.toggleBranchesView}
+                  mergeFilter={props.mergeFilter}
                   isSticky={props.isSticky}
-                  {...props}
+                  visibility={props.visibility}
+                  sectionType={props.sectionType}
+                  auth={props.auth}
+                  setSyncingState={this._setSyncingState}
+                  setPublishingState={this._setPublishingState}
+                  setExportingState={this._setExportingState}
+                  isLocked={props.isLocked}
+                  setBranchUptodate={props.setBranchUptodate}
                 />
-                { isLabbookSection && <Container {...props} /> }
-              </div>
+              </ErrorBoundary>
+
             </div>
 
-            <Navigation {...props} />
-
+            <div className="Header__columnContainer Header__columnContainer--fixed-width">
+              <ActionsSection
+                visibility={visibility}
+                description={description}
+                collaborators={collaborators}
+                defaultRemote={defaultRemote}
+                labbookId={id}
+                remoteUrl={defaultRemote}
+                setSyncingState={this._setSyncingState}
+                setExportingState={this._setExportingState}
+                branchName={branchName}
+                isSticky={props.isSticky}
+                {...props}
+              />
+              { isLabbookSection && <Container {...props} /> }
+            </div>
           </div>
+
+          <Navigation {...props} />
+
+        </div>
       </div>
     );
   }

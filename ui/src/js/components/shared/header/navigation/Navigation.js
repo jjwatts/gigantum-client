@@ -15,7 +15,7 @@ import {
   setUpdateDetailView,
 } from 'JS/redux/reducers/labbook/labbook';
 // components
-import ToolTip from 'Components/common/ToolTip';
+import Tooltip from 'Components/common/Tooltip';
 // assets
 import './Navigation.scss';
 
@@ -40,38 +40,59 @@ class Navigation extends Component {
   */
   @boundMethod
   _getSelectedIndex() {
-    const { props } = this,
-          pathArray = this.props.location.pathname.split('/'),
-          defaultOrder = Config[`${this.props.sectionType}DefaultNavOrder`],
-          selectedPath = (pathArray.length > 4) ? pathArray[pathArray.length - 1] : defaultOrder[0],
-          selectedIndex = defaultOrder.indexOf(selectedPath);
+    const { props } = this;
+
+
+    const pathArray = this.props.location.pathname.split('/');
+
+
+    const defaultOrder = Config[`${this.props.sectionType}DefaultNavOrder`];
+
+
+    const selectedPath = (pathArray.length > 4) ? pathArray[pathArray.length - 1] : defaultOrder[0];
+
+
+    const selectedIndex = defaultOrder.indexOf(selectedPath);
     return selectedIndex;
   }
 
   render() {
-    const { props, state } = this,
-          { visibility } = props[props.sectionType],
-          selectedIndex = this._getSelectedIndex(),
-          labbookLockCSS = classNames({
-            [`Header__${visibility}`]: true,
-            [`Header__${visibility}--sticky`]: props.isSticky,
-          }),
-          section = (props.sectionType === 'labbook') ? 'projects' : 'datasets',
-          name = (props.sectionType === 'labbook') ? props.match.params.labbookName : props.match.params.datasetName;
+    const { props, state } = this;
+
+
+    const { visibility } = props[props.sectionType];
+
+
+    const selectedIndex = this._getSelectedIndex();
+
+
+    const labbookLockCSS = classNames({
+      [`Header__${visibility}`]: true,
+      [`Header__${visibility}--sticky`]: props.isSticky,
+    });
+
+
+    const section = (props.sectionType === 'labbook') ? 'projects' : 'datasets';
+
+
+    const name = (props.sectionType === 'labbook') ? props.match.params.labbookName : props.match.params.datasetName;
 
     return (
       <div className="Navigation flex-0-0-auto">
 
-      <ul className="Navigation__ul flex flex--row">
-        {
+        <ul className="Tabs flex flex--row">
+          {
           Config[`${this.props.sectionType}_navigation_items`].map((item, index) => {
-            const pathArray = props.location.pathname.split('/'),
-                  selectedPath = (pathArray.length > 4) ? pathArray[pathArray.length - 1] : 'overview', // sets avtive nav item to overview if there is no menu item in the url
-                  navItemCSS = classNames({
-                    'Navigation__list-item--selected': (selectedPath === item.id),
-                    [`Navigation__list-item Navigation__list-item--${item.id}`]: (!selectedPath !== item.id),
-                    [`Navigation__list-item--${index}`]: true,
-                  });
+            const pathArray = props.location.pathname.split('/');
+
+
+            const selectedPath = (pathArray.length > 4) ? pathArray[pathArray.length - 1] : 'overview';
+            // sets avtive nav item to overview if there is no menu item in the url
+
+            const navItemCSS = classNames({
+              Tab: true,
+              'Tab--selected': (selectedPath === item.id),
+            });
 
             return (
               <li
@@ -79,21 +100,23 @@ class Navigation extends Component {
                 key={item.id}
                 className={navItemCSS}
                 onClick={() => this._setSelectedComponent(item.id)}
-                title={Config.navTitles[item.id]}>
+                title={Config.navTitles[item.id]}
+              >
 
                 <Link
                   onClick={this._scrollToTop}
                   to={`../../../${section}/${props.owner}/${name}/${item.id}`}
-                  replace>
+                  replace
+                >
                   {item.name}
                 </Link>
 
               </li>);
           })
         }
-      </ul>
+        </ul>
 
-    </div>
+      </div>
     );
   }
 }

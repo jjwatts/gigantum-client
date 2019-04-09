@@ -46,7 +46,7 @@ $dropBoxWidth: 250px;
      align-items: center;
 
      &:hover {
-       border-color: $turquise;
+      @include boxShadowDark();
      }
 
      background: url('~Images/icons/down-arrow-azure.svg') no-repeat calc(100% - 10px) center;
@@ -62,6 +62,9 @@ $dropBoxWidth: 250px;
        cursor: auto;
        * {
          color: $romanSilver !important;
+       }
+       .BranchMenu__status{
+         pointer-events: none;
        }
      }
    }
@@ -99,7 +102,7 @@ $dropBoxWidth: 250px;
   flex-wrap: nowrap;
   margin: 0 0 0 10px;
 }
-.BranchMenu__btn {
+.Btn--branch {
   height: 40px;
   line-height: 30px;
   color: $azure;
@@ -116,6 +119,10 @@ $dropBoxWidth: 250px;
     border: 1px solid $azure;
     padding: 0 10px 0 30px;
   }
+  &:disabled{
+    background-color: $background-color !important;
+    border: 1px solid $romanSilver !important;
+  }
 
   &--create {
 
@@ -127,10 +134,8 @@ $dropBoxWidth: 250px;
       background: $azure url(~Images/icons/branches/create-hover.svg) no-repeat center center;
       background-size: 25px;
     }
-    &--disabled,
-    &--disabled:hover,
-    &--disabled:focus {
-      background: $background-color url(~Images/icons/branches/create-disabled.svg) no-repeat center center !important;
+    &:disabled {
+      background: $background-color url(~Images/icons/branches/create-disabled.svg) no-repeat center center;
       background-size: 25px !important;
       border: 1px solid $romanSilver;
       color: $romanSilver;
@@ -147,9 +152,7 @@ $dropBoxWidth: 250px;
       background: $azure url(~Images/icons/branches/manage-hover.svg) no-repeat center center;
       background-size: 25px;
     }
-    &--disabled,
-    &--disabled:hover,
-    &--disabled:focus {
+    &:disabled {
       background: $background-color url(~Images/icons/branches/manage-disabled.svg) no-repeat center center;
       background-size: 25px;
       border: 1px solid $romanSilver;
@@ -167,9 +170,7 @@ $dropBoxWidth: 250px;
       background: $azure url(~Images/icons/branches/reset-hover.svg) no-repeat center center;
       background-size: 25px;
     }
-    &--disabled,
-    &--disabled:hover,
-    &--disabled:focus {
+    &:disabled{
       background: $background-color url(~Images/icons/branches/reset-disabled.svg) no-repeat center center;
       background-size: 25px;
       border: 1px solid $romanSilver;
@@ -213,9 +214,17 @@ $dropBoxWidth: 250px;
       background-size: 25px !important;
       padding: 0 10px 0 30px !important;
       &:hover, &:focus{
-        background: $azure url('~Images/icons/branches/sync-hover.svg') no-repeat left 5px center !important;
+        background: $azure url('~Images/icons/branches/sync-hover.svg') no-repeat left 5px center;
         background-size: 25px !important;
         color: $white;
+      }
+      &:disabled{
+        background: $background-color url(~Images/icons/branches/sync-disabled.svg) no-repeat 5px center;
+        background-size: 25px !important;
+        border: 1px solid $romanSilver;
+        color: $romanSilver;
+        padding: 0 10px 0 30px !important;
+        cursor: auto;
       }
     }
     &--publish{
@@ -223,9 +232,17 @@ $dropBoxWidth: 250px;
       background-size: 25px !important;
       padding: 0 10px 0 30px !important;
       &:hover, &:focus{
-        background: $azure url('~Images/icons/branches/push-hover.svg') no-repeat left 5px center !important;
+        background: $azure url('~Images/icons/branches/push-hover.svg') no-repeat left 5px center;
         background-size: 25px !important;
         color: $white;
+      }
+      &:disabled {
+        background: $background-color url(~Images/icons/branches/push-disabled.svg) no-repeat 5px center;
+        background-size: 25px !important;
+        border: 1px solid $romanSilver;
+        color: $romanSilver;
+        padding: 0 10px 0 30px !important;
+        cursor: auto;
       }
     }
     &--pull{
@@ -233,40 +250,18 @@ $dropBoxWidth: 250px;
       background-size: 25px !important;
       padding: 0 10px 0 30px !important;
       &:hover, &:focus{
-        background: $azure url('~Images/icons/branches/pull-hover.svg') no-repeat left 5px center !important;
+        background: $azure url('~Images/icons/branches/pull-hover.svg') no-repeat left 5px center;
         background-size: 25px !important;
         color: $white;
       }
-    }
-    &--pull--disabled,
-    &--pull--disabled:hover,
-    &--pull--disabled:focus {
-      background: $background-color url(~Images/icons/branches/pull-disabled.svg) no-repeat 5px center !important;
-      background-size: 25px !important;
-      border: 1px solid $romanSilver;
-      color: $romanSilver;
-      padding: 0 10px 0 30px !important;
-      cursor: auto;
-    }
-    &--publish--disabled,
-    &--publish--disabled:hover,
-    &--publish--disabled:focus {
-      background: $background-color url(~Images/icons/branches/push-disabled.svg) no-repeat 5px center !important;
-      background-size: 25px !important;
-      border: 1px solid $romanSilver;
-      color: $romanSilver;
-      padding: 0 10px 0 30px !important;
-      cursor: auto;
-    }
-    &--upToDate--disabled,
-    &--upToDate--disabled:hover,
-    &--upToDate--disabled:focus {
-      background: $background-color url(~Images/icons/branches/sync-disabled.svg) no-repeat 5px center !important;
-      background-size: 25px !important;
-      border: 1px solid $romanSilver;
-      color: $romanSilver;
-      padding: 0 10px 0 30px !important;
-      cursor: auto;
+      &:disabled{
+        background: $background-color url(~Images/icons/branches/pull-disabled.svg) no-repeat 5px center;
+        background-size: 25px !important;
+        border: 1px solid $romanSilver;
+        color: $romanSilver;
+        padding: 0 10px 0 30px !important;
+        cursor: auto;
+      }
     }
   }
 
@@ -285,9 +280,7 @@ $dropBoxWidth: 250px;
       padding: 2px;
     }
 
-    &--disabled,
-    &--disabled:hover,
-    &--disabled:focus {
+    &:disabled {
       background: $background-color url(~Images/icons/down-arrow-silver.svg) no-repeat center center;
       background-size: 20px !important;
       border: 1px solid $romanSilver;
@@ -527,7 +520,10 @@ $dropBoxWidth: 250px;
   .BranchMenu__buttons{
     font-size: 0 !important;
   }
-  .BranchMenu__btn {
+  .Btn--branch {
     padding-right: 5px !important;
+    &--sync{
+      background-position: center center !important;
+    }
   }
 }

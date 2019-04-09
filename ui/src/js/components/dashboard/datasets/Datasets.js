@@ -4,14 +4,14 @@ import queryString from 'querystring';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 // components
-import WizardModal from 'Components/wizard/WizardModal';
+import WizardModal from 'Components/shared/modals/wizard/WizardModal';
 import Loader from 'Components/common/Loader';
 import LocalDatasetsContainer, { LocalDatasets } from 'Components/dashboard/datasets/localDatasets/LocalDatasets';
 import RemoteDatasets from 'Components/dashboard/datasets/remoteDatasets/RemoteDatasets';
 import LoginPrompt from 'Components/shared/modals/LoginPrompt';
-import ToolTip from 'Components/common/ToolTip';
-import DatasetFilterBy from './filters/DatasetFilterBy';
-import DatasetSort from './filters/DatasetSort';
+import Tooltip from 'Components/common/Tooltip';
+import FilterByDropdown from 'Components/dashboard/filters/FilterByDropdown';
+import SortByDropdown from 'Components/dashboard/filters/SortByDropdown';
 // utils
 import Validation from 'JS/utils/Validation';
 // queries
@@ -127,7 +127,7 @@ class Datasets extends Component {
   */
 
   _closeSortMenu(evt) {
-    const isSortMenu = evt && evt.target && evt.target.className && (evt.target.className.indexOf('DatasetSort__selector') > -1);
+    const isSortMenu = evt && evt.target && evt.target.className && (evt.target.className.indexOf('Dropdown__sort-selector') > -1);
 
     if (!isSortMenu && this.state.sortMenuOpen) {
       this.setState({ sortMenuOpen: false });
@@ -140,7 +140,7 @@ class Datasets extends Component {
     * hides the filter menu dropdown from the view
   */
   _closeFilterMenu(evt) {
-    const isFilterMenu = evt.target.className.indexOf('DatasetFilterBy__selector') > -1;
+    const isFilterMenu = evt.target.className.indexOf('Dropdown__filter-selector') > -1;
 
     if (!isFilterMenu && this.state.filterMenuOpen) {
       this.setState({ filterMenuOpen: false });
@@ -215,18 +215,21 @@ class Datasets extends Component {
     this.setState({ filterMenuOpen: false, filter });
     this._changeSearchParam({ filter });
   }
+
   /**
      sets state for filter menu
   */
   _toggleFilterMenu() {
     this.setState({ filterMenuOpen: !this.state.filterMenuOpen });
   }
+
   /**
    sets state for sort menu
   */
   _toggleSortMenu() {
     this.setState({ sortMenuOpen: !this.state.sortMenuOpen });
   }
+
   /**
    * @param {string} section
    replaces history and checks session
@@ -238,6 +241,7 @@ class Datasets extends Component {
       this.props.history.replace(`../datasets/${section}${this.props.history.location.search}`);
     }
   }
+
   /**
    * @param {object} dataset
    * returns true if dataset's name or description exists in filtervalue, else returns false
@@ -248,6 +252,7 @@ class Datasets extends Component {
     }
     return false;
   }
+
   /**
    * @param {Object} datasetList
    * @param {String} filter
@@ -260,8 +265,10 @@ class Datasets extends Component {
     }
     const datasets = this.state.selectedSection === 'local' ? datasetList.localDatasets.edges : datasetList.remoteDatasets.edges;
     const username = localStorage.getItem('username');
-    let self = this,
-      filteredDatasets = [];
+    const self = this;
+
+
+    let filteredDatasets = [];
 
 
     if (filter === 'owner') {
@@ -384,15 +391,15 @@ class Datasets extends Component {
 
     if (props.datasetList !== null || props.loading) {
       const localNavItemCSS = classNames({
-        'Datasets__nav-item': true,
-        'Datasets__nav-item--local': true,
-        'Datasets__nav-item--selected': this.state.selectedSection === 'local',
+        Tab: true,
+        'Tab--local': true,
+        'Tab--selected': this.state.selectedSection === 'local',
       });
 
       const cloudNavItemCSS = classNames({
-        'Datasets__nav-item': true,
-        'Datasets__nav-item--cloud': true,
-        'Datasets__nav-item--selected': this.state.selectedSection === 'cloud',
+        Tab: true,
+        'Tab--cloud': true,
+        'Tab--selected': this.state.selectedSection === 'cloud',
       });
 
       return (
@@ -409,13 +416,11 @@ class Datasets extends Component {
 
           <div className="Datasets__panel-bar">
             <h6 className="Datasets__username">{localStorage.getItem('username')}</h6>
-            <h2 className="Datasets__title">
-                Datasets
-            </h2>
+            <h1>Datasets</h1>
 
           </div>
           <div className="Datasets__menu  mui-container flex-0-0-auto">
-            <ul className="Datasets__nav  flex flex--row">
+            <ul className="Tabs">
               <li className={localNavItemCSS}>
                 <a onClick={() => this._setSection('local')}>Local</a>
               </li>
@@ -425,15 +430,16 @@ class Datasets extends Component {
 
               <hr className={`Datasets__navigation-slider Datasets__navigation-slider--${this.state.selectedSection}`} />
 
-              <ToolTip section="cloudLocal" />
+              <Tooltip section="cloudLocal" />
             </ul>
 
           </div>
           <div className="Datasets__subheader grid">
             <div className="Datasets__search-container column-2-span-6 padding--0">
               {
-                  this.state.showSearchCancel &&
-                  (this.props.filterText.length !== 0) &&
+                  this.state.showSearchCancel
+                  && (this.props.filterText.length !== 0)
+                  && (
                   <Fragment>
                     <div
                       className="Datasets__search-cancel"
@@ -441,6 +447,7 @@ class Datasets extends Component {
                     />
                     <div className="Datasets__search-cancel--text">Clear</div>
                   </Fragment>
+                  )
                 }
               <input
                 type="text"
@@ -453,80 +460,85 @@ class Datasets extends Component {
               />
             </div>
 
-            <DatasetFilterBy
+            <FilterByDropdown
               {...this.state}
+              type="Datasets"
               toggleFilterMenu={this._toggleFilterMenu}
               setFilter={this._setFilter}
             />
-            <DatasetSort
+            <SortByDropdown
               {...this.state}
               toggleSortMenu={this._toggleSortMenu}
               setSortFilter={this._setSortFilter}
             />
           </div>
           {
-            props.loading ?
-              <LocalDatasets
-                loading
-                showModal={this._showModal}
-                filterDatasets={this._filterDatasets}
-                section={this.props.section}
-                history={this.props.history}
-              />
-            :
-            this.state.selectedSection === 'local' ?
-              <LocalDatasetsContainer
-                datasetListId={props.datasetList.id}
-                localDatasets={props.datasetList.datasetList}
-                showModal={this._showModal}
-                goToDataset={this._goToDataset}
-                filterDatasets={this._filterDatasets}
-                filterState={this.state.filter}
-                setFilterValue={this._setFilterValue}
-                changeRefetchState={bool => this.setState({ refetchLoading: bool })}
-                {...props}
-              />
-            :
-            <RemoteDatasets
-              datasetListId={props.datasetList.datasetList.id}
-              remoteDatasets={props.datasetList.datasetList}
-              showModal={this._showModal}
-              goToLabbook={this._goToLabbook}
-              filterDatasets={this._filterDatasets}
-              filterState={this.state.filter}
-              setFilterValue={this._setFilterValue}
-              forceLocalView={() => {
-                this.setState({ selectedSection: 'local' });
-                this.setState({ showLoginPrompt: true });
-              }}
-              changeRefetchState={bool => this.setState({ refetchLoading: bool })}
-              {...props}
-            />
+            props.loading
+              ? (
+                <LocalDatasets
+                  loading
+                  showModal={this._showModal}
+                  filterDatasets={this._filterDatasets}
+                  section={this.props.section}
+                  history={this.props.history}
+                />
+              )
+              : this.state.selectedSection === 'local'
+                ? (
+                  <LocalDatasetsContainer
+                    datasetListId={props.datasetList.id}
+                    localDatasets={props.datasetList.datasetList}
+                    showModal={this._showModal}
+                    goToDataset={this._goToDataset}
+                    filterDatasets={this._filterDatasets}
+                    filterState={this.state.filter}
+                    setFilterValue={this._setFilterValue}
+                    changeRefetchState={bool => this.setState({ refetchLoading: bool })}
+                    {...props}
+                  />
+                )
+                : (
+                  <RemoteDatasets
+                    datasetListId={props.datasetList.datasetList.id}
+                    remoteDatasets={props.datasetList.datasetList}
+                    showModal={this._showModal}
+                    goToLabbook={this._goToLabbook}
+                    filterDatasets={this._filterDatasets}
+                    filterState={this.state.filter}
+                    setFilterValue={this._setFilterValue}
+                    forceLocalView={() => {
+                      this.setState({ selectedSection: 'local' });
+                      this.setState({ showLoginPrompt: true });
+                    }}
+                    changeRefetchState={bool => this.setState({ refetchLoading: bool })}
+                    {...props}
+                  />
+                )
           }
           {
-            this.state.showLoginPrompt &&
-            <LoginPrompt closeModal={this._closeLoginPromptModal} />
+            this.state.showLoginPrompt
+            && <LoginPrompt closeModal={this._closeLoginPromptModal} />
           }
         </div>
       );
-    } else if (props.datasetList === null) {
+    } if (props.datasetList === null) {
       UserIdentity.getUserIdentity().then((response) => {
         if (response.data && response.data.userIdentity.isSessionValid) {
           setErrorMessage('Failed to fetch Datasets.', [{ message: 'There was an error while fetching Datasets. This likely means you have a corrupted Dataset directory.' }]);
           return (
             <div className="Datasets__fetch-error">
                 There was an error attempting to fetch Datasets.
-                <br />
+              <br />
                 Try restarting Gigantum and refresh the page.
-                <br />
+              <br />
                 If the problem persists
-                <a
-                  target="_blank"
-                  href="https://spectrum.chat/gigantum"
-                  rel="noopener noreferrer"
-                >
+              <a
+                target="_blank"
+                href="https://spectrum.chat/gigantum"
+                rel="noopener noreferrer"
+              >
                 {' request assistance here.'}
-                </a>
+              </a>
             </div>
           );
         }

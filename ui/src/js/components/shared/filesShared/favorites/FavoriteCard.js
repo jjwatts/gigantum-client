@@ -9,6 +9,8 @@ import RemoveFavoriteMutation from 'Mutations/fileBrowser/RemoveFavoriteMutation
 import UpdateFavoriteMutation from 'Mutations/fileBrowser/UpdateFavoriteMutation';
 // store
 import store from 'JS/redux/store';
+// assets
+import '../FileCard.scss';
 
 
 const cardSource = {
@@ -100,23 +102,24 @@ class FavoriteCard extends Component {
     this._removeFavorite = this._removeFavorite.bind(this);
   }
 
-  /*
+  /**
 		@param {number} newIndex
 		sets editMode to true or false
 		displays textarea if true
 	*/
   _updateIndexMutation(newIndex) {
+    const { props, state } = this;
     UpdateFavoriteMutation(
-      this.props.connection,
-      this.props.parentId,
-      this.state.owner,
-      this.state.labbookName,
-      this.props.favorite.id,
-      this.props.favorite.key,
-      this.props.favorite.description,
+      props.connection,
+      props.parentId,
+      state.owner,
+      state.labbookName,
+      props.favorite.id,
+      props.favorite.key,
+      props.favorite.description,
       newIndex,
-      this.props.favorite,
-      this.props.section,
+      props.favorite,
+      props.section,
       (response, error) => {
         if (error) {
           console.error(error);
@@ -125,7 +128,7 @@ class FavoriteCard extends Component {
     );
   }
 
-  /*
+  /**
     @param {boolean} value
     sets editMode to true or false
     displays textarea if true
@@ -133,12 +136,14 @@ class FavoriteCard extends Component {
   _editDescription(value) {
     this.setState({ editMode: value });
   }
-  /*
+
+  /**
     @param {event, string} evt,key
     triggers add favorite mutation on key ENTER
     hides editMode
   */
   _updateDescription(evt, favorite) {
+    const { props, state } = this;
     const filepath = favorite.key.replace(`${this.props.section}/`, '');
 
     if (evt.type === 'keyup') {
@@ -147,16 +152,16 @@ class FavoriteCard extends Component {
 
     if (evt.keyCode === 13 || evt.type === 'click') {
       UpdateFavoriteMutation(
-        this.props.connection,
-        this.props.parentId,
-        this.state.owner,
-        this.state.labbookName,
+        props.connection,
+        props.parentId,
+        state.owner,
+        state.labbookName,
         favorite.id,
         filepath,
-        this.state.newDescription,
+        state.newDescription,
         favorite.index,
         favorite,
-        this.props.section,
+        props.section,
         (response, error) => {
           if (error) {
             console.error(error);
@@ -172,12 +177,13 @@ class FavoriteCard extends Component {
     triggers remove favorite mutation
   */
   _removeFavorite(node) {
+    const { props, state } = this;
     RemoveFavoriteMutation(
-      this.props.connection,
-      this.props.parentId,
-      this.state.owner,
-      this.state.labbookName,
-      this.props.section,
+      props.connection,
+      props.parentId,
+      state.owner,
+      state.labbookName,
+      props.section,
       node.key,
       node.id,
       node,
@@ -188,6 +194,7 @@ class FavoriteCard extends Component {
       },
     );
   }
+
   /**
     @param {}
     sets description to edit mode on double click
@@ -197,91 +204,101 @@ class FavoriteCard extends Component {
   }
 
   render() {
-    const fileDirectories = this.props.favorite.key.split('/');
+    const { props, state } = this;
+    const fileDirectories = props.favorite.key.split('/');
     const filename = fileDirectories[fileDirectories.length - 1];
-    const path = `${this.props.section}/${this.props.favorite.key.replace(filename, '')}`;
+    const path = `${props.section}/${props.favorite.key.replace(filename, '')}`;
 
     const {
 	    connectDragSource,
       connectDropTarget,
       isDragging,
-  	} = this.props;
+  	} = props;
 
     const favoriteCardCSS = classNames({
-      'Favorite__card Card': (this.props.favorite.index !== undefined),
-      'Favorite__card--opaque Card': !(this.props.favorite.index !== undefined),
-      'column-3-span-4': true,
-      'Favorite__card--hidden': this.props.isOverCurrent,
-      'Favorite__card--isDragging': isDragging,
+      'FileCard Card': true,
+      'FileCard--opaque Card': !(props.favorite.index !== undefined),
+      'column-3-span-4--shrink': true,
+      'FileCard-hidden': props.isOverCurrent,
+      'FileCard--isDragging': isDragging,
+    });
+
+    const favoriteMaskCSS = classNames({
+      FileCard__mask: true,
+      hidden: (props.favorite.index !== undefined),
     });
     return (
-      connectDragSource(connectDropTarget(<div
-        className={favoriteCardCSS}>
+      connectDragSource(connectDropTarget(<div className={favoriteCardCSS}>
         <div
-          onClick={() => { this._removeFavorite(this.props.favorite); }}
-          className="Favorite__star"
+          onClick={() => { this._removeFavorite(props.favorite); }}
+          className="FileCard__star"
         />
-        <div className="Favorite__header-section">
-          <h6 className="Favorite__card-header">
-            <TextTruncate
-                className="Favorite__card-header"
-                line={1}
-                truncateText="…"
-                text={filename}
+        <h6 className="FileCard__header">
+          <TextTruncate
+            className="FileCard__header"
+            line={1}
+            truncateText="…"
+            text={filename}
+          />
+        </h6>
+
+        <p className="FileCard__path">{path}</p>
+
+
+        { !state.editMode && (props.favorite.description.length > 0)
+          && (
+          <p className="FileCard__description">
+            {props.favorite.description}
+            <button
+              onClick={() => this._editDescription(true)}
+              className="FileCard__edit-button"
             />
-          </h6>
-        </div>
-
-        <div className="Favorite__path-section">
-          <p className="Favorite__path">{path}</p>
-        </div>
-
-        <div className="Favorite__description-section">
-
-          { !this.state.editMode && (this.props.favorite.description.length > 0) &&
-
-          <p className="Favorite__description">{this.props.favorite.description} <button
-                                                                                   onClick={() => this._editDescription(true)}
-                                                                                   className="Favorite__edit-button" />
           </p>
-	            }
+          )
+        }
 
-          { !this.state.editMode && (this.props.favorite.description.length < 1) &&
-
+        { (!state.editMode && (props.favorite.description.length < 1))
+          && (
           <p
             onDoubleClick={() => this._handleClickDescription()}
-            className="Favorite__description-filler">
-            Enter a short description <button
-                                        onClick={() => this._editDescription(true)}
-                                        className="Favorite__edit-button" />
+            className="FileCard__description-filler"
+          >
+            Enter a short description
+            <button
+              onClick={() => this._editDescription(true)}
+              className="FileCard__edit-button"
+            />
           </p>
-	            }
+          )
+        }
 
-          {
-	              this.state.editMode &&
-                <div className="Favorite__edit flex justify--space-between">
-  	              <textarea
-                    maxLength="140"
-                    className="Favorite__description-editor"
-                    onKeyUp={evt => this._updateDescription(evt, this.props.favorite)}
-                    placeholder={this.props.favorite.description}>
-                    {this.props.favorite.description}
-  	              </textarea>
+        { state.editMode
+            && (
+            <div className="flex justify--space-between">
+              <textarea
+                maxLength="140"
+                className="FileCard__description-editor"
+                onKeyUp={evt => this._updateDescription(evt, props.favorite)}
+                placeholder={props.favorite.description}
+              >
+                {props.favorite.description}
+              </textarea>
 
-                  <div className="flex justify--space-around align-items--center">
-                    <button
-                      onClick={() => this._editDescription(false)}
-                      className="Btn Btn--round Btn--close" />
-                    <button
-                      onClick={(evt) => { this._updateDescription(evt, this.props.favorite); }}
-                      className="Btn Btn--round Btn--check" />
-                  </div>
-                </div>
-	            }
+              <div className="flex flex--column-reverse justify--space-around align-items--center">
+                <button
+                  onClick={() => this._editDescription(false)}
+                  className="Btn Btn--round Btn--medium Btn__close"
+                />
+                <button
+                  onClick={(evt) => { this._updateDescription(evt, props.favorite); }}
+                  className="Btn Btn--round Btn--medium Btn__check"
+                />
+              </div>
+            </div>
+            )
+	        }
 
-          <div className={(this.props.favorite.index !== undefined) ? 'Favorite__mask hidden' : 'Favorite__mask'} />
-
-        </div>
+        <div className={favoriteMaskCSS} />
 
       </div>))
     );

@@ -9,14 +9,8 @@
   @include flex(space-between, row);
 }
 
-.CreateBranch__navGroup {
+.CreateBranch__buttons {
   @include flex(flex-end, row);
-}
-
-.CreateBranch_navItem{
-  width: 100px;
-  align-content: center;
-  text-align: center;
 }
 
 .CreateBranch__name {

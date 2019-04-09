@@ -1,10 +1,9 @@
 // vendor
-import React, { Component } from 'react';
+import React from 'react';
+// assets
+import './Loader.scss';
 
-export default class Loader extends Component {
-  render() {
-    return (
-      <div className="Loader" />
-    );
-  }
-}
+const Loader = () => <div className="Loader" />;
+
+
+export default Loader;

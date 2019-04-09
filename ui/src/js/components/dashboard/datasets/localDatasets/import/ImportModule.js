@@ -2,23 +2,23 @@
 import React, { Component, Fragment } from 'react';
 import classNames from 'classnames';
 import uuidv4 from 'uuid/v4';
-// components
-import ToolTip from 'Components/common/ToolTip';
-import Modal from 'Components/common/Modal';
+// utils
 import JobStatus from 'JS/utils/JobStatus';
 import ChunkUploader from 'JS/utils/ChunkUploader';
-import { setUploadMessageRemove } from 'JS/redux/reducers/footer';
+// config
+import config from 'JS/config';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // store
 import store from 'JS/redux/store';
-// assets
-import './ImportModule.scss';
+import { setUploadMessageRemove } from 'JS/redux/reducers/footer';
 // mutations
 import ImportRemoteDatasetMutation from 'Mutations/ImportRemoteDatasetMutation';
-// config
-import config from 'JS/config';
-
+// components
+import Tooltip from 'Components/common/Tooltip';
+import Modal from 'Components/common/Modal';
+// assets
+import './ImportModule.scss';
 
 let counter = 0;
 const dropZoneId = uuidv4();
@@ -128,6 +128,7 @@ export default class ImportModule extends Component {
     window.addEventListener('dragleave', this._dragleave);
     window.addEventListener('dragenter', this._dragenter);
   }
+
   /**
   *  @param {object}
   *  detects when a file has been dropped
@@ -171,6 +172,7 @@ export default class ImportModule extends Component {
       evt.dataTransfer.dropEffect = 'none';
     }
   }
+
   /**
   *  @param {object}
   *  detects when file leaves dropzone
@@ -208,6 +210,7 @@ export default class ImportModule extends Component {
       evt.dataTransfer.dropEffect = 'none';
     }
   }
+
   /**
   *  @param {}
   *  shows import screen
@@ -244,7 +247,7 @@ export default class ImportModule extends Component {
     store.dispatch({
       type: 'UPLOAD_MESSAGE_SETTER',
       payload: {
-        uploadMessage: 'Prepparing Import ...',
+        uploadMessage: 'Preparing Import ...',
         totalBytes: this.state.files[0].file.size / 1000,
         percentage: 0,
         id: '',
@@ -318,15 +321,15 @@ export default class ImportModule extends Component {
     *  preventDefault on dragOver event
     */
     _getBlob = (dataTransfer) => {
-      let chunkSize = 1024;
+      const chunkSize = 1024;
       let offset = 0;
-      let fileReader = new FileReader();
+      const fileReader = new FileReader();
       let file;
       function seek() {
         if (offset >= file.size) {
           return;
         }
-        var slice = file.slice(offset, offset + chunkSize);
+        const slice = file.slice(offset, offset + chunkSize);
         fileReader.readAsArrayBuffer(slice);
       }
       const self = this;
@@ -340,7 +343,7 @@ export default class ImportModule extends Component {
           }, 5000);
         } else {
           this.setState({ error: false });
-          let self = this;
+          const self = this;
           fileReader.onloadend = function (evt) {
             const arrayBuffer = evt.target.result;
 
@@ -356,7 +359,7 @@ export default class ImportModule extends Component {
                 },
               ],
               readyDataset: {
-                datasetName: self._getFilename(file.name),
+                name: self._getFilename(file.name),
                 owner: localStorage.getItem('username'),
                 method: 'local',
               },
@@ -364,8 +367,8 @@ export default class ImportModule extends Component {
           };
 
           fileReader.onload = function () {
-            var view = new Uint8Array(fileReader.result);
-            for (var i = 0; i < view.length; ++i) {
+            const view = new Uint8Array(fileReader.result);
+            for (let i = 0; i < view.length; ++i) {
               if (view[i] === 10 || view[i] === 13) {
                 return;
               }
@@ -443,6 +446,7 @@ export default class ImportModule extends Component {
       });
     }
   }
+
   /**
   *  @param {Object} evt
   *  imports dataset from remote url, builds the image, and redirects to imported dataset
@@ -450,10 +454,16 @@ export default class ImportModule extends Component {
   */
   importDataset = (evt) => {
     if (!this.state.files[0]) {
-      const id = uuidv4(),
-        datasetName = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 1],
-        owner = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 2],
-        remote = `https://repo.${config.domain}/${owner}/${datasetName}.git`;
+      const id = uuidv4();
+
+
+      const datasetName = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 1];
+
+
+      const owner = this.state.remoteURL.split('/')[this.state.remoteURL.split('/').length - 2];
+
+
+      const remote = `https://repo.${config.domain}/${owner}/${datasetName}.git`;
       const self = this;
 
       UserIdentity.getUserIdentity().then((response) => {
@@ -499,7 +509,6 @@ export default class ImportModule extends Component {
     const self = this;
 
     ImportRemoteDatasetMutation(owner, datasetName, remote, (response, error) => {
-
       this._clearState();
       if (error) {
         console.error(error);
@@ -555,9 +564,9 @@ export default class ImportModule extends Component {
   */
 
   _getFilename(filename) {
-    let fileArray = filename.split('-');
+    const fileArray = filename.split('-');
     fileArray.pop();
-    let newFilename = fileArray.join('-');
+    const newFilename = fileArray.join('-');
     return newFilename;
   }
 
@@ -567,117 +576,127 @@ export default class ImportModule extends Component {
       hidden: !this.state.isImporting,
     });
 
-    return (<Fragment>
-
+    return (
       <div
         className="ImportModule Card Card--line-50 Card--text-center Card--add Card--import column-4-span-3"
-        key="AddDatasetCollaboratorPayload">
+        key="AddDatasetCollaboratorPayload"
+      >
         <ImportMain self={this} />
         <div className={loadingMaskCSS} />
-      </div>
-
-    </Fragment>);
+      </div>);
   }
 }
 
 const ImportMain = ({ self }) => {
+  let owner = '';
+
+
+  let datasetName = '';
   const importCSS = classNames({
     'btn--import': true,
     'btn--expand': self.state.importTransition,
     'btn--collapse': !self.state.importTransition && self.state.importTransition !== null,
   });
 
-  return (<div className="Import__dataset-main">
-    {
-      self.state.showImportModal &&
+  if (self.state.readyDataset) {
+    owner = self.state.readyDataset.owner;
+    datasetName = self.state.readyDataset.datasetName;
+  }
+
+  return (
+    <div className="Import__dataset-main">
+      {
+      self.state.showImportModal
+      && (
       <Modal
         header="Import Dataset"
         handleClose={() => self._closeImportModal()}
         size="large"
-        renderContent={() =>
-          (<Fragment>
-            <div className="ImportModal">
-              <p>Import a dataset by either pasting a URL or drag & dropping below</p>
-              <input
-                className="Import__input"
-                type="text"
-                placeholder="Paste Dataset URL"
-                onChange={evt => self._updateRemoteUrl(evt)}
-                defaultValue={self.state.remoteUrl}
-              />
+        renderContent={() => (
+          <div className="ImportModal">
+            <p>Import a dataset by either pasting a URL or drag & dropping below</p>
+            <input
+              className="Import__input"
+              type="text"
+              placeholder="Paste Dataset URL"
+              onChange={evt => self._updateRemoteUrl(evt)}
+              defaultValue={self.state.remoteUrl}
+            />
 
-              <div
-                id="dropZone"
-                className="ImportDropzone"
-                ref={div => self.dropZone = div}
-                type="file"
-                onDragEnd={evt => self._dragendHandler(evt)}
-                onDrop={evt => self._dropHandler(evt)}
-                onDragOver={evt => self._dragoverHandler(evt)}
-              >
-                {
-                  self.state.readyDataset && self.state.files[0] ?
-                  <div className="Import__ReadyDataset">
-                    <div>Select Import to import the following dataset</div>
-                    <hr/>
-                    <div>Dataset Owner: {self.state.readyDataset.owner}</div>
-                    <div>Dataset Name: {self.state.readyDataset.datasetName}</div>
-                  </div> :
-                  <div className= "DropZone">
-                     <p>Drag and drop an exported Dataset here</p>
-                  </div>
+            <div
+              id="dropZone"
+              className="ImportDropzone"
+              ref={ref => self.dropZone = ref}
+              type="file"
+              onDragEnd={evt => self._dragendHandler(evt)}
+              onDrop={evt => self._dropHandler(evt)}
+              onDragOver={evt => self._dragoverHandler(evt)}
+            >
+              {
+                  self.state.readyDataset && self.state.files[0]
+                    ? (
+                      <div className="Import__ReadyDataset">
+                        <div>Select Import to import the following dataset</div>
+                        <hr />
+                        <div>{`Dataset Owner: ${owner}`}</div>
+                        <div>{`Dataset Name: ${datasetName}`}</div>
+                      </div>
+                    )
+                    : (
+                      <div className="DropZone">
+                        <p>Drag and drop an exported Dataset here</p>
+                      </div>
+                    )
                 }
-              </div>
-              <div className="Import__buttonContainer">
-                <button
-                  onClick={() => self._closeImportModal()}
-                  className="Btn--flat"
-                >
-                Cancel
-                </button>
-                <button
-                  onClick={() => { self.importDataset(); }}
-                  disabled={!self.state.readyDataset || self.state.isImporting}
-                >
-                  Import
-                </button>
-              </div>
             </div>
-            </Fragment>)
+            <div className="Import__buttonContainer">
+              <button
+                onClick={() => self._closeImportModal()}
+                className="Btn--flat"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { self.importDataset(); }}
+                className="Btn--last"
+                disabled={!self.state.readyDataset || self.state.isImporting}
+              >
+                  Import
+              </button>
+            </div>
+          </div>
+        )
         }
       />
+      )
     }
 
-    <div className="Import__dataset-header">
-      <div className="Import__dataset-icon">
-        <div className="Import__dataset-add-icon" />
-      </div>
-      <div className="Import__dataset-title">
-        <h4>Add Dataset</h4>
+      <div className="Import__dataset-header">
+        <div className="Import__dataset-icon">
+          <div className="Import__dataset-add-icon" />
+        </div>
+        <div className="Import__dataset-title">
+          <h2>Add Dataset</h2>
+        </div>
+
       </div>
 
-    </div>
-
-    <div
-      className="btn--import"
-      onClick={(evt) => {
-        self._showModal(evt);
-      }}
-    >
+      <div
+        className="btn--import"
+        onClick={(evt) => { self._showModal(evt); }}
+      >
       Create New
-    </div>
+      </div>
 
-    <div
-      className="btn--import"
-      onClick={(evt) => {
-        self.setState({ showImportModal: true });
-      }}
-    >
+      <div
+        className="btn--import"
+        onClick={(evt) => { self.setState({ showImportModal: true }); }}
+      >
       Import Existing
+      </div>
+
+      <Tooltip section="createLabbook" />
+
     </div>
-
-    <ToolTip section="createLabbook" />
-
-
-  </div>);
+  );
 };

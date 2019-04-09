@@ -1,11 +1,15 @@
 @import '~Styles/_imports.scss';
 
 .Modal__content{
-  @include flex(flex-start, column);
-  padding: 0 40px;
   z-index: index($elements, modal);
+
   overflow: hidden;
+
+  padding: 0 40px;
+
   transition: all 0.25s;
+
+  @include flex(flex-start, column);
 }
 
 .Modal__wrapper {
@@ -13,77 +17,59 @@
 }
 
 .Modal__container{
-  padding: 20px;
   height: calc(100% - 70px);
+  padding: 20px;
   hr{
-    background-color: #007ea8 !important;
-    border-color: #007ea8 !important;
-    border-width: 1px;
-    opacity: 0.3 !important;
     width: calc(100% - 2px) !important !important;
     margin-top: 10px;
     margin-bottom: 10px;
-  }
-}
 
-.Modal__content.create .Modal__container{
-  .Modal__header{
-    background: url('~Images/icons/create-azure.svg') no-repeat 207px 45px;
-    background-size: 50px;
-  }
-}
-
-.Modal__content.user .Modal__container{
-  .Modal__header{
-    background: url('~Images/icons/user-azure.svg') no-repeat 160px 34px;
-    background-size: 50px;
-  }
-}
-
-.Modal__content.add .Modal__container{
-  .Modal__header{
-    background: url('~Images/icons/add.svg') no-repeat 160px 34px;
-    background-size: 50px;
-  }
-}
-
-.Modal__content.rollback .Modal__container{
-  .Modal__header{
-    background: url('~Images/icons/rollback.svg') no-repeat 160px 34px;
-    background-size: 50px;
-  }
-}
-
-.Modal__content.project .Modal__container{
-  .Modal__header{
-    background: url('~Images/icons/labbooks-blue.svg') no-repeat 274px 40px;
-    background-size: 42px;
+    opacity: 0.3 !important;
+    border-width: 1px;
+    border-color: #007ea8 !important;
+    background-color: #007ea8 !important;
   }
 }
 
 .Modal__sub-container{
-  padding: 0 20px;
   height: calc(100% - 60px);
+  padding: 0 20px;
+
   @include flex(flex-start, column);
   button{
     align-self: center;
   }
   &--nopadding{
-    padding: 0;
     margin-top: -11px;
+    padding: 0;
   }
 }
 
 .Modal__content.large{
   padding: 0 60px 20px 60px;
+
   @include modal(500px, 960px);
 }
 
 .Modal__content.large-long{
   padding: 0 60px 20px 60px;
-  @include modal(700px, 960px);
-  .SelectBase__images {
-    max-height: 429px !important;
+  position: fixed;
+  left: 50%;
+  top: 15px;
+  bottom: 15px;
+  z-index: 16;
+  width: 960px;
+  max-height: 1000px;
+  margin: 0 0 0 -480px;
+  border: 1px solid #fefefe;
+  border-radius: 8px;
+  background-color: #fefefe;
+  box-shadow: 0 0px 12px 0 rgba(0, 0, 0, 0.1);
+
+  @include animation('slide-up-fade-in forwards .25s');
+
+  .Modal__container {
+    height: 100%;
   }
 }
 
@@ -92,33 +78,26 @@
 }
 
 .Modal__content.small{
-  p{
+  padding: 0;
+
+  @include modal(200px, 300px);
+  p {
     line-height: 20px;
   }
-  padding: 0;
-  @include modal(200px, 300px);
-}
-
-
-.Modal__header{
-  background-size: 50px;
-  font-weight: 600;
-  padding: 40px 0 5px 20px;
-  color: $azure;
-  text-align: center;
-  margin: 0;
 }
 
 .Modal__cover{
   position: fixed;
-  top: 0px;
-  bottom: 0px;
-  right: 0px;
-  left: 0px;
-  background-color: $slateBlueOpaque;
-  animation: fade-in-modal forwards .25s;
-  opacity: 0.5;
   z-index: index($elements, modalCover);
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+
+  opacity: 0.5;
+  background-color: $slateBlueOpaque;
+
+  @include animation('fade-in-modal forwards .25s');
 }
 
 .Modal__close{
@@ -127,8 +106,98 @@
 
 .Modal__pre-header{
   margin: 0;
-  color: #007ea8;
-  text-align: center;
   margin-top: -10px;
   margin-bottom: -40px;
+
+  text-align: center;
+
+  color: #007ea8;
+}
+
+// modal header
+
+.Modal__header{
+  margin: 0;
+  padding: 40px 0 5px 20px;
+
+  text-align: center;
+
+  color: $azure;
+  background-size: 50px;
+
+  font-weight: 600;
+
+  @include flex(center, row);
+}
+
+
+.Icon {
+  height: 50px;
+  width: 50px;
+
+  margin: 0 1rem 0 0;
+
+  &--create {
+    background: url('~Images/icons/create-azure.svg') no-repeat center center;
+    background-size: 50px;
+  }
+
+  &--user {
+    background: url('~Images/icons/user-azure.svg') no-repeat center center;
+    background-size: 50px;
+  }
+
+  &--add {
+    background: $azure url('~Images/icons/add-white.svg') no-repeat center center;
+    background-size: 34px;
+
+    border-radius: 50px;
+  }
+
+  &--rollback {
+    background: url('~Images/icons/rollback.svg') no-repeat center center;
+    background-size: 50px;
+  }
+
+  &--project {
+    background: url('~Images/icons/labbooks-blue.svg') no-repeat center center;
+    background-size: 42px;
+  }
+
+  &--dataset {
+    background: url('~Images/icons/datasets-azure.svg') no-repeat center center;
+    background-size: 42px;
+  }
+
+
+  &--public {
+    background: url('~Images/icons/earth-azure.svg') no-repeat center center;
+    background-size: 42px;
+  }
+
+  &--private {
+    background: url('~Images/icons/lock-azure.svg') no-repeat center center;
+    background-size: 42px;
+  }
+
+  &--sync {
+    background: url('~Images/icons/branches/sync.svg') no-repeat center center;
+    background-size: 42px;
+  }
+
+  &--login {
+
+  }
+
+  &--merge {
+    background: url('~Images/icons/branches/merge.svg') no-repeat center center;
+    background-size: 42px;
+  }
+
+  &--delete {
+    background: url('~Images/icons/branches/delete.svg') no-repeat center center;
+    background-size: 60px;
+  }
+
+
 }

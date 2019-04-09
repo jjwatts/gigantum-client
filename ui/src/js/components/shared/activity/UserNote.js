@@ -143,8 +143,9 @@ export default class UserNote extends Component {
        <div className="UserNote flex flex--column">
 
          <div
-          className="UserNote__close close"
-          onClick={() => this.props.toggleUserNote(false) }></div>
+           className="UserNote__close close"
+           onClick={() => this.props.toggleUserNote(false)}
+         />
 
          <input
            type="text"
@@ -168,10 +169,11 @@ export default class UserNote extends Component {
          />
 
          <button
-          type="submit"
+           type="submit"
            className="UserNote__add-note"
            disabled={state.addNoteDisabled}
-           onClick={() => { this._addNote(); }}>
+           onClick={() => { this._addNote(); }}
+         >
            Add Note
          </button>
        </div>

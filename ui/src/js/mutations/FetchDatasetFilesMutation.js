@@ -24,7 +24,7 @@ mutation FetchDatasetFilesMutation($input: FetchDatasetEdgeInput!){
 }
 `;
 
-let tempID = 0;
+const tempID = 0;
 
 
 export default function FetchDatasetFilesMutation(

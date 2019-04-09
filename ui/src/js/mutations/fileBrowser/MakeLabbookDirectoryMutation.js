@@ -124,8 +124,6 @@ export default function MakeLabbookDirectoryMutation(
         node.setValue(100, 'size');
 
         sharedUpdater(store, labbookId, connectionKey, node);
-
-
       },
       updater: (store, response) => {
         // const id = `client:newCodeFile:${tempID++}`;

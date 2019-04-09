@@ -18,7 +18,7 @@ import {
 // config
 import config from 'JS/config';
 // components
-import ToolTip from 'Components/common/ToolTip';
+import Tooltip from 'Components/common/Tooltip';
 // assets
 import './SidePanel.scss';
 
@@ -26,6 +26,7 @@ class SidePanel extends Component {
   state = {
     isPanelOpen: false,
   }
+
   /**
     @param {} -
     updates panelState
@@ -38,28 +39,35 @@ class SidePanel extends Component {
   }
 
   render() {
-    const { props, state } = this,
-           isPushedDownTwice = (window.location.hostname === config.demoHostName) && props.isDeprecated,
-           isPushedDownOnce = ((window.location.hostname === config.demoHostName) || props.isDeprecated) && !isPushedDownTwice,
-           sidePanelCSS = classNames({
-             SidePanel: true,
-             'SidePanel--sticky': props.isSticky && !props.isDeprecated,
-             'SidePanel--is-deprecated': isPushedDownOnce && !props.isSticky,
-             'SidePanel--is-deprecated-demo': isPushedDownTwice && !props.isSticky,
-             'SidePanel--is-deprecated-demo-sticky': isPushedDownTwice && props.isSticky,
-             'SidePanel--is-deprecated-sticky': isPushedDownOnce && props.isSticky,
-           });
+    const { props, state } = this;
+
+
+    const isPushedDownTwice = (window.location.hostname === config.demoHostName) && props.isDeprecated;
+
+
+    const isPushedDownOnce = ((window.location.hostname === config.demoHostName) || props.isDeprecated) && !isPushedDownTwice;
+
+
+    const sidePanelCSS = classNames({
+      SidePanel: true,
+      'SidePanel--sticky': props.isSticky && !props.isDeprecated,
+      'SidePanel--is-deprecated': isPushedDownOnce && !props.isSticky,
+      'SidePanel--is-deprecated-demo': isPushedDownTwice && !props.isSticky,
+      'SidePanel--is-deprecated-demo-sticky': isPushedDownTwice && props.isSticky,
+      'SidePanel--is-deprecated-sticky': isPushedDownOnce && props.isSticky,
+    });
     return (
       ReactDom.createPortal(
         <div className={sidePanelCSS}>
-            <div className="SidePanel__header">
-              <div
+          <div className="SidePanel__header">
+            <div
               onClick={() => props.toggleSidePanel(false)}
-              className="SidePanel__btn SidePanel__btn--close" />
-            </div>
-            <div className="SidePanel__body">
-              { props.renderContent() }
-            </div>
+              className="SidePanel__btn SidePanel__btn--close"
+            />
+          </div>
+          <div className="SidePanel__body">
+            { props.renderContent() }
+          </div>
         </div>, document.getElementById('side_panel'),
       )
     );

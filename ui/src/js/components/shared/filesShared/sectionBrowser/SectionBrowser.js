@@ -35,13 +35,14 @@ class SectionBrowser extends Component {
   */
   componentDidMount() {
     this.props.loadStatus(this.state.moreLoading);
-    if (this.props[this.props.section].allFiles &&
-      this.props[this.props.section].allFiles.pageInfo.hasNextPage) {
+    if (this.props[this.props.section].allFiles
+      && this.props[this.props.section].allFiles.pageInfo.hasNextPage) {
       this._loadMore(); // routes query only loads 2, call loadMore
     } else {
       this.setState({ moreLoading: false });
     }
   }
+
   /*
     @param {}
     triggers relay pagination function loadMore
@@ -58,8 +59,8 @@ class SectionBrowser extends Component {
           console.error(error);
         }
 
-        if (self.props[this.props.section].allFiles &&
-         self.props[this.props.section].allFiles.pageInfo.hasNextPage) {
+        if (self.props[this.props.section].allFiles
+         && self.props[this.props.section].allFiles.pageInfo.hasNextPage) {
           self._loadMore();
         } else {
           this.setState({ moreLoading: false });
@@ -67,6 +68,7 @@ class SectionBrowser extends Component {
       },
     );
   }
+
   /*
     @param
     sets root folder by key
@@ -88,7 +90,7 @@ class SectionBrowser extends Component {
       }
       return (
         <FileBrowser
-          ref={inst => inst }
+          ref={inst => inst}
           // ref={`${this.props.section}Browser`}
           section={this.props.section}
           selectedFiles={this.props.selectedFiles}

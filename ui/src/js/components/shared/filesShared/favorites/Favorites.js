@@ -10,21 +10,6 @@ export default class Favorites extends Component {
       loading: false,
     };
   }
-  /*
-    update component when props are reloaded
-  */
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps[this.props.section] && nextProps[this.props.section].favorites && nextProps[this.props.section].favorites.pageInfo.hasNextPage && nextProps[this.props.section].favorites.edges.length < 3) {
-      this.props.relay.loadMore(
-        1, // Fetch the next 1 feed items
-        (response, error) => {
-          if (error) {
-            console.error(error);
-          }
-        },
-      );
-    }
-  }
 
   /**
     handle state and addd listeners when component mounts
@@ -68,20 +53,23 @@ export default class Favorites extends Component {
 
 
   render() {
-    if (this.props[this.props.section] && this.props[this.props.section].favorites) {
-      const capitalSection = this.props.section[0].toUpperCase() + this.props.section.slice(1);
-      if (this.props[this.props.section].favorites.edges.length > 0) {
-        const favorites = this.props[this.props.section].favorites.edges.filter(edge => edge && (edge.node !== undefined));
+    const { props, state } = this;
+
+    if (props[props.section] && props[props.section].favorites) {
+      const capitalSection = props.section[0].toUpperCase() + props.section.slice(1);
+
+      if (props[props.section].favorites.edges.length > 0) {
+        const favorites = props[props.section].favorites.edges.filter(edge => edge && (edge.node !== undefined));
 
         return (
 
           <div className="Favorite">
             <FavoritesList
-              labbookName={this.props.labbookName}
-              sectionId={this.props.sectionId}
-              section={this.props.section}
+              labbookName={props.labbookName}
+              sectionId={props.sectionId}
+              section={props.section}
               favorites={favorites}
-              owner={this.props.owner}
+              owner={props.owner}
             />
           </div>
 
@@ -89,9 +77,9 @@ export default class Favorites extends Component {
       }
       return (
         <div className="Favorite__none flex flex--column justify--center">
-          <div className="Favorite__icon--star"></div>
-          <p className="Favorite__p"><b>No {capitalSection} Favorites</b></p>
-          <p className="Favorite__p">Add a favorite and enter a description to highlight important items.</p>
+          <div className="FavoriteCard__star" />
+          <p><b>{`No ${capitalSection} Favorites`}</b></p>
+          <p>Add a favorite and enter a description to highlight important items.</p>
         </div>
       );
     }

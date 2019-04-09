@@ -6,51 +6,11 @@
   margin: 15px 0 0 0;
 }
 
-.Navigation__ul {
-  white-space: nowrap;
-  min-width: 760px;
-  border-bottom: 1px solid $grey;
-}
-
-.Navigation__list-item {
-  width: 137px;
-
-  text-align: center;
-
-  a {
-    display: inline-block;
-
-    margin: 0;
-    padding: .5rem 10px;
-
-    text-decoration: none !important;
-
-    color: $jet;
-    border-bottom: 2px solid $azure;
-  }
-
-  a:hover {
-    background: $azure;
-    color: $white;
-  }
-
-  &--selected a {
-    position: relative;
-    z-index: index($elements, button);
-    color: $white;
-    background: $azure;
-
-    &:hover {
-      color: $white;
-    }
-  }
-}
-
 @media screen and (max-width: 1000px) and (min-width: 0px) {
-  .Navigation__ul {
+  .Navigation .Tabs{
     width: calc(100% - 20px);
   }
-  .Navigation__list-item {
-    width: 120px;
+  .Tab {
+    margin: 0 12.5px;
   }
 }

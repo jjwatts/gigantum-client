@@ -1,0 +1,110 @@
+@import '~Styles/_imports.scss';
+
+.BaseCard {
+
+  display: flex;
+  flex-direction: flex-start;
+  justify-content: center;
+
+  min-width: calc(50% - 10px);
+  margin: 10px 0;
+
+  cursor: pointer;
+  &--expanded {
+    height: auto !important;
+    padding-bottom: 20px;
+  }
+
+  &--selected {
+    border: 2px solid $azure;
+  }
+
+  &:hover {
+    background-color: $lightGrey;
+  }
+}
+
+.BaseCard__icon {
+  width: 70px;
+  padding: 10px;
+  align-self: flex-start;
+}
+
+.BaseCard__moreDetails {
+  padding: 1em;
+  flex: 1;
+  align-content: flex-start;
+
+  @include flex(flex-start, column);
+  p {
+    align-self: flex-start;
+    max-width: 375px;
+  }
+  ul {
+    margin: 0;
+  }
+}
+
+.BaseCard-actions {
+  position:absolute;
+  right: 10px;
+  bottom: 10px;
+  @include flex(center, row);
+  width: 25px;
+  height:25px;
+  background: url('~Images/icons/down-arrow-silver.svg') no-repeat right center;
+  background-size: 25px;
+  .Btn--flat{
+    padding: 0px 20px 0 0px;
+  }
+  &--expanded{
+    background: url('~Images/icons/up-arrow-silver.svg') no-repeat right center;
+    background-size: 25px;
+  }
+}
+
+.BaseCard__details{
+  padding: 0px 10px 10px;
+  color: $slateBlue;
+  @include flex(flex-start, column);
+
+  p {
+    margin: 0px
+  }
+}
+.BaseCard__type{
+  font-size: 12px !important;
+}
+.BaseCard__name{
+  color: $jet;
+  font-weight: 1000;
+}
+
+
+.BaseCard__description {
+  align-self: center;
+}
+
+.BaseCard-info {
+  @include flex(flex-start, row)
+}
+
+.BaseCard-languages {
+  width: calc(50% - 10px);
+  padding: 0 10px 0 0;
+}
+.BaseCard-tools {
+  width: calc(50% - 10px);
+  padding: 0 10px 0 0;
+}
+
+.BaseDetails__table {
+  td {
+    padding: 5px;
+  }
+}
+
+.BaseCard__readme {
+
+  @include flex(flex-end, column)
+}

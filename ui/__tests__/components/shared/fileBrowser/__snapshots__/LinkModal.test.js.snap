@@ -10,7 +10,7 @@ exports[`Test LinkModal 1`] = `
     onClick={[Function]}
   />
   <div
-    className="Modal__content large-long"
+    className="Modal__content large-long dataset"
     style={
       Object {
         "overflow": "hidden",
@@ -24,11 +24,14 @@ exports[`Test LinkModal 1`] = `
     <div
       className="Modal__container"
     >
-      <h4
+      <h1
         className="Modal__header"
       >
+        <div
+          className="Icon Icon--dataset"
+        />
         Link Dataset
-      </h4>
+      </h1>
       <hr />
       <div
         className="Modal__sub-container Modal__sub-container--nopadding"

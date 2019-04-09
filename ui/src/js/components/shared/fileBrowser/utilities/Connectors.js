@@ -1,13 +1,13 @@
 import React from 'react';
 import { DragSource } from 'react-dnd';
 import uuidv4 from 'uuid/v4';
-import FileBrowserMutations from './FileBrowserMutations';
-// utilities
-import CreateFiles from './../utilities/CreateFiles';
 // store
 import store from 'JS/redux/store';
 // config
 import config from 'JS/config';
+// utilities
+import FileBrowserMutations from './FileBrowserMutations';
+import CreateFiles from './CreateFiles';
 
 
 /**
@@ -17,7 +17,6 @@ import config from 'JS/config';
 * @return {number} totalFiles
 */
 const checkFileSize = (files, promptType) => {
-
   const tenMB = 10 * 1000 * 1000;
   const oneHundredMB = 100 * 1000 * 1000;
   const fiveHundredMB = oneHundredMB * 5;
@@ -46,14 +45,13 @@ const checkFileSize = (files, promptType) => {
             fileSizePrompt.push(file);
           }
         } else if ((promptType === 'output') || (promptType === 'input')) {
-              if (file.size > fiveHundredMB) {
-                fileSizeNotAllowed.push(file);
-              }
+          if (file.size > fiveHundredMB) {
+            fileSizeNotAllowed.push(file);
+          }
 
-              if ((file.size > oneHundredMB) && (file.size < fiveHundredMB)) {
-                fileSizePrompt.push(file);
-              }
-
+          if ((file.size > oneHundredMB) && (file.size < fiveHundredMB)) {
+            fileSizePrompt.push(file);
+          }
         } else if (file.size > fiveGigs) {
           fileSizeNotAllowed.push(file);
         }
@@ -66,21 +64,21 @@ const checkFileSize = (files, promptType) => {
 
 const dragSource = {
 
- canDrag(props) {
-   // You can disallow drag based on props
-   return true;
- },
+  canDrag(props) {
+    // You can disallow drag based on props
+    return true;
+  },
 
- isDragging(props, monitor) {
+  isDragging(props, monitor) {
     return monitor.getItem().key === props.key;
- },
+  },
 
- beginDrag(props, monitor) {
-  return {
-    isDragging: true,
-    fileData: props.fileData,
-  };
- },
+  beginDrag(props, monitor) {
+    return {
+      isDragging: true,
+      fileData: props.fileData,
+    };
+  },
 
   endDrag(props, monitor, component) {
     if (!monitor.didDrop()) {
@@ -90,33 +88,33 @@ const dragSource = {
     const item = monitor.getItem();
     const dropResult = monitor.getDropResult();
 
-    let fileNameParts = props.fileData.edge.node.key.split('/');
+    const fileNameParts = props.fileData.edge.node.key.split('/');
 
-    let fileName = fileNameParts[fileNameParts.length - 1];
+    const fileName = fileNameParts[fileNameParts.length - 1];
 
     if (dropResult.fileData) {
-      let pathArray = dropResult.fileData.edge.node.key.split('/');
+      const pathArray = dropResult.fileData.edge.node.key.split('/');
       // remove filename or empty string
       pathArray.pop();
-      let path = pathArray.join('/');
+      const path = pathArray.join('/');
 
-      let newKey = path ? `${path}/${fileName}` : `${fileName}`;
+      const newKey = path ? `${path}/${fileName}` : `${fileName}`;
 
-      let newKeyArray = dropResult.fileData.edge.node.key.split('/');
-      let fileKeyArray = props.fileData.edge.node.key.split('/');
+      const newKeyArray = dropResult.fileData.edge.node.key.split('/');
+      const fileKeyArray = props.fileData.edge.node.key.split('/');
 
       newKeyArray.pop();
       fileKeyArray.pop();
 
       let newKeyPath = newKeyArray.join('/');
-      let fileKeyPath = fileKeyArray.join('/');
+      const fileKeyPath = fileKeyArray.join('/');
       newKeyPath = newKeyPath.replace(/\/\/\/g/, '/');
       const trimmedFilePath = (fileKeyPath + (fileName.length ? `/${fileName}` : '')).split('/').slice(0, -1).join('/');
 
       if ((newKeyPath !== fileKeyPath) && (trimmedFilePath !== newKeyPath)) {
         if (newKey !== props.fileData.edge.node.key) {
-          let removeIds = [props.fileData.edge.node.id];
-          let currentHead = props.fileData;
+          const removeIds = [props.fileData.edge.node.id];
+          const currentHead = props.fileData;
           // check if folder has children and push id into array to removed by optomistic updater
           const searchChildren = (parent) => {
             if (parent.children) {
@@ -185,190 +183,196 @@ function dragCollect(connect, monitor) {
 const uploadDirContent = (dndItem, props, mutationData, fileSizeData) => {
   let path;
   dndItem.dirContent.then((fileList) => {
-      if (fileList.length) {
-        let key = props.fileData ? props.fileData.edge.node.key : props.fileKey ? props.fileKey : '';
-        path = key === '' ? '' : key.substr(0, key.lastIndexOf('/') || key.length);
+    if (fileList.length) {
+      const key = props.fileData ? props.fileData.edge.node.key : props.fileKey ? props.fileKey : '';
+      path = key === '' ? '' : key.substr(0, key.lastIndexOf('/') || key.length);
 
-        CreateFiles.createFiles(fileList.flat(), `${path}/`, mutationData, props, fileSizeData);
-      } else if (dndItem.files && dndItem.files.length) {
-           // handle dragged files
-           let key = props.newKey || props.fileKey;
-           path = key.substr(0, key.lastIndexOf('/') || key.length);
-           let item = monitor.getItem();
+      CreateFiles.createFiles(fileList.flat(), `${path}/`, mutationData, props, fileSizeData);
+    } else if (dndItem.files && dndItem.files.length) {
+      // handle dragged files
+      const key = props.newKey || props.fileKey;
+      path = key.substr(0, key.lastIndexOf('/') || key.length);
+      const item = monitor.getItem();
 
-           if (item && item.files && props.browserProps.createFiles) {
-             CreateFiles.createFiles(item.files, `${path}/`, mutationData, props, fileSizeData);
-           }
-           newPath = null;
-           fileKey = null;
+      if (item && item.files && props.browserProps.createFiles) {
+        CreateFiles.createFiles(item.files, `${path}/`, mutationData, props, fileSizeData);
       }
+      newPath = null;
+      fileKey = null;
+    }
   });
 };
 
 const targetSource = {
   canDrop(props, monitor) {
-     const { uploading } = store.getState().fileBrowser;
-     return monitor.isOver({ shallow: true }) && !uploading;
+    const { uploading } = store.getState().fileBrowser;
+    return monitor.isOver({ shallow: true }) && !uploading;
   },
   drop(props, monitor, component, comp) {
     // TODO: clean up this code, some of this logic is being duplicated. make better use of functions
     const dndItem = monitor.getItem();
     const promptType = props.section ? props.section : ((props.mutationData) && (props.mutationData.section)) ? props.mutationData.section : '';
-    let newPath,
-        fileKey,
-        path,
-        files;
+    let newPath;
+
+
+    let fileKey;
+
+
+    let path;
+
+
+    let files;
     // non root folder drop
     if (dndItem && props.fileData) {
-          if (!dndItem.dirContent) {
-              fileKey = props.fileData.edge.node.key;
+      if (!dndItem.dirContent) {
+        fileKey = props.fileData.edge.node.key;
 
-              const fileNameParts = fileKey.split('/');
-              const fileName = fileNameParts[fileNameParts.length - 1];
-              let newKey = props.newKey || props.fileKey;
-              newPath = newKey + fileName;
-              fileKey = props.fileKey;
-          } else {
-            // check if user needs to be prompted to accept some files in upload
-            let fileSizeData = checkFileSize(dndItem.files, promptType);
-            if (fileSizeData.fileSizePrompt.length === 0) {
-               uploadDirContent(dndItem, props, props.mutationData, fileSizeData);
-            } else {
-               props.codeDirUpload(dndItem, props, props.mutationData, uploadDirContent, fileSizeData);
-            }
-          }
+        const fileNameParts = fileKey.split('/');
+        const fileName = fileNameParts[fileNameParts.length - 1];
+        const newKey = props.newKey || props.fileKey;
+        newPath = newKey + fileName;
+        fileKey = props.fileKey;
       } else {
-          // root folder upload
-          const {
-            parentId,
-            connection,
-            favoriteConnection,
-            section,
-          } = props;
-          const { owner, labbookName } = store.getState().routes;
+        // check if user needs to be prompted to accept some files in upload
+        const fileSizeData = checkFileSize(dndItem.files, promptType);
+        if (fileSizeData.fileSizePrompt.length === 0) {
+          uploadDirContent(dndItem, props, props.mutationData, fileSizeData);
+        } else {
+          props.codeDirUpload(dndItem, props, props.mutationData, uploadDirContent, fileSizeData);
+        }
+      }
+    } else {
+      // root folder upload
+      const {
+        parentId,
+        connection,
+        favoriteConnection,
+        section,
+      } = props;
+      const { owner, labbookName } = store.getState().routes;
 
-          const mutationData = {
-            owner,
-            labbookName,
-            parentId,
-            connection,
-            favoriteConnection,
-            section,
+      const mutationData = {
+        owner,
+        labbookName,
+        parentId,
+        connection,
+        favoriteConnection,
+        section,
+      };
+      // uploads to root directory
+      const item = monitor.getItem();
+      // check to see if it is an upload
+      if (item.files) {
+        // check to see if user needs to be prompted for upload
+        const fileSizeData = checkFileSize(item.files, promptType);
+        if (fileSizeData.fileSizePrompt.length === 0) {
+          if (dndItem.dirContent) {
+            uploadDirContent(dndItem, props, mutationData, fileSizeData);
+          } else {
+            CreateFiles.createFiles(item.files, '', component.state.mutationData, props, fileSizeData);
+          }
+        } else if (dndItem.dirContent) {
+          component._codeDirUpload(dndItem, props, mutationData, uploadDirContent, fileSizeData);
+        } else {
+          component._codeFileUpload(item.files, props, component.state.mutationData, CreateFiles.createFiles, fileSizeData);
+        }
+      } else { // else it's a move
+        const dropResult = monitor.getDropResult();
+        const currentKey = item.fileData.edge.node.key;
+        const splitKey = currentKey.split('/');
+        const newKeyTemp = (splitKey[splitKey.length - 1] !== '') ? splitKey[splitKey.length - 1] : splitKey[splitKey.length - 2];
+        const splitFolder = dropResult && dropResult.fileData ? dropResult.fileData.edge.node.key.split('/') : [''];
+        if (splitFolder !== '') {
+          splitFolder.pop();
+        }
+
+        const dropFolderKey = splitFolder.join('/');
+
+        let newKey = item.fileData && item.fileData.edge.node.isDir ? `${dropFolderKey}/${newKeyTemp}/` : `${dropFolderKey}/${newKeyTemp}`;
+        newKey = dropResult && dropResult.fileData ? newKey : `${newKeyTemp}`;
+
+        if ((newKey !== item.fileData.edge.node.key) && ((`${newKey}/`) !== item.fileData.edge.node.key)) {
+          const removeIds = [item.fileData.edge.node.id];
+          const currentHead = item.fileData;
+
+          const searchChildren = (parent) => {
+            if (parent.children) {
+              Object.keys(parent.children).forEach((childKey) => {
+                if (parent.children[childKey].edge) {
+                  removeIds.push(parent.children[childKey].edge.node.id);
+                  searchChildren(parent.children[childKey]);
+                }
+              });
+            }
           };
-          // uploads to root directory
-          let item = monitor.getItem();
-          // check to see if it is an upload
-          if (item.files) {
-            // check to see if user needs to be prompted for upload
-            let fileSizeData = checkFileSize(item.files, promptType);
-            if (fileSizeData.fileSizePrompt.length === 0) {
-              if (dndItem.dirContent) {
-                 uploadDirContent(dndItem, props, mutationData, fileSizeData);
-              } else {
-                 CreateFiles.createFiles(item.files, '', component.state.mutationData, props, fileSizeData);
-              }
-            } else if (dndItem.dirContent) {
-                component._codeDirUpload(dndItem, props, mutationData, uploadDirContent, fileSizeData);
+
+          searchChildren(currentHead);
+
+          const moveLabbookFileData = {
+            newKey,
+            edge: item.fileData.edge,
+            removeIds,
+          };
+
+          if (props.mutations) {
+            if (props.section !== 'data') {
+              props.mutations.moveLabbookFile(moveLabbookFileData, (response) => {});
             } else {
-                component._codeFileUpload(item.files, props, component.state.mutationData, CreateFiles.createFiles, fileSizeData);
+              props.mutations.moveDatasetFile(moveLabbookFileData, (response) => {});
             }
-          } else { // else it's a move
-            const dropResult = monitor.getDropResult();
-            let currentKey = item.fileData.edge.node.key;
-            let splitKey = currentKey.split('/');
-            let newKeyTemp = (splitKey[splitKey.length - 1] !== '') ? splitKey[splitKey.length - 1] : splitKey[splitKey.length - 2];
-            let splitFolder = dropResult && dropResult.fileData ? dropResult.fileData.edge.node.key.split('/') : [''];
-            if (splitFolder !== '') {
-              splitFolder.pop();
-            }
+          } else {
+            const {
+              parentId,
+              connection,
+              favoriteConnection,
+              section,
+            } = props;
+            const { owner, labbookName } = store.getState().routes;
 
-            let dropFolderKey = splitFolder.join('/');
+            const mutationData = {
+              owner,
+              labbookName,
+              parentId,
+              connection,
+              favoriteConnection,
+              section,
+            };
 
-            let newKey = item.fileData && item.fileData.edge.node.isDir ? `${dropFolderKey}/${newKeyTemp}/` : `${dropFolderKey}/${newKeyTemp}`;
-            newKey = dropResult && dropResult.fileData ? newKey : `${newKeyTemp}`;
+            const mutations = new FileBrowserMutations(mutationData);
 
-            if ((newKey !== item.fileData.edge.node.key) && ((`${newKey}/`) !== item.fileData.edge.node.key)) {
-              let removeIds = [item.fileData.edge.node.id];
-              let currentHead = item.fileData;
-
-              const searchChildren = (parent) => {
-                if (parent.children) {
-                  Object.keys(parent.children).forEach((childKey) => {
-                    if (parent.children[childKey].edge) {
-                      removeIds.push(parent.children[childKey].edge.node.id);
-                      searchChildren(parent.children[childKey]);
-                    }
-                  });
-                }
-              };
-
-              searchChildren(currentHead);
-
-              const moveLabbookFileData = {
-                newKey,
-                edge: item.fileData.edge,
-                removeIds,
-              };
-
-              if (props.mutations) {
-                if (props.section !== 'data') {
-                  props.mutations.moveLabbookFile(moveLabbookFileData, (response) => {});
-                } else {
-                  props.mutations.moveDatasetFile(moveLabbookFileData, (response) => {});
-                }
-              } else {
-                const {
-                  parentId,
-                  connection,
-                  favoriteConnection,
-                  section,
-                } = props;
-                const { owner, labbookName } = store.getState().routes;
-
-                const mutationData = {
-                  owner,
-                  labbookName,
-                  parentId,
-                  connection,
-                  favoriteConnection,
-                  section,
-                };
-
-                const mutations = new FileBrowserMutations(mutationData);
-
-                if (props.section !== 'data') {
-                  mutations.moveLabbookFile(moveLabbookFileData, (response) => {});
-                } else {
-                  mutations.moveDatasetFile(moveLabbookFileData, (response) => {});
-                }
-              }
+            if (props.section !== 'data') {
+              mutations.moveLabbookFile(moveLabbookFileData, (response) => {});
+            } else {
+              mutations.moveDatasetFile(moveLabbookFileData, (response) => {});
             }
           }
+        }
       }
+    }
 
-      return {
-       fileData: props.fileData,
-      };
+    return {
+      fileData: props.fileData,
+    };
   },
 };
 
 function targetCollect(connect, monitor) {
   // TODO: clean up this code, removal of file drop containers removes the need for some of this logic.
   // decide if drop zone should appear;
-  let currentTargetId = monitor.targetId;
-  let isOverCurrent = monitor.isOver({ shallow: true });
+  const currentTargetId = monitor.targetId;
+  const isOverCurrent = monitor.isOver({ shallow: true });
   let isOver = monitor.isOver({});
   let canDrop = monitor.canDrop();
-  let currentTarget = monitor.internalMonitor.registry.dropTargets.get(currentTargetId);
+  const currentTarget = monitor.internalMonitor.registry.dropTargets.get(currentTargetId);
 
   let newLastTarget;
   // get a list of drop target ids
-  let targetIds = monitor.internalMonitor.getTargetIds();
-  let targets = targetIds.map(id => monitor.internalMonitor.registry.dropTargets.get(id));
+  const targetIds = monitor.internalMonitor.getTargetIds();
+  const targets = targetIds.map(id => monitor.internalMonitor.registry.dropTargets.get(id));
   // if targets found
   if (targets.length > 0) {
     // get the last target
-    let lastTarget = targets[targets.length - 1];
+    const lastTarget = targets[targets.length - 1];
 
     // if last target is a file remove it
     if (lastTarget.props.fileData && !lastTarget.props.fileData.edge.node.isDir) {
@@ -389,11 +393,11 @@ function targetCollect(connect, monitor) {
   });
   // compare dragItem and lastTarget
   if (dragItem && newLastTarget) {
-    let dragKeyArray = dragItem.props.fileData.edge.node.key.split('/');
+    const dragKeyArray = dragItem.props.fileData.edge.node.key.split('/');
     dragKeyArray.pop();
     // check if file drag key is the same
-    let dragKeyPruned = dragKeyArray.join('/') === '' ? '' : `${dragKeyArray.join('/')}/`;
-    let dropKey = newLastTarget.props.files ? '' : newLastTarget.props.fileData.edge.node.key;
+    const dragKeyPruned = dragKeyArray.join('/') === '' ? '' : `${dragKeyArray.join('/')}/`;
+    const dropKey = newLastTarget.props.files ? '' : newLastTarget.props.fileData.edge.node.key;
     canDrop = (dragKeyPruned !== dropKey);
     isOver = isOver && canDrop;
   }
@@ -402,7 +406,7 @@ function targetCollect(connect, monitor) {
 
   return {
     connectDropTarget: connect.dropTarget(),
-		canDrop,
+    canDrop,
     isOver,
     isOverCurrent,
   };

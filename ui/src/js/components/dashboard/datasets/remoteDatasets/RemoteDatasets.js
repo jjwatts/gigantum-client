@@ -7,7 +7,7 @@ import {
 // components
 import RemoteDatasetPanel from 'Components/dashboard/datasets/remoteDatasets/RemoteDatasetsPanel';
 import DeleteDataset from 'Components/shared/modals/DeleteDataset';
-import DatasetsPaginationLoader from '../datasetsLoaders/datasetsPaginationLoader';
+import CardLoader from 'Components/dashboard/loaders/CardLoader';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // store
@@ -31,6 +31,7 @@ class RemoteDatasets extends Component {
     this._toggleDeleteModal = this._toggleDeleteModal.bind(this);
     this._loadMore = this._loadMore.bind(this);
   }
+
   /*
     loads more remote datasets on mount
   */
@@ -119,50 +120,56 @@ class RemoteDatasets extends Component {
         <div className="Datasets__listing">
           <div className="grid">
             {
-            datasets.length ?
-            datasets.map(edge => (
-              <RemoteDatasetPanel
-                toggleDeleteModal={this._toggleDeleteModal}
-                datasetListId={this.props.remoteDatasetsId}
-                key={edge.node.owner + edge.node.name}
-                ref={`RemoteDatasetPanel${edge.node.name}`}
-                edge={edge}
-                history={this.props.history}
-                existsLocally={edge.node.isLocal}
-                auth={this.props.auth}
-              />
+            datasets.length
+              ? datasets.map(edge => (
+                <RemoteDatasetPanel
+                  toggleDeleteModal={this._toggleDeleteModal}
+                  datasetListId={this.props.remoteDatasetsId}
+                  key={edge.node.owner + edge.node.name}
+                  ref={`RemoteDatasetPanel${edge.node.name}`}
+                  edge={edge}
+                  history={this.props.history}
+                  existsLocally={edge.node.isLocal}
+                  auth={this.props.auth}
+                />
               ))
-            :
-            !this.state.isPaginating &&
-            store.getState().datasetListing.filterText &&
+              : !this.state.isPaginating
+            && store.getState().datasetListing.filterText
 
+            && (
             <div className="Datasets__no-results">
 
               <h3 className="Datasets__h3">No Results Found</h3>
 
-              <p>Edit your filters above or <span
-                className="Datasets__span"
-                onClick={() => this.props.setFilterValue({ target: { value: '' } })}
-              >clear
-                                            </span> to try again.
+              <p>
+                Edit your filters above or
+                <span
+                  className="Datasets__span"
+                  onClick={() => this.props.setFilterValue({ target: { value: '' } })}
+                >
+                clear
+                </span>
+                to try again.
               </p>
 
             </div>
+            )
           }
             {
             Array(5).fill(1).map((value, index) => (
-              <DatasetsPaginationLoader
+              <CardLoader
                 key={`RemoteDatasets_paginationLoader${index}`}
                 index={index}
                 isLoadingMore={this.state.isPaginating}
               />
-              ))
+            ))
           }
           </div>
           {
-            this.state.deleteModalVisible &&
+            this.state.deleteModalVisible
+            && (
             <DeleteDataset
-              sectionType={'dataset'}
+              sectionType="dataset"
               handleClose={() => { this._toggleDeleteModal(); }}
               datasetListId={this.props.datasetListId}
               remoteId={this.state.deleteData.remoteId}
@@ -174,6 +181,7 @@ class RemoteDatasets extends Component {
               remoteDelete
               history={this.props.history}
             />
+            )
           }
         </div>
       );

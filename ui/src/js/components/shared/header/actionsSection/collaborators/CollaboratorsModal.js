@@ -61,9 +61,9 @@ export default class CollaboratorsModal extends Component {
     * fires when component unmounts
     * removes added event listeners
   */
- componentWillUnmount() {
-  window.removeEventListener('click', this._closePermissionsMenu);
-}
+  componentWillUnmount() {
+    window.removeEventListener('click', this._closePermissionsMenu);
+  }
 
   /**
     *  @param {String} permission
@@ -73,13 +73,14 @@ export default class CollaboratorsModal extends Component {
   _getPermissions(permission, collaboratorName) {
     if ((permission === 'readonly') || (permission === 'READ_ONLY')) {
       return 'Read';
-    } else if ((permission === 'readwrite') || (permission === 'READ_WRITE')) {
+    } if ((permission === 'readwrite') || (permission === 'READ_WRITE')) {
       return 'Write';
-    } else if ((permission === 'owner') || (permission === 'OWNER')) {
+    } if ((permission === 'owner') || (permission === 'OWNER')) {
       return collaboratorName === this.state.owner ? 'Owner' : 'Admin';
     }
     return 'Read';
   }
+
   /**
   *  @param {number}
   *  iterate value of index within the bounds of the array size
@@ -93,6 +94,7 @@ export default class CollaboratorsModal extends Component {
 
     this.setState({ selectedIndex: newSelectedIndex });
   }
+
   /**
   *  @param {String} newPermissions
   *  assigns new permissions in state
@@ -101,6 +103,7 @@ export default class CollaboratorsModal extends Component {
   _setPermission(newPermissions) {
     this.setState({ newPermissions });
   }
+
   /**
   *  @param {event} evt
   *  queries collaborator api and updates list
@@ -124,6 +127,7 @@ export default class CollaboratorsModal extends Component {
 
     this._handleInputKeys(evt);
   }
+
   /**
   *  @param {String} userExpanded
   *  toggles permissionMenuOpen in state or assigns userexpanded a name
@@ -133,10 +137,12 @@ export default class CollaboratorsModal extends Component {
     if (this.props.canManageCollaborators) {
       if (userExpanded) {
         if (userExpanded !== localStorage.getItem('username')) {
-          this.setState({ userExpanded: this.state.userExpanded === userExpanded ? null : userExpanded});
+          this.setState({
+            userExpanded: (this.state.userExpanded === userExpanded) ? null : userExpanded,
+          });
         }
       } else {
-        this.setState({ permissionMenuOpen: !this.state.permissionMenuOpen});
+        this.setState({ permissionMenuOpen: !this.state.permissionMenuOpen });
       }
     }
   }
@@ -181,6 +187,7 @@ export default class CollaboratorsModal extends Component {
       this.setState({ newCollaborator: evt.target.value });
     }
   }
+
   /**
   *  @param {event} evt
   *  queries collaborator api and updates list
@@ -197,6 +204,7 @@ export default class CollaboratorsModal extends Component {
       });
     }
   }
+
   /**
   *  @param {String} permissionOverride
   *  @param {String} collaboratorName
@@ -220,8 +228,8 @@ export default class CollaboratorsModal extends Component {
       this.setState({ buttonLoaderRemoveCollaborator });
     }
 
-    this.props.sectionType === 'dataset' ?
-      AddDatasetCollaboratorMutation(
+    this.props.sectionType === 'dataset'
+      ? AddDatasetCollaboratorMutation(
         labbookName,
         owner,
         collaboratorName || newCollaborator,
@@ -242,7 +250,6 @@ export default class CollaboratorsModal extends Component {
               postCompleteState[collaboratorName] = '';
               this.setState({ buttonLoaderAddCollaborator: postCompleteState });
             }, 2000);
-
           } else {
             completeState[newCollaborator] = '';
 
@@ -265,8 +272,7 @@ export default class CollaboratorsModal extends Component {
         },
 
       )
-      :
-      AddCollaboratorMutation(
+      : AddCollaboratorMutation(
         labbookName,
         owner,
         collaboratorName || newCollaborator,
@@ -287,7 +293,6 @@ export default class CollaboratorsModal extends Component {
               postCompleteState[collaboratorName] = '';
               this.setState({ buttonLoaderAddCollaborator: postCompleteState });
             }, 2000);
-
           } else {
             completeState[newCollaborator] = '';
 
@@ -311,6 +316,7 @@ export default class CollaboratorsModal extends Component {
 
       );
   }
+
   /**
   *  @param {object} params
   *  deletes collaborators using mutation
@@ -396,21 +402,27 @@ export default class CollaboratorsModal extends Component {
     const autoCompleteMenu = classNames({
       'CollaboratorsModal__auto-compelte-menu box-shadow': true,
       'CollaboratorsModal__auto-compelte-menu--visible': this.state.colloboratorSearchList.length > 0,
-    }),
-      permissionsSelectorCSS = classNames({
-        'CollaboratorModal__PermissionsSelector Dropdown': true,
-        'Dropdown--open': this.state.permissionMenuOpen,
-        'CollaboratorModal__PermissionsSelector--add': true,
-        'Dropdown--collapsed': !this.state.permissionMenuOpen,
-      }),
-      permissionsMenuCSS = classNames({
-        'CollaboratorModal__PermissionsMenu Dropdown__menu box-shadow': true,
-        hidden: !this.state.permissionMenuOpen,
-      }),
-      collaboratorList = classNames({
-        CollaboratorsModal__list: true,
-        'CollaboratorsModal__list--overflow': (state.userExpanded !== null),
-      });
+    });
+
+
+    const permissionsSelectorCSS = classNames({
+      'CollaboratorModal__PermissionsSelector Dropdown': true,
+      'Dropdown--open': this.state.permissionMenuOpen,
+      'CollaboratorModal__PermissionsSelector--add': true,
+      'Dropdown--collapsed': !this.state.permissionMenuOpen,
+    });
+
+
+    const permissionsMenuCSS = classNames({
+      'CollaboratorModal__PermissionsMenu Dropdown__menu box-shadow': true,
+      hidden: !this.state.permissionMenuOpen,
+    });
+
+
+    const collaboratorList = classNames({
+      CollaboratorsModal__list: true,
+      'CollaboratorsModal__list--overflow': (state.userExpanded !== null),
+    });
     const disableAddButton = this.state.addCollaboratorButtonDisabled || !this.state.newCollaborator.length;
     return (
       <Modal
@@ -419,105 +431,111 @@ export default class CollaboratorsModal extends Component {
         size="large"
         overflow="visible"
         handleClose={() => { this.props.toggleCollaborators(); }}
-        renderContent={() =>
-          (<div>
+        renderContent={() => (
+          <div>
             {
-              this.props.canManageCollaborators ?
-              <div className="CollaboratorsModal__add">
+              this.props.canManageCollaborators
+                ? (
+                  <div className="CollaboratorsModal__add">
 
-              <input
-                className="CollaboratorsModal__input--collaborators"
-                ref={el => this.collaboratorSearch = el}
+                    <input
+                      className="CollaboratorsModal__input--collaborators"
+                      ref={el => this.collaboratorSearch = el}
 
-                onChange={evt => this._getUsers(evt)}
-                onKeyUp={evt => this._getUsers(evt)}
+                      onChange={evt => this._getUsers(evt)}
+                      onKeyUp={evt => this._getUsers(evt)}
 
-                type="text"
-                placeholder="Add Collaborator"
+                      type="text"
+                      placeholder="Add Collaborator"
 
-                disabled={this.state.addCollaboratorButtonDisabled}
-              />
+                      disabled={this.state.addCollaboratorButtonDisabled}
+                    />
 
-              <div className={autoCompleteMenu}>
-                <ul className="CollaboratorsModal__list">
-                  {
+                    <div className={autoCompleteMenu}>
+                      <ul className="CollaboratorsModal__list">
+                        {
                   this.state.colloboratorSearchList.map((collaborator, index) => {
                     const listItemCSS = classNames({
                       CollaboratorsModal__listItem: true,
                       'CollaboratorsModal__listItem--selected': (index === this.state.selectedIndex),
                     });
-                    return (<li
-                      onClick={() => this._completeColloborator(collaborator)}
-                      className={listItemCSS}
-                      key={collaborator.username}
-                    >
+                    return (
+                      <li
+                        onClick={() => this._completeColloborator(collaborator)}
+                        className={listItemCSS}
+                        key={collaborator.username}
+                      >
 
-                      <div className="CollaboratorsModal__listItem--username">{collaborator.username}</div>
+                        <div className="CollaboratorsModal__listItem--username">{collaborator.username}</div>
 
-                      <div className="CollaboratorsModal__listItem--name">{collaborator.name}</div>
-
-                            </li>);
+                        <div className="CollaboratorsModal__listItem--name">{collaborator.name}</div>
+                      </li>
+                    );
                   })
                 }
-                </ul>
-              </div>
-              <div className="CollaboratorsModal__permissions">
-                <span
-                  className={permissionsSelectorCSS}
-                  onClick={() => this._togglePermissionsMenu()}>
-                  {this._getPermissions(this.state.newPermissions)}
-                </span>
-                <ul className={permissionsMenuCSS}>
-                  <li onClick={() => this._setPermission('readonly')}>
-                    <div className="CollaboratorsModal__permissions-header">Read</div>
-                    <div className="CollaboratorsModal__permissions-subtext">Read-only permissions. Can only pull updates</div>
-                  </li>
-                  <li onClick={() => this._setPermission('readwrite')}>
-                    <div className="CollaboratorsModal__permissions-header">Write</div>
-                    <div className="CollaboratorsModal__permissions-subtext">Read/Write permissions. Can sync to branches other than master</div>
-                  </li>
-                  <li onClick={() => this._setPermission('owner')}>
-                    <div className="CollaboratorsModal__permissions-header">Admin</div>
-                    <div className="CollaboratorsModal__permissions-subtext">Admin permissions. Can sync to master and manage collaborators</div>
-                  </li>
-                </ul>
-              </div>
-              <ButtonLoader
-                className="CollaboratorsModal__btn--add"
-                ref="addCollaborator"
+                      </ul>
+                    </div>
+                    <div className="CollaboratorsModal__permissions">
+                      <span
+                        className={permissionsSelectorCSS}
+                        onClick={() => this._togglePermissionsMenu()}
+                      >
+                        {this._getPermissions(this.state.newPermissions)}
+                      </span>
+                      <ul className={permissionsMenuCSS}>
+                        <li onClick={() => this._setPermission('readonly')}>
+                          <div className="CollaboratorsModal__permissions-header">Read</div>
+                          <div className="CollaboratorsModal__permissions-subtext">Read-only permissions. Can only pull updates</div>
+                        </li>
+                        <li onClick={() => this._setPermission('readwrite')}>
+                          <div className="CollaboratorsModal__permissions-header">Write</div>
+                          <div className="CollaboratorsModal__permissions-subtext">Read/Write permissions. Can sync to branches other than master</div>
+                        </li>
+                        <li onClick={() => this._setPermission('owner')}>
+                          <div className="CollaboratorsModal__permissions-header">Admin</div>
+                          <div className="CollaboratorsModal__permissions-subtext">Admin permissions. Can sync to master and manage collaborators</div>
+                        </li>
+                      </ul>
+                    </div>
+                    <ButtonLoader
+                      className="Btn__plus Btn--round Btn--medium"
+                      ref="addCollaborator"
 
-                buttonState={this.state.buttonLoaderAddCollaborator}
-                buttonText=""
+                      buttonState={this.state.buttonLoaderAddCollaborator}
+                      buttonText=""
 
-                params={{}}
-                buttonDisabled={disableAddButton}
-                clicked={() => this._addCollaborator()}
-              />
+                      params={{}}
+                      buttonDisabled={disableAddButton}
+                      clicked={() => this._addCollaborator()}
+                    />
 
-            </div>
-            :
-            this.props.collaborators.length ?
-            <div className="CollaboratorsModal__message">
+                  </div>
+                )
+                : this.props.collaborators.length
+                  ? (
+                    <div className="CollaboratorsModal__message">
               To add and edit collaborators,
-              <b>
-                {' Administrator '}
-              </b>
+                      <b>
+                        {' Administrator '}
+                      </b>
               access is required. Contact the Project
-              <b>
-                {' Owner '}
-              </b>
+                      <b>
+                        {' Owner '}
+                      </b>
               or a Project
-              <b>
-                {' Administrator '}
-              </b>
+                      <b>
+                        {' Administrator '}
+                      </b>
               to manage collaborator settings.
-            </div>
-            :
-            <div className="CollaboratorsModal__message">
-              <b>
+                    </div>
+                  )
+                  : (
+                    <div className="CollaboratorsModal__message">
+                      <b>
                 This project needs to be published before collaborators can be added.
-              </b>
-            </div>
+                      </b>
+                    </div>
+                  )
             }
 
             <div className="CollaboratorsModal__collaborators">
@@ -526,40 +544,47 @@ export default class CollaboratorsModal extends Component {
 
               <div className="CollaboratorsModal__listContainer">
 
-                {this.props.collaborators &&
+                {this.props.collaborators
 
-                <ul className={ collaboratorList }>
+                && (
+                <ul className={collaboratorList}>
                   {
                     this.props.collaborators.map((collaborator) => {
                       const collaboratorName = collaborator.collaboratorUsername;
                       const collaboratorItemCSS = classNames({
                         'CollaboratorsModal__item CollaboratorsModal__item--me': collaborator.collaboratorUsername === localStorage.getItem('username'),
                         CollaboratorsModal__item: !(collaborator.collaboratorUsername === localStorage.getItem('username')),
-                      }),
-                        individualPermissionsSelectorCSS = classNames({
-                          CollaboratorModal__PermissionsSelector: true,
-                          'CollaboratorModal__PermissionsSelector--individual': true,
-                          'CollaboratorModal__PermissionsSelector--open': this.state.userExpanded === collaboratorName,
-                          'CollaboratorModal__PermissionsSelector--disabled': (collaboratorName === localStorage.getItem('username')) || !this.props.canManageCollaborators || (collaboratorName === this.state.owner),
-                          'CollaboratorModal__PermissionsSelector--collapsed': this.state.userExpanded !== collaboratorName,
-                        }),
-                        individualPermissionsMenuCSS = classNames({
-                          'CollaboratorModal__PermissionsMenu box-shadow': true,
-                          'CollaboratorModal__PermissionsMenu--individual': true,
-                          hidden: this.state.userExpanded !== collaboratorName,
-                        });
+                      });
+
+
+                      const individualPermissionsSelectorCSS = classNames({
+                        CollaboratorModal__PermissionsSelector: true,
+                        'CollaboratorModal__PermissionsSelector--individual': true,
+                        'CollaboratorModal__PermissionsSelector--open': this.state.userExpanded === collaboratorName,
+                        'CollaboratorModal__PermissionsSelector--disabled': (collaboratorName === localStorage.getItem('username')) || !this.props.canManageCollaborators || (collaboratorName === this.state.owner),
+                        'CollaboratorModal__PermissionsSelector--collapsed': this.state.userExpanded !== collaboratorName,
+                      });
+
+
+                      const individualPermissionsMenuCSS = classNames({
+                        'CollaboratorModal__PermissionsMenu box-shadow': true,
+                        'CollaboratorModal__PermissionsMenu--individual': true,
+                        hidden: this.state.userExpanded !== collaboratorName,
+                      });
                       return (
 
                         <li
                           key={collaboratorName}
                           ref={collaboratorName}
-                          className={collaboratorItemCSS}>
+                          className={collaboratorItemCSS}
+                        >
 
                           <div className="CollaboratorsModal__collaboratorName">{collaboratorName}</div>
                           <div className="CollaboratorsModal__permissions CollaboratorsModal__permissions--individual">
                             <span
                               className={individualPermissionsSelectorCSS}
-                              onClick={() => this._togglePermissionsMenu(collaboratorName)}>
+                              onClick={() => this._togglePermissionsMenu(collaboratorName)}
+                            >
                               {this._getPermissions(collaborator.permission, collaboratorName)}
                             </span>
                             <ul className={individualPermissionsMenuCSS}>
@@ -582,7 +607,7 @@ export default class CollaboratorsModal extends Component {
                             ref={collaboratorName}
                             buttonState={this.state.buttonLoaderRemoveCollaborator[collaboratorName]}
                             buttonText=""
-                            className="CollaboratorsModal__btn"
+                            className="Btn__remove Btn--round Btn--small"
                             params={{ collaborator: collaboratorName, button: this }}
                             buttonDisabled={collaboratorName === localStorage.getItem('username') || !this.props.canManageCollaborators}
                             clicked={this._removeCollaborator}
@@ -590,16 +615,14 @@ export default class CollaboratorsModal extends Component {
 
                         </li>);
                     })
-
                   }
-
                 </ul>
-
+                )
               }
-
               </div>
             </div>
-          </div>)
+          </div>
+        )
         }
       />
     );

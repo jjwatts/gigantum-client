@@ -21,11 +21,17 @@ export default class CreateBranchModal extends Component {
   constructor(props) {
     super(props);
     let branchDescription = props.selected ? `${props.selected.description}. ${props.selected.activeBranch} at ${formatedTimestamp}.` : props.description ? props.description : '';
-          branchDescription = branchDescription.substr(0, 80);
-    const textLength = 80 - branchDescription.length,
-          formatedCurrentTimestamp = Moment().format('M/DD/YY h:mm:ss A'),
-          formatedTimestamp = props.selected ? Moment(Date.parse(props.selected.activityNode.timestamp)).format('M/DD/YY h:mm:ss A') : '',
-          textWarning = textLength > 20 ? 'CreateBranch__warning--green' : 'CreateBranch__warning--orange';
+    branchDescription = branchDescription.substr(0, 80);
+    const textLength = 80 - branchDescription.length;
+
+
+    const formatedCurrentTimestamp = Moment().format('M/DD/YY h:mm:ss A');
+
+
+    const formatedTimestamp = props.selected ? Moment(Date.parse(props.selected.activityNode.timestamp)).format('M/DD/YY h:mm:ss A') : '';
+
+
+    const textWarning = textLength > 20 ? 'CreateBranch__warning--green' : 'CreateBranch__warning--orange';
 
     this.state = {
       modalVisible: props.modalVisible,
@@ -53,7 +59,7 @@ export default class CreateBranchModal extends Component {
     }
 
     if (nextProps.selected) {
-      const formattedTimestamp = Moment(Date.parse(nextProps.selected.activityNode.timestamp)).format('MMDDYY-HHmmss').toLowerCase()
+      const formattedTimestamp = Moment(Date.parse(nextProps.selected.activityNode.timestamp)).format('MMDDYY-HHmmss').toLowerCase();
       const branchName = `${nextProps.selected.activeBranch}-at-${formattedTimestamp}`;
       this.setState({ branchName });
     } else if (state.branchName && (typeof state.branchName === 'string') && (state.branchName.indexOf('rollback') > -1)) {
@@ -153,11 +159,19 @@ export default class CreateBranchModal extends Component {
   *   @return {}
   */
   _createNewBranch() {
-    const self = this,
-          { state, props } = this,
-          { owner, labbookName } = store.getState().routes,
-          { branchName } = this.state,
-          revision = props.selected ? props.selected.activityNode.commit : null;
+    const self = this;
+
+
+    const { state, props } = this;
+
+
+    const { owner, labbookName } = store.getState().routes;
+
+
+    const { branchName } = this.state;
+
+
+    const revision = props.selected ? props.selected.activityNode.commit : null;
 
 
     this.setState({ buttonLoaderCreateBranch: 'loading' });
@@ -207,90 +221,103 @@ export default class CreateBranchModal extends Component {
   }
 
   render() {
-    const { props, state } = this,
-          createDisabled = state.showError || (state.branchName.length === 0) || state.createButtonClicked,
-          inputsDisabled = state.buttonLoaderCreateBranch !== '',
-          formatedCurrentTimestamp = Moment().format('MM/DD/YY hh:mm:ss A'),
-          formatedTimestamp = props.selected ? Moment(Date.parse(props.selected.activityNode.timestamp)).format('M/DD/YY h:mm:ss A') : '',
-          branchNameTimestamp = props.selected ? Moment(Date.parse(props.selected.activityNode.timestamp)).format('MMDDYY-HHmmss').toLowerCase() : '',
-          branchDefault = props.selected ? `${props.selected.activeBranch}-at-${branchNameTimestamp}` : '',
-          textAreaDefault = state.branchDescription,
-          inputCSS = classNames({
-            'CreateBranch__input--invalid': state.showError,
-          }),
-          errorCSS = classNames({
-            CreateBranch__error: state.showError,
-            hidden: !state.showError,
-          }),
-          branchModalTitle = props.selected ? 'Create Rollback Branch' : 'Create Branch',
-          icon = props.selected ? 'rollback' : 'create';
+    const { props, state } = this;
+    const createDisabled = state.showError
+          || (state.branchName.length === 0)
+          || state.createButtonClicked;
+    const inputsDisabled = state.buttonLoaderCreateBranch !== '';
+    const branchNameTimestamp = props.selected ? Moment(Date.parse(props.selected.activityNode.timestamp)).format('MMDDYY-HHmmss').toLowerCase() : '';
+    const branchDefault = props.selected ? `${props.selected.activeBranch}-at-${branchNameTimestamp}` : '';
+    const textAreaDefault = state.branchDescription;
+    const inputCSS = classNames({
+      'CreateBranch__input--invalid': state.showError,
+    });
+    const errorCSS = classNames({
+      CreateBranch__error: state.showError,
+      hidden: !state.showError,
+    });
+    const branchModalTitle = props.selected ? 'Create Rollback Branch' : 'Create Branch';
+    const icon = props.selected ? 'rollback' : 'add';
 
     return (
       <div>
         { state.modalVisible
-          && <Modal
-          handleClose={() => { this._hideModal(inputsDisabled); }}
-          size="large"
-          header={branchModalTitle}
-          icon={icon}
-          renderContent={() => (<div className="CreateBranch">
-            <div className="CreateBranch__name">
-              <label htmlFor="CreateBranchName">Name</label>
-              <input
-                id="CreateBranchName"
-                type="text"
-                maxLength="80"
-                className={inputCSS}
-                onChange={evt => this._updateTextState(evt, 'branchName')}
-                onKeyUp={evt => this._updateTextState(evt, 'branchName')}
-                placeholder="Enter a unique branch name"
-                defaultValue={branchDefault}
-                disabled={inputsDisabled}
-              />
-              <span className={errorCSS}>{this._getErrorText()}</span>
-            </div>
-
-            <div className="CreateBranch__description">
-              <label htmlFor="CreateBranchDescription">Description</label>
-              <textarea
-                id="CreateBranchDescription"
-                className="CreateBranch__input--description"
-                disabled={inputsDisabled}
-                onChange={evt => this._updateTextState(evt, 'branchDescription')}
-                onKeyUp={evt => this._updateTextState(evt, 'branchDescription')}
-                maxLength="80"
-                placeholder="Briefly describe this branch, its purpose and any other key details. "
-                defaultValue={textAreaDefault}
-              />
-              <p className={`CreateBranch__warning ${state.textWarning}`}>{`${state.textLength} characters remaining`}</p>
-            </div>
-
-            <div className="CreateBranch_nav">
-              <div className="CreateBranch__navGroup">
-                <div className="CreateBranch_navItem">
-                  <button
-                    type="submit"
-                    disabled={inputsDisabled}
-                    onClick={() => { this._hideModal(); }}
-                    className="CreateBranch__btn--progress button--flat">
-                    Cancel
-                  </button>
+          && (
+          <Modal
+            handleClose={() => { this._hideModal(inputsDisabled); }}
+            size="large"
+            header={branchModalTitle}
+            icon={icon}
+            renderContent={() => (
+              <div className="CreateBranch">
+                <div className="CreateBranch__name">
+                  <label
+                    id="CreateBranchName"
+                    htmlFor="CreateBranchName"
+                  >
+                    Name
+                    <input
+                      id="CreateBranchName"
+                      type="text"
+                      maxLength="80"
+                      className={inputCSS}
+                      onChange={evt => this._updateTextState(evt, 'branchName')}
+                      onKeyUp={evt => this._updateTextState(evt, 'branchName')}
+                      placeholder="Enter a unique branch name"
+                      defaultValue={branchDefault}
+                      disabled={inputsDisabled}
+                    />
+                  </label>
+                  <span className={errorCSS}>{this._getErrorText()}</span>
                 </div>
 
-                <div className="CreateBranch_navItem">
-                  <ButtonLoader
-                    ref="buttonLoaderCreateBranch"
-                    buttonState={state.buttonLoaderCreateBranch}
-                    buttonText="Create"
-                    params={{}}
-                    buttonDisabled={createDisabled}
-                    clicked={this._createNewBranch}
-                  />
+                <div className="CreateBranch__description">
+                  <label
+                    id="CreateBranchDescription__label"
+                    htmlFor="CreateBranchDescription"
+                  >
+                    Description
+                    <textarea
+                      id="CreateBranchDescription"
+                      className="CreateBranch__input--description"
+                      disabled={inputsDisabled}
+                      onChange={evt => this._updateTextState(evt, 'branchDescription')}
+                      onKeyUp={evt => this._updateTextState(evt, 'branchDescription')}
+                      maxLength="80"
+                      placeholder="Briefly describe this branch, its purpose and any other key details. "
+                      defaultValue={textAreaDefault}
+                    />
+                  </label>
+                  <p className={`CreateBranch__warning ${state.textWarning}`}>{`${state.textLength} characters remaining`}</p>
+                </div>
+
+                <div className="CreateBranch_nav">
+                  <div className="CreateBranch__buttons">
+                    <button
+                      type="submit"
+                      disabled={inputsDisabled}
+                      onClick={() => { this._hideModal(); }}
+                      className="CreateBranch__btn--progress Btn--flat"
+                    >
+                      Cancel
+                    </button>
+
+                    <ButtonLoader
+                      className="Btn--last"
+                      ref="buttonLoaderCreateBranch"
+                      buttonState={state.buttonLoaderCreateBranch}
+                      buttonText="Create"
+                      params={{}}
+                      buttonDisabled={createDisabled}
+                      clicked={this._createNewBranch}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>)
-         }/>
+            )
+          }
+          />
+          )
         }
       </div>
 

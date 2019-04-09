@@ -1,17 +1,17 @@
 import React, { Component } from 'react';
 import { graphql, QueryRenderer } from 'react-relay';
 import queryString from 'querystring';
+// redux
+import { setCallbackRoute } from 'JS/redux/reducers/routes';
 // components
+import environment from 'JS/createRelayEnvironment';
+import Loader from 'Components/common/Loader';
 import LocalLabbooksContainer from './labbooks/localLabbooks/LocalLabbooksContainer';
 import LocalDatasetsContainer from './datasets/localDatasets/LocalDatasetsContainer';
 import RemoteDatasetsContainer from './datasets/remoteDatasets/RemoteDatasetsContainer';
 import RemoteLabbooksContainer from './labbooks/remoteLabbooks/RemoteLabbooksContainer';
-import environment from 'JS/createRelayEnvironment';
-import Loader from 'Components/common/Loader';
 // assets
 import './Dashboard.scss';
-// redux
-import { setCallbackRoute } from 'JS/redux/reducers/routes';
 
 
 const LocalListingQuery = graphql`query DashboardLocalQuery($first: Int!, $cursor: String, $orderBy: String $sort: String){
@@ -43,6 +43,7 @@ export default class DashboardContainer extends Component {
     setCallbackRoute(props.history.location.pathname);
     this._refetchSort = this._refetchSort.bind(this);
   }
+
   /**
   *  @param {Object} nextProps
   *  update select component before component renders
@@ -71,10 +72,6 @@ export default class DashboardContainer extends Component {
   *  @return {jsx}
   */
   _displaySelectedComponent() {
-    // if (this.state.selectedComponent === '/datasets/:labbookSection') {
-    //   return (<DatasetSets />);
-    // }
-
     const paths = this.props.history.location.pathname.split('/');
     const sectionRoute = paths.length > 2 ? paths[2] : 'local';
 
@@ -97,74 +94,62 @@ export default class DashboardContainer extends Component {
         environment={environment}
         query={query}
         variables={{
-            first: sectionRoute === 'cloud' ? 8 : 100,
-            cursor: null,
-            orderBy: this.state.orderBy,
-            sort: this.state.sort,
-          }}
+          first: sectionRoute === 'cloud' ? 8 : 100,
+          cursor: null,
+          orderBy: this.state.orderBy,
+          sort: this.state.sort,
+        }}
         render={({ error, props }) => {
-            if (error) {
-              console.log(error);
-            } else if (props) {
-              if (this.state.selectedComponent === '/datasets/:labbookSection') {
-                if (sectionRoute === 'cloud') {
-                  return (
-                    <RemoteDatasetsContainer
-                      auth={this.props.auth}
-                      datasetList={props}
-                      history={this.props.history}
-                      section={sectionRoute}
-                      refetchSort={this._refetchSort}
-                    />
-                  );
-                }
-                  return (
-                    <LocalDatasetsContainer
-                      auth={this.props.auth}
-                      datasetList={props}
-                      history={this.props.history}
-                      section={sectionRoute}
-                      refetchSort={this._refetchSort}
-                    />
-                  );
-              }
+          if (error) {
+            console.log(error);
+          } else if (props) {
+            if (this.state.selectedComponent === '/datasets/:labbookSection') {
               if (sectionRoute === 'cloud') {
                 return (
-                  <RemoteLabbooksContainer
+                  <RemoteDatasetsContainer
                     auth={this.props.auth}
-                    labbookList={props}
+                    datasetList={props}
                     history={this.props.history}
+                    section={sectionRoute}
                     refetchSort={this._refetchSort}
                   />
                 );
               }
-
               return (
-                <LocalLabbooksContainer
+                <LocalDatasetsContainer
+                  auth={this.props.auth}
+                  datasetList={props}
+                  history={this.props.history}
+                  section={sectionRoute}
+                  refetchSort={this._refetchSort}
+                />
+              );
+            }
+            if (sectionRoute === 'cloud') {
+              return (
+                <RemoteLabbooksContainer
                   auth={this.props.auth}
                   labbookList={props}
                   history={this.props.history}
                   refetchSort={this._refetchSort}
                 />
               );
-            } else {
-              if (this.state.selectedComponent === '/datasets/:labbookSection') {
-                return (
-                  <LocalDatasetsContainer
-                    auth={this.props.auth}
-                    datasetList={props}
-                    history={this.props.history}
-                    section={sectionRoute}
-                    refetchSort={this._refetchSort}
-                    loading
-                  />
-                );
-              }
+            }
 
+            return (
+              <LocalLabbooksContainer
+                auth={this.props.auth}
+                labbookList={props}
+                history={this.props.history}
+                refetchSort={this._refetchSort}
+              />
+            );
+          } else {
+            if (this.state.selectedComponent === '/datasets/:labbookSection') {
               return (
-                <LocalLabbooksContainer
+                <LocalDatasetsContainer
                   auth={this.props.auth}
-                  labbookList={props}
+                  datasetList={props}
                   history={this.props.history}
                   section={sectionRoute}
                   refetchSort={this._refetchSort}
@@ -172,17 +157,30 @@ export default class DashboardContainer extends Component {
                 />
               );
             }
-          }}
+
+            return (
+              <LocalLabbooksContainer
+                auth={this.props.auth}
+                labbookList={props}
+                history={this.props.history}
+                section={sectionRoute}
+                refetchSort={this._refetchSort}
+                loading
+              />
+            );
+          }
+        }}
       />
     );
   }
+
   render() {
     return (
       <div className="Dashboard flex flex-column">
 
         <div className="Dashboard__view flex-1-0-auto">
           <div id="dashboard__cover" className="Dashboard__cover hidden">
-            <Loader/>
+            <Loader />
           </div>
           {
             this._displaySelectedComponent()

@@ -4,11 +4,11 @@ import { createFragmentContainer, graphql } from 'react-relay';
 import SectionWrapper from 'Components/shared/filesShared/sectionWrapper/SectionWrapper';
 
 export default createFragmentContainer(
-    SectionWrapper,
-    graphql`
+  SectionWrapper,
+  graphql`
       fragment Data_dataset on Dataset{
         id
         ...DataBrowser_data
       }
     `,
-  );
+);

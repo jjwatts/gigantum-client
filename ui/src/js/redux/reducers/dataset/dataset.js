@@ -28,7 +28,7 @@ export default (
       ...state,
       isSticky: action.payload.isSticky,
     };
-  } else if (action.type === SET_IS_PROCESSING) {
+  } if (action.type === SET_IS_PROCESSING) {
     return {
       ...state,
       isProcessing: action.payload.isProcessing,

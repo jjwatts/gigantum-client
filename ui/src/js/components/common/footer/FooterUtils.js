@@ -40,10 +40,9 @@ const FooterUtils = {
 
       if (resultKey) {
         JobStatus.updateFooterStatus(result[type][key]).then((response) => {
-          if (response.data &&
-            response.data.jobStatus &&
-            response.data.jobStatus.jobMetadata) {
-
+          if (response.data
+              && response.data.jobStatus
+              && response.data.jobStatus.jobMetadata) {
             let fullMessage = (response.data.jobStatus.jobMetadata.indexOf('feedback') > -1) ? JSON.parse(response.data.jobStatus.jobMetadata).feedback : '';
             fullMessage = fullMessage.lastIndexOf('\n') === (fullMessage.length - 1)
               ? fullMessage.slice(0, fullMessage.length - 1)
@@ -55,12 +54,11 @@ const FooterUtils = {
               ? fullMessage.lastIndexOf('\n')
               : 0;
 
-
             let message = fullMessage.slice(lastIndex, fullMessage.length);
 
             if (message.indexOf('[0m') > 0) {
-              let res = [],
-                index = 0;
+              const res = [];
+              let index = 0;
 
               while (fullMessage.indexOf('\n', index + 1) > 0) {
                 index = fullMessage.indexOf('\n', index + 1);
@@ -72,11 +70,13 @@ const FooterUtils = {
 
             if (response.data.jobStatus.status === 'started') {
               if (html.length) {
-                setMultiInfoMessage(id || response.data.jobStatus.id, message, false, false, [{ message: html }]);
+                const repsonseId = id || response.data.jobStatus.id;
+                setMultiInfoMessage(repsonseId, message, false, false, [{ message: html }]);
               }
               refetch();
             } else if (response.data.jobStatus.status === 'finished') {
-              setMultiInfoMessage(id || response.data.jobStatus.id, message, true, null, [{ message: html }]);
+              const repsonseId = id || response.data.jobStatus.id;
+              setMultiInfoMessage(repsonseId, message, true, null, [{ message: html }]);
 
               document.getElementById('modal__cover').classList.add('hidden');
               document.getElementById('loader').classList.add('hidden');
@@ -87,8 +87,8 @@ const FooterUtils = {
                 const metaDataArr = JSON.parse(response.data.jobStatus.jobMetadata)[section].split('|');
                 const owner = metaDataArr[1];
                 const labbookName = metaDataArr[2];
-                section === 'labbook' ?
-                  FetchLabbookEdgeMutation(
+                section === 'labbook'
+                  ? FetchLabbookEdgeMutation(
                     owner,
                     labbookName,
                     (error) => {
@@ -97,8 +97,7 @@ const FooterUtils = {
                       }
                     },
                   )
-                  :
-                  FetchDatasetEdgeMutation(
+                  : FetchDatasetEdgeMutation(
                     owner,
                     labbookName,
                     (error) => {
@@ -120,7 +119,7 @@ const FooterUtils = {
                     () => {
                       successCall();
                     },
-                    );
+                  );
                 } else {
                   const owner = metaDataArr[1];
                   const labbookName = metaDataArr[2];
@@ -130,7 +129,7 @@ const FooterUtils = {
                     () => {
                       successCall();
                     },
-                    );
+                  );
                 }
               } else if (type === 'importRemoteLabbook') {
                 successCall();
@@ -163,7 +162,7 @@ const FooterUtils = {
                     () => {
                       failureCall(response.data.jobStatus.failureMessage);
                     },
-                    );
+                  );
                 } else {
                   const owner = metaDataArr[1];
                   const labbookName = metaDataArr[2];
@@ -173,7 +172,7 @@ const FooterUtils = {
                     () => {
                       failureCall(response.data.jobStatus.failureMessage);
                     },
-                    );
+                  );
                 }
                 errorMessage = `Failed to download ${failureKeys.length} of ${totalAmount} Files.`;
                 reportedFailureMessage = 'Failed to download the following Files:';

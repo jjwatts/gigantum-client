@@ -7,9 +7,9 @@ import store from 'JS/redux/store';
 
 export default createPaginationContainer(
   SectionBrowser,
-    {
+  {
 
-      input: graphql`
+    input: graphql`
         fragment InputBrowser_input on LabbookSection{
           allFiles(after: $cursor, first: $first)@connection(key: "InputBrowser_allFiles", filters: []){
             edges{
@@ -32,29 +32,29 @@ export default createPaginationContainer(
           }
 
         }`,
+  },
+  {
+    direction: 'forward',
+    getConnectionFromProps(props) {
+      return props.input && props.input.allFiles;
     },
-    {
-      direction: 'forward',
-      getConnectionFromProps(props) {
-        return props.input && props.input.allFiles;
-      },
-      getFragmentVariables(prevVars, totalCount) {
-        return {
-          ...prevVars,
-          count: totalCount,
-        };
-      },
-      getVariables(props, { count, cursor }, fragmentVariables) {
-        const { owner, labbookName } = store.getState().routes;
+    getFragmentVariables(prevVars, totalCount) {
+      return {
+        ...prevVars,
+        count: totalCount,
+      };
+    },
+    getVariables(props, { count, cursor }, fragmentVariables) {
+      const { owner, labbookName } = store.getState().routes;
 
-        return {
-          first: count,
-          cursor,
-          owner,
-          name: labbookName,
-        };
-      },
-      query: graphql`
+      return {
+        first: count,
+        cursor,
+        owner,
+        name: labbookName,
+      };
+    },
+    query: graphql`
         query InputBrowserPaginationQuery(
           $first: Int
           $cursor: String
@@ -69,5 +69,5 @@ export default createPaginationContainer(
           }
         }
       `,
-    },
-  );
+  },
+);

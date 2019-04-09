@@ -23,6 +23,7 @@ export default class ActivityCard extends Component {
   _toggleExtraInfo = () => {
     this.setState({ showExtraInfo: !this.state.showExtraInfo });
   }
+
   /**
     @param {string} timestamp
     if input is undefined. current time of day is used
@@ -37,6 +38,7 @@ export default class ActivityCard extends Component {
     const ampm = time.getHours() >= 12 ? 'pm' : 'am';
     return `${hour}:${minutes}${ampm}`;
   }
+
   /**
     @param {Object} node
     loobest through detailObjects array to get format an object of details
@@ -69,9 +71,12 @@ export default class ActivityCard extends Component {
   _hideElipsis() {
     this.setState({ showEllispsis: false });
   }
+
   render() {
-    const { props, state } = this,
-          categorizedDetails = this._catagorizeDetails(props.node);
+    const { props, state } = this;
+
+
+    const categorizedDetails = this._catagorizeDetails(props.node);
     return (
       <div className="ActivityDetail">
         {
@@ -87,7 +92,7 @@ export default class ActivityCard extends Component {
               show={props.show}
               showEllispsis={state.showEllispsis}
             />
-            ))
+          ))
         }
       </div>
     );

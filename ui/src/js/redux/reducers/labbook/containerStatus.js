@@ -29,17 +29,17 @@ export default (
       ...state,
       status: action.payload.status,
     };
-  } else if (action.type === UPDATE_CONTAINER_MENU_VISIBILITY) {
+  } if (action.type === UPDATE_CONTAINER_MENU_VISIBILITY) {
     return {
       ...state,
       containerMenuOpen: action.payload.containerMenuOpen,
     };
-  } else if (action.type === RESET_DETAIL_STORE) {
+  } if (action.type === RESET_DETAIL_STORE) {
     return {
       ...state,
       detailMode: false,
     };
-  } else if (action.type === IS_LOOKING_UP_PACKAGES) {
+  } if (action.type === IS_LOOKING_UP_PACKAGES) {
     return {
       ...state,
       isLookingUpPackages: action.payload.isLookingUpPackages,

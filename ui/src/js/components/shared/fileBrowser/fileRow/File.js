@@ -6,51 +6,52 @@ import classNames from 'classnames';
 import { DragSource, DropTarget } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
 import TextTruncate from 'react-text-truncate';
-// components
-import Connectors from './../utilities/Connectors';
-import ActionsMenu from './ActionsMenu';
-import DatasetActionsMenu from './dataset/DatasetActionsMenu';
-// mutations
-import StartContainerMutation from 'Mutations/container/StartContainerMutation';
-import StartDevToolMutation from 'Mutations/container/StartDevToolMutation';
 // config
 import config from 'JS/config';
 // store
 import store from 'JS/redux/store';
 import { setMergeMode } from 'JS/redux/reducers/labbook/labbook';
 import { setErrorMessage, setInfoMessage, setWarningMessage } from 'JS/redux/reducers/footer';
+// mutations
+import StartContainerMutation from 'Mutations/container/StartContainerMutation';
+import StartDevToolMutation from 'Mutations/container/StartDevToolMutation';
+// components
+import ActionsMenu from './ActionsMenu';
+import DatasetActionsMenu from './dataset/DatasetActionsMenu';
+// utils
+import Connectors from '../utilities/Connectors';
 // assets
 import './File.scss';
 
 class File extends Component {
   constructor(props) {
-      super(props);
-      this.state = {
-          isDragging: props.isDragging,
-          isSelected: (props.isSelected || this.props.childrenState[this.props.fileData.edge.node.key].isSelected) || false,
-          stateSwitch: false,
-          newFileName: props.filename,
-          renameEditMode: false,
-          hover: false,
-      };
-      this._setSelected = this._setSelected.bind(this);
-      this._renameEditMode = this._renameEditMode.bind(this);
-      this._triggerMutation = this._triggerMutation.bind(this);
-      this._clearState = this._clearState.bind(this);
-      this._setHoverState = this._setHoverState.bind(this);
-      this._checkHover = this._checkHover.bind(this);
+    super(props);
+    this.state = {
+      isDragging: props.isDragging,
+      isSelected: (props.isSelected || this.props.childrenState[this.props.fileData.edge.node.key].isSelected) || false,
+      stateSwitch: false,
+      newFileName: props.filename,
+      renameEditMode: false,
+      hover: false,
+    };
+    this._setSelected = this._setSelected.bind(this);
+    this._renameEditMode = this._renameEditMode.bind(this);
+    this._triggerMutation = this._triggerMutation.bind(this);
+    this._clearState = this._clearState.bind(this);
+    this._setHoverState = this._setHoverState.bind(this);
+    this._checkHover = this._checkHover.bind(this);
   }
 
   static getDerivedStateFromProps(nextProps, state) {
-    let isSelected = (nextProps.multiSelect === 'all')
+    const isSelected = (nextProps.multiSelect === 'all')
       ? true
       : (nextProps.multiSelect === 'none')
-      ? false
-      : state.isSelected;
+        ? false
+        : state.isSelected;
 
-      if ((nextProps.isOverCurrent !== nextProps.isOverChildFile) && !nextProps.isDragging && state.hover) {
-        nextProps.updateParentDropZone(nextProps.isOverCurrent);
-      }
+    if ((nextProps.isOverCurrent !== nextProps.isOverChildFile) && !nextProps.isDragging && state.hover) {
+      nextProps.updateParentDropZone(nextProps.isOverCurrent);
+    }
     return {
       ...state,
       isSelected,
@@ -59,8 +60,8 @@ class File extends Component {
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (this.state.renameEditMode) {
-           this.reanmeInput.focus();
-      }
+      this.reanmeInput.focus();
+    }
   }
 
   /**
@@ -68,21 +69,22 @@ class File extends Component {
   *  sets elements to be selected and parent
   */
   _setSelected(isSelected) {
-      this.props.updateChildState(this.props.fileData.edge.node.key, isSelected, false);
-      this.setState({ isSelected }, () => {
-          Object.keys(this.refs).forEach((ref) => {
-              this.refs[ref].getDecoratedComponentInstance().getDecoratedComponentInstance()._setSelected();
-          });
-          if (this.props.checkParent) {
-              this.props.checkParent();
-          }
+    this.props.updateChildState(this.props.fileData.edge.node.key, isSelected, false);
+    this.setState({ isSelected }, () => {
+      Object.keys(this.refs).forEach((ref) => {
+        this.refs[ref].getDecoratedComponentInstance().getDecoratedComponentInstance()._setSelected();
       });
+      if (this.props.checkParent) {
+        this.props.checkParent();
+      }
+    });
   }
-    /**
+
+  /**
     *  @param {}
     *  sets dragging state
     */
-   _mouseEnter() {
+  _mouseEnter() {
     if (this.props.setParentDragFalse) {
       this.props.setParentDragFalse();
     }
@@ -90,12 +92,13 @@ class File extends Component {
       this.setState({ isDragging: true, isHovered: true });
     }
   }
-    /**
+
+  /**
     *  @param {String} devTool
     *  @param {Boolean} forceStart
     *  launches dev tool to appropriate file
     */
-   _openDevTool(devTool, forceStart) {
+  _openDevTool(devTool, forceStart) {
     const { owner, labbookName } = store.getState().routes;
     const status = store.getState().containerStatus.status;
     const tabName = `${devTool}-${owner}-${labbookName}`;
@@ -147,6 +150,7 @@ class File extends Component {
       );
     }
   }
+
   /**
   *  @param {}
   *  sets dragging state
@@ -159,6 +163,7 @@ class File extends Component {
       this.setState({ isDragging: false, isHovered: false });
     }
   }
+
   /**
   *  @param {}
   *  sets dragging state to true
@@ -186,6 +191,7 @@ class File extends Component {
       newFileName: evt.target.value,
     });
   }
+
   /**
   *  @param {Object} evt
   *  sets dragging state
@@ -219,11 +225,11 @@ class File extends Component {
   *  @return {}
   */
   _triggerMutation() {
-    let fileKeyArray = this.props.fileData.edge.node.key.split('/');
+    const fileKeyArray = this.props.fileData.edge.node.key.split('/');
     fileKeyArray.pop();
-    let folderKeyArray = fileKeyArray;
-    let folderKey = folderKeyArray.join('/');
-    let newKey = (folderKey.length > 0) ? `${folderKey}/${this.state.newFileName}` : this.state.newFileName;
+    const folderKeyArray = fileKeyArray;
+    const folderKey = folderKeyArray.join('/');
+    const newKey = (folderKey.length > 0) ? `${folderKey}/${this.state.newFileName}` : this.state.newFileName;
 
     this._clearState();
     if (this.props.fileData.edge.node.key !== newKey) {
@@ -236,11 +242,11 @@ class File extends Component {
       if (this.props.section !== 'data') {
         this.props.mutations.moveLabbookFile(data, (response) => {
           this._clearState();
-       });
+        });
       } else {
         this.props.mutations.moveDatasetFile(data, (response) => {
           this._clearState();
-       });
+        });
       }
     }
   }
@@ -264,62 +270,78 @@ class File extends Component {
   }
 
   render() {
-    const { node } = this.props.fileData.edge;
-    const { index } = this.props.fileData;
-    const fileName = this.props.filename;
+    const { props, state } = this;
+    const { node } = props.fileData.edge;
+    const { index } = props.fileData;
+    const fileName = props.filename;
     const isNotebook = fileName.split('.')[fileName.split('.').length - 1] === 'ipynb';
     // TODO remove hard coded references when api is updated
     const isRFile = fileName.split('.')[fileName.split('.').length - 1] === 'Rmd';
     const devTool = isNotebook ? 'JupyterLab' : isRFile ? 'Rstudio' : '';
     const fileRowCSS = classNames({
-            File__row: true,
-            'File__row--hover': this.state.hover,
-            'File__row--background': this.props.isDragging,
-          }),
-          buttonCSS = classNames({
-            'Btn Btn--round': true,
-            'Btn--uncheck': !this.state.isSelected,
-            'Btn--check': this.state.isSelected,
-          }),
-          textIconsCSS = classNames({
-            'File__cell File__cell--name': true,
-            hidden: this.state.renameEditMode,
-          }),
-          renameCSS = classNames({
-            'File__cell File__cell--edit': true,
-            hidden: !this.state.renameEditMode,
-          }),
-          paddingLeft = 40 * index,
-          rowStyle = { paddingLeft: `${paddingLeft}px` },
-          truncateCSS = classNames({
-            File__paragragh: true,
-            'File__paragragh--external': isNotebook || isRFile,
-          });
-    let file = <div
-      style={this.props.style}
-      onMouseOver={(evt) => { this._setHoverState(evt, true); }}
-      onMouseOut={(evt) => { this._setHoverState(evt, false); }}
-      onMouseLeave={() => { this._mouseLeave(); }}
-      onMouseEnter={() => { this._mouseEnter(); }}
-      className="File">
+      File__row: true,
+      'File__row--hover': state.hover,
+      'File__row--background': props.isDragging,
+    });
 
-             <div
-               className={fileRowCSS}
-               style={rowStyle}
-               >
 
-                <button
-                    className={buttonCSS}
-                    onClick={() => { this._setSelected(!this.state.isSelected); }}>
-                </button>
+    const buttonCSS = classNames({
+      'Btn Btn--round Btn--medium': true,
+      Btn__uncheck: !state.isSelected,
+      Btn__check: state.isSelected,
+    });
 
-                <div className={textIconsCSS}>
 
-                  <div className={`File__icon ${fileIconsJs.getClass(fileName)}`}></div>
+    const textIconsCSS = classNames({
+      'File__cell File__cell--name': true,
+      hidden: state.renameEditMode,
+    });
 
-                  <div className="File__text">
-                  {
-                    this.props.expanded &&
+
+    const renameCSS = classNames({
+      'File__cell File__cell--edit': true,
+      hidden: !state.renameEditMode,
+    });
+
+
+    const paddingLeft = 40 * index;
+
+
+    const rowStyle = { paddingLeft: `${paddingLeft}px` };
+
+
+    const truncateCSS = classNames({
+      File__paragragh: true,
+      'File__paragragh--external': isNotebook || isRFile,
+    });
+    const file = (
+      <div
+        style={this.props.style}
+        onMouseOver={(evt) => { this._setHoverState(evt, true); }}
+        onMouseOut={(evt) => { this._setHoverState(evt, false); }}
+        onMouseLeave={() => { this._mouseLeave(); }}
+        onMouseEnter={() => { this._mouseEnter(); }}
+        className="File"
+      >
+
+        <div
+          className={fileRowCSS}
+          style={rowStyle}
+        >
+
+          <button
+            className={buttonCSS}
+            onClick={() => { this._setSelected(!this.state.isSelected); }}
+          />
+
+          <div className={textIconsCSS}>
+
+            <div className={`File__icon ${fileIconsJs.getClass(fileName)}`} />
+
+            <div className="File__text">
+              {
+                    this.props.expanded
+                    && (
                     <TextTruncate
                       className={truncateCSS}
                       line={1}
@@ -331,73 +353,78 @@ class File extends Component {
                         }
                       }}
                     />
+                    )
                   }
-                  </div>
-
-                </div>
-
-                <div className={renameCSS}>
-
-                  <div className="File__container">
-                    <input
-                      draggable
-                      ref={(input) => { this.reanmeInput = input; }}
-                      value={this.state.newFileName}
-                      type="text"
-                      className="File__input"
-                      onClick={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
-                      onDragStart={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
-                      onChange={(evt) => { this._updateFileName(evt); }}
-                      onKeyDown={(evt) => { this._submitRename(evt); }}
-                    />
-                  </div>
-                  <div className="flex justify-space-around">
-                    <button
-                      className="File__btn--round File__btn--cancel File__btn--rename-cancel"
-                      onClick={() => { this._clearState(); }} />
-                    <button
-                      className="File__btn--round File__btn--add File__btn--rename-add"
-                      onClick={() => { this._triggerMutation(); }}
-                    />
-                  </div>
-                </div>
-
-                <div className="File__cell File__cell--size">
-                    {config.humanFileSize(node.size)}
-                </div>
-
-                <div className="File__cell File__cell--date">
-                    {Moment((node.modifiedAt * 1000), 'x').fromNow()}
-                </div>
-
-                <div className="File__cell File__cell--menu">
-                  <ActionsMenu
-                     edge={this.props.fileData.edge}
-                     mutationData={this.props.mutationData}
-                     mutations={this.props.mutations}
-                     renameEditMode={ this._renameEditMode }
-                     section={this.props.section}
-                   />
-                  {
-                    this.props.section === 'data' &&
-                      <DatasetActionsMenu
-                      edge={this.props.fileData.edge}
-                      section={this.props.section}
-                      mutationData={this.props.mutationData}
-                      mutations={this.props.mutations}
-                      renameEditMode={ this._renameEditMode }
-                      isDownloading={this.props.isDownloading}
-                      parentDownloading={this.props.parentDownloading}
-                      setFolderIsDownloading={this.props.setFolderIsDownloading}
-                    />
-                  }
-                </div>
-
             </div>
-        </div>;
+
+          </div>
+
+          <div className={renameCSS}>
+
+            <div className="File__container">
+              <input
+                draggable
+                ref={(input) => { this.reanmeInput = input; }}
+                value={this.state.newFileName}
+                type="text"
+                className="File__input"
+                onClick={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
+                onDragStart={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
+                onChange={(evt) => { this._updateFileName(evt); }}
+                onKeyDown={(evt) => { this._submitRename(evt); }}
+              />
+            </div>
+            <div className="flex justify-space-around">
+              <button
+                className="File__btn--round File__btn--cancel File__btn--rename-cancel"
+                onClick={() => { this._clearState(); }}
+              />
+              <button
+                className="File__btn--round File__btn--add File__btn--rename-add"
+                onClick={() => { this._triggerMutation(); }}
+              />
+            </div>
+          </div>
+
+          <div className="File__cell File__cell--size">
+            {config.humanFileSize(node.size)}
+          </div>
+
+          <div className="File__cell File__cell--date">
+            {Moment((node.modifiedAt * 1000), 'x').fromNow()}
+          </div>
+
+          <div className="File__cell File__cell--menu">
+            <ActionsMenu
+              edge={props.fileData.edge}
+              mutationData={props.mutationData}
+              mutations={props.mutations}
+              renameEditMode={this._renameEditMode}
+              section={props.section}
+            />
+            {
+                    (props.section === 'data')
+                    && (
+                    <DatasetActionsMenu
+                      edge={props.fileData.edge}
+                      section={props.section}
+                      mutationData={props.mutationData}
+                      mutations={props.mutations}
+                      renameEditMode={this._renameEditMode}
+                      isDownloading={props.isDownloading}
+                      parentDownloading={props.parentDownloading}
+                      setFolderIsDownloading={props.setFolderIsDownloading}
+                    />
+                    )
+                  }
+          </div>
+
+        </div>
+      </div>
+    );
 
     return (
-      this.props.connectDragSource(file)
+      props.connectDragSource(file)
     );
   }
 }

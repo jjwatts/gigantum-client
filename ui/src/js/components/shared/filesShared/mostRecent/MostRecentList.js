@@ -1,9 +1,9 @@
 // vendor
 import React, { Component } from 'react';
-// componenets
-import RecentCard from './RecentCard';
 // store
 import store from 'JS/redux/store';
+// componenets
+import RecentCard from './RecentCard';
 
 export default class MostRecentList extends Component {
   constructor(props) {
@@ -36,15 +36,15 @@ export default class MostRecentList extends Component {
     if (selectedPath === 'inputData' || selectedPath === 'outputData') {
       selectedPath = selectedPath.substring(0, selectedPath.length - 4);
     }
-    const favoriteConnection = selectedPath === 'code' ? 'CodeFavorites_favorites' :
-      selectedPath === 'input' ? 'InputFavorites_favorites' :
-        'OutputFavorites_favorites';
-    const connection = selectedPath === 'code' ? 'MostRecentCode_allFiles' :
-      selectedPath === 'input' ? 'MostRecentInput_allFiles' :
-        'MostRecentOutput_allFiles';
+    const favoriteConnection = selectedPath === 'code' ? 'CodeFavorites_favorites'
+      : selectedPath === 'input' ? 'InputFavorites_favorites'
+        : 'OutputFavorites_favorites';
+    const connection = selectedPath === 'code' ? 'MostRecentCode_allFiles'
+      : selectedPath === 'input' ? 'MostRecentInput_allFiles'
+        : 'MostRecentOutput_allFiles';
 
     return (
-      <div className="Recent__list">
+      <div className="Recent__list grid">
         {
           shownFiles.map((edge, index) => (
             <RecentCard
@@ -59,7 +59,7 @@ export default class MostRecentList extends Component {
               file={edge}
               owner={this.props.owner}
             />
-            ))
+          ))
         }
       </div>
     );

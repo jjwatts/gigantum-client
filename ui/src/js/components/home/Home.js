@@ -1,6 +1,10 @@
+// vendor
 import React, { Component } from 'react';
+// components
 import Dashboard from 'Components/dashboard/Dashboard';
 import Login from 'Components/login/Login';
+// assets
+import './Home.scss';
 
 export default class Home extends Component {
   // login for Auth0 function
@@ -11,20 +15,23 @@ export default class Home extends Component {
     };
     this.footerWorkerCallback = this.footerWorkerCallback.bind(this);
   }
+
   /*
     sets authentication response to the state
   */
   componentDidMount() {
+    const { state } = this;
     this.props.auth.isAuthenticated().then((response) => {
       let isAuthenticated = response;
       if (isAuthenticated === null) {
         isAuthenticated = false;
       }
-      if (isAuthenticated !== this.state.authenticated) {
+      if (isAuthenticated !== state.authenticated) {
         this.setState({ authenticated: isAuthenticated });
       }
     });
   }
+
   login() {
     this.props.auth.login();
   }
@@ -32,6 +39,7 @@ export default class Home extends Component {
   footerWorkerCallback(worker, filepath) {
     this.props.footerWorkerCallback(worker, filepath);
   }
+
   render() {
     const { loadingRenew } = this.props;
     return (
@@ -54,7 +62,7 @@ export default class Home extends Component {
             auth={this.props.auth}
             loadingRenew={loadingRenew}
           />
-            )
+          )
         }
 
       </div>

@@ -7,7 +7,7 @@ import {
 // components
 import RemoteLabbookPanel from 'Components/dashboard/labbooks/remoteLabbooks/RemoteLabbookPanel';
 import DeleteLabbook from 'Components/shared/modals/DeleteLabbook';
-import LabbooksPaginationLoader from '../labbookLoaders/LabbookPaginationLoader';
+import CardLoader from 'Components/dashboard/loaders/CardLoader';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // store
@@ -31,6 +31,7 @@ class RemoteLabbooks extends Component {
     this._toggleDeleteModal = this._toggleDeleteModal.bind(this);
     this._loadMore = this._loadMore.bind(this);
   }
+
   /*
     loads more remote labbooks on mount
   */
@@ -119,48 +120,54 @@ class RemoteLabbooks extends Component {
         <div className="Labbooks__listing">
           <div className="grid">
             {
-            labbooks.length ?
-            labbooks.map(edge => (
-              <RemoteLabbookPanel
-                toggleDeleteModal={this._toggleDeleteModal}
-                labbookListId={this.props.remoteLabbooksId}
-                key={edge.node.owner + edge.node.name}
-                ref={`RemoteLabbookPanel${edge.node.name}`}
-                edge={edge}
-                history={this.props.history}
-                existsLocally={edge.node.isLocal}
-                auth={this.props.auth}
-              />
+            labbooks.length
+              ? labbooks.map(edge => (
+                <RemoteLabbookPanel
+                  toggleDeleteModal={this._toggleDeleteModal}
+                  labbookListId={this.props.remoteLabbooksId}
+                  key={edge.node.owner + edge.node.name}
+                  ref={`RemoteLabbookPanel${edge.node.name}`}
+                  edge={edge}
+                  history={this.props.history}
+                  existsLocally={edge.node.isLocal}
+                  auth={this.props.auth}
+                />
               ))
-            :
-            !this.state.isPaginating &&
-            store.getState().labbookListing.filterText &&
+              : !this.state.isPaginating
+            && store.getState().labbookListing.filterText
 
+            && (
             <div className="Labbooks__no-results">
 
               <h3 className="Labbooks__h3">No Results Found</h3>
 
-              <p>Edit your filters above or <span
-                className="Labbooks__span"
-                onClick={() => this.props.setFilterValue({ target: { value: '' } })}
-              >clear
-                                            </span> to try again.
+              <p>
+                Edit your filters above or
+                <span
+                  className="Labbooks__span"
+                  onClick={() => this.props.setFilterValue({ target: { value: '' } })}
+                >
+                clear
+                </span>
+                to try again.
               </p>
 
             </div>
+            )
           }
             {
             Array(5).fill(1).map((value, index) => (
-              <LabbooksPaginationLoader
+              <CardLoader
                 key={`RemoteLabbooks_paginationLoader${index}`}
                 index={index}
                 isLoadingMore={this.state.isPaginating}
               />
-              ))
+            ))
           }
           </div>
           {
-          this.state.deleteModalVisible &&
+          this.state.deleteModalVisible
+          && (
           <DeleteLabbook
             handleClose={() => { this._toggleDeleteModal(); }}
             labbookListId={this.props.labbookListId}
@@ -173,6 +180,7 @@ class RemoteLabbooks extends Component {
             remoteDelete
             history={this.props.history}
           />
+          )
         }
         </div>
       );

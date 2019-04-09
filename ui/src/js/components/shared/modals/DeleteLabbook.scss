@@ -5,3 +5,8 @@
   align-items: center;
   height: 100%;
 }
+
+.DeleteProject__buttons {
+  width: 100%;
+  @include flex(flex-end, row);
+}

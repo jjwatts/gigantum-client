@@ -14,6 +14,7 @@ export default class ActionsMenu extends Component {
   state = {
     popupVisible: false,
   }
+
   /**
   *  LIFECYCLE MEHTODS START
   */
@@ -34,18 +35,18 @@ export default class ActionsMenu extends Component {
   *  @return{ }
   */
   _triggerFavoriteMutation() {
-     const data = {
+    const data = {
       key: this.props.edge.node.key,
       edge: this.props.edge,
-     };
+    };
 
-     if (this.props.edge.node.isFavorite) {
-       this.props.mutations.removeFavorite(data, (response) => {
-       });
-     } else {
-       this.props.mutations.addFavorite(data, (response) => {
-       });
-     }
+    if (this.props.edge.node.isFavorite) {
+      this.props.mutations.removeFavorite(data, (response) => {
+      });
+    } else {
+      this.props.mutations.addFavorite(data, (response) => {
+      });
+    }
   }
 
   /**
@@ -71,13 +72,14 @@ export default class ActionsMenu extends Component {
     }
     this.setState({ popupVisible });
   }
+
   /**
   *  @param {Object} data - event from clicking delete button
   *  triggers DeleteLabbookFileMutation
   *  @return {}
   */
   _getEdges(data) {
-    let edges = [data.edge];
+    const edges = [data.edge];
     function getEdges(data) {
       Object.keys(data).forEach((name) => {
         edges.push(data[name].edge);
@@ -92,6 +94,7 @@ export default class ActionsMenu extends Component {
     }
     return edges;
   }
+
   /**
   *  @param {event} evt - event from clicking delete button
   *  triggers DeleteLabbookFileMutation
@@ -114,58 +117,67 @@ export default class ActionsMenu extends Component {
   *  set wrapper ref
   *  @return {}
   */
-   _setWrapperRef(node) {
-     this[this.props.edge.node.id] = node;
-   }
+  _setWrapperRef(node) {
+    this[this.props.edge.node.id] = node;
+  }
 
   render() {
     const favoriteCSS = classNames({
-            'ActionsMenu__item Tooltip-data Tooltip-data--small': true,
-            'ActionsMenu__item--favorite-on': this.props.edge.node.isFavorite,
-            'ActionsMenu__item--favorite-off': !this.props.edge.node.isFavorite,
-          }),
-          popupCSS = classNames({
-            ActionsMenu__popup: true,
-            hidden: !this.state.popupVisible,
-            ToolTip__message: true,
-          }),
+      'ActionsMenu__item Tooltip-data Tooltip-data--small': true,
+      'ActionsMenu__item--favorite-on': this.props.edge.node.isFavorite,
+      'ActionsMenu__item--favorite-off': !this.props.edge.node.isFavorite,
+    });
 
-          deleteCSS = classNames({
-            'ActionsMenu__item ActionsMenu__item--delete': true,
-            'Tooltip-data Tooltip-data--small': !this.state.popupVisible,
-            'ActionsMenu__popup-visible': this.state.popupVisible,
-          }),
-          folderCSS = classNames({
-            'ActionsMenu__item Tooltip-data Tooltip-data--small': true,
-            'ActionsMenu__item--AddSubfolder': true,
-            'visibility-hidden': !this.props.folder,
-          });
+
+    const popupCSS = classNames({
+      ActionsMenu__popup: true,
+      hidden: !this.state.popupVisible,
+      Tooltip__message: true,
+    });
+
+
+    const deleteCSS = classNames({
+      'ActionsMenu__item ActionsMenu__item--delete': true,
+      'Tooltip-data Tooltip-data--small': !this.state.popupVisible,
+      'ActionsMenu__popup-visible': this.state.popupVisible,
+    });
+
+
+    const folderCSS = classNames({
+      'ActionsMenu__item Tooltip-data Tooltip-data--small': true,
+      'ActionsMenu__item--AddSubfolder': true,
+      'visibility-hidden': !this.props.folder,
+    });
     const isUntrackedDirectory = (this.props.edge.node.key === 'untracked/') && this.props.folder && (this.props.section === 'output');
     return (
+      <div
+        className="ActionsMenu"
+        key={`${this.props.edge.node.id}-action-menu}`}
+        ref={this._setWrapperRef}
+      >
         <div
-          className="ActionsMenu"
-          key={`${this.props.edge.node.id}-action-menu}`}
-          ref={this._setWrapperRef}>
-          <div
-            onClick={() => { this.props.folder && this.props.addFolderVisible(true); }}
-            className={folderCSS}
-            data-tooltip="Add Subfolder">
-          </div>
-          {
-            !isUntrackedDirectory &&
+          onClick={() => { this.props.folder && this.props.addFolderVisible(true); }}
+          className={folderCSS}
+          data-tooltip="Add Subfolder"
+        />
+        {
+            !isUntrackedDirectory
+            && (
             <Fragment>
               <div
                 className={deleteCSS}
                 data-tooltip="Delete"
-                onClick={(evt) => { this._togglePopup(evt, true); }} >
+                onClick={(evt) => { this._togglePopup(evt, true); }}
+              >
 
                 <div className={popupCSS}>
-                  <div className="ToolTip__pointer"></div>
+                  <div className="Tooltip__pointer" />
                   <p>Are you sure?</p>
                   <div className="flex justify--space-around">
                     <button
                       className="File__btn--round File__btn--cancel"
-                      onClick={(evt) => { this._togglePopup(evt, false); }} />
+                      onClick={(evt) => { this._togglePopup(evt, false); }}
+                    />
                     <button
                       className="File__btn--round File__btn--add"
                       onClick={(evt) => { this._triggerDeleteMutation(evt); }}
@@ -176,19 +188,22 @@ export default class ActionsMenu extends Component {
               <div
                 onClick={() => { this.props.renameEditMode(true); }}
                 className="ActionsMenu__item ActionsMenu__item--rename Tooltip-data Tooltip-data--small"
-                data-tooltip="Rename">
-              </div>
+                data-tooltip="Rename"
+              />
               {
-                this.props.section !== 'data' &&
+                this.props.section !== 'data'
+                && (
                 <div
-                  onClick={ () => { this._triggerFavoriteMutation(); }}
+                  onClick={() => { this._triggerFavoriteMutation(); }}
                   className={favoriteCSS}
-                  data-tooltip="Favorite">
-                </div>
+                  data-tooltip="Favorite"
+                />
+                )
               }
             </Fragment>
+            )
           }
-        </div>
+      </div>
     );
   }
 }

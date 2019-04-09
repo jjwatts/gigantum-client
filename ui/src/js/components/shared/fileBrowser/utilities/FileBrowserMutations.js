@@ -15,7 +15,7 @@ import { setErrorMessage } from 'JS/redux/reducers/footer';
 import { setIsProcessing } from 'JS/redux/reducers/dataset/dataset';
 
 class FileBrowserMutations {
-   /**
+  /**
     * @param {Object} props
     *        {string} props.owner
     *        {string} props.labbookName
@@ -25,21 +25,21 @@ class FileBrowserMutations {
     *        {string} props.parentId
     * pass above props to state
     */
-   constructor(props) {
+  constructor(props) {
     this.state = props;
-   }
+  }
 
-   downloadDatasetFiles(data, callback) {
-     const {
-       keys,
-       allKeys,
-       owner,
-       datasetName,
-       labbookName,
-       labbookOwner,
-       successCall,
-       failureCall,
-     } = data;
+  downloadDatasetFiles(data, callback) {
+    const {
+      keys,
+      allKeys,
+      owner,
+      datasetName,
+      labbookName,
+      labbookOwner,
+      successCall,
+      failureCall,
+    } = data;
 
     DownloadDatasetFilesMutation(
       owner,
@@ -52,27 +52,27 @@ class FileBrowserMutations {
       allKeys,
       callback,
     );
-   }
+  }
 
-   /**
+  /**
    *  @param {Object} data
    *         {string} data.key
    *  @param {function} callback
    *  creates a dirctory using MakeLabbookDirectoryMutation
    */
-   makeLabbookDirectory(data, callback) {
-     const {
-       key,
-     } = data;
+  makeLabbookDirectory(data, callback) {
+    const {
+      key,
+    } = data;
 
-     const {
-       connection,
-       owner,
-       labbookName,
-       parentId,
-       section,
-     } = this.state;
-     if (section !== 'data') {
+    const {
+      connection,
+      owner,
+      labbookName,
+      parentId,
+      section,
+    } = this.state;
+    if (section !== 'data') {
       MakeLabbookDirectoryMutation(
         connection,
         owner,
@@ -88,8 +88,8 @@ class FileBrowserMutations {
           callback(response, error);
         },
       );
-     } else {
-      setIsProcessing(true)
+    } else {
+      setIsProcessing(true);
       MakeDatasetDirectoryMutation(
         connection,
         owner,
@@ -105,9 +105,10 @@ class FileBrowserMutations {
           callback(response, error);
         },
       );
-     }
-   }
-    /**
+    }
+  }
+
+  /**
    *  @param {Object} data
    *         {string} data.newKey
    *         {Object} data.edge
@@ -148,8 +149,9 @@ class FileBrowserMutations {
         callback(response, error);
       },
     );
-}
-   /**
+  }
+
+  /**
    *  @param {Object} data
    *         {string} data.newKey
    *         {Object} data.edge
@@ -157,38 +159,39 @@ class FileBrowserMutations {
    *  @param {function} callback
    *  moves file from old folder to a new folder
    */
-   moveLabbookFile(data, callback) {
-      const {
-        edge,
-        newKey,
-        removeIds,
-      } = data;
+  moveLabbookFile(data, callback) {
+    const {
+      edge,
+      newKey,
+      removeIds,
+    } = data;
 
-      const {
-        connection,
-        owner,
-        labbookName,
-        section,
-        parentId,
-      } = this.state;
+    const {
+      connection,
+      owner,
+      labbookName,
+      section,
+      parentId,
+    } = this.state;
 
-      const { key } = edge.node;
+    const { key } = edge.node;
 
-      MoveLabbookFileMutation(
-        connection,
-        owner,
-        labbookName,
-        parentId,
-        edge,
-        key,
-        newKey,
-        section,
-        removeIds,
-        (response, error) => {
-          callback(response, error);
-        },
-      );
+    MoveLabbookFileMutation(
+      connection,
+      owner,
+      labbookName,
+      parentId,
+      edge,
+      key,
+      newKey,
+      section,
+      removeIds,
+      (response, error) => {
+        callback(response, error);
+      },
+    );
   }
+
   /**
   *  @param {Object} data
   *         {string} data.key
@@ -240,17 +243,19 @@ class FileBrowserMutations {
   */
   removeFavorite(data, callback) {
     const {
-        key,
-        edge,
-      } = data,
-      edgeId = edge.node.id;
-   const {
-        favoriteConnection,
-        owner,
-        labbookName,
-        section,
-        parentId,
-      } = this.state;
+      key,
+      edge,
+    } = data;
+
+
+    const edgeId = edge.node.id;
+    const {
+      favoriteConnection,
+      owner,
+      labbookName,
+      section,
+      parentId,
+    } = this.state;
 
     RemoveFavoriteMutation(
       favoriteConnection,
@@ -286,21 +291,21 @@ class FileBrowserMutations {
   */
   deleteLabbookFiles(data, callback) {
     const {
-          filePaths,
-          edges,
-        } = data;
+      filePaths,
+      edges,
+    } = data;
     const {
-        connection,
-        owner,
-        labbookName,
-        parentId,
-        section,
-      } = this.state;
+      connection,
+      owner,
+      labbookName,
+      parentId,
+      section,
+    } = this.state;
 
     if (section !== 'data') {
       edges.forEach((edge) => {
         if (edge && edge.node && edge.node.isFavorite) {
-          let data = {
+          const data = {
             key: edge.node.key,
             edge,
           };
@@ -320,7 +325,7 @@ class FileBrowserMutations {
         (response, error) => {
           if (error) {
             console.error(error);
-            let keys = filePaths.join(' ');
+            const keys = filePaths.join(' ');
             setErrorMessage(`ERROR: could not delete folders ${keys}`, error);
           }
         },
@@ -339,7 +344,7 @@ class FileBrowserMutations {
         (response, error) => {
           if (error) {
             console.error(error);
-            let keys = filePaths.join(' ');
+            const keys = filePaths.join(' ');
             setErrorMessage(`ERROR: could not delete folders ${keys}`, error);
           }
           setTimeout(() => setIsProcessing(false), 1100);
@@ -347,6 +352,7 @@ class FileBrowserMutations {
       );
     }
   }
+
   /**
   *  @param {undefined} data
   *  @param {function} callback
@@ -354,11 +360,11 @@ class FileBrowserMutations {
   */
   completeBatchUploadTransaction(data, callback) {
     const {
-        connection,
-        owner,
-        labbookName,
-        section,
-      } = this.state;
+      connection,
+      owner,
+      labbookName,
+      section,
+    } = this.state;
     const { transactionId } = store.getState().fileBrowser;
 
     CompleteBatchUploadTransactionMutation(

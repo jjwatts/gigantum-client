@@ -43,17 +43,17 @@ export default (
       ...state,
       uploading: true,
     };
-  } else if (action.type === FINISHED_UPLOADING) {
+  } if (action.type === FINISHED_UPLOADING) {
     return {
       ...state,
       uploading: false,
     };
-  } else if (action.type === PAUSE_UPLOAD) {
+  } if (action.type === PAUSE_UPLOAD) {
     return {
       ...state,
       pause: action.payload.pause,
     };
-  } else if (action.type === PAUSE_UPLOAD_DATA) {
+  } if (action.type === PAUSE_UPLOAD_DATA) {
     return {
       ...state,
       files: action.payload.files,
@@ -62,7 +62,7 @@ export default (
       prefix: action.payload.prefix,
       totalFiles: action.payload.totalFiles,
     };
-  } else if (action.type === PAUSE_CHUNK_UPLOAD) {
+  } if (action.type === PAUSE_CHUNK_UPLOAD) {
     const {
       data,
       chunkData,
@@ -80,7 +80,7 @@ export default (
       ...state,
       chunkUploadData,
     };
-  } else if (action.type === RESET_CHUNK_UPLOAD) {
+  } if (action.type === RESET_CHUNK_UPLOAD) {
     return {
       ...state,
       chunkUploadData: {},

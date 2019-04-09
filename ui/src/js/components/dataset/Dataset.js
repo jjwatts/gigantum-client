@@ -19,7 +19,8 @@ import { getFilesFromDragEvent } from 'JS/utils/html-dir-content';
 import Login from 'Components/login/Login';
 import Loader from 'Components/common/Loader';
 import ErrorBoundary from 'Components/common/ErrorBoundary';
-import DatasetHeader from '../shared/header/Header';
+import Tooltip from 'Components/common/Tooltip';
+import DatasetHeader from 'Components/shared/header/Header';
 // assets
 import './Dataset.scss';
 
@@ -55,6 +56,7 @@ class Dataset extends Component {
     const { labbookName, owner } = store.getState().routes;
     document.title = `${owner}/${labbookName}`;
   }
+
   /**
     @param {object} nextProps
     @param {object} state
@@ -64,6 +66,7 @@ class Dataset extends Component {
     setCallbackRoute(nextProps.location.pathname);
     return state;
   }
+
   /**
     @param {}
     subscribe to store to update state
@@ -143,9 +146,9 @@ class Dataset extends Component {
             <DatasetHeader
               description={dataset.description}
               toggleBranchesView={() => {}}
-              branchName={''}
+              branchName=""
               dataset={dataset}
-              sectionType={'dataset'}
+              sectionType="dataset"
               {...this.props}
             />
 
@@ -165,7 +168,7 @@ class Dataset extends Component {
                         scrollToTop={this._scrollToTop}
                         sectionType="dataset"
                         datasetType={dataset.datasetType}
-                        />
+                      />
                     </ErrorBoundary>
                   )}
                 />
@@ -190,10 +193,10 @@ class Dataset extends Component {
                             scrollToTop={this._scrollToTop}
                             sectionType="dataset"
                             datasetType={dataset.datasetType}
-                             />
+                          />
 
                         </ErrorBoundary>
-                          )}
+                      )}
                     />
                     <Route
                       path={`${this.props.match.path}/activity`}
@@ -204,17 +207,17 @@ class Dataset extends Component {
                         >
 
                           <Activity
-                               key={`${this.props.datasetName}_activity`}
-                               dataset={dataset}
-                               activityRecords={this.props.activityRecords}
-                               datasetId={dataset.id}
-                               activeBranch={dataset.activeBranch}
-                               sectionType={'dataset'}
-                               {...this.props}
-                             />
+                            key={`${this.props.datasetName}_activity`}
+                            dataset={dataset}
+                            activityRecords={this.props.activityRecords}
+                            datasetId={dataset.id}
+                            activeBranch={dataset.activeBranch}
+                            sectionType="dataset"
+                            {...this.props}
+                          />
 
                         </ErrorBoundary>
-                          )}
+                      )}
                     />
                     <Route
                       path={`${this.props.match.url}/data`}
@@ -225,11 +228,11 @@ class Dataset extends Component {
                         >
 
                           <Data
-                               dataset={dataset}
-                               datasetId={dataset.id}
-                               type="dataset"
-                               section="data"
-                             />
+                            dataset={dataset}
+                            datasetId={dataset.id}
+                            type="dataset"
+                            section="data"
+                          />
 
                         </ErrorBoundary>)}
                     />
@@ -297,8 +300,10 @@ const DatasetFragmentContainer = createFragmentContainer(
 );
 
 const backend = (manager: Object) => {
-  const backend = HTML5Backend(manager),
-    orgTopDropCapture = backend.handleTopDropCapture;
+  const backend = HTML5Backend(manager);
+
+
+  const orgTopDropCapture = backend.handleTopDropCapture;
 
   backend.handleTopDropCapture = (e) => {
     e.preventDefault();

@@ -4,8 +4,8 @@ import { createFragmentContainer, graphql } from 'react-relay';
 import SectionWrapper from 'Components/shared/filesShared/sectionWrapper/SectionWrapper';
 
 export default createFragmentContainer(
-    SectionWrapper,
-    graphql`
+  SectionWrapper,
+  graphql`
       fragment Input_labbook on Labbook {
         input{
           id
@@ -38,4 +38,4 @@ export default createFragmentContainer(
         }
       }
     `,
-  );
+);

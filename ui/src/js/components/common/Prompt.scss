@@ -1,0 +1,173 @@
+@import '~Styles/_imports.scss';
+
+.Prompt {
+    position: relative;
+}
+
+.Prompt__info {
+    position: fixed;
+    z-index: index($elements, prompt);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    text-align: center;
+
+    color: white;
+    background: $slateBlue;
+
+    font-size: 20px;
+    line-height: 300px;
+}
+
+.Prompt__logo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    width: 500px;
+    height: 130px;
+
+    transform: translate(-50%, -50%);
+
+    background: url('https://s3.amazonaws.com/io.gigantum.assets/gigantum-turquise-logo.svg') no-repeat 50% 50%;
+    background-size: 100%;
+    &--raised {
+      top: 40%;
+
+      transition: top 2s ease 0s;
+      transform: translate(-50%, -50%);
+
+      background: url('https://s3.amazonaws.com/io.gigantum.assets/gigantum-turquise-logo.svg') no-repeat 50% 50%;
+      background-size: 100%;
+    }
+
+    &--final {
+        top: 30%;
+
+        transition: top 2s ease 0s;
+        transform: translate(-50%, -50%);
+
+        background: url('https://s3.amazonaws.com/io.gigantum.assets/gigantum-turquise-logo.svg') no-repeat 50% 50%;
+        background-size: 100%;
+    }
+}
+
+.Prompt__logo--final {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+
+    width: 500px;
+    height: 130px;
+
+    transition: top 2s ease 0s;
+    transform: translate(-50%, -50%);
+
+    background: url('https://s3.amazonaws.com/io.gigantum.assets/gigantum-turquise-logo.svg') no-repeat 50% 50%;
+    background-size: 100%;
+}
+
+.Prompt__loading-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    opacity: 0;
+
+    @include animation('fade-in-out 13s linear');
+    animation-delay: 2s;
+
+}
+
+.Prompt__failure-container{
+  position: absolute;
+  top: 45%;
+  left: calc(50% - 400px);
+
+  align-items: center;
+
+  width: 800px;
+
+  @include flex(space-between, column);
+
+  img{
+    width: 600px;
+    height: auto;
+    margin-top: 20px;
+  }
+}
+
+.Prompt__failure-text {
+
+    opacity: 0;
+
+    line-height: 1.5;
+
+    @include animation('fade-in 3s forwards');
+    animation-delay: 2s;
+
+    p {
+        margin: 0
+    }
+    a {
+        color: $turquise;
+    }
+}
+
+.Prompt__cli {
+    width: 600px;
+    height: 300px;
+
+    opacity: 0;
+    background: url('~Images/logos/cli.png') no-repeat 50% 50%;
+    background-size: 100%;
+
+    @include animation('fade-in 3s forwards');
+    animation-delay: 2s;
+}
+
+.Prompt__mac {
+    width: 600px;
+    height: 300px;
+
+    opacity: 0;
+    background: url('~Images/logos/app-mac.png') no-repeat 50% 50%;
+    background-size: 50%;
+
+    @include animation('fade-in 3s forwards');
+    animation-delay: 2s;
+}
+
+.Prompt__windows {
+    width: 600px;
+    height: 300px;
+
+    opacity: 0;
+    background: url('~Images/logos/app-win.png') no-repeat 50% 50%;
+    background-size: 50%;
+
+    @include animation('fade-in 3s forwards');
+    animation-delay: 2s;
+}
+
+.Prompt__refresh {
+    position: fixed;
+    z-index: index($elements, popup);
+    bottom: 20px;
+    left: 180px;
+
+    width: 500px;
+    padding: 20px;
+
+    text-align: center;
+    word-wrap: break-word;
+
+    color: $romanSilver;
+    border-radius: 8px;
+    background: $white;
+    box-shadow: 0 0px 12px 0 rgba(0,0,0,.20);
+}

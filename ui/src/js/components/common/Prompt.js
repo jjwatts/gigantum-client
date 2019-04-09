@@ -1,7 +1,47 @@
+// vendor
 import React, { Component } from 'react';
 import uuidv4 from 'uuid/v4';
+import classNames from 'classnames';
+// assets
+import './Prompt.scss';
 
 let updateAvailable = false;
+
+const Localhost = () => (
+  <div>
+    <p>Ensure Gigantum is running or restart the application</p>
+    <p>
+       If the problem continues to persist, follow the steps
+      {' '}
+      <a
+        href="https://docs.gigantum.com/docs/client-interface-fails-to-load"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+          here
+      </a>
+       .
+    </p>
+  </div>
+);
+
+const Cloud = () => (
+  <div>
+    <p>Please ensure you have a valid internet connection.</p>
+    <p>
+       If the problem continues to persist, please report it&nbsp;
+      {' '}
+      <a
+        href="https://spectrum.chat/gigantum"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+           here
+      </a>
+       .
+    </p>
+  </div>
+);
 
 const pingServer = () => {
   const apiHost = process.env.NODE_ENV === 'development' ? 'localhost:10000' : window.location.host;
@@ -42,7 +82,7 @@ export default class Prompt extends Component {
     this._handlePing = this._handlePing.bind(this);
   }
 
-  UNSAFE_componentWillMount() {
+  componentDidMount() {
     this._handlePing();
     this.intervalId = setInterval(this._handlePing.bind(this), 2500);
   }
@@ -58,13 +98,27 @@ export default class Prompt extends Component {
           this.setState({ updateAvailable });
         }
         if (response) {
-          if (this.state.failureCount > 0) window.location.reload();
-          this.setState({ promptState: true, connected: true, failureCount: 0 });
+          if (this.state.failureCount > 0) {
+            window.location.reload();
+          }
+
+          this.setState({
+            promptState: true,
+            connected: true,
+            failureCount: 0,
+          });
+
           clearInterval(this.intervalId);
+
           this.intervalId = setInterval(this._handlePing.bind(this), 10000);
         } else {
-          this.setState({ failureCount: this.state.failureCount + 1, promptState: false });
+          this.setState({
+            failureCount: this.state.failureCount + 1,
+            promptState: false,
+          });
+
           clearInterval(this.intervalId);
+
           this.intervalId = setInterval(this._handlePing.bind(this), 2500);
         }
       });
@@ -72,52 +126,67 @@ export default class Prompt extends Component {
 
 
   render() {
+    const { props, state } = this;
+    const failedTwiceOrMore = (state.failureCount >= 2);
+    const failedEightTimesOrMore = (state.failureCount >= 8);
+    const lessThanEight = (state.failureCount < 8);
+    const promptInfoCSS = classNames({
+      Prompt__info: true,
+      hidden: state.promptState,
+    });
+
+
+    const propmptLogoCSS = classNames({
+      Prompt__logo: true,
+      'Prompt__logo--final': failedEightTimesOrMore,
+      'Prompt__logo--raised': failedTwiceOrMore && !failedEightTimesOrMore,
+    });
+
+
+    const loadingMessageCSS = classNames({
+      'Prompt__loading-text': ((lessThanEight) && failedTwiceOrMore),
+      hidden: !((failedTwiceOrMore) && lessThanEight),
+    });
+
+
+    const failureContainerCSS = classNames({
+      'Prompt__failure-container': failedEightTimesOrMore,
+      hidden: !failedEightTimesOrMore,
+    });
+
+
+    const updateAvailableCSS = classNames({
+      Prompt__refresh: state.updateAvailable,
+      hidden: !state.updateAvailable,
+    });
+
     return (
       <div className="Prompt">
-        <div className={this.state.promptState ? 'hidden' : 'Prompt__info'}>
-          <div
-            className={this.state.failureCount >= 2 ? this.state.failureCount >= 8 ? 'Prompt__logo--final' : 'Prompt__logo--raised' : 'Prompt__logo'}
-          />
-          <div className={this.state.failureCount >= 2 && this.state.failureCount < 8 ? 'Prompt__loading-text' : 'hidden'}>
+        <div className={promptInfoCSS}>
+          <div className={propmptLogoCSS} />
+          <div className={loadingMessageCSS}>
             Loading Please Wait...
           </div>
-          <div className={this.state.failureCount >= 8 ? 'Prompt__failure-container' : 'hidden'}>
+          <div className={failureContainerCSS}>
             <div className="Prompt__failure-text">
               <p>There was a problem loading Gigantum</p>
               {
-                window.location.hostname === 'localhost' ?
-                  <div>
-                    <p>Ensure Gigantum is running or restart the application</p>
-                    <p>If the problem continues to persist, follow the steps <a href="https://docs.gigantum.com/docs/client-interface-fails-to-load" rel="noopener noreferrer" target="_blank">here</a>.</p>
-
-                  </div>
-                :
-                  <div>
-                    <p>Please ensure you have a valid internet connection.</p>
-                    <p>If the problem continues to persist, please report it&nbsp;
-                      <a
-                        href="https://spectrum.chat/gigantum"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        here
-                      </a>
-                      .
-                      </p>
-                  </div>
+                (window.location.hostname === 'localhost')
+                  ? <Localhost />
+                  : <Cloud />
               }
             </div>
           </div>
         </div>
-        <div className={this.state.updateAvailable ? 'Prompt__refresh' : 'hidden'}>
+        <div className={updateAvailableCSS}>
           <div>
             <p>A newer version of gigantum has been detected. Please refresh the page to view changes.</p>
           </div>
-
           <div>
             <button
               className="button--green"
-              onClick={() => window.location.reload()}>
+              onClick={() => window.location.reload()}
+            >
               Refresh
             </button>
           </div>

@@ -13,10 +13,12 @@ import { setFinishedUploading, setPauseChunkUpload } from 'JS/redux/reducers/lab
 import { setIsProcessing } from 'JS/redux/reducers/dataset/dataset';
 import config from 'JS/config';
 
-const uploadLabbookChunk = (file, chunk, accessToken, getChunkCallback, type) => {
+const uploadImportChunk = (file, chunk, accessToken, getChunkCallback, type) => {
+  console.log(type);
   if (type === 'dataset') {
     ImportDatasetMutation(chunk.blob, chunk, accessToken, (result, error) => {
-      if (result && (error === undefined)) {
+      console.log(result, error);
+      if (result && !error) {
         getChunkCallback(file, result);
       } else {
         getChunkCallback(error);
@@ -24,7 +26,8 @@ const uploadLabbookChunk = (file, chunk, accessToken, getChunkCallback, type) =>
     });
   } else {
     ImportLabbookMutation(chunk.blob, chunk, accessToken, (result, error) => {
-      if (result && (error === undefined)) {
+      console.log(result, error);
+      if (result && !error) {
         getChunkCallback(file, result);
       } else {
         getChunkCallback(error);
@@ -122,10 +125,9 @@ const updateChunkStatus = (file, chunkData, labbookName, owner, transactionId, s
 };
 
 const uploadFileBrowserChunk = (data, chunkData, file, chunk, accessToken, username, filepath, section, getChunkCallback, componentCallback, type) => {
-  let { footer, fileBrowser } = store.getState();
+  const { footer, fileBrowser } = store.getState();
   if (fileBrowser.pause || (footer.totalFiles > 0)) {
     const cbFunction = (result, error) => {
-
       if (result && !error) {
         getChunkCallback(file, result);
         if (store.getState().footer.totalFiles > 1) {
@@ -180,34 +182,50 @@ const ChunkUploader = {
     @param {object} data includes file filepath username and accessToken
   */
   chunkFile: (data, postMessage, passedChunkIndex) => {
-    let {
-        file,
-        filepath,
-        username,
-        section,
-      } = data,
-      componentCallback = (response) => { // callback to trigger postMessage from initializer
-        postMessage(response, false);
-      };
+    console.log(data);
+    const {
+      file,
+      filepath,
+      username,
+      section,
+    } = data;
 
-    const id = uuidv4(),
-      chunkSize = 1000 * 1000 * 48,
-      fileSize = file.size,
-      fileSizeKb = Math.round(fileSize / 1000, 10);
 
-    let fileLoadedSize = 0,
-      chunkIndex = passedChunkIndex || 0,
-      totalChunks = (file.size === 0) ? 1 : Math.ceil(file.size / chunkSize);
+    const componentCallback = (response) => { // callback to trigger postMessage from initializer
+      console.trace(response);
+      postMessage(response, false);
+    };
+
+    const id = uuidv4();
+
+
+    const chunkSize = 1000 * 1000 * 48;
+
+
+    const fileSize = file.size;
+
+
+    const fileSizeKb = Math.round(fileSize / 1000, 10);
+
+    let fileLoadedSize = 0;
+
+
+    let chunkIndex = passedChunkIndex || 0;
+
+
+    const totalChunks = (file.size === 0) ? 1 : Math.ceil(file.size / chunkSize);
 
     /*
       @param{object, object} response result
     */
     const getChunk = (response, result) => {
-      if (response.name) { // checks if response is a file
-        let sliceUpperBound = (fileSize > (fileLoadedSize + chunkSize))
-            ? (fileLoadedSize + chunkSize)
-            : ((fileSize - fileLoadedSize) + fileLoadedSize),
-          blob = file.slice(fileLoadedSize, sliceUpperBound);
+      if (response && response.name) { // checks if response is a file
+        const sliceUpperBound = (fileSize > (fileLoadedSize + chunkSize))
+          ? (fileLoadedSize + chunkSize)
+          : ((fileSize - fileLoadedSize) + fileLoadedSize);
+
+
+        const blob = file.slice(fileLoadedSize, sliceUpperBound);
 
         fileLoadedSize += chunkSize;
 
@@ -226,7 +244,7 @@ const ChunkUploader = {
           // select type of mutation
           if (file.name.indexOf('.lbk') > -1 || file.name.indexOf('.zip') > -1) {
             if (!data.connectionKey) {
-              uploadLabbookChunk(
+              uploadImportChunk(
                 file,
                 chunkData,
                 data.accessToken,
@@ -255,11 +273,14 @@ const ChunkUploader = {
             // }
           }
         } else if (result) { // completes chunk upload task
+          console.log(result);
           componentCallback(result);
         } else { // chunk upload fails
+          console.log(response);
           componentCallback(response);
         }
       } else { // chunk upload fails
+        console.log(response, result);
         componentCallback(response);
       }
     };

@@ -1,10 +1,10 @@
 // vendor
 import React, { Component } from 'react';
+// store
+import store from 'JS/redux/store';
 // componenets
 import FileEmpty from 'Components/labbook/overview/FileEmpty';
 import MostRecentList from './MostRecentList';
-// store
-import store from 'JS/redux/store';
 // assets
 import './MostRecent.scss';
 
@@ -41,8 +41,8 @@ export default class MostRecent extends Component {
     handle state and addd listeners when component mounts
   */
   componentDidMount() {
-    if (this.state.files && this.state.files.allFiles &&
-        this.state.files.allFiles.pageInfo.hasNextPage) {
+    if (this.state.files && this.state.files.allFiles
+        && this.state.files.allFiles.pageInfo.hasNextPage) {
       this._loadMore(); // routes query only loads 2, call loadMore
     }
   }
@@ -62,8 +62,8 @@ export default class MostRecent extends Component {
       (response, error) => {
         const files = self.props[this.state.selectedPath];
 
-        if (files.allFiles &&
-        files.allFiles.pageInfo.hasNextPage) {
+        if (files.allFiles
+        && files.allFiles.pageInfo.hasNextPage) {
           self._loadMore();
         } else {
           self.setState({ loading: false });
@@ -74,6 +74,7 @@ export default class MostRecent extends Component {
       },
     );
   }
+
   /**
   *  @param {}
   *  sets state for more
@@ -82,6 +83,7 @@ export default class MostRecent extends Component {
   _showMore() {
     this.setState({ showAmount: this.state.showAmount + 3 });
   }
+
   /**
   *  @param {Array:[Object]} files
   *  sorts by modified date
@@ -92,19 +94,20 @@ export default class MostRecent extends Component {
   }
 
   render() {
-    if (this.state.files && this.state.files.allFiles) {
-      let loadingClass = (this.state.showAmount < this.state.files.allFiles.edges.length) ? 'Recent__action-bar' : 'hidden';
-      loadingClass = (this.state.loading) ? 'Recent__action-bar--loading' : loadingClass;
+    const { props, state } = this;
+    if (state.files && state.files.allFiles) {
+      let loadingClass = (state.showAmount < state.files.allFiles.edges.length) ? 'Recent__action-bar' : 'hidden';
+      loadingClass = (state.loading) ? 'Recent__action-bar--loading' : loadingClass;
 
-      if (this.state.files.allFiles.edges.length > 0) {
-        let allFiles = this.state.files.allFiles.edges.filter(edge => edge && edge.node && (edge.node !== undefined) && !edge.node.isDir);
+      if (state.files.allFiles.edges.length > 0) {
+        let allFiles = state.files.allFiles.edges.filter(edge => edge && edge.node && (edge.node !== undefined) && !edge.node.isDir);
         allFiles = this._sortFiles(allFiles);
         return (
           <div className="Recent">
             <MostRecentList
               allFiles={allFiles}
-              showAmount={this.state.showAmount}
-              edgeId={this.props.edgeId}
+              showAmount={state.showAmount}
+              edgeId={props.edgeId}
             />
           </div>
 
@@ -112,7 +115,7 @@ export default class MostRecent extends Component {
       }
       return (
         <FileEmpty
-          section={this.state.fullPathName}
+          section={state.fullPathName}
           mainText="This Project has No Recent Files"
         />
       );

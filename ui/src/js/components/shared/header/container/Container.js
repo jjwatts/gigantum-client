@@ -37,29 +37,31 @@ class Container extends Component {
   }
 
   render() {
-    const { props, state } = this,
-          { labbook } = props;
+    const { props, state } = this;
+
+
+    const { labbook } = props;
     return (
-        <div className="Container">
+      <div className="Container">
 
-            <DevTools
-              {...props}
-              updateStatus={this._updateStatus}
-              stateStatus={state.status}
-              containerMutations={state.containerMutations}
-              isBuilding={state.isBuilding}
-            />
+        <DevTools
+          {...props}
+          updateStatus={this._updateStatus}
+          stateStatus={state.status}
+          containerMutations={state.containerMutations}
+          isBuilding={state.isBuilding}
+        />
 
-            <ContainerStatus
-              ref={ref => this.containerStatusComponent = ref}
-              {...props}
-              stateStatus={state.status}
-              updateStatus={this._updateStatus}
-              containerMutations={state.containerMutations}
-              base={labbook.environment.base}
-            />
+        <ContainerStatus
+          ref={ref => this.containerStatusComponent = ref}
+          {...props}
+          stateStatus={state.status}
+          updateStatus={this._updateStatus}
+          containerMutations={state.containerMutations}
+          base={labbook.environment.base}
+        />
 
-        </div>
+      </div>
     );
   }
 }

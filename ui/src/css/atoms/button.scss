@@ -1,228 +1,188 @@
 button {
-  height: 26px;
-  line-height: 22px;
-  padding: 0px 20px;
-  border: 2px solid $azure;
-  border-radius: 10px;
-  color: $white;
-  background: $azure;
+  width: 162px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  margin: 0 12.5px;
+
   cursor: pointer;
-  font-weight: 100;
 
-}
-
-button:hover {
   color: $white;
-  background: $turquise;
-  border: 2px solid $turquise;
-}
-
-button:focus {
-  color: $white;
+  border: 0;
+  border-radius: 4px;
   background: $azure;
+
+  font-weight: 400;
+  line-height: 1rem;
+  outline: none;
+
+  &:hover {
+    @include boxShadowDark();
+  }
+
+  &:disabled,
+  &:hover:disabled {
+    overflow: hidden;
+    border: 0;
+    background-color: $romanSilver;
+    box-shadow: none !important;
+  }
 }
 
-
-button:disabled {
-  color: $grey;
-  background: $grey-light;
-  border: 2px solid $grey;
-  overflow: hidden;
-}
-
-.button--flat {
-  padding: 0px 20px;
-  border: 0px solid $azure;
-  border-radius: 0px;
-  color: $font-grey;
-  background: none;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.button--flat:hover {
-  color: $turquise;
-  background: none;
-  border: 0px solid $turquise;
-}
-.button--flat:focus {
-  color: $azure;
-  background: none;
-  border: 0px solid $azure;
-}
-.button--flat:disabled,
-.button--flat:disabled:focus,
-.button--flat:disabled:hover{
-  color: $grey;
-  background: $grey-light;
-  border: 2px solid $grey;
-}
-
-.Btn{
+.Btn {
    background-color: $azure;
    border: 0px;
    border-radius: 8px;
    outline: none;
 
-   &:focus {
-     outline: none;
-   }
+   &:hover {
+    @include boxShadowDark();
+  }
 
-   &:hover{
-     background-color: $turquise;
-   }
+  // flat button
+  &--flat {
+      width: auto;
+      padding: 7px 20px;
 
-   &--large {
-     padding: 10px 30px;
-   }
+      cursor: pointer;
+      text-decoration: underline;
 
-   &--medium {
-     padding: 5px 15px;
-   }
+      color: $azure;
+      border: 0;
+      border-radius: 0px;
+      background: none;
+      box-shadow: none !important;
 
-   &--small{
-     padding: 0px;
-   }
+      &:hover {
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+      }
 
-   &--round {
-     height: 34px;
-     width: 34px;
+      &:disabled{
+        text-decoration: none;
+
+        color: $romanSilver;
+        border: 0px solid $grey;
+        background: transparent !important;
+        text-shadow: none;
+      }
+  }
+
+  // feature or actions buttons
+  &--feature {
+   position: absolute;
+   z-index: 1;
+
+   width: 30px;
+   height: 30px;
+   padding: 0;
+
+   transition: all 0.25s ease, background-position 0ms, font-size 0ms;
+
+   border: 2px solid $white;
+   border-radius: 30px;
+
+   font-size: 0;
+
+   &:hover, &:focus, &--expanded {
+     width: auto;
+     padding: 0 40px 0 15px;
+
+     font-size: 14px;
+   }
+   &--expanded--paddingLeft,
+   &--expanded--paddingLeft:hover,
+   &--expanded--paddingLeft:focus {
+      width: auto;
+      padding: 0 15px 0 40px;
+
+      font-size: 14px;
+   }
+   &:disabled, &:disabled:hover, &:disabled:focus {
+     width: 30px;
+     padding: 0;
+
+     background-size: 30px;
+
+     font-size: 0;
+   }
+   &--noPadding {
+     padding: 0 15px !important;
+   }
+  }
+
+  &--noMargin {
+    margin: 0;
+  }
+
+  &--action{
+    width: auto;
+  }
+
+  &--round {
      border-radius: 15px;
-   }
+  }
 
-   &--redirect {
-    transition: all 0.25s ease, background-position 1ms;
-    width: 30px;
-    height: 30px;
-    border-radius: 30px;
-    position: absolute;
-    right: 15px;
-    top: -20px;
-    padding: 0;
-    background: $azure url('~Images/icons/continue-arrow.svg') no-repeat -1px center;
-    background-size: 30px;
-    border: none;
-    z-index: 1;
-    span {
-      display: none;
+  &--medium {
+    height: 34px;
+    width: 34px;
+  }
+
+  &--small {
+    width: 20px;
+    height: 20px;
+    background-size: 10px !important;
+  }
+
+
+  &--no-underline {
+    text-decoration: none;
+  }
+
+
+  &--columns {
+    @include flex(space-around, column);
+    align-items: flex-start;
+    line-height: 14px;
+    padding: 6px 40px 6px 20px;
+  }
+
+  &--label {
+    font-size: 12px;
+  }
+
+  &--text {
+    font-size: 16px;
+  }
+
+  &--last {
+    margin-right: 0px;
+  }
+
+  &--first {
+    margin-left: 0px;
+  }
+
+
+  /**********************************
+   * feature buttons
+   *
+   *
+   *********************************/
+  &__loadMore{
+    margin: 0;
+    border-radius: 0;
+    width: 100%;
+    height: 25px;
+    &--up {
+      background: $azure url('~Images/icons/up-arrow-white.svg') no-repeat center center;
+      background-size: 20px;
     }
-
-    &:hover,
-    &:focus {
-      border: none;
-      width: auto;
-      padding: 0 40px 0 15px;
-      background: $azure url('~Images/icons/continue-arrow.svg') no-repeat right 1px center;
-      background-size: 30px;
-
-      span {
-        display: block;
-      }
+    &--down {
+      background: $azure url('~Images/icons/down-arrow-white.svg') no-repeat center center;
+      background-size: 20px;
     }
-   }
+  }
 
-   &--expandable-close {
-    transition: all 0.25s ease, background-position 1ms;
-    width: 30px;
-    height: 30px;
-    border-radius: 30px;
-    position: absolute;
-    right: 15px;
-    top: -20px;
-    padding: 0;
-    background: $azure url('~Images/icons/close-white.svg') no-repeat center center;
-    background-size: 15px;
-    border: none;
-    z-index: 1;
-    span {
-      display: none;
-    }
-
-    &:hover,
-    &:focus {
-      border: none;
-      width: auto;
-      padding: 0 40px 0 15px;
-      background: $azure url('~Images/icons/close-white.svg') no-repeat right 10px center;
-      background-size: 15px;
-
-      span {
-        display: block;
-      }
-    }
-   }
-
-   &--check {
-     background: url(~Images/icons/check-selected.svg) no-repeat center center;
-     background-size: 30px;
-
-
-     &:focus {
-       background: url(~Images/icons/check-selected.svg) no-repeat center center;
-       border: 0px;
-       background-size: 30px;
-     }
-
-     &:hover {
-       background: url(~Images/icons/check-selected.svg) no-repeat center center;
-       border: 0px;
-        background-size: 34px;
-     }
-   }
-
-   &--uncheck {
-     background: url(~Images/icons/check-unselected.svg) no-repeat center center;
-     background-size: 30px;
-
-
-     &:focus {
-       background: url(~Images/icons/check-unselected.svg) no-repeat center center;
-       background-size: 30px;
-       border: 0px;
-     }
-
-     &:hover {
-       background: url(~Images/icons/check-unselected.svg) no-repeat center center;
-       background-size: 34px;
-       border: 0px;
-     }
-   }
-
-   &--partial {
-     background: url(~Images/icons/minus.svg) no-repeat center center;
-     background-size: 30px;
-     &:focus {
-       background: url(~Images/icons/minus.svg) no-repeat center center;
-       background-size: 30px;
-       border: 0px;
-     }
-
-     &:hover {
-       background: url(~Images/icons/minus.svg) no-repeat center center;
-       background-size: 34px;
-       border: 0px;
-     }
-   }
-
-   &--close {
-     background: url(~Images/icons/close.svg) no-repeat center center;
-     background-size: 30px;
-     border: 0px;
-
-     &:focus {
-       background: url(~Images/icons/close.svg) no-repeat center center;
-       background-size: 30px;
-       border: 0px;
-     }
-
-     &:hover {
-       background: url(~Images/icons/close.svg) no-repeat center center;
-       background-size: 34px;
-       border: 0px;
-     }
-   }
-
-   &--delete {
+  &__delete {
      background: url(~Images/icons/trash-dark.svg) no-repeat center center;
      background-size: 20px;
      border: 0px;
@@ -246,52 +206,183 @@ button:disabled {
      }
   }
 
-
-  &--flat {
-    padding: 0px 20px;
-    border: 0px solid $azure;
-    border-radius: 0px;
-    color: $azure;
-    background: none;
-    cursor: pointer;
-    text-decoration: none;
+  &__redirect {
+     right: 15px;
+     top: -20px;
+     background: $azure url('~Images/icons/continue-arrow.svg') no-repeat -1px center;
+     background-size: 30px;
+     &:hover, &:focus {
+       background-position: right 1px center;
+       background-size: 30px;
+     }
   }
 
-  &--flat:hover {
-    color: $turquise;
-    background: none;
-    border: 0px solid $turquise;
-  }
-  &--flat:focus {
-    color: $azure;
-    background: none;
-    border: 0px solid $azure;
-  }
-  &--flat:disabled,
-  &--flat:disabled:focus,
-  &--flat:disabled:hover{
-    color: $grey;
-    background: $grey-light;
-    border: 2px solid $grey;
+  &__edit {
+     top: -20px;
+     right: 15px;
+     background: $azure url('~Images/icons/edit-azure.svg') no-repeat center center;
+     background-size: 18px;
+     &:hover, &:focus {
+       background: $azure url('~Images/icons/edit-azure.svg') no-repeat right 7px center;
+       background-size: 18px;
+     }
   }
 
-  &--no-underline {
-    text-decoration: none;
+  &__toggle {
+      flex: 0 1 30px;
+
+      width: 24px;
+      height: 24px;
+
+      cursor: pointer;
+
+      background: url('~Images/icons/down-arrow-white.svg') no-repeat center center;
+      background-size: 18px;
+
+      &:hover{
+        box-shadow: none;
+      }
+
+      &--open {
+          background: url('~Images/icons/up-arrow-white.svg') no-repeat center center;
+          background-size: 18px;
+      }
   }
 
 
-  &--columns {
-    @include flex(space-around, column);
-    align-items: flex-start;
-    line-height: 14px;
-    padding: 6px 40px 6px 20px;
+  &__check {
+    background: url(~Images/icons/check-selected.svg) no-repeat center center;
+    background-size: 30px;
+
+
+    &:focus {
+      background: url(~Images/icons/check-selected.svg) no-repeat center center;
+      border: 0px;
+      background-size: 30px;
+    }
+
+    &:hover {
+      background: url(~Images/icons/check-selected.svg) no-repeat center center;
+      border: 0px;
+       background-size: 34px;
+    }
   }
 
-  &--label {
-    font-size: 12px;
+  &__uncheck {
+    background: url(~Images/icons/check-unselected.svg) no-repeat center center;
+    background-size: 30px;
+
+
+    &:focus {
+      background: url(~Images/icons/check-unselected.svg) no-repeat center center;
+      background-size: 30px;
+      border: 0px;
+    }
+
+    &:hover {
+      background: url(~Images/icons/check-unselected.svg) no-repeat center center;
+      background-size: 34px;
+      border: 0px;
+    }
   }
 
-  &--text {
-    font-size: 16px;
+  &__partial {
+    background: url(~Images/icons/minus.svg) no-repeat center center;
+    background-size: 30px;
+    &:focus {
+      background: url(~Images/icons/minus.svg) no-repeat center center;
+      background-size: 30px;
+      border: 0px;
+    }
+
+    &:hover {
+      background: url(~Images/icons/minus.svg) no-repeat center center;
+      background-size: 34px;
+      border: 0px;
+    }
   }
+
+  &__close {
+    background: url(~Images/icons/close.svg) no-repeat center center;
+    background-size: 30px;
+    border: 0px;
+
+    &:focus {
+      background: url(~Images/icons/close.svg) no-repeat center center;
+      background-size: 30px;
+      border: 0px;
+    }
+
+    &:hover {
+      background: url(~Images/icons/close.svg) no-repeat center center;
+      background-size: 34px;
+      border: 0px;
+    }
+  }
+
+  &__remove {
+    background: $azure url('~Images/icons/close-white.svg') no-repeat center center;
+    background-size: 20px;
+
+    &:disabled {
+      background-image: url('~Images/icons/close-white.svg');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: 20px;
+    }
+  }
+
+
+  &__expandable-close {
+   transition: all 0.25s ease, background-position 1ms;
+   width: 30px;
+   height: 30px;
+   border-radius: 30px;
+   position: absolute;
+   right: 15px;
+   top: -20px;
+   padding: 0;
+   background: $azure url('~Images/icons/close-white.svg') no-repeat center center;
+   background-size: 15px;
+   border: none;
+   z-index: 1;
+
+   span {
+     display: none;
+   }
+
+   &:hover,
+   &:focus {
+     border: none;
+     width: auto;
+     padding: 0 40px 0 15px;
+     background: $azure url('~Images/icons/close-white.svg') no-repeat right 10px center;
+     background-size: 15px;
+
+     span {
+       display: block;
+     }
+   }
+  }
+
+  &__overview {
+    top: -7px;
+  }
+
+  &__plus {
+    background: $azure url('~Images/icons/add-white.svg') no-repeat center center;
+    background-size: 20px !important;
+    &:disabled {
+      background-image: url('~Images/icons/add-white.svg');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: 20px !important;
+    }
+  }
+
+  &__dropdown {
+    width: 20px;
+    height: 20px;
+  }
+
 }

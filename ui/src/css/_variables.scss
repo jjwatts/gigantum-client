@@ -60,18 +60,22 @@ $white: #fefefe;
 ***********************/
 $elements: basic, psuedoCard, card, fixedDate, date, button,labbookHeader, sideBar, headerStrip, veil, popup, head, modalCoverNested, loader, modalCover, modal, footer, helper, login, prompt;
 
+$footerElements: basic, progressBar, status, section, message, button;
 /*********************
 *
 * font sizes
 *
 ***********************/
-$h1-fontsize: 4.2rem !default;
-$h2-fontsize: 3.56rem !default;
-$h3-fontsize: 2.92rem !default;
-$h4-fontsize: 2.28rem !default;
-$h5-fontsize: 1.64rem !default;
-$h6-fontsize: 1rem !default;
-$body-fontsize: 14px !default;
+$h1-fontsize: 3.052em;
+$h2-fontsize: 2.441em;
+$h3-fontsize: 1.953em;
+$h4-fontsize: 1.563em;
+$h5-fontsize: 1.25em;
+$h6-fontsize: 1em;
+$body-fontsize: 15px !default;
+$tooltip: 0.8em;
+$annotation: 0.64em;
+$superscript: 0.512em;
 /*****************************
 *
 * width

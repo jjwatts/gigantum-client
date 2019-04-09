@@ -6,7 +6,6 @@ import Moment from 'moment';
 import './LinkCard.scss';
 
 export default class Overview extends Component {
-
   render() {
     const { node, selectedDataset } = this.props;
     const linkCardCSS = classNames({
@@ -17,24 +16,24 @@ export default class Overview extends Component {
     });
 
     return (
-        <div className={linkCardCSS}>
-          <img
-              alt=""
-              src={`data:image/jpeg;base64,${node.datasetType.icon}`}
-              height="50"
-              width="50"
-          />
-          <div className="LinkCard__details">
-              <h6 className="LinkCard__name">{node.name}</h6>
-              <h6 className="LinkCard__type">{node.datasetType.isManaged ? 'Managed' : 'Unmanaged'}</h6>
-              <h6>{`Created on ${Moment(node.createdOnUtc).format('MM/DD/YY')}`}</h6>
-              <h6>{`Modified ${Moment(node.modifiedOnUtc).fromNow()}`}</h6>
-          </div>
-          <div className="LinkCard__text">
-              <p className="LinkCard__description">
-                  {node.description}
-              </p>
-          </div>
-    </div>);
+      <div className={linkCardCSS}>
+        <img
+          alt=""
+          src={`data:image/jpeg;base64,${node.datasetType.icon}`}
+          height="50"
+          width="50"
+        />
+        <div className="LinkCard__details">
+          <h6><b>{node.name}</b></h6>
+          <p>{node.datasetType.isManaged ? 'Managed' : 'Unmanaged'}</p>
+          <p>{`Created on ${Moment(node.createdOnUtc).format('MM/DD/YY')}`}</p>
+          <p>{`Modified ${Moment(node.modifiedOnUtc).fromNow()}`}</p>
+        </div>
+        <div className="LinkCard__text">
+          <p className="LinkCard__description">
+            {node.description}
+          </p>
+        </div>
+      </div>);
   }
 }

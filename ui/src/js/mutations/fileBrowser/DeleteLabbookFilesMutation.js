@@ -27,7 +27,6 @@ export default function DeleteLabbookFilesMutation(
   edgesToDelete,
   callback,
 ) {
-
   const variables = {
     input: {
       owner,
@@ -37,11 +36,11 @@ export default function DeleteLabbookFilesMutation(
       clientMutationId: `${tempID++}`,
     },
   };
-  const recentConnectionKey = section === 'code' ?
-        'MostRecentCode_allFiles' :
-        section === 'input' ?
-        'MostRecentInput_allFiles' :
-        'MostRecentOutput_allFiles';
+  const recentConnectionKey = section === 'code'
+    ? 'MostRecentCode_allFiles'
+    : section === 'input'
+      ? 'MostRecentInput_allFiles'
+      : 'MostRecentOutput_allFiles';
 
   function sharedUpdater(store, labbookID, deletedID, connectionKey) {
     const userProxy = store.get(labbookID);
@@ -87,14 +86,14 @@ export default function DeleteLabbookFilesMutation(
       onError: err => console.error(err),
 
       updater: (store) => {
-          edgesToDelete.forEach((edge) => {
-            if (edge) {
-              sharedUpdater(store, labbookId, edge.node.id, connectionKey);
-              sharedUpdater(store, labbookId, edge.node.id, recentConnectionKey);
+        edgesToDelete.forEach((edge) => {
+          if (edge) {
+            sharedUpdater(store, labbookId, edge.node.id, connectionKey);
+            sharedUpdater(store, labbookId, edge.node.id, recentConnectionKey);
 
-              store.delete(edge.node.id);
-            }
-          });
+            store.delete(edge.node.id);
+          }
+        });
       },
       optimisticUpdater: (store) => {
         edgesToDelete.forEach((edge) => {

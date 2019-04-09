@@ -1,0 +1,156 @@
+@import '~Styles/_imports.scss';
+
+.FileCard {
+  cursor: grab;
+  height: 120px;
+  position: relative;
+  text-align: left;
+  padding: 10px;
+
+  &--opaque {
+    opacity: 0.1;
+    animation: fluxuateLoad 3s infinite;
+  }
+  &--hidden{
+    opacity: 0;
+  }
+
+  &--dragging {
+    cursor: grabbing;
+  }
+
+  p {
+    padding: 2px 0;
+  }
+}
+
+
+.FileCard__header {
+  overflow: hidden;
+
+  max-width: 300px;
+  padding: 0 30px 0 0;
+  margin: 5px 0;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: break-all;
+
+  font-weight: bold;
+}
+
+
+.FileCard__star {
+  height: 30px;
+  width: 30px;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: url('~Images/icons/star__on.svg') no-repeat center center;
+  background-size: 24px;
+
+  &--off {
+    background: url('~Images/icons/star__off.svg') no-repeat center center;
+    background-size: 24px;
+  }
+
+  &:hover {
+    background-size: 34px;
+  }
+
+
+}
+
+.FileCard__path {
+  overflow: hidden;
+
+  height: 28px;
+  margin: 0;
+  padding-right: 20px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+
+.FileCard__description {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+
+  width: calc(100% - 40px);
+  height: 60px;
+  margin: 0;
+
+  white-space: pre-line;
+  text-overflow: ellipsis;
+  word-break: break-all;
+
+  line-height: 18px;
+
+  -webkit-line-clamp: 3;
+}
+
+.FileCard__description-editor {
+  overflow: hidden;
+
+  width: calc(100% - 50px);
+  max-width: calc(100% - 50px);
+  height: 50px;
+  padding: 0 5px;
+  margin: 0px;
+
+  resize: none;
+
+  line-height: 20px;
+
+}
+
+
+.FileCard__description-filler {
+  height: 40px;
+
+  color: $romanSilver;
+  background: linear-gradient(#eee 0.1em, transparent 0.1em) repeat 30px 34px;
+  background-color: #fff;
+  background-size: 100% 38px;
+
+  line-height: 30px;
+}
+
+.FileCard__edit-button {
+  font-weight: light;
+  color: $romanSilver;
+  height: 30px;
+  width: 30px;
+  padding: 5px;
+  position: absolute;
+  bottom: 1px;
+  right: 10px;
+
+  &:hover{
+    background: url('~Images/icons/edit.svg') no-repeat center center;
+    background-size: 26px;
+    border: 0px;
+  }
+
+  &,
+  &:focus{
+    background: url('~Images/icons/edit.svg') no-repeat center center;
+    background-size: 22px;
+    border: 0px;
+  }
+
+}
+
+.FileCard__mask {
+  position: absolute;
+
+  top: 0px;
+  right: 0px;
+  left: 0px;
+  bottom: 0px;
+}
