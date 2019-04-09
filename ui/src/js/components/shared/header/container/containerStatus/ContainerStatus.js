@@ -207,6 +207,24 @@ class ContainerStatus extends Component {
 
   /**
     @param {}
+    triggers stop build mutation
+  */
+  @boundMethod
+  _cancelBuildMutation() {
+    const { props } = this;
+
+    props.setContainerMenuVisibility(false);
+
+    const self = this;
+
+    props.containerMutations.cancelBuild(
+      (response, error) => {
+      },
+    );
+  }
+
+  /**
+    @param {}
     triggers start container mutation
   */
   _startContainerMutation(launchDevTool) {
@@ -250,7 +268,7 @@ class ContainerStatus extends Component {
     @return {string} newStatus
    */
   _containerAction(status, cssStatus, evt) {
-    const { props, state } = this;
+    const { props } = this;
     if (!store.getState().labbook.isBuilding && !props.isLookingUpPackages) {
       if (status === 'Stop') {
         props.updateStatus('Stopping');
@@ -258,6 +276,7 @@ class ContainerStatus extends Component {
         this.setState({ contanerMenuRunning: false });
         this._stopContainerMutation();
       } else if ((status === 'Run') && (cssStatus !== 'Rebuild')) {
+
         props.updateStatus('Starting');
 
         this.setState({ contanerMenuRunning: false });
@@ -265,6 +284,7 @@ class ContainerStatus extends Component {
         props.setMergeMode(false, false);
         this._startContainerMutation();
       } else if ((status === 'Run') || (status === 'Rebuild')) {
+
         this.setState({
           status: 'Building',
           contanerMenuRunning: false,
@@ -274,6 +294,10 @@ class ContainerStatus extends Component {
       }
     } else {
       props.setContainerMenuWarningMessage('Can\'t start container when environment is being edited');
+    }
+
+    if ((status === 'Cancel')) {
+      this._cancelBuildMutation();
     }
   }
 
@@ -311,7 +335,7 @@ class ContainerStatus extends Component {
     newStatus = state.isMouseOver && (status === 'Rebuild') ? 'Rebuild' : newStatus;
 
     newStatus = props.isBuilding ? 'Building' : props.isSyncing ? 'Syncing' : props.isPublishing ? 'Publishing' : newStatus;
-
+    newStatus = state.isMouseOver && (props.isBuilding || status === 'Building') ? 'Cancel' : newStatus;
     return newStatus;
   }
 
@@ -353,7 +377,7 @@ class ContainerStatus extends Component {
     const key = 'setStatus';
 
 
-    const excludeStatuses = ['Stopping', 'Starting', 'Building', 'Publishing', 'Syncing'];
+    const excludeStatuses = ['Stopping', 'Starting', 'Publishing', 'Syncing'];
 
 
     const notExcluded = (excludeStatuses.indexOf(constainerStatus) === -1);
@@ -371,7 +395,7 @@ class ContainerStatus extends Component {
       Publishing: props.isPublishing,
       LookingUp: props.isLookingUpPackages,
       'ContainerStatus__container-state--expanded': state.isMouseOver && notExcluded && !props.isBuilding && !(state.imageStatus === 'BUILD_IN_PROGRESS'),
-      'ContainerStatus__container-remove-pointer': !notExcluded || props.isBuilding || (props.imageStatus === 'BUILD_IN_PROGRESS') || props.isSyncing || props.isPublishing,
+      'ContainerStatus__container-remove-pointer': !notExcluded || props.isSyncing || props.isPublishing,
     });
 
     return (
