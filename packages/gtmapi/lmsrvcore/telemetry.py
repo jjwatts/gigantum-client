@@ -29,18 +29,8 @@ def service_telemetry():
             'available': rq_free
         },
         # How long it took to collect stats - round to two decimal places
-        'computeTimeSec': float(f'{compute_time:.2f}')
+        'collectionTimeSec': float(f'{compute_time:.2f}')
     }
-
-    # Collect telemetry every 10 seconds
-    period_sec = 10
-
-    # while True:
-    #     mem_total, mem_available= _calc_mem_free()
-    #     _calc_disk_free()
-    #     logger.info(f"Mem free: {(mem_available / mem_total) * 100:.2f}% ")
-    #
-    #     time.sleep(period_sec)
 
 
 def _calc_mem_free() -> Tuple[int, int]:
