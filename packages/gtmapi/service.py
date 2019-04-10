@@ -97,6 +97,12 @@ def handle_auth_error(ex):
     return response
 
 
+@app.route(f"{api_prefix}/sysinfo")
+@cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
+def sysinfo():
+    return jsonify(service_telemetry())
+
+
 # Set Unauth'd route for API health-check
 @app.route(f"{api_prefix}/ping/")
 @cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
@@ -234,7 +240,7 @@ if config.config["lock"]["reset_on_start"]:
     logger.info("Resetting ALL distributed locks")
     reset_all_locks(config.config['lock'])
 
-threading.Thread(target=service_telemetry).start()
+#threading.Thread(target=service_telemetry).start()
 
 def main(debug=False) -> None:
     try:
@@ -249,8 +255,6 @@ def main(debug=False) -> None:
         else:
             # If debug arg is not explicitly given then it is loaded from config
             app.run(host="0.0.0.0", port=10001)
-
-
     except Exception as e:
         logger.exception(e)
         raise
