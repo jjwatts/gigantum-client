@@ -220,7 +220,7 @@ class TestEnvironmentMutations(object):
                                description="building an env")
         cm = ComponentManager(lb)
         cm.add_base(ENV_UNIT_TEST_REPO, "ut-busybox", 0)
-        cm.add_docker_snippet('customdocker', ['RUN sleep 2'])
+        cm.add_docker_snippet('customdocker', ['RUN sleep 5'])
 
         # Build the image
         build_query = """
@@ -267,6 +267,5 @@ class TestEnvironmentMutations(object):
         }
         """
         check_r = fixture_working_dir_env_repo_scoped[2].execute(check_query)
-        pprint.pprint(check_r)
         assert 'errors' not in check_r
         assert check_r['data']['labbook']['environment']['imageStatus'] == 'BUILD_FAILED'
