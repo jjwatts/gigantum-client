@@ -143,7 +143,7 @@ const FooterUtils = {
               document.getElementById('loader').classList.add('hidden');
               if (method === 'build_image') {
                 if (reportedFailureMessage.indexOf('terminated unexpectedly')) {
-                  errorMessage = 'Build was forcibly canceled.';
+                  errorMessage = 'Build Canceled.';
                 } else {
                   errorMessage = 'Project failed to build: Check for and remove invalid dependencies and try again.';
                 }
