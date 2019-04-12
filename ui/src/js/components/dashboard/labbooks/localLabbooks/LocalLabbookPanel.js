@@ -49,7 +49,7 @@ export default class LocalLabbookPanel extends Component {
       status = ((state.status === 'Starting') && (containerStatus !== 'RUNNING')) || (state.status === 'Stopping' && (containerStatus !== 'NOT_RUNNING')) ? state.status : status;
 
       let textStatus = (status === 'Rebuild') ? 'Stopped' : status;
-      textStatus = (state.textStatus === 'Run') ? 'Run' : textStatus;
+      textStatus = (state.textStatus === 'Start') ? 'Start' : textStatus;
       textStatus = (state.textStatus === 'Stop') ? 'Stop' : textStatus;
 
       state.status = status;
@@ -162,7 +162,7 @@ export default class LocalLabbookPanel extends Component {
       if (status === 'Running') {
         this.setState({ textStatus: 'Stop' });
       } else if (status === 'Stopped') {
-        this.setState({ textStatus: 'Run' });
+        this.setState({ textStatus: 'Start' });
       }
     } else {
       this.setState({ textStatus: status });

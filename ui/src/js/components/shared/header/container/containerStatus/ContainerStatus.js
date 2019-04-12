@@ -28,12 +28,9 @@ class ContainerStatus extends Component {
 
     this.state = {
       status: '',
-      secondsElapsed: 0,
       isMouseOver: false,
-      rebuildAttempts: 0,
       showDevList: false,
       showInitialMessage: false,
-      previousContainerStatus: props.containerStatus,
       attemptingRebuild: false,
     };
 
@@ -47,8 +44,7 @@ class ContainerStatus extends Component {
     // const status = (state.previousContainerStatus === nextProps.containerStatus) ? nextProps.status : '';
     return ({
       ...state,
-      status: nextProps.stateStatus,
-      previousContainerStatus: nextProps.containerStatus,
+      status: nextProps.stateStatus.length ? nextProps.stateStatus : state.status,
     });
   }
 
@@ -173,8 +169,9 @@ class ContainerStatus extends Component {
       this.props.setCloseEnvironmentMenus();
       setPackageMenuVisible(false);
     }
-    const cssClass = status;
+    let cssClass = status;
     const constainerStatus = (status === 'Rebuild') ? 'Stopped' : status;
+    cssClass = ((cssClass === 'Building') && (state.status === 'Canceling')) ? 'Canceling' : cssClass;
 
     return { constainerStatus, cssClass };
   }
@@ -275,7 +272,7 @@ class ContainerStatus extends Component {
 
         this.setState({ contanerMenuRunning: false });
         this._stopContainerMutation();
-      } else if ((status === 'Run') && (cssStatus !== 'Rebuild')) {
+      } else if ((status === 'Start') && (cssStatus !== 'Rebuild')) {
 
         props.updateStatus('Starting');
 
@@ -283,7 +280,7 @@ class ContainerStatus extends Component {
 
         props.setMergeMode(false, false);
         this._startContainerMutation();
-      } else if ((status === 'Run') || (status === 'Rebuild')) {
+      } else if ((status === 'Start') || (status === 'Rebuild')) {
 
         this.setState({
           status: 'Building',
@@ -297,6 +294,10 @@ class ContainerStatus extends Component {
     }
 
     if ((status === 'Cancel')) {
+      this.setState({
+        status: 'Canceling',
+        contanerMenuRunning: false,
+      });
       this._cancelBuildMutation();
     }
   }
@@ -330,12 +331,13 @@ class ContainerStatus extends Component {
     let newStatus = status;
 
     newStatus = state.isMouseOver && (status === 'Running') ? 'Stop' : newStatus;
-    newStatus = state.isMouseOver && ((status === 'Stopped') && !props.isLookingUpPackages) ? 'Run' : newStatus;
+    newStatus = state.isMouseOver && ((status === 'Stopped') && !props.isLookingUpPackages) ? 'Start' : newStatus;
     newStatus = state.isMouseOver && (status === 'Rebuild') ? 'Rebuild' : newStatus;
     newStatus = state.isMouseOver && (status === 'Rebuild') ? 'Rebuild' : newStatus;
 
     newStatus = props.isBuilding ? 'Building' : props.isSyncing ? 'Syncing' : props.isPublishing ? 'Publishing' : newStatus;
     newStatus = state.isMouseOver && (props.isBuilding || status === 'Building') ? 'Cancel' : newStatus;
+    newStatus = ((newStatus === 'Building' || newStatus === 'Cancel') && (state.status === 'Canceling')) ? 'Canceling' : newStatus;
     return newStatus;
   }
 
@@ -375,7 +377,6 @@ class ContainerStatus extends Component {
 
     const notExcluded = (excludeStatuses.indexOf(constainerStatus) === -1);
 
-
     const status = this._getStatusText(constainerStatus);
 
     const containerStatusCss = classNames({
@@ -383,7 +384,8 @@ class ContainerStatus extends Component {
       'ContainerStatus__container-state': !props.containerMenuOpen,
       [cssClass]: !props.isBuilding && !props.isSyncing && !props.isPublishing,
       'Tooltip-data': (cssClass === 'Rebuild'),
-      Building: props.isBuilding || props.imageStatus === 'BUILD_IN_PROGRESS',
+      Building: (props.isBuilding || props.imageStatus === 'BUILD_IN_PROGRESS') && state.status !== 'Canceling',
+      Canceling: state.status === 'Canceling' && ((props.isBuilding || props.imageStatus === 'BUILD_IN_PROGRESS')),
       Syncing: props.isSyncing,
       Publishing: props.isPublishing,
       LookingUp: props.isLookingUpPackages,
