@@ -83,9 +83,10 @@ exports[`Dataset File component File Snapshot 1`] = `
           data-tooltip="Add Subfolder"
           onClick={[Function]}
         />
-        <div
-          className="ActionsMenu__item ActionsMenu__item--delete Tooltip-data Tooltip-data--small"
-          data-tooltip="Delete"
+        <button
+          className="ActionsMenu__item Btn__delete Btn--noShadow Tooltip-data Tooltip-data--small"
+          data-tooltip="Must download before deleting"
+          disabled={true}
           onClick={[Function]}
         >
           <div
@@ -110,10 +111,11 @@ exports[`Dataset File component File Snapshot 1`] = `
               />
             </div>
           </div>
-        </div>
-        <div
-          className="ActionsMenu__item ActionsMenu__item--rename Tooltip-data Tooltip-data--small"
-          data-tooltip="Rename"
+        </button>
+        <button
+          className="ActionsMenu__item Btn__rename Btn--noShadow Tooltip-data Tooltip-data--small"
+          data-tooltip="Must download before renaming"
+          disabled={true}
           onClick={[Function]}
         />
       </div>
@@ -123,7 +125,7 @@ exports[`Dataset File component File Snapshot 1`] = `
       >
         <div
           className="DatasetActionsMenu__item Tooltip-data Tooltip-data--small DatasetActionsMenu__item--download-grey"
-          data-tooltip="Downlaod"
+          data-tooltip="Download"
           onClick={[Function]}
         />
       </div>

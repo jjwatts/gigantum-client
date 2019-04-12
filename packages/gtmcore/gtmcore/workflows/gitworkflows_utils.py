@@ -135,6 +135,7 @@ def publish_to_remote(repository: Repository, username: str, remote: str,
     call_subprocess(['git', 'push', '--set-upstream', 'origin', bm.workspace_branch],
                     cwd=repository.root_dir)
     feedback_callback(f"Publish complete.")
+    repository.git.clear_checkout_context()
 
 
 def _set_upstream_branch(repository: Repository, branch_name: str, feedback_cb: Callable):
@@ -166,6 +167,7 @@ def _pull(repository: Repository, branch_name: str, override: str, feedback_cb: 
         else:
             raise
 
+
 def sync_branch(repository: Repository, username: Optional[str], override: str,
                 pull_only: bool, feedback_callback: Callable) -> int:
     """"""
@@ -181,11 +183,13 @@ def sync_branch(repository: Repository, username: Optional[str], override: str,
     if pull_only and branch_name not in bm.branches_remote:
         # Cannot pull when remote branch doesn't exist.
         feedback_callback("Pull complete - nothing to pull")
+        repository.git.clear_checkout_context()
         return 0
 
     if branch_name not in bm.branches_remote:
         # Branch does not exist, so push it to remote.
         _set_upstream_branch(repository, bm.active_branch, feedback_callback)
+        repository.git.clear_checkout_context()
         feedback_callback("Synced current branch up to remote")
         return 0
     else:
@@ -201,6 +205,8 @@ def sync_branch(repository: Repository, username: Optional[str], override: str,
             feedback_callback("Sync complete")
         else:
             feedback_callback("Pull complete")
+
+        repository.git.clear_checkout_context()
         return pulled_updates_count
 
 
@@ -246,6 +252,7 @@ def migrate_labbook_untracked_space(labbook: LabBook) -> None:
     untracked_path = os.path.join(labbook.root_dir, 'output/untracked')
     if not os.path.exists(untracked_path):
         os.makedirs(untracked_path, exist_ok=True)
+
 
 def migrate_labbook_branches(labbook: LabBook) -> None:
     bm = BranchManager(labbook)

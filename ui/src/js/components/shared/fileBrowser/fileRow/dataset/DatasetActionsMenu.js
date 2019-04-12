@@ -212,37 +212,6 @@ export default class DatasetActionsMenu extends Component {
     });
   }
 
-
-  /**
-   *  @param {} -
-   *  checks to see if the file is local/downloaded
-   *  @return {boolean}
-   */
-  _getIsLocal() {
-    const { props } = this;
-    let isLocal = true;
-    const searchChildren = (parent) => {
-      if (parent.children) {
-        Object.keys(parent.children).forEach((childKey) => {
-          if (parent.children[childKey].edge) {
-            if (parent.children[childKey].edge.node.isLocal === false) {
-              isLocal = false;
-            }
-            searchChildren(parent.children[childKey]);
-          }
-        });
-      }
-    };
-
-    if (props.fullEdge) {
-      searchChildren(props.fullEdge);
-    } else {
-      isLocal = props.edge.node.isLocal;
-    }
-
-    return isLocal;
-  }
-
   /**
   *  @param {boolean} isLocal
   *  set wrapper ref
@@ -250,7 +219,7 @@ export default class DatasetActionsMenu extends Component {
   */
   _getTooltipText(isLocal) {
     const { props, state } = this;
-    let downloadText = isLocal ? 'Downloaded' : 'Downlaod';
+    let downloadText = isLocal ? 'Downloaded' : 'Download';
     downloadText = props.isParent ? 'Download All' : downloadText;
     downloadText = props.folder ? 'Download Directory' : downloadText;
     downloadText = state.showSessionValidMessage ? 'A valid session is required to download a dataset file.' : downloadText;
@@ -262,7 +231,7 @@ export default class DatasetActionsMenu extends Component {
     const { props, state } = this;
 
 
-    const isLocal = this._getIsLocal();
+    const { isLocal } = props;
 
 
     const fileIsNotLocal = ((!props.edge.node.isLocal || (props.folder)) && !isLocal);

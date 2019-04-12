@@ -2,10 +2,14 @@ import pytest
 import os
 from collections import OrderedDict
 import time
+import redis
+import glob
 
 from gtmcore.dataset import Manifest
+from gtmcore.inventory.inventory import InventoryManager
+
 from gtmcore.fixtures.datasets import mock_dataset_with_cache_dir, mock_dataset_with_manifest, helper_append_file, \
-    USERNAME
+    USERNAME, mock_legacy_dataset
 
 
 class TestManifest(object):
@@ -78,7 +82,7 @@ class TestManifest(object):
         assert len(status.modified) == 0
         assert len(status.deleted) == 0
 
-    def test_status_deleted_files(self, mock_dataset_with_manifest):
+    def test_update_simple_with_reloading(self, mock_dataset_with_manifest):
         ds, manifest, working_dir = mock_dataset_with_manifest
 
         helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt", "asdfasdf")
@@ -89,6 +93,43 @@ class TestManifest(object):
         assert len(status.deleted) == 0
 
         assert "test1.txt" in status.created
+
+        manifest.update(status=status)
+        time.sleep(2)
+
+        status = manifest.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+
+        m2 = Manifest(mock_dataset_with_manifest[0], 'tester')
+
+        helper_append_file(m2.cache_mgr.cache_root, m2.dataset_revision, "test1.txt", "asdfasdf")
+
+        status = m2.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 1
+        assert len(status.deleted) == 0
+
+        m2.update()
+
+        status = m2.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+
+    def test_status_deleted_files(self, mock_dataset_with_manifest):
+        ds, manifest, working_dir = mock_dataset_with_manifest
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt", "asdfasdf")
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test2.txt", "54455445")
+
+        status = manifest.status()
+        assert len(status.created) == 2
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+
+        assert "test1.txt" in status.created
+        assert "test2.txt" in status.created
 
         manifest.update(status=status)
 
@@ -110,6 +151,13 @@ class TestManifest(object):
         assert len(status.created) == 0
         assert len(status.modified) == 0
         assert len(status.deleted) == 0
+
+        assert 'test1.txt' not in manifest.manifest
+
+        # Reload a new manifest instance and verify no file
+        m2 = Manifest(mock_dataset_with_manifest[0], 'tester')
+        assert 'test1.txt' not in m2.manifest
+        assert 'test2.txt' in m2.manifest
 
     def test_update_complex(self, mock_dataset_with_manifest):
         ds, manifest, working_dir = mock_dataset_with_manifest
@@ -185,8 +233,9 @@ class TestManifest(object):
                            "fdghdfgsa")
         manifest.update()
 
-        file_info = manifest.list()
+        file_info, indexes = manifest.list()
         assert len(file_info) == 6
+        assert indexes == list(range(0, 6))
         assert file_info[3]['key'] == "test1.txt"
         assert file_info[3]['size'] == '8'
         assert file_info[3]['is_favorite'] is False
@@ -204,29 +253,34 @@ class TestManifest(object):
         assert file_info[4]['key'] == "test2.txt"
         assert file_info[5]['key'] == "test3.txt"
 
-        file_info = manifest.list(first=1)
+        file_info, indexes = manifest.list(first=1)
+        assert indexes == list(range(0, 1))
         assert len(file_info) == 1
         assert file_info[0]['key'] == "other_dir/"
 
-        file_info = manifest.list(first=2)
+        file_info, indexes = manifest.list(first=2)
+        assert indexes == list(range(0, 2))
         assert len(file_info) == 2
         assert file_info[0]['key'] == "other_dir/"
         assert file_info[1]['key'] == "other_dir/test4.txt"
 
-        file_info = manifest.list(first=3, after_index=2)
+        file_info, indexes = manifest.list(first=3, after_index=1)
+        assert indexes == list(range(2, 5))
         assert len(file_info) == 3
         assert file_info[0]['key'] == "other_dir/test5.txt"
         assert file_info[1]['key'] == "test1.txt"
         assert file_info[2]['key'] == "test2.txt"
 
-        file_info = manifest.list(first=300, after_index=3)
+        file_info, indexes = manifest.list(first=300, after_index=2)
         assert len(file_info) == 3
+        assert indexes == list(range(3, 6))
         assert file_info[0]['key'] == "test1.txt"
         assert file_info[1]['key'] == "test2.txt"
         assert file_info[2]['key'] == "test3.txt"
 
         os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt"))
-        file_info = manifest.list()
+        file_info, indexes = manifest.list()
+        assert indexes == list(range(0, 6))
         assert len(file_info) == 6
         assert file_info[3]['key'] == "test1.txt"
         assert file_info[3]['size'] == '8'
@@ -270,8 +324,13 @@ class TestManifest(object):
         assert file_info['is_dir'] is False
         assert 'modified_at' in file_info
 
-        file_info = manifest.gen_file_info("other_dir/test4.txt")
-        assert file_info['key'] == "other_dir/test4.txt"
+        file_info = manifest.gen_file_info("other_dir/")
+        assert file_info['key'] == "other_dir/"
+        assert file_info['size'] == '0'
+        assert file_info['is_favorite'] is False
+        assert file_info['is_local'] is True
+        assert file_info['is_dir'] is True
+        assert 'modified_at' in file_info
 
     def test_sweep_all_changes(self, mock_dataset_with_manifest):
         ds, manifest, working_dir = mock_dataset_with_manifest
@@ -717,7 +776,7 @@ class TestManifest(object):
         assert os.path.isdir(os.path.join(manifest.cache_mgr.cache_root,
                                           manifest.dataset_revision, 'test1', 'test2')) is True
 
-        assert "Created new empty directory `test1/test2/`" in ds.git.log()[0]['message']
+        assert "Created new empty directory `test1/test2/`" in ds.git.log()[0]['message' ]
 
     def test_create_directory_errors(self, mock_dataset_with_manifest):
         ds, manifest, working_dir = mock_dataset_with_manifest
@@ -728,3 +787,168 @@ class TestManifest(object):
         manifest.create_directory("test1/")
         with pytest.raises(ValueError):
             manifest.create_directory("test1/")
+
+    def test_legacy_manifest(self, mock_legacy_dataset):
+        ds, manifest, working_dir = mock_legacy_dataset
+        assert len(manifest.manifest) == 3
+        assert 'IdeaPF.pdf' in manifest.manifest
+        assert 'test_folder/gitflow.vdx' in manifest.manifest
+
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt", "asddfdffasdf")
+
+        status = manifest.status()
+        assert len(status.created) == 1
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+
+        assert "test1.txt" in status.created
+
+        manifest.update(status=status)
+        time.sleep(2)
+
+        status = manifest.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+
+        m2 = Manifest(ds, 'tester')
+
+        helper_append_file(m2.cache_mgr.cache_root, m2.dataset_revision, "test1.txt", "asdfasdf")
+
+        status = m2.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 1
+        assert len(status.deleted) == 0
+
+        m2.update()
+
+        status = m2.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+
+        assert len(m2.manifest) == 4
+        assert 'IdeaPF.pdf' in m2.manifest
+        assert 'test_folder/gitflow.vdx' in m2.manifest
+
+    def test_update_and_delete_from_legacy_manifest(self, mock_legacy_dataset):
+        ds, manifest, working_dir = mock_legacy_dataset
+        assert len(manifest.manifest) == 3
+        assert 'IdeaPF.pdf' in manifest.manifest
+        assert 'test_folder/gitflow.vdx' in manifest.manifest
+
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt", "asddfdffasdf")
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "IdeaPF.pdf", "fake data")
+
+        status = manifest.status()
+        assert len(status.created) == 1
+        assert len(status.modified) == 1
+        assert len(status.deleted) == 0
+        assert len(manifest.manifest) == 3
+        manifest.update(status=status)
+
+        status = manifest.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+        assert len(manifest.manifest) == 4
+
+        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, 'IdeaPF.pdf'))
+
+        status = manifest.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 1
+
+        manifest.update()
+
+        status = manifest.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+        assert len(manifest.manifest) == 3
+
+        assert 'IdeaPF.pdf' not in manifest.manifest
+
+        # Test reloading (should be from cache)
+        m2 = Manifest(ds, 'tester')
+        assert len(m2.manifest) == 3
+        assert 'IdeaPF.pdf' not in m2.manifest
+        assert 'test_folder/gitflow.vdx' in m2.manifest
+        assert 'test1.txt' in m2.manifest
+
+        # Test reloading (should be from files)
+        client = redis.StrictRedis(db=1)
+        client.delete(m2._manifest_io.manifest_cache_key)
+
+        m3 = Manifest(ds, 'tester')
+        assert len(m3.manifest) == 3
+        assert 'IdeaPF.pdf' not in m3.manifest
+        assert 'test_folder/gitflow.vdx' in m3.manifest
+        assert 'test1.txt' in m3.manifest
+
+    def test_multiple_contexts(self, mock_dataset_with_manifest):
+        ds, manifest, working_dir = mock_dataset_with_manifest
+        checkout_context_file = os.path.join(ds.root_dir, '.gigantum', '.checkout')
+        im = InventoryManager()
+
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt", "asdfasdf")
+        manifest.update()
+        status = manifest.status()
+        assert len(status.created) == 0
+        assert len(status.modified) == 0
+        assert len(status.deleted) == 0
+
+        assert len(manifest.manifest) == 1
+
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test2.txt", "2212121")
+        manifest.update()
+        assert len(manifest.manifest) == 2
+        os.remove(checkout_context_file)
+
+        # Load new context
+        ds = im.load_dataset(USERNAME, USERNAME, ds.name)
+        manifest = Manifest(ds, USERNAME)
+
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test3.txt", "454")
+        manifest.update()
+        assert len(manifest.manifest) == 3
+        assert manifest.manifest['test3.txt']['b'] == '3'
+        os.remove(checkout_context_file)
+
+        # Load new context
+        ds = im.load_dataset(USERNAME, USERNAME, ds.name)
+        manifest = Manifest(ds, USERNAME)
+
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test4.txt", "fgfgfdfd")
+        helper_append_file(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test3.txt", "dfdfddfdfdfdfd")
+        manifest.update()
+        assert len(manifest.manifest) == 4
+        assert manifest.manifest['test3.txt']['b'] == '17'
+
+        # Test reloading (should be from cache)
+
+        # Load new context
+        ds = im.load_dataset(USERNAME, USERNAME, ds.name)
+        manifest = Manifest(ds, USERNAME)
+        assert len(manifest.manifest) == 4
+        assert 'test1.txt' in manifest.manifest
+        assert 'test2.txt' in manifest.manifest
+        assert 'test3.txt' in manifest.manifest
+        assert 'test4.txt' in manifest.manifest
+        assert manifest.manifest['test3.txt']['b'] == '17'
+
+        # Test reloading (should be from files)
+        client = redis.StrictRedis(db=1)
+        client.delete(manifest._manifest_io.manifest_cache_key)
+
+        ds = im.load_dataset(USERNAME, USERNAME, ds.name)
+        manifest = Manifest(ds, USERNAME)
+        assert len(manifest.manifest) == 4
+        assert 'test1.txt' in manifest.manifest
+        assert 'test2.txt' in manifest.manifest
+        assert 'test3.txt' in manifest.manifest
+        assert 'test4.txt' in manifest.manifest
+        assert manifest.manifest['test3.txt']['b'] == '17'
+
+        assert len(glob.glob(os.path.join(ds.root_dir, 'manifest', 'manifest-*'))) == 3

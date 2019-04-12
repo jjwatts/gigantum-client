@@ -21,8 +21,8 @@ export HOME=/home/giguser
 # Set permissions for container-container share
 chown -R giguser:root /mnt/share/
 
-# Set permissions for demo labbook
-chown giguser:root /opt/awful-intersections-demo.lbk
+# Set permissions for demo project
+chown giguser:root /opt/my-first-project.zip
 
 # Setup git config for giguser
 gosu giguser bash -c "git config --global user.email 'noreply@gigantum.io'"

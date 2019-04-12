@@ -144,7 +144,7 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 3'] = {
                 'pageInfo': {
                     'endCursor': 'Mg==',
                     'hasNextPage': True,
-                    'hasPreviousPage': False
+                    'hasPreviousPage': True
                 }
             },
             'description': 'Cats 2',
@@ -203,7 +203,7 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 4'] = {
                 'pageInfo': {
                     'endCursor': 'NQ==',
                     'hasNextPage': False,
-                    'hasPreviousPage': False
+                    'hasPreviousPage': True
                 }
             },
             'description': 'Cats 2',

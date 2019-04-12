@@ -706,7 +706,7 @@ class FileBrowser extends Component {
 
 
     const downloadAllCSS = classNames({
-      FileBrowser__button: true,
+      'FileBrowser__button Tooltip-data Tooltip-data--small': true,
       'FileBrowser__button--download-all': !state.downloadingAll && !allFilesLocal,
       'FileBrowser__button--downloaded': !state.downloadingAll && allFilesLocal,
       'FileBrowser__button--downloading': state.downloadingAll,
@@ -823,16 +823,16 @@ class FileBrowser extends Component {
           </div>
 
           <div className="FileBrowser__header--menu flex flex--row justify--right">
-            <div
-              className="FileBrowser__button FileBrowser__button--add-folder"
+            <button
+              className="FileBrowser__button FileBrowser__button--add-folder Tooltip-data Tooltip-data--small"
               data-tooltip="Add Folder"
               onClick={() => this.setState({ addFolderVisible: !this.state.addFolderVisible })}
             />
             {
                   (this.props.section === 'input')
                   && (
-                  <div
-                    className="FileBrowser__button FileBrowser__button--add-dataset"
+                  <button
+                    className="FileBrowser__button FileBrowser__button--add-dataset Tooltip-data Tooltip-data--small"
                     onClick={() => this.setState({ showLinkModal: true })}
                     data-tooltip="Link Dataset"
                   />
@@ -841,7 +841,7 @@ class FileBrowser extends Component {
             {
                   (this.props.section === 'data')
                   && (
-                  <div
+                  <button
                     className={downloadAllCSS}
                     onClick={() => this._handleDownloadAll(allFilesLocal)}
                     data-tooltip={allFilesLocal ? 'Downloaded' : 'Download All'}
@@ -850,7 +850,7 @@ class FileBrowser extends Component {
                       this.state.downloadingAll
                       && <div />
                     }
-                  </div>
+                  </button>
                   )
                 }
           </div>

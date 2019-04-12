@@ -95,7 +95,7 @@ const createProjectFilters = (projectBases) => {
   @param {Array} projects
   filters projects based on selected filters
 */
-const filterProjects = (projects, filterCategories, tags) => {
+const filterProjects = (projects, tags) => {
   const mostRecent = localStorage.getItem('latest_base');
   let mostRecentNode;
 

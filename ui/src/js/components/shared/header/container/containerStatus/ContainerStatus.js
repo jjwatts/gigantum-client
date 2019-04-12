@@ -321,14 +321,7 @@ class ContainerStatus extends Component {
     @return {}
   */
   _rebuildContainer() {
-    const { props, state } = this;
-
-
-    const { labbookName, owner } = state;
-
-
-    const self = this;
-
+    const { props } = this;
 
     const data = { noCache: true };
 

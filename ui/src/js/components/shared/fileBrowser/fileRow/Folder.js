@@ -142,6 +142,7 @@ class Folder extends Component {
   _checkParent() {
     let checkCount = 0;
     let incompleteCount = 0;
+
     Object.keys(this.refs).forEach((ref) => {
       const state = (this.refs[ref] && this.refs[ref].getDecoratedComponentInstance && this.refs[ref].getDecoratedComponentInstance().getDecoratedComponentInstance) ? this.refs[ref].getDecoratedComponentInstance().getDecoratedComponentInstance().state : this.refs[ref].getDecoratedComponentInstance().state;
       if (state.isSelected) {
@@ -200,33 +201,35 @@ class Folder extends Component {
     *  @return {}
     */
   _expandSection(evt) {
+    const { props, state } = this;
     if (!evt.target.classList.contains('Folder__btn') && !evt.target.classList.contains('ActionsMenu__item') && !evt.target.classList.contains('Btn--round') && !evt.target.classList.contains('DatasetActionsMenu__item')
       && !evt.target.classList.contains('File__btn--round')) {
-      this.setState({ expanded: !this.state.expanded }, () => {
-        this.props.updateChildState(this.props.fileData.edge.node.key, this.state.isSelected, this.state.isIncomplete, this.state.expanded, this.state.addFolderVisible);
-        // this.props.listRef.recomputeGridSize()
+      this.setState({ expanded: !state.expanded }, () => {
+        props.updateChildState(props.fileData.edge.node.key, state.isSelected, state.isIncomplete, state.expanded, state.addFolderVisible);
       });
     }
     if (evt.target.classList.contains('ActionsMenu__item--AddSubfolder')) {
       this.setState({ expanded: true }, () => {
-        this.props.updateChildState(this.props.fileData.edge.node.key, this.state.isSelected, this.state.isIncomplete, this.state.expanded, this.state.addFolderVisible);
-        // this.props.listRef.recomputeGridSize()
+        props.updateChildState(props.fileData.edge.node.key, state.isSelected, state.isIncomplete, state.expanded, state.addFolderVisible);
       });
     }
   }
 
   /**
     *  @param {jsx} render
+    *  @param {Boolean} blockDrag
     *  sets elements to be selected and parent
     */
-  connectDND(render) {
-    if (this.state.isDragging || this.props.parentIsDragged) {
-      render = this.props.connectDragSource(render);
+  connectDND(render, blockDrag) {
+    let renderType;
+    const { props, state } = this;
+    if ((state.isDragging || props.parentIsDragged) && !blockDrag) {
+      renderType = props.connectDragSource(render);
     } else {
-      render = this.props.connectDropTarget(render);
+      renderType = props.connectDropTarget(render);
     }
 
-    return render;
+    return renderType;
   }
 
   /**
@@ -460,10 +463,40 @@ class Folder extends Component {
     return array;
   }
 
+  /**
+   *  @param {} -
+   *  checks to see if the file is local/downloaded
+   *  @return {boolean}
+   */
+  _getIsLocal() {
+    const { props } = this;
+    let isLocal = true;
+    const searchChildren = (parent) => {
+      if (parent.children) {
+        Object.keys(parent.children).forEach((childKey) => {
+          if (parent.children[childKey].edge) {
+            if (parent.children[childKey].edge.node.isLocal === false) {
+              isLocal = false;
+            }
+            searchChildren(parent.children[childKey]);
+          }
+        });
+      }
+    };
+
+    if (props.fileData) {
+      searchChildren(props.fileData);
+    } else {
+      isLocal = props.fileData.edge.node.isLocal;
+    }
+
+    return isLocal;
+  }
+
   render() {
     const { props, state } = this;
     const { node } = props.fileData.edge;
-
+    const isLocal = this._getIsLocal();
 
     const { children, index } = props.fileData;
 
@@ -604,6 +637,7 @@ class Folder extends Component {
               addFolderVisible={this._addFolderVisible}
               fileData={props.fileData}
               section={props.section}
+              isLocal={isLocal}
               folder
               renameEditMode={this._renameEditMode}
             />
@@ -621,6 +655,7 @@ class Folder extends Component {
                         isDownloading={state.isDownloading || props.isDownloading}
                         parentDownloading={props.parentDownloading}
                         setFolderIsDownloading={this._setFolderIsDownloading}
+                        isLocal={isLocal}
                       />
                       )
                     }
@@ -707,7 +742,7 @@ class Folder extends Component {
     );
 
     return (
-      this.connectDND(folder)
+      this.connectDND(folder, !isLocal && props.section === 'data')
     );
   }
 }

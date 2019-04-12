@@ -87,8 +87,8 @@ exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
     <div
       className="FileBrowser__header--menu flex flex--row justify--right"
     >
-      <div
-        className="FileBrowser__button FileBrowser__button--add-folder"
+      <button
+        className="FileBrowser__button FileBrowser__button--add-folder Tooltip-data Tooltip-data--small"
         data-tooltip="Add Folder"
         onClick={[Function]}
       />

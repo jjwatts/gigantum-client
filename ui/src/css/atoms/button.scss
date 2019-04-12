@@ -109,6 +109,10 @@ button {
    }
   }
 
+  &--noShadow {
+    box-shadow: none !important;
+  }
+
   &--noMargin {
     margin: 0;
   }
@@ -183,28 +187,100 @@ button {
   }
 
   &__delete {
-     background: url(~Images/icons/trash-dark.svg) no-repeat center center;
+     background: url(~Images/icons/trash-azure.svg) no-repeat center center;
      background-size: 20px;
      border: 0px;
 
      &:focus {
-       background: url(~Images/icons/trash-dark.svg) no-repeat center center;
+       background: url(~Images/icons/trash-azure.svg) no-repeat center center;
        background-size: 20px;
        border: 0px;
      }
 
      &:hover {
        background: url(~Images/icons/trash-azure.svg) no-repeat center center;
-       background-size: 20px;
+       background-size: 22px;
        border: 0px;
      }
 
      &:disabled {
-       background: url(~Images/icons/trash.svg) no-repeat center center;
+       background: transparent url(~Images/icons/trash.svg) no-repeat center center !important;
        background-size: 20px;
        border: 0px;
      }
   }
+
+  &__rename {
+    background: url(~Images/icons/rename-azure.svg) no-repeat center center;
+    background-size: 20px;
+    border: 0px;
+
+    &:focus {
+      background: url(~Images/icons/rename-azure.svg) no-repeat center center;
+      background-size: 20px;
+      border: 0px;
+    }
+
+    &:hover {
+      background: url(~Images/icons/rename-azure.svg) no-repeat center center;
+      background-size: 22px;
+      border: 0px;
+    }
+
+    &:disabled {
+      background: transparent url(~Images/icons/rename.svg) no-repeat center center !important;
+      background-size: 20px;
+      border: 0px;
+    }
+ }
+
+ &__Favorite-off {
+  background: url(~Images/icons/star__off-azure.svg) no-repeat center center;
+  background-size: 20px;
+  border: 0px;
+
+  &:focus {
+    background: url(~Images/icons/star__off-azure.svg) no-repeat center center;
+    background-size: 20px;
+    border: 0px;
+  }
+
+  &:hover {
+    background: url(~Images/icons/star__off-azure.svg) no-repeat center center;
+    background-size: 22px;
+    border: 0px;
+  }
+
+  &:disabled {
+    background: url(~Images/icons/star__off.svg) no-repeat center center;
+    background-size: 20px;
+    border: 0px;
+  }
+}
+
+&__Favorite-on {
+  background: url(~Images/icons/star__on.svg) no-repeat center center;
+  background-size: 20px;
+  border: 0px;
+
+  &:focus {
+    background: url(~Images/icons/star__on.svg) no-repeat center center;
+    background-size: 20px;
+    border: 0px;
+  }
+
+  &:hover {
+    background: url(~Images/icons/star__on.svg) no-repeat center center;
+    background-size: 22px;
+    border: 0px;
+  }
+
+  &:disabled {
+    background: url(~Images/icons/star__on.svg) no-repeat center center;
+    background-size: 20px;
+    border: 0px;
+  }
+}
 
   &__redirect {
      right: 15px;
