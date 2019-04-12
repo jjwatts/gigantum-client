@@ -681,9 +681,7 @@ class GitFilesystem(GitRepoInterface):
             self.repo.heads[branch_name].checkout()
 
         # Remove the checkout context id file if one exists
-        checkout_id_file = os.path.join(self.working_directory, '.gigantum', '.checkout')
-        if os.path.exists(checkout_id_file):
-            os.remove(checkout_id_file)
+        self.clear_checkout_context()
 
     # BRANCH METHODS
 
@@ -914,3 +912,14 @@ class GitFilesystem(GitRepoInterface):
 
         self.repo.submodules[submodule_name].remove(module=True, configuration=True)
         self.repo.index.commit("Removed submodule: {}".format(submodule_name))
+
+    def clear_checkout_context(self):
+        """Method to remove the checkout context file so a new context is created
+
+        Returns:
+            None
+        """
+        # Remove the checkout context id file if one exists
+        checkout_id_file = os.path.join(self.working_directory, '.gigantum', '.checkout')
+        if os.path.exists(checkout_id_file):
+            os.remove(checkout_id_file)

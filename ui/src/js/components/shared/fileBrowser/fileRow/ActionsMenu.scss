@@ -23,31 +23,6 @@
 
       cursor: pointer;
 
-
-      &--delete {
-          background: url('~Images/icons/trash.svg') no-repeat 50% 50%;
-          background-size: 20px;
-
-          position: relative;
-
-          &:hover{
-              //change color here
-              background: url('~Images/icons/trash-azure.svg') no-repeat 50% 50%;
-              background-size: 20px;
-          }
-      }
-
-      &--rename {
-          background: url('~Images/icons/rename.svg') no-repeat 50% 50%;
-          background-size: 20px;
-
-          &:hover{
-              //change color here
-              background: url('~Images/icons/rename-azure.svg') no-repeat 50% 50%;
-              background-size: 20px;
-          }
-      }
-
       &--duplicate {
           background: url('~Images/icons/copy-light.svg') no-repeat 50% 50%;
           background-size: 24px;

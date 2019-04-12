@@ -185,60 +185,34 @@
 .FileBrowser__button {
   height: 30px;
   width: 45px;
-  border-radius: 10px;
   margin: 0 10px;
   position: relative;
-
-  &:hover:after {
-    position: absolute;
-    z-index: index($elements, popup);
-    top: 35px;
-    left: -15px;
-    white-space: nowrap;
-    padding: 5px;
-    border: 2px solid $jet;
-    content: attr(data-tooltip);
-
-    color: $white;
-    background: $azure;
-
-    font-size: 14px;
-}
+  border: 1px solid $azure;
 
   &--add-folder {
-    background: $background-color url(~Images/icons/folder-add-new.svg) no-repeat center center;
+    background: transparent url(~Images/icons/folder-add-new.svg) no-repeat center center;
     background-size: 30px;
     &:hover {
-      border: 2px solid $azure;
-      box-shadow: .05em .01em .5em rgba(0,0,0,.2);
+      background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat center center;
     }
   }
 
   &--add-dataset {
-    background: $background-color url(~Images/icons/database-add.svg) no-repeat center center;
+    background: transparent url(~Images/icons/database-add.svg) no-repeat center center;
     background-size: 30px;
     &:hover {
-      border: 2px solid $azure;
-      box-shadow: .05em .01em .5em rgba(0,0,0,.2);
+      background: $azure url(~Images/icons/database-add-hover.svg) no-repeat center center;
     }
   }
   &--download-all {
-    background: $background-color url(~Images/icons/database-dark-download.svg) no-repeat center center;
+    background: transparent url(~Images/icons/database-dark-download.svg) no-repeat center center;
     background-size: 25px;
     margin-right: -8px;
-    &:hover {
-      border: 2px solid $azure;
-      box-shadow: .05em .01em .5em rgba(0,0,0,.2);
-    }
   }
   &--downloaded {
     background: $background-color url(~Images/icons/database-dark-local.svg) no-repeat center center;
     background-size: 25px;
     margin-right: -8px;
-    &:hover {
-      border: 2px solid $azure;
-      box-shadow: .05em .01em .5em rgba(0,0,0,.2);
-    }
   }
   &--downloading{
     background: $background-color no-repeat center center;

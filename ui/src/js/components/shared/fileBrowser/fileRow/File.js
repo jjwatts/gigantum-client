@@ -423,9 +423,12 @@ class File extends Component {
       </div>
     );
 
-    return (
-      props.connectDragSource(file)
-    );
+    if (props.fileData.edge.node.isLocal) {
+      return (
+        props.connectDragSource(file)
+      );
+    }
+    return file;
   }
 }
 

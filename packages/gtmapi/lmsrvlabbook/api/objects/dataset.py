@@ -6,7 +6,6 @@ from gtmcore.activity import ActivityStore
 from lmsrvcore.auth.identity import parse_token
 from lmsrvcore.auth.user import get_logged_in_username
 from lmsrvcore.api.interfaces import GitRepository
-from lmsrvcore.api.connections import ListBasedConnection
 
 from gtmcore.dataset.manifest import Manifest
 from gtmcore.workflows.gitlab import GitLabManager, ProjectPermissions
@@ -343,24 +342,41 @@ class Dataset(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         """Helper method to populate the DatasetFileConnection"""
         manifest = Manifest(dataset, get_logged_in_username())
 
-        # Generate naive cursors
-        # TODO: Use manifest pagination interface
-        edges = manifest.list()
-        cursors = [base64.b64encode("{}".format(cnt).encode("UTF-8")).decode("UTF-8") for cnt, x in enumerate(edges)]
+        if "after" in kwargs:
+            after_index = int(base64.b64decode(kwargs["after"]))
+        else:
+            after_index = 0
 
-        # Process slicing and cursor args
-        lbc = ListBasedConnection(edges, cursors, kwargs)
-        lbc.apply()
+        # Generate naive cursors
+        edges, indexes = manifest.list(first=kwargs.get("first"), after_index=after_index)
+        cursors = [base64.b64encode("{}".format(x).encode("UTF-8")).decode("UTF-8") for x in indexes]
 
         edge_objs = []
-        for edge, cursor in zip(lbc.edges, lbc.cursors):
+        for edge, cursor in zip(edges, cursors):
             create_data = {"owner": self.owner,
                            "name": self.name,
                            "key": edge['key'],
                            "_file_info": edge}
             edge_objs.append(DatasetFileConnection.Edge(node=DatasetFile(**create_data), cursor=cursor))
 
-        return DatasetFileConnection(edges=edge_objs, page_info=lbc.page_info)
+        has_previous_page = False
+        has_next_page = True
+        start_cursor = None
+        end_cursor = None
+        if cursors:
+            start_cursor = cursors[0]
+            end_cursor = cursors[-1]
+            if indexes[-1] == len(manifest.manifest) - 1:
+                has_next_page = False
+
+        if kwargs.get("after"):
+            if int(base64.b64decode(kwargs["after"])) > 0:
+                has_previous_page = True
+
+        page_info = graphene.relay.PageInfo(has_next_page=has_next_page, has_previous_page=has_previous_page,
+                                            start_cursor=start_cursor, end_cursor=end_cursor)
+
+        return DatasetFileConnection(edges=edge_objs, page_info=page_info)
 
     def resolve_all_files(self, info, **kwargs):
         """Resolver for getting all files in a Dataset"""

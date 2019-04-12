@@ -84,9 +84,10 @@ exports[`File component File Snapshot 1`] = `
           data-tooltip="Add Subfolder"
           onClick={[Function]}
         />
-        <div
-          className="ActionsMenu__item ActionsMenu__item--delete Tooltip-data Tooltip-data--small"
+        <button
+          className="ActionsMenu__item Btn__delete Btn--noShadow Tooltip-data Tooltip-data--small"
           data-tooltip="Delete"
+          disabled={false}
           onClick={[Function]}
         >
           <div
@@ -111,14 +112,15 @@ exports[`File component File Snapshot 1`] = `
               />
             </div>
           </div>
-        </div>
-        <div
-          className="ActionsMenu__item ActionsMenu__item--rename Tooltip-data Tooltip-data--small"
+        </button>
+        <button
+          className="ActionsMenu__item Btn__rename Btn--noShadow Tooltip-data Tooltip-data--small"
           data-tooltip="Rename"
+          disabled={false}
           onClick={[Function]}
         />
-        <div
-          className="ActionsMenu__item Tooltip-data Tooltip-data--small ActionsMenu__item--favorite-off"
+        <button
+          className="ActionsMenu__item Tooltip-data Tooltip-data--small Btn__Favorite-off Btn--noShadow"
           data-tooltip="Favorite"
           onClick={[Function]}
         />

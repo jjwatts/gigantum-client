@@ -201,7 +201,7 @@ export default class SelectBase extends Component {
               );
             } if (queryProps && props.datasets) {
               const filterCategories = createDatasetFilters(queryProps.availableDatasetTypes);
-              const filteredDatasets = filterDatasets(queryProps.availableDatasetTypes, state, tags);
+              const filteredDatasets = filterDatasets(queryProps.availableDatasetTypes, state.tags);
               return (
                 <div className={innerContainer}>
                   <AdvancedSearch

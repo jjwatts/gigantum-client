@@ -463,6 +463,10 @@ class InventoryManager(object):
                 os.path.join('.gigantum', 'activity', 'log')
             ]
 
+            # Create .gitignore default file
+            shutil.copyfile(os.path.join(resource_filename('gtmcore', 'dataset'), 'gitignore.default'),
+                            os.path.join(dataset.root_dir, ".gitignore"))
+
             for d in dirs:
                 p = os.path.join(dataset.root_dir, d, '.gitkeep')
                 os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -474,10 +478,6 @@ class InventoryManager(object):
 
             # Create an empty storage.json file
             dataset.backend_config = {}
-
-            # Create .gitignore default file
-            shutil.copyfile(os.path.join(resource_filename('gtmcore', 'dataset'), 'gitignore.default'),
-                            os.path.join(dataset.root_dir, ".gitignore"))
 
             # Commit
             dataset.git.add_all()

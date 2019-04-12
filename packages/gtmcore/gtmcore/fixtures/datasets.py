@@ -3,11 +3,14 @@ import os
 import shutil
 from mock import patch
 import snappy
+from pkg_resources import resource_filename
+import tempfile
 
 from gtmcore.configuration import Configuration
 from gtmcore.fixtures.fixtures import _create_temp_work_dir
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.dataset import Manifest
+from gtmcore.dispatcher.jobs import import_dataset_from_zip
 
 USERNAME = 'tester'
 
@@ -22,7 +25,6 @@ def mock_dataset_with_cache_dir():
                                storage_type="gigantum_object_v1")
 
         yield ds, working_dir, ds.git.repo.head.commit.hexsha
-
         shutil.rmtree(working_dir)
 
 
@@ -34,6 +36,24 @@ def mock_dataset_with_manifest(mock_dataset_with_cache_dir):
 
     # yield dataset, manifest, working_dir
     yield mock_dataset_with_cache_dir[0], m, mock_dataset_with_cache_dir[1]
+
+
+@pytest.fixture()
+def mock_legacy_dataset(mock_dataset_with_cache_dir):
+    """A pytest fixture that imports the legacy dataset"""
+    archive_path = os.path.join(resource_filename('gtmcore.dataset.tests', 'data'), 'test-legacy-dataset.zip')
+    temp_path = os.path.join(tempfile.gettempdir(), 'test-legacy-dataset.zip')
+    shutil.copyfile(archive_path, temp_path)
+    conf_file = mock_dataset_with_cache_dir[0].client_config.config_file
+    import_dataset_from_zip(archive_path=temp_path, username=USERNAME,
+                            owner=USERNAME, config_file=conf_file)
+
+    im = InventoryManager()
+    ds = im.load_dataset(USERNAME, USERNAME, 'test-legacy-dataset')
+    m = Manifest(ds, USERNAME)
+
+    # yield dataset, manifest, working_dir
+    yield ds, m, mock_dataset_with_cache_dir[1]
 
 
 def helper_append_file(cache_dir, revision, rel_path, content):

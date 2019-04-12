@@ -122,10 +122,14 @@ export default class ActionsMenu extends Component {
   }
 
   render() {
+    const { props } = this;
+    const disableButtons = props.section === 'data' && (!props.edge.node.isLocal || (props.folder && !props.isLocal));
+    const deleteTooltip = disableButtons ? 'Must download before deleting' : 'Delete';
+    const renameTooltip = disableButtons ? 'Must download before renaming' : 'Rename';
     const favoriteCSS = classNames({
       'ActionsMenu__item Tooltip-data Tooltip-data--small': true,
-      'ActionsMenu__item--favorite-on': this.props.edge.node.isFavorite,
-      'ActionsMenu__item--favorite-off': !this.props.edge.node.isFavorite,
+      'Btn__Favorite-on Btn--noShadow': this.props.edge.node.isFavorite,
+      'Btn__Favorite-off Btn--noShadow': !this.props.edge.node.isFavorite,
     });
 
 
@@ -137,7 +141,7 @@ export default class ActionsMenu extends Component {
 
 
     const deleteCSS = classNames({
-      'ActionsMenu__item ActionsMenu__item--delete': true,
+      'ActionsMenu__item Btn__delete Btn--noShadow': true,
       'Tooltip-data Tooltip-data--small': !this.state.popupVisible,
       'ActionsMenu__popup-visible': this.state.popupVisible,
     });
@@ -164,10 +168,11 @@ export default class ActionsMenu extends Component {
             !isUntrackedDirectory
             && (
             <Fragment>
-              <div
+              <button
                 className={deleteCSS}
-                data-tooltip="Delete"
+                data-tooltip={deleteTooltip}
                 onClick={(evt) => { this._togglePopup(evt, true); }}
+                disabled={disableButtons}
               >
 
                 <div className={popupCSS}>
@@ -184,16 +189,17 @@ export default class ActionsMenu extends Component {
                     />
                   </div>
                 </div>
-              </div>
-              <div
+              </button>
+              <button
+                disabled={disableButtons}
                 onClick={() => { this.props.renameEditMode(true); }}
-                className="ActionsMenu__item ActionsMenu__item--rename Tooltip-data Tooltip-data--small"
-                data-tooltip="Rename"
+                className="ActionsMenu__item Btn__rename Btn--noShadow Tooltip-data Tooltip-data--small"
+                data-tooltip={renameTooltip}
               />
               {
                 this.props.section !== 'data'
                 && (
-                <div
+                <button
                   onClick={() => { this._triggerFavoriteMutation(); }}
                   className={favoriteCSS}
                   data-tooltip="Favorite"

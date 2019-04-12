@@ -395,6 +395,127 @@ class TestJupyterLabNotebookMonitor(object):
         assert record._detail_objects[0][1] == ActivityDetailType.CODE_EXECUTED.value
         assert record._detail_objects[0][2] == 255
 
+    def test_gtm_comments(self, redis_client, mock_labbook, mock_kernel):
+        """Test processing notebook activity that's modified by gtm: comments
+
+        Testing here is lighter than above - we only test aspects relevant to
+        showing / hiding/ ignoring"""
+        monitor_key = "dev_env_monitor:{}:{}:{}:{}:activity_monitor:{}".format('test',
+                                                                               'test',
+                                                                               'labbook1',
+                                                                               'jupyterlab-ubuntu1604',
+                                                                               uuid.uuid4())
+
+        monitor = JupyterLabNotebookMonitor("test", "test", mock_labbook[2].name,
+                                            monitor_key, config_file=mock_labbook[0])
+
+        # Setup monitoring metadata
+        metadata = {"kernel_id": "XXXX",
+                    "kernel_name": 'python',
+                    "kernel_type": 'notebook',
+                    "path": 'code/Test.ipynb'}
+
+        # We'll use this repeatedly below
+        a_store = ActivityStore(mock_labbook[2])
+
+        # First, we check both cases for the default (auto)
+        # Perform an action that generates output (default shown)
+        mock_kernel[0].execute("# gtm:auto\nprint('Hello!')")
+
+        # Process messages
+        for _ in range(4):
+            monitor.handle_message(mock_kernel[0].get_iopub_msg())
+
+        # This is the one redundant assertion with other tests in this file (and it's repeated in each execution below),
+        # but it's fairly central to what we're doing!
+        assert monitor.can_store_activity_record is True
+
+        # Store the record manually for this test
+        monitor.store_record(metadata)
+
+        # Check activity entry
+        log = mock_labbook[2].git.log()
+
+        record = a_store.get_activity_record(log[0]['commit'])
+        assert record.show is True
+
+        # Perform an action that doesn't generate output (default hidden)
+        mock_kernel[0].execute("# gtm:auto\na=1")
+
+        # Process messages
+        for _ in range(3):
+            monitor.handle_message(mock_kernel[0].get_iopub_msg())
+
+        assert monitor.can_store_activity_record is True
+
+        # Store the record manually for this test
+        monitor.store_record(metadata)
+
+        # Check activity entry
+        log = mock_labbook[2].git.log()
+
+        record = a_store.get_activity_record(log[0]['commit'])
+        assert record.show is False
+
+        # Perform an action that generates output (default shown)
+        # Hide comment should override
+        mock_kernel[0].execute("# gtm:hide\nprint('Hello!')")
+
+        # Process messages
+        for _ in range(4):
+            monitor.handle_message(mock_kernel[0].get_iopub_msg())
+
+        assert monitor.can_store_activity_record is True
+
+        # Store the record manually for this test
+        monitor.store_record(metadata)
+
+        # Check activity entry
+        log = mock_labbook[2].git.log()
+
+        record = a_store.get_activity_record(log[0]['commit'])
+        assert record.show is False
+
+        # Perform an action that doesn't generate output (default hidden)
+        # Show comment should override
+        mock_kernel[0].execute("# gtm:show\na=1")
+
+        # Process messages
+        for _ in range(3):
+            monitor.handle_message(mock_kernel[0].get_iopub_msg())
+
+        assert monitor.can_store_activity_record is True
+
+        # Store the record manually for this test
+        monitor.store_record(metadata)
+
+        # Check activity entry
+        log = mock_labbook[2].git.log()
+
+        record = a_store.get_activity_record(log[0]['commit'])
+        assert record.show is True
+
+        # Finally, we test the ignore feature
+        # Here, the default shouldn't matter - we shouldn't end up with a new record
+        # Show comment should override
+        mock_kernel[0].execute("# gtm:ignore\na=1")
+
+        # Process messages
+        for _ in range(3):
+            monitor.handle_message(mock_kernel[0].get_iopub_msg())
+
+        assert monitor.can_store_activity_record is True
+
+        # Store the record manually for this test
+        monitor.store_record(metadata)
+
+        # Check activity entry
+        log = mock_labbook[2].git.log()
+
+        record = a_store.get_activity_record(log[0]['commit'])
+        # assert there is "nothing" in the activity record (we still generated one)
+        assert record.num_detail_objects == 0
+
     def test_add_many_files(self, redis_client, mock_labbook, mock_kernel):
         """Test processing notebook activity when lots of output files have been created"""
         for file_number in range(0, 260):

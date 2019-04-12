@@ -1,5 +1,4 @@
-from typing import Callable, List, Dict, Any, Tuple, Optional
-import pickle
+from typing import List, Dict, Any, Tuple, Optional
 import os
 from enum import Enum
 import shutil
@@ -8,11 +7,13 @@ from collections import OrderedDict, namedtuple
 from natsort import natsorted
 import copy
 from pathlib import Path
+from stat import S_ISDIR
 
 from gtmcore.activity import ActivityStore, ActivityRecord, ActivityDetailType, ActivityType,\
     ActivityAction, ActivityDetailRecord
 from gtmcore.dataset.dataset import Dataset
 from gtmcore.dataset.manifest.hash import SmartHash
+from gtmcore.dataset.manifest.file import ManifestFileCache
 from gtmcore.dataset.cache import get_cache_manager_class, CacheManager
 from gtmcore.dataset.manifest.eventloop import get_event_loop
 from gtmcore.logging import LMLogger
@@ -36,6 +37,7 @@ class Manifest(object):
 
     def __init__(self, dataset: Dataset, logged_in_username: Optional[str] = None) -> None:
         self.dataset = dataset
+        self.logged_in_username = logged_in_username
 
         cache_mgr_class = get_cache_manager_class(self.dataset.client_config)
         self.cache_mgr: CacheManager = cache_mgr_class(self.dataset, logged_in_username)
@@ -43,12 +45,13 @@ class Manifest(object):
         self.hasher = SmartHash(dataset.root_dir, self.cache_mgr.cache_root,
                                 self.dataset.git.repo.head.commit.hexsha)
 
-        self.ignore_file = os.path.join(dataset.root_dir, ".gigantumignore")
-
-        self.manifest = self._load_manifest()
+        self._manifest_io = ManifestFileCache(dataset, logged_in_username)
 
         # TODO: Support ignoring files
+        # self.ignore_file = os.path.join(dataset.root_dir, ".gigantumignore")
         # self.ignored = self._load_ignored()
+
+        self._legacy_manifest_file = os.path.join(self.dataset.root_dir, 'manifest', 'manifest0')
 
     @property
     def dataset_revision(self) -> str:
@@ -59,27 +62,43 @@ class Manifest(object):
         """
         return self.dataset.git.repo.head.commit.hexsha
 
-    def _load_manifest(self) -> OrderedDict:
-        """Method to load the manifest file
+    @property
+    def manifest(self) -> OrderedDict:
+        """Property to get the current manifest as the union of all manifest files, with caching supported
 
         Returns:
-            dict
+            OrderedDict
         """
-        manifest_file = os.path.join(self.dataset.root_dir, 'manifest', 'manifest0')
-        if os.path.exists(manifest_file):
-            with open(manifest_file, 'rb') as mf:
-                return pickle.load(mf)
-        else:
-            return OrderedDict()
+        return self._manifest_io.get_manifest()
 
-    def _save_manifest(self) -> None:
-        """Method to load the manifest file
+    @staticmethod
+    def _get_object_subdirs(object_id) -> Tuple[str, str]:
+        """Get the subdirectories when accessing an object ID
+
+        Args:
+            object_id:
 
         Returns:
-            dict
+
         """
-        with open(os.path.join(self.dataset.root_dir, 'manifest', 'manifest0'), 'wb') as mf:
-            pickle.dump(self.manifest, mf, pickle.HIGHEST_PROTOCOL)
+        return object_id[0:8], object_id[8:16]
+
+    def dataset_to_object_path(self, dataset_path: str) -> str:
+        """Helper method to compute the absolute object path from the relative dataset path
+
+        Args:
+            dataset_path: relative dataset path
+
+        Returns:
+            str
+        """
+        data: Optional[dict] = self.manifest.get(dataset_path)
+        if not data:
+            raise ValueError(f"{dataset_path} not found in Dataset manifest.")
+
+        hash_str: str = data['h']
+        level1, level2 = self._get_object_subdirs(hash_str)
+        return os.path.join(self.cache_mgr.cache_root, 'objects', level1, level2, hash_str)
 
     def get_abs_path(self, relative_path: str) -> str:
         """Method to generate the absolute path to a file in the cache at the current revision
@@ -118,7 +137,7 @@ class Manifest(object):
             fh.write(f"{rel_path},{obj}\n")
 
     def get_change_type(self, path) -> FileChangeType:
-        """
+        """Helper method to get the type of change from the manifest/fast hash
 
         Args:
             path:
@@ -132,7 +151,7 @@ class Manifest(object):
             else:
                 result = FileChangeType.NOCHANGE
         else:
-            if path in self.manifest.keys():
+            if path in self.manifest:
                 # No fast hash, but exists in manifest. User just edited a file that hasn't been pulled
                 result = FileChangeType.MODIFIED
             else:
@@ -141,10 +160,11 @@ class Manifest(object):
         return result
 
     def status(self) -> StatusResult:
-        """
+        """Method to compute the changes (create, modified, delete) of a dataset, comparing local state to the
+        manifest and fast hash
 
         Returns:
-
+            StatusResult
         """
         # TODO: think about how to send batches to get_change_type
         status: Dict[str, List] = {"created": [], "modified": [], "deleted": []}
@@ -200,36 +220,16 @@ class Manifest(object):
                             deleted=self.hasher.get_deleted_files(all_files))
 
     @staticmethod
-    def _get_object_subdirs(object_id) -> Tuple[str, str]:
-        """
-
-        Args:
-            object_id:
-
-        Returns:
-
-        """
-        return object_id[0:8], object_id[8:16]
-
-    def dataset_to_object_path(self, dataset_path: str) -> str:
-        """
-
-        Args:
-            dataset_path:
-
-        Returns:
-
-        """
-        data: Optional[dict] = self.manifest.get(dataset_path)
-        if not data:
-            raise ValueError(f"{dataset_path} not found in Dataset manifest.")
-
-        hash_str: str = data['h']
-        level1, level2 = self._get_object_subdirs(hash_str)
-        return os.path.join(self.cache_mgr.cache_root, 'objects', level1, level2, hash_str)
-
-    @staticmethod
     def _blocking_move_and_link(source, destination):
+        """Blocking method to move a file and hard link it
+
+        Args:
+            source: source path
+            destination: destination path
+
+        Returns:
+
+        """
         if os.path.isfile(destination):
             # Object already exists, no need to store again
             os.remove(source)
@@ -240,11 +240,11 @@ class Manifest(object):
         os.link(destination, source)
 
     async def _move_to_object_cache(self, relative_path, hash_str):
-        """
+        """Method to move a file to the object cache
 
         Args:
-            relative_path:
-            hash_str:
+            relative_path: relative path to the file
+            hash_str: content hash of the file
 
         Returns:
 
@@ -270,13 +270,14 @@ class Manifest(object):
         return destination
 
     def update(self, status: StatusResult = None) -> StatusResult:
-        """
+        """Method to run the update process on the manifest based on change status (optionally computing changes if
+        status is not set)
 
         Args:
-            status:
+            status: The current change status of the dataset, of omitted, it will be computed
 
         Returns:
-
+            StatusResult
         """
         if not status:
             status = self.status()
@@ -302,29 +303,28 @@ class Manifest(object):
             for f, h, fh in zip(update_files, hash_result, fast_hash_result):
                 if not fh:
                     raise ValueError(f"Failed to update manifest for {f}. File not found.")
+
                 _, file_bytes, mtime = fh.split("||")
-                self.manifest[f] = {'h': h,
-                                    'm': mtime,
-                                    'b': file_bytes}
+                self._manifest_io.add_or_update(f, h, mtime, file_bytes)
 
         if status.deleted:
             self.hasher.delete_fast_hashes(status.deleted)
-            for f in status.deleted:
-                del self.manifest[f]
+            for relative_path in status.deleted:
+                self._manifest_io.remove(relative_path)
 
-        self._save_manifest()
+        self._manifest_io.persist()
 
         return status
 
     def _file_info(self, key, item) -> Dict[str, Any]:
-        """
+        """Method to populate file info (e.g. size, mtime, etc.) using data from the manifest
 
         Args:
-            key:
-            item:
+            key: relative path to the file
+            item: data from the manifest
 
         Returns:
-
+            dict
         """
         # TODO: Support favorites
         abs_path = os.path.join(self.cache_mgr.cache_root, self.dataset_revision, key)
@@ -332,28 +332,27 @@ class Manifest(object):
                 'size': item.get('b'),
                 'is_favorite': False,
                 'is_local': os.path.exists(abs_path),
-                'is_dir': os.path.isdir(abs_path),
+                'is_dir': True if abs_path[-1] == "/" else False,
                 'modified_at': float(item.get('m'))}
 
     def gen_file_info(self, key) -> Dict[str, Any]:
-        """
+        """Method to generate file info (e.g. size, mtime, etc.)
 
         Args:
-            key:
-            item:
+            key: relative path to the file
 
         Returns:
-
+            dict
         """
         # TODO: Support favorites
         abs_path = self.get_abs_path(key)
         stat = os.stat(abs_path)
-        is_dir = os.path.isdir(abs_path)
+        is_dir = True if S_ISDIR(stat.st_mode) else False
 
         return {'key': key,
                 'size': str(stat.st_size) if not is_dir else '0',
                 'is_favorite': False,
-                'is_local': os.path.exists(abs_path),
+                'is_local': True,
                 'is_dir': is_dir,
                 'modified_at': stat.st_mtime}
 
@@ -368,7 +367,7 @@ class Manifest(object):
         item = self.manifest.get(dataset_path)
         return self._file_info(dataset_path, item)
 
-    def list(self, first: int = None, after_index: int = 0) -> List[Dict[str, Any]]:
+    def list(self, first: int = None, after_index: int = 0) -> Tuple[List[Dict[str, Any]], List[int]]:
         """
 
         Args:
@@ -386,13 +385,22 @@ class Manifest(object):
                 raise ValueError("`after_index` must be greater or equal than 0")
 
         result = list()
+        indexes = list()
+
+        if after_index != 0:
+            after_index = after_index + 1
+
         if first is not None:
-            first = min(first + after_index, len(self.manifest))
+            end = min(first + after_index, len(self.manifest))
+        else:
+            end = len(self.manifest)
 
-        for key, item in list(self.manifest.items())[after_index:first]:
-            result.append(self._file_info(key, item))
+        data = list(self.manifest.items())
+        for idx in range(after_index, end):
+            result.append(self._file_info(data[idx][0], data[idx][1]))
+            indexes.append(idx)
 
-        return result
+        return result, indexes
 
     def delete(self, path_list: List[str]) -> None:
         """Method to delete a list of files/folders from the dataset
@@ -467,7 +475,6 @@ class Manifest(object):
         else:
             raise ValueError("Destination path does not exist after move operation")
 
-        logger.info(msg)
         return moved_files
 
     def create_directory(self, path: str) -> Dict[str, Any]:
@@ -575,11 +582,11 @@ class Manifest(object):
         self.hasher.fast_hash(list(self.manifest.keys()))
 
     def sweep_all_changes(self, upload: bool = False, extra_msg: str = None) -> None:
-        """
+        """Method to sweep all changes in a dataset up into a commit and create an activity record
 
         Args:
-            upload:
-            extra_msg:
+            upload: If part of an upload, set to true
+            extra_msg: A string with an extra message you want to put into the activity record
 
         Returns:
 
