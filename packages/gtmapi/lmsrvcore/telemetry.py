@@ -2,10 +2,6 @@ import time
 from typing import Tuple
 
 from gtmcore.configuration.utils import call_subprocess
-from gtmcore.logging import LMLogger
-
-
-logger = LMLogger.get_logger()
 
 
 def service_telemetry():
@@ -43,8 +39,6 @@ def _calc_mem_free() -> Tuple[int, int]:
 def _calc_disk_free() -> Tuple[int, int]:
     disk_results = call_subprocess("df -h /".split(), cwd='/').split('\n')
     _, disk_size, disk_used, disk_avail, use_pct, _ = disk_results[1].split()
-    logger.info(disk_results)
-    logger.info(f"Disk use: {disk_size}, {disk_used}, {disk_avail}, {use_pct}")
     return disk_size, disk_avail
 
 
@@ -52,7 +46,6 @@ def _calc_rq_free() -> Tuple[int, int]:
     """Parses the output of `rq info` to return total number
     of workers and the count of workers currently idle."""
     rq_out = call_subprocess("rq info".split(), cwd='/')
-    logger.info(rq_out)
     total_cnt, idle_cnt = 0, 0
     for rq_line in rq_out.split('\n'):
         toks = rq_line.strip().split()
@@ -63,6 +56,4 @@ def _calc_rq_free() -> Tuple[int, int]:
             if 'idle' in toks[1]:
                 idle_cnt += 1
             total_cnt += 1
-        else:
-            logger.info(rq_line)
     return total_cnt, idle_cnt

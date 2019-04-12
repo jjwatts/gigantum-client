@@ -240,7 +240,6 @@ if config.config["lock"]["reset_on_start"]:
     logger.info("Resetting ALL distributed locks")
     reset_all_locks(config.config['lock'])
 
-#threading.Thread(target=service_telemetry).start()
 
 def main(debug=False) -> None:
     try:
