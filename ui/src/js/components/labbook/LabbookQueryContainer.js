@@ -48,6 +48,7 @@ class LabbookQueryContainer extends Component {
                 labbook={props.labbook}
                 owner={parentProps.owner}
                 history={parentProps.history}
+                diskLow={props.diskLow}
                 {...parentProps}
               />);
           }

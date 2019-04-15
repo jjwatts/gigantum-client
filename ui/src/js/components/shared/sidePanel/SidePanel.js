@@ -40,12 +40,12 @@ class SidePanel extends Component {
 
   render() {
     const { props, state } = this;
+    console.log(props.diskLow)
+
+    const isPushedDownTwice = ((window.location.hostname === config.demoHostName) || props.diskLow) && props.isDeprecated;
 
 
-    const isPushedDownTwice = (window.location.hostname === config.demoHostName) && props.isDeprecated;
-
-
-    const isPushedDownOnce = ((window.location.hostname === config.demoHostName) || props.isDeprecated) && !isPushedDownTwice;
+    const isPushedDownOnce = (((window.location.hostname === config.demoHostName) || props.diskLow) || props.isDeprecated) && !isPushedDownTwice;
 
 
     const sidePanelCSS = classNames({

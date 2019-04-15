@@ -27,40 +27,45 @@ export default class Home extends Component {
         isAuthenticated = false;
       }
       if (isAuthenticated !== state.authenticated) {
+        console.log(state.authenticated, isAuthenticated)
         this.setState({ authenticated: isAuthenticated });
       }
     });
   }
 
   login() {
-    this.props.auth.login();
+    const { props } = this;
+    props.auth.login();
   }
 
   footerWorkerCallback(worker, filepath) {
-    this.props.footerWorkerCallback(worker, filepath);
+    const { props } = this;
+    props.footerWorkerCallback(worker, filepath);
   }
 
   render() {
-    const { loadingRenew } = this.props;
+    const { state, props } = this;
     return (
       <div className="Home">
         {
-          this.state.authenticated && (
+          state.authenticated && (
             <Dashboard
-              auth={this.props.auth}
+              auth={props.auth}
+              diskLow={props.diskLow}
               footerWorkerCallback={this.footerWorkerCallback}
-              section={this.props.match}
-              match={this.props.match}
-              history={this.props.history}
+              section={props.match}
+              match={props.match}
+              history={props.history}
             />
           )
         }
 
         {
-          !this.state.authenticated && this.state.authenticated !== null && (
+          !state.authenticated && state.authenticated !== null && (
           <Login
-            auth={this.props.auth}
-            loadingRenew={loadingRenew}
+            auth={props.auth}
+            diskLow={props.diskLow}
+            loadingRenew={props.loadingRenew}
           />
           )
         }

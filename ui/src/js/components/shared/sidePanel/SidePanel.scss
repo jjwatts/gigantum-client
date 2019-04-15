@@ -32,21 +32,20 @@
   top: 191px;
   bottom: 0px;
   @include boxShadow();
+  &--sticky{
+    top: 110px;
+  }
   &--is-deprecated{
     top: 251px;
   }
   &--is-deprecated-sticky{
-    top: 170px;
+    top: 160px;
   }
   &--is-deprecated-demo{
     top: 251px;
   }
   &--is-deprecated-demo-sticky{
     top: 251px;
-  }
-
-  &--sticky{
-    top: 110px;
   }
 }
 

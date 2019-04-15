@@ -412,13 +412,10 @@ class Activity extends Component {
   */
   @boundMethod
   _setStickyDate() {
-    let offsetAmount = window.location.hostname === config.demoHostName ? 50 : 0;
-    offsetAmount = this.props.isDeprecated ? offsetAmount + 70 : offsetAmount;
+    const { props } = this;
+    let offsetAmount = ((window.location.hostname === config.demoHostName) || props.diskLow) ? 50 : 0;
+    offsetAmount = props.isDeprecated ? offsetAmount + 70 : offsetAmount;
     const upperBound = offsetAmount + 120;
-
-
-    const lowerBound = offsetAmount + 80;
-
 
     let stickyDate = null;
 
@@ -752,7 +749,6 @@ class Activity extends Component {
   render() {
     const { props, state } = this;
 
-
     const section = props[props.sectionType];
 
 
@@ -764,9 +760,9 @@ class Activity extends Component {
 
     const newActivityCSS = classNames({
       'Activity__new-record box-shadow': true,
-      'is-demo': window.location.hostname === config.demoHostName,
-      'is-deprecated': this.props.isDeprecated,
-      'is-demo-deprecated': window.location.hostname === config.demoHostName && this.props.isDeprecated,
+      'is-demo': ((window.location.hostname === config.demoHostName) || props.diskLow),
+      'is-deprecated': props.isDeprecated,
+      'is-demo-deprecated': ((window.location.hostname === config.demoHostName) || props.diskLow) && props.isDeprecated,
     });
     if (section) {
       const recordDates = Object.keys(state.activityRecords);
@@ -775,9 +771,9 @@ class Activity extends Component {
       const stickyDateCSS = classNames({
         'Activity__date-tab': true,
         fixed: state.stickyDate,
-        'is-demo': window.location.hostname === config.demoHostName,
-        'is-deprecated': this.props.isDeprecated,
-        'is-demo-deprecated': window.location.hostname === config.demoHostName && this.props.isDeprecated,
+        'is-demo': ((window.location.hostname === config.demoHostName) || props.diskLow),
+        'is-deprecated': props.isDeprecated,
+        'is-demo-deprecated': ((window.location.hostname === config.demoHostName) || props.diskLow) && props.isDeprecated,
       });
       return (
         <div

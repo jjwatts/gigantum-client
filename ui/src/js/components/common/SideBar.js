@@ -23,12 +23,13 @@ export default class SideBar extends Component {
     sets authentication response to the state
   */
   componentDidMount() {
-    this.props.auth.isAuthenticated().then((response) => {
+    const { props, state } = this;
+    props.auth.isAuthenticated().then((response) => {
       let isAuthenticated = response;
       if (isAuthenticated === null) {
         isAuthenticated = false;
       }
-      if (isAuthenticated !== this.state.authenticated) {
+      if (isAuthenticated !== state.authenticated) {
         this.setState({ authenticated: isAuthenticated });
       }
     });
@@ -39,7 +40,8 @@ export default class SideBar extends Component {
     logout through Auth0
   */
   logout() {
-    this.props.auth.logout();
+    const { props } = this;
+    props.auth.logout();
   }
 
   render() {
@@ -47,9 +49,9 @@ export default class SideBar extends Component {
     const isLabbooks = (window.location.href.indexOf('projects') > 0) || (window.location.href.indexOf('datasets') === -1);
 
     const sidebarCSS = classNames({
-      'SideBar col-sm-1': this.state.authenticated || this.state.authenticated === null,
-      hidden: !(this.state.authenticated || this.state.authenticated === null),
-      'SideBar--demo': window.location.hostname === config.demoHostName,
+      'SideBar col-sm-1': state.authenticated || state.authenticated === null,
+      hidden: !(state.authenticated || state.authenticated === null),
+      'SideBar--demo': window.location.hostname === config.demoHostName || props.diskLow,
     });
     const projectsCSS = classNames({
       SideBar__icon: true,
@@ -111,7 +113,7 @@ export default class SideBar extends Component {
           </ul>
 
           {
-            state.authenticated && (<User {...this.props} />)
+            state.authenticated && (<User {...props} />)
           }
         </div>
       </div>

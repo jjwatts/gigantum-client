@@ -72,16 +72,17 @@ export default class DashboardContainer extends Component {
   *  @return {jsx}
   */
   _displaySelectedComponent() {
-    const paths = this.props.history.location.pathname.split('/');
+    const { state, props } = this;
+    const paths = props.history.location.pathname.split('/');
     const sectionRoute = paths.length > 2 ? paths[2] : 'local';
 
     if (paths[2] !== 'cloud' && paths[2] !== 'local') {
-      this.props.history.replace('../../../../projects/local');
+      props.history.replace('../../../../projects/local');
     }
 
 
     let query;
-    if (this.state.selectedComponent === '/datasets/:labbookSection') {
+    if (state.selectedComponent === '/datasets/:labbookSection') {
       query = sectionRoute === 'cloud' ? RemoteDatasetListingQuery : LocalDatasetListingQuery;
     } else if (sectionRoute === 'cloud') {
       query = RemoteListingQuery;
@@ -96,76 +97,84 @@ export default class DashboardContainer extends Component {
         variables={{
           first: sectionRoute === 'cloud' ? 8 : 100,
           cursor: null,
-          orderBy: this.state.orderBy,
-          sort: this.state.sort,
+          orderBy: state.orderBy,
+          sort: state.sort,
         }}
-        render={({ error, props }) => {
+        render={(response) => {
+          const { error } = response;
+          const renderProps = response.props;
           if (error) {
             console.log(error);
-          } else if (props) {
-            if (this.state.selectedComponent === '/datasets/:labbookSection') {
+          } else if (renderProps) {
+            if (state.selectedComponent === '/datasets/:labbookSection') {
               if (sectionRoute === 'cloud') {
                 return (
                   <RemoteDatasetsContainer
-                    auth={this.props.auth}
-                    datasetList={props}
-                    history={this.props.history}
+                    auth={props.auth}
+                    datasetList={renderProps}
+                    history={props.history}
                     section={sectionRoute}
                     refetchSort={this._refetchSort}
+                    diskLow={props.diskLow}
                   />
                 );
               }
               return (
                 <LocalDatasetsContainer
-                  auth={this.props.auth}
-                  datasetList={props}
-                  history={this.props.history}
+                  auth={props.auth}
+                  datasetList={renderProps}
+                  history={props.history}
                   section={sectionRoute}
                   refetchSort={this._refetchSort}
+                  diskLow={props.diskLow}
                 />
               );
             }
             if (sectionRoute === 'cloud') {
               return (
                 <RemoteLabbooksContainer
-                  auth={this.props.auth}
-                  labbookList={props}
-                  history={this.props.history}
+                  auth={props.auth}
+                  labbookList={renderProps}
+                  history={props.history}
                   refetchSort={this._refetchSort}
+                  diskLow={props.diskLow}
                 />
               );
             }
 
             return (
               <LocalLabbooksContainer
-                auth={this.props.auth}
-                labbookList={props}
-                history={this.props.history}
+                auth={props.auth}
+                labbookList={renderProps}
+                history={props.history}
                 refetchSort={this._refetchSort}
+                diskLow={props.diskLow}
               />
             );
           } else {
-            if (this.state.selectedComponent === '/datasets/:labbookSection') {
+            if (state.selectedComponent === '/datasets/:labbookSection') {
               return (
                 <LocalDatasetsContainer
-                  auth={this.props.auth}
-                  datasetList={props}
-                  history={this.props.history}
+                  auth={props.auth}
+                  datasetList={renderProps}
+                  history={props.history}
                   section={sectionRoute}
                   refetchSort={this._refetchSort}
                   loading
+                  diskLow={props.diskLow}
                 />
               );
             }
 
             return (
               <LocalLabbooksContainer
-                auth={this.props.auth}
-                labbookList={props}
-                history={this.props.history}
+                auth={props.auth}
+                labbookList={renderProps}
+                history={props.history}
                 section={sectionRoute}
                 refetchSort={this._refetchSort}
                 loading
+                diskLow={props.diskLow}
               />
             );
           }

@@ -130,12 +130,13 @@ class Dataset extends Component {
   }
 
   render() {
-    if (this.props.dataset) {
-      const { dataset } = this.props;
+    const { props, state } = this;
+    if (props.dataset) {
+      const { dataset } = props;
       const datasetCSS = classNames({
         Dataset: true,
-        'Dataset--detail-mode': this.props.detailMode,
-        'Dataset--demo-mode': window.location.hostname === Config.demoHostName,
+        'Dataset--detail-mode': props.detailMode,
+        'Dataset--demo-mode': (window.location.hostname === Config.demoHostName) || props.diskLow,
       });
 
       return (
@@ -149,7 +150,7 @@ class Dataset extends Component {
               branchName=""
               dataset={dataset}
               sectionType="dataset"
-              {...this.props}
+              {...props}
             />
 
             <div className="Dataset__routes flex flex-1-0-auto">
@@ -157,11 +158,11 @@ class Dataset extends Component {
               <Switch>
                 <Route
                   exact
-                  path={`${this.props.match.path}`}
+                  path={`${props.match.path}`}
                   render={() => (
                     <ErrorBoundary type="datasetSectionError" key="overview">
                       <Overview
-                        key={`${this.props.datasetName}_overview`}
+                        key={`${props.datasetName}_overview`}
                         dataset={dataset}
                         isManaged={dataset.datasetType.isManaged}
                         datasetId={dataset.id}
@@ -173,12 +174,12 @@ class Dataset extends Component {
                   )}
                 />
 
-                <Route path={`${this.props.match.path}/:datasetMenu`}>
+                <Route path={`${props.match.path}/:datasetMenu`}>
 
                   <Switch>
 
                     <Route
-                      path={`${this.props.match.path}/overview`}
+                      path={`${props.match.path}/overview`}
                       render={() => (
                         <ErrorBoundary
                           type="datasetSectionError"
@@ -186,7 +187,7 @@ class Dataset extends Component {
                         >
 
                           <Overview
-                            key={`${this.props.datasetName}_overview`}
+                            key={`${props.datasetName}_overview`}
                             dataset={dataset}
                             isManaged={dataset.datasetType.isManaged}
                             datasetId={dataset.id}
@@ -199,7 +200,7 @@ class Dataset extends Component {
                       )}
                     />
                     <Route
-                      path={`${this.props.match.path}/activity`}
+                      path={`${props.match.path}/activity`}
                       render={() => (
                         <ErrorBoundary
                           type="datasetSectionError"
@@ -207,20 +208,21 @@ class Dataset extends Component {
                         >
 
                           <Activity
-                            key={`${this.props.datasetName}_activity`}
+                            key={`${props.datasetName}_activity`}
                             dataset={dataset}
-                            activityRecords={this.props.activityRecords}
+                            diskLow={props.diskLow}
+                            activityRecords={props.activityRecords}
                             datasetId={dataset.id}
                             activeBranch={dataset.activeBranch}
                             sectionType="dataset"
-                            {...this.props}
+                            {...props}
                           />
 
                         </ErrorBoundary>
                       )}
                     />
                     <Route
-                      path={`${this.props.match.url}/data`}
+                      path={`${props.match.url}/data`}
                       render={() => (
                         <ErrorBoundary
                           type="datasetSectionError"
@@ -252,11 +254,11 @@ class Dataset extends Component {
         </div>);
     }
 
-    if (this.state.authenticated) {
+    if (state.authenticated) {
       return (<Loader />);
     }
 
-    return (<Login auth={this.props.auth} />);
+    return (<Login auth={props.auth} />);
   }
 }
 

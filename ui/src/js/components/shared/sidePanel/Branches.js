@@ -530,6 +530,7 @@ class Branches extends Component {
     const activeUpToDate = props.activeBranch.commitsAhead === 0 && props.activeBranch.commitsBehind === 0;
     const statusText = props.activeBranch.isLocal ? props.activeBranch.isRemote ? 'Local & Remote' : 'Local only' : 'Remote only';
     const activeCommitsText = `${props.activeBranch.commitsBehind ? `${props.activeBranch.commitsBehind} Commits Behind, ` : ''} ${props.activeBranch.commitsAhead ? `${props.activeBranch.commitsAhead} Commits Ahead` : ''}`;
+    console.log(props.diskLow)
     return (
       <div>
         { state.forceMergeModalVisible
@@ -547,6 +548,7 @@ class Branches extends Component {
         <SidePanel
           toggleSidePanel={props.toggleSidePanel}
           isSticky={props.isSticky}
+          diskLow={props.diskLow}
           isDeprecated={props.isDeprecated}
           renderContent={() => (
             <div className="Branches">

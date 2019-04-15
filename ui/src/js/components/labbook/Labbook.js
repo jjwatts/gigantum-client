@@ -522,7 +522,7 @@ class Labbook extends Component {
       const branchName = '';
 
 
-      const isDemo = window.location.hostname === Config.demoHostName;
+      const isDemo = (window.location.hostname === Config.demoHostName) || props.diskLow;
 
 
       const labbookCSS = classNames({
@@ -794,6 +794,7 @@ class Labbook extends Component {
                           <Activity
                             key={`${props.labbookName}_activity`}
                             labbook={labbook}
+                            diskLow={props.diskLow}
                             activityRecords={props.activityRecords}
                             labbookId={labbook.id}
                             branchName={branchName}

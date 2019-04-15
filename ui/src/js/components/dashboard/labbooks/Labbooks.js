@@ -382,7 +382,7 @@ class Labbooks extends Component {
 
     const labbooksCSS = classNames({
       Labbooks: true,
-      'Labbooks--demo': window.location.hostname === config.demoHostName,
+      'Labbooks--demo': (window.location.hostname === config.demoHostName) || props.diskLow,
     });
 
     if (props.labbookList !== null || props.loading) {

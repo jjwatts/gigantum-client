@@ -38,16 +38,17 @@ const DatasetQueryContainer = Loadable({
   loading: Loading,
 });
 
+
 class Routes extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      history,
       hasError: false,
       forceLoginScreen: this.props.forceLoginScreen,
       loadingRenew: this.props.loadingRenew,
       showYT: false,
       showDefaultMessage: true,
+      diskLow: false,
     };
 
     this._setForceLoginScreen = this._setForceLoginScreen.bind(this);
@@ -59,6 +60,7 @@ class Routes extends Component {
     calls flip header text function
   */
   componentDidMount() {
+    this._checkSysinfo()
     this._flipDemoHeaderText();
   }
 
@@ -108,11 +110,38 @@ class Routes extends Component {
     }
   }
 
+  /**
+    shows sysinfo header if available size is too small
+  */
+  _checkSysinfo() {
+    const apiHost = process.env.NODE_ENV === 'development' ? 'localhost:10000' : window.location.host;
+    const self = this;
+    const url = `${window.location.protocol}//${apiHost}${process.env.SYSINFO_API}`;
+    setTimeout(self._checkSysinfo.bind(this), 60 * 1000);
+    return fetch(url, {
+      method: 'GET',
+    }).then((response) => {
+      if (response.status === 200 && (response.headers.get('content-type') === 'application/json')) {
+        response.json().then((res) => {
+          const { available } = res.disk;
+          const size = available.slice(0, available.length - 1);
+          const sizeType = available.slice(-1);
+          if ((sizeType === 'T') || ((sizeType === 'G') && (Number(size) > 5))) {
+            self.setState({ diskLow: false });
+          } else {
+            self.setState({ diskLow: true });
+          }
+        });
+      }
+    }).catch(() => false);
+  }
+
   render() {
-    if (!this.state.hasError) {
+    const { state, props } = this;
+    if (!state.hasError) {
       const headerCSS = classNames({
         HeaderBar: true,
-        'is-demo': window.location.hostname === config.demoHostName,
+        'is-demo': (window.location.hostname === config.demoHostName) || state.diskLow,
       });
       const routesCSS = classNames({
         Routes__main: true,
@@ -128,11 +157,11 @@ class Routes extends Component {
 
             <Route
               path=""
-              render={location => (
+              render={() => (
                 <div className="Routes">
                   {
                     window.location.hostname === config.demoHostName
-                    && (this.state.showDefaultMessage
+                    && (state.showDefaultMessage
                       ? (
                         <div
                           id="demo-header"
@@ -161,7 +190,25 @@ class Routes extends Component {
                       ))
                   }
                   {
-                    this.state.showYT
+                    state.diskLow &&
+                    (
+                      <div className="disk-header">
+                        Gigantum is running low on storage.
+                        {' '}
+                        <a
+                          href="https://docs.gigantum.com/docs/"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          Click here
+                        </a>
+                        {' '}
+                        to learn how to allocate more space to Docker, or free up existing storage in Gigantum.
+                      </div>
+                    )
+                  }
+                  {
+                    state.showYT
                       && (
                       <div
                         id="yt-lightbox"
@@ -178,20 +225,22 @@ class Routes extends Component {
                   }
                   <div className={headerCSS} />
                   <SideBar
-                    auth={this.props.auth}
+                    auth={props.auth}
                     history={history}
+                    diskLow={state.diskLow}
                   />
                   <div className={routesCSS}>
 
                     <Route
                       exact
                       path="/"
-                      render={props => (
+                      render={renderProps => (
                         <Home
-                          loadingRenew={this.state.loadingRenew}
+                          loadingRenew={state.loadingRenew}
                           history={history}
-                          auth={this.props.auth}
-                          {...props}
+                          diskLow={state.diskLow}
+                          auth={props.auth}
+                          {...renderProps}
                         />
                       )
                     }
@@ -200,12 +249,13 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/login"
-                      render={props => (
+                      render={renderProps => (
                         <Home
-                          loadingRenew={this.state.loadingRenew}
+                          loadingRenew={state.loadingRenew}
                           history={history}
-                          auth={this.props.auth}
-                          {...props}
+                          diskLow={state.diskLow}
+                          auth={props.auth}
+                          {...renderProps}
                         />
                       )
                       }
@@ -213,25 +263,26 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/:id"
-                      render={props => <Redirect to="/projects/local" />}
+                      render={() => <Redirect to="/projects/local" />}
                     />
 
                     <Route
                       exact
                       path="/labbooks/:section"
-                      render={props => <Redirect to="/projects/local" />}
+                      render={() => <Redirect to="/projects/local" />}
                     />
 
 
                     <Route
                       exact
                       path="/datasets/:labbookSection"
-                      render={props => (
+                      render={renderProps => (
                         <Home
-                          loadingRenew={this.state.loadingRenew}
+                          loadingRenew={state.loadingRenew}
                           history={history}
-                          auth={this.props.auth}
-                          {...props}
+                          auth={props.auth}
+                          diskLow={state.diskLow}
+                          {...renderProps}
                         />
                       )
                       }
@@ -241,12 +292,13 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/projects/:labbookSection"
-                      render={props => (
+                      render={renderProps => (
                         <Home
-                          loadingRenew={this.state.loadingRenew}
+                          loadingRenew={state.loadingRenew}
                           history={history}
-                          auth={this.props.auth}
-                          {...props}
+                          auth={props.auth}
+                          diskLow={state.diskLow}
+                          {...renderProps}
                         />
                       )
                       }
@@ -254,9 +306,9 @@ class Routes extends Component {
 
                     <Route
                       path="/datasets/:owner/:datasetName"
-                      auth={this.props.auth}
+                      auth={props.auth}
                       render={(parentProps) => {
-                        if (this.state.forceLoginScreen) {
+                        if (state.forceLoginScreen) {
                           return <Redirect to="/login" />;
                         }
 
@@ -264,9 +316,10 @@ class Routes extends Component {
                           <DatasetQueryContainer
                             datasetName={parentProps.match.params.datasetName}
                             owner={parentProps.match.params.owner}
-                            auth={this.props.auth}
+                            auth={props.auth}
                             history={history}
-                            {...this.props}
+                            diskLow={state.diskLow}
+                            {...props}
                             {...parentProps}
                           />);
                       }
@@ -276,9 +329,9 @@ class Routes extends Component {
 
                     <Route
                       path="/projects/:owner/:labbookName"
-                      auth={this.props.auth}
+                      auth={props.auth}
                       render={(parentProps) => {
-                        if (this.state.forceLoginScreen) {
+                        if (state.forceLoginScreen) {
                           return <Redirect to="/login" />;
                         }
 
@@ -286,9 +339,10 @@ class Routes extends Component {
                           <LabbookQueryContainer
                             labbookName={parentProps.match.params.labbookName}
                             owner={parentProps.match.params.owner}
-                            auth={this.props.auth}
+                            auth={props.auth}
                             history={history}
-                            {...this.props}
+                            diskLow={state.diskLow}
+                            {...props}
                             {...parentProps}
                           />);
                       }
@@ -297,7 +351,7 @@ class Routes extends Component {
                     />
 
                     <Helper
-                      auth={this.props.auth}
+                      auth={props.auth}
                     />
 
                     <Prompt

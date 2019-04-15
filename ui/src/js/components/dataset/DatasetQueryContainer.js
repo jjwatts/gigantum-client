@@ -48,6 +48,7 @@ class DatasetQueryContainer extends Component {
                 dataset={props.dataset}
                 owner={parentProps.owner}
                 history={parentProps.history}
+                diskLow={props.diskLow}
                 {...parentProps}
               />);
           }
