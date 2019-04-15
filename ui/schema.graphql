@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Tue Mar 19 2019 15:37:58 GMT-0400 (Eastern Daylight Time)
+# timestamp: Tue Apr 09 2019 10:43:58 GMT-0400 (Eastern Daylight Time)
 
 schema {
   query: LabbookQuery
@@ -280,6 +280,18 @@ input BuildImageInput {
 type BuildImagePayload {
   environment: Environment
   backgroundJobKey: String
+  clientMutationId: String
+}
+
+input CancelBuildInput {
+  owner: String!
+  labbookName: String!
+  clientMutationId: String
+}
+
+type CancelBuildPayload {
+  buildStopped: Boolean
+  message: String
   clientMutationId: String
 }
 
@@ -929,35 +941,39 @@ type LabbookList implements Node {
 
 """Entry point for all graphql mutations"""
 type LabbookMutations {
+  buildImage(input: BuildImageInput!): BuildImagePayload
+  cancelBuild(input: CancelBuildInput!): CancelBuildPayload
+  startContainer(input: StartContainerInput!): StartContainerPayload
+  stopContainer(input: StopContainerInput!): StopContainerPayload
+  startDevTool(input: StartDevToolInput!): StartDevToolPayload
+  addPackageComponents(input: AddPackageComponentsInput!): AddPackageComponentsPayload
+  removePackageComponents(input: RemovePackageComponentsInput!): RemovePackageComponentsPayload
+  addCustomDocker(input: AddCustomDockerInput!): AddCustomDockerPayload
+  removeCustomDocker(input: RemoveCustomDockerInput!): RemoveCustomDockerPayload
+  importLabbook(input: ImportLabbookInput!): ImportLabbookPayload
+  exportLabbook(input: ExportLabbookInput!): ExportLabbookPayload
+  importRemoteLabbook(input: ImportRemoteLabbookInput!): ImportRemoteLabbookPayload
+  deleteRemoteLabbook(input: DeleteRemoteLabbookInput!): DeleteRemoteLabbookPayload
+  syncLabbook(input: SyncLabbookInput!): SyncLabbookPayload
+  publishLabbook(input: PublishLabbookInput!): PublishLabbookPayload
+  setVisibility(input: SetVisibilityInput!): SetVisibilityPayload
+  addLabbookRemote(input: AddLabbookRemoteInput!): AddLabbookRemotePayload
+  addCollaborator(input: AddLabbookCollaboratorInput!): AddLabbookCollaboratorPayload
+  deleteCollaborator(input: DeleteLabbookCollaboratorInput!): DeleteLabbookCollaboratorPayload
   migrateLabbookSchema(input: MigrateLabbookSchemaInput!): MigrateLabbookSchemaPayload
   createExperimentalBranch(input: CreateExperimentalBranchInput!): CreateExperimentalBranchPayload
   deleteExperimentalBranch(input: DeleteExperimentalBranchInput!): DeleteExperimentalBranchPayload
   mergeFromBranch(input: MergeFromBranchInput!): MergeFromBranchPayload
   workonExperimentalBranch(input: WorkonBranchInput!): WorkonBranchPayload
-  importLabbook(input: ImportLabbookInput!): ImportLabbookPayload
-  importRemoteLabbook(input: ImportRemoteLabbookInput!): ImportRemoteLabbookPayload
   importRemoteDataset(input: ImportRemoteDatasetInput!): ImportRemoteDatasetPayload
   importDataset(input: ImportDatasetInput!): ImportDatasetPayload
   exportDataset(input: ExportDatasetInput!): ExportDatasetPayload
-  exportLabbook(input: ExportLabbookInput!): ExportLabbookPayload
   createLabbook(input: CreateLabbookInput!): CreateLabbookPayload
   deleteLabbook(input: DeleteLabbookInput!): DeleteLabbookPayload
-  deleteRemoteLabbook(input: DeleteRemoteLabbookInput!): DeleteRemoteLabbookPayload
   setLabbookDescription(input: SetLabbookDescriptionInput!): SetLabbookDescriptionPayload
-  publishLabbook(input: PublishLabbookInput!): PublishLabbookPayload
   publishDataset(input: PublishDatasetInput!): PublishDatasetPayload
-  syncLabbook(input: SyncLabbookInput!): SyncLabbookPayload
-  addLabbookRemote(input: AddLabbookRemoteInput!): AddLabbookRemotePayload
   resetBranchToRemote(input: ResetBranchToRemoteInput!): ResetBranchToRemotePayload
-  buildImage(input: BuildImageInput!): BuildImagePayload
-  startContainer(input: StartContainerInput!): StartContainerPayload
-  stopContainer(input: StopContainerInput!): StopContainerPayload
-  startDevTool(input: StartDevToolInput!): StartDevToolPayload
   createUserNote(input: CreateUserNoteInput!): CreateUserNotePayload
-  addPackageComponents(input: AddPackageComponentsInput!): AddPackageComponentsPayload
-  removePackageComponents(input: RemovePackageComponentsInput!): RemovePackageComponentsPayload
-  addCustomDocker(input: AddCustomDockerInput!): AddCustomDockerPayload
-  removeCustomDocker(input: RemoveCustomDockerInput!): RemoveCustomDockerPayload
   addLabbookFile(input: AddLabbookFileInput!): AddLabbookFilePayload
   completeBatchUploadTransaction(input: CompleteBatchUploadTransactionInput!): CompleteBatchUploadTransactionPayload
   moveLabbookFile(input: MoveLabbookFileInput!): MoveLabbookFilePayload
@@ -967,12 +983,9 @@ type LabbookMutations {
   addFavorite(input: AddLabbookFavoriteInput!): AddLabbookFavoritePayload
   updateFavorite(input: UpdateLabbookFavoriteInput!): UpdateLabbookFavoritePayload
   removeFavorite(input: RemoveLabbookFavoriteInput!): RemoveLabbookFavoritePayload
-  addCollaborator(input: AddLabbookCollaboratorInput!): AddLabbookCollaboratorPayload
-  deleteCollaborator(input: DeleteLabbookCollaboratorInput!): DeleteLabbookCollaboratorPayload
   addDatasetCollaborator(input: AddDatasetCollaboratorInput!): AddDatasetCollaboratorPayload
   deleteDatasetCollaborator(input: DeleteDatasetCollaboratorInput!): DeleteDatasetCollaboratorPayload
   writeLabbookReadme(input: WriteLabbookReadmeInput!): WriteLabbookReadmePayload
-  setVisibility(input: SetVisibilityInput!): SetVisibilityPayload
   fetchLabbookEdge(input: FetchLabbookEdgeInput!): FetchLabbookEdgePayload
   createDataset(input: CreateDatasetInput!): CreateDatasetPayload
   deleteDataset(input: DeleteDatasetInput!): DeleteDatasetPayload
@@ -1012,22 +1025,23 @@ type LabbookOverview implements Node & GitRepository {
 
 """Entry point for all LabBook queryable fields"""
 type LabbookQuery {
-  """The ID of the object"""
-  node(id: ID!): Node
-  nodes(ids: [String]): [Node]
   buildInfo: String
   cudaAvailable: Boolean
-  labbook(owner: String, name: String): Labbook
-  dataset(owner: String, name: String): Dataset
   currentLabbookSchemaVersion: Int
   jobStatus(jobId: String): JobStatus
   backgroundJobs(before: String, after: String, first: Int, last: Int): JobStatusConnection
+  userIdentity: UserIdentity
+
+  """The ID of the object"""
+  node(id: ID!): Node
+  nodes(ids: [String]): [Node]
+  labbook(owner: String, name: String): Labbook
+  dataset(owner: String, name: String): Dataset
   labbookList: LabbookList
   datasetList: DatasetList
   availableBases(before: String, after: String, first: Int, last: Int): BaseComponentConnection
   availableDatasetTypes: [DatasetType]
   package(manager: String, package: String, version: String = ""): PackageComponent
-  userIdentity: UserIdentity
 }
 
 """

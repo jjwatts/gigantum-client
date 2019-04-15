@@ -21,7 +21,7 @@ import importlib
 import json
 import os
 import time
-from typing import Optional, List
+from typing import Callable, Optional, List
 import sys
 
 from rq import get_current_job
@@ -71,7 +71,6 @@ def publish_repository(repository: Repository, username: str, access_token: str,
                 wf = DatasetWorkflow(repository) # type: ignore
             wf.publish(username=username, access_token=access_token, remote=remote or "origin",
                        public=public, feedback_callback=update_meta, id_token=id_token)
-
     except Exception as e:
         logger.exception(f"(Job {p}) Error on publish_repository: {e}")
         raise
@@ -274,6 +273,9 @@ def build_labbook_image(path: str, username: Optional[str] = None,
 
     try:
         job = get_current_job()
+        if job:
+            job.meta['pid'] = os.getpid()
+            job.save_meta()
 
         def save_metadata_callback(line: str) -> None:
             try:
@@ -426,6 +428,7 @@ def test_sleep(n):
     try:
         job = get_current_job()
         job.meta['sample'] = 'test_sleep metadata'
+        job.meta['pid'] = int(os.getpid())
         job.save_meta()
 
         time.sleep(n)

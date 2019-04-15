@@ -96,11 +96,12 @@
 }
 
 .ContainerStatus__container-state.Building,
+.ContainerStatus__container-state.Canceling,
 .ContainerStatus__container-state.Syncing,
 .ContainerStatus__container-state.Publishing {
   border: 1px solid $orange;
   background-size: 20px;
-
+  pointer-events: none;
   .ContainerStatus__toggle-btn {
     top: 3px;
     right: 3px;
@@ -111,6 +112,19 @@
   .ContainerStatus__toggle {
     background: $romanSilver url(~Images/icons/container-status-spinner-building.svg) no-repeat center center;
     background-size: 40px 24px;
+  }
+}
+
+.ContainerStatus__container-state.Building{
+  pointer-events: auto;
+  &:hover {
+    .ContainerStatus__toggle {
+      background: $orange;
+      &-btn {
+        background: $orange url(~Images/icons/close-white.svg) no-repeat center center;
+        background-size: 12px;
+      }
+    }
   }
 }
 

@@ -21,6 +21,38 @@ from lmsrvlabbook.api.objects.environment import Environment
 logger = LMLogger.get_logger()
 
 
+class CancelBuild(graphene.relay.ClientIDMutation):
+    class Input:
+        owner = graphene.String(required=True)
+        labbook_name = graphene.String(required=True)
+
+    build_stopped = graphene.Boolean()
+    message = graphene.String()
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, owner, labbook_name,
+                               client_mutation_id=None):
+        username = get_logged_in_username()
+        lb = InventoryManager().load_labbook(username, owner, labbook_name)
+        d = Dispatcher()
+        lb_jobs = d.get_jobs_for_labbook(lb.key)
+
+        jobs = [j for j in d.get_jobs_for_labbook(lb.key)
+                if j.meta.get('method') == 'build_image'
+                and j.status == 'started']
+
+        if len(jobs) == 1:
+            d.abort_task(jobs[0].job_key)
+            ContainerOperations.delete_image(lb, username=username)
+            return CancelBuild(build_stopped=True, message="Stopped build")
+        elif len(jobs) == 0:
+            logger.warning(f"No build_image tasks found for {str(lb)}")
+            return CancelBuild(build_stopped=False, message="No build task found")
+        else:
+            logger.warning(f"Multiple build jobs found for {str(lb)}")
+            return CancelBuild(build_stopped=False, message="Multiple builds found")
+
+
 class BuildImage(graphene.relay.ClientIDMutation):
     """Mutator to build a LabBook's Docker Image"""
 

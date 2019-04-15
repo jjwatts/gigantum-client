@@ -213,4 +213,59 @@ class TestEnvironmentMutations(object):
         assert r['data']['labbook']['environment']['imageStatus'] == 'EXISTS'
         assert r['data']['labbook']['environment']['containerStatus'] == 'NOT_RUNNING'
 
+    @pytest.mark.parametrize('reset_images', ["labbook-build2"], indirect=['reset_images'])
+    def test_cancel_build(self, fixture_working_dir_env_repo_scoped, reset_images):
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook-build-cancel",
+                               description="building an env")
+        cm = ComponentManager(lb)
+        cm.add_base(ENV_UNIT_TEST_REPO, "ut-busybox", 0)
+        cm.add_docker_snippet('customdocker', ['RUN sleep 5'])
 
+        # Build the image
+        build_query = """
+        mutation myBuildImage {
+          buildImage(input: {
+            labbookName: "labbook-build-cancel",
+            owner: "default",
+            noCache: true
+          }) {
+            environment {
+              imageStatus
+              containerStatus
+            }
+          }
+        }
+        """
+        r = fixture_working_dir_env_repo_scoped[2].execute(build_query)
+        time.sleep(1)
+        assert 'errors' not in r
+        assert r['data']['buildImage']['environment']['imageStatus'] == 'BUILD_IN_PROGRESS'
+
+        cancel_query = """
+        mutation myCancel {
+            cancelBuild(input: {
+                labbookName: "labbook-build-cancel",
+                owner: "default"
+            }) {
+                buildStopped
+                message
+            }
+        }"""
+        cancel_r = fixture_working_dir_env_repo_scoped[2].execute(cancel_query)
+        assert 'errors' not in cancel_r
+        assert cancel_r['data']['cancelBuild']['buildStopped'] == True
+
+        check_query = """
+        {
+            labbook(name: "labbook-build-cancel", owner: "default") {
+                environment {
+                    imageStatus
+                    containerStatus
+                }
+            }
+        }
+        """
+        check_r = fixture_working_dir_env_repo_scoped[2].execute(check_query)
+        assert 'errors' not in check_r
+        assert check_r['data']['labbook']['environment']['imageStatus'] == 'BUILD_FAILED'

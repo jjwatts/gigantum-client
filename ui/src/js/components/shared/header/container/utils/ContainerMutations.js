@@ -3,6 +3,7 @@ import StopContainerMutation from 'Mutations/container/StopContainerMutation';
 import StartContainerMutation from 'Mutations/container/StartContainerMutation';
 import StartDevToolMutation from 'Mutations/container/StartDevToolMutation';
 import BuildImageMutation from 'Mutations/container/BuildImageMutation';
+import CancelBuildMutation from 'Mutations/container/CancelBuildMutation';
 // store
 import { setBuildingState } from 'JS/redux/reducers/labbook/labbook';
 
@@ -99,6 +100,21 @@ class ContainerMutations {
       () => {
         self.startContainer({}, callback);
       },
+    );
+  }
+
+  /**
+   *  @param {function} callback
+   *  cancels ongoing project build
+   */
+  cancelBuild(callback) {
+    const { owner, name } = this.state;
+
+    setBuildingState(true);
+    CancelBuildMutation(
+      owner,
+      name,
+      callback,
     );
   }
 }

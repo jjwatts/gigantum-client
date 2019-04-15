@@ -149,6 +149,31 @@ class TestDispatcher(object):
         assert job_ref in [j.job_key for j in d.finished_jobs]
         assert job_ref not in [j.job_key for j in d.failed_jobs]
 
+    def test_abort(self, temporary_worker):
+        w, d = temporary_worker
+        job_ref_1 = d.dispatch_task(bg_jobs.test_sleep, args=(3,))
+        time.sleep(1.2)
+        assert d.query_task(job_ref_1).status == 'started'
+
+        d.abort_task(job_ref_1)
+
+        time.sleep(0.1)
+        j = d.query_task(job_ref_1)
+
+        # There should be no result, cause it was cancelled
+        assert j.result is None
+
+        # RQ should identify the task as failed
+        assert j.status == "failed"
+
+        # Now assert the worker pid is still alive (so it can be assigned something else)
+        worker_pid = w.pid
+        try:
+            os.kill(int(worker_pid), 0)
+            assert True, "Worker process is still hanging around."
+        except OSError:
+            assert False, "Worker process is killed"
+
     def test_simple_dependent_job(self, temporary_worker):
         w, d = temporary_worker
         job_ref_1 = d.dispatch_task(bg_jobs.test_sleep, args=(2,))
