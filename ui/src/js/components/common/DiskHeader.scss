@@ -1,0 +1,26 @@
+@import '~Styles/_imports.scss';
+
+.DiskHeader{
+    position: fixed;
+    color: $mineShaft;
+    height: 50px;
+    width: 100%;
+    padding: 13px 0 13px 165px;
+    background: $goldenLemon url('~Images/icons/info-icon.svg') no-repeat left 120px center;
+    background-size: 20px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 100;
+    white-space: nowrap;
+    top: 0;
+    text-align: left;
+    z-index: index($elements, login) + 1;
+    a,
+    a:visited{
+      text-decoration: underline;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+      color: $mineShaft;
+    }
+}

@@ -16,6 +16,7 @@ import history from 'JS/history';
 import SideBar from 'Components/common/SideBar';
 import Footer from 'Components/common/footer/Footer';
 import Prompt from 'Components/common/Prompt';
+import DiskHeader from 'Components/common/DiskHeader';
 import Helper from 'Components/common/Helper';
 // config
 import config from 'JS/config';
@@ -65,8 +66,9 @@ class Routes extends Component {
     calls flip header text function
   */
   componentDidMount() {
-    this._checkSysinfo()
     const self = this;
+
+    this._checkSysinfo();
     this._flipDemoHeaderText();
 
     UserIdentity.getUserIdentity().then((response) => {
@@ -177,11 +179,8 @@ class Routes extends Component {
           const { available } = res.disk;
           const size = available.slice(0, available.length - 1);
           const sizeType = available.slice(-1);
-          if ((sizeType === 'T') || ((sizeType === 'G') && (Number(size) > 5))) {
-            self.setState({ diskLow: false });
-          } else {
-            self.setState({ diskLow: true });
-          }
+          const diskLow = !((sizeType === 'T') || ((sizeType === 'G') && (Number(size) > 5)));
+          self.setState({ diskLow });
         });
       }
     }).catch(() => false);
@@ -253,22 +252,8 @@ class Routes extends Component {
                       ))
                   }
                   {
-                    state.diskLow &&
-                    (
-                      <div className="disk-header">
-                        Gigantum is running low on storage.
-                        {' '}
-                        <a
-                          href="https://docs.gigantum.com/docs/"
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        >
-                          Click here
-                        </a>
-                        {' '}
-                        to learn how to allocate more space to Docker, or free up existing storage in Gigantum.
-                      </div>
-                    )
+                    state.diskLow
+                    && <DiskHeader />
                   }
                   {
                     state.showYT
