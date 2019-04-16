@@ -144,8 +144,8 @@ const filterDatasets = (datasets, stateTags) => {
     const lowercaseDescription = dataset.description.toLowerCase();
     const lowercaseName = dataset.name.toLowerCase();
     let isReturned = true;
-    if (tags.indexOf('Managed') > -1 && !dataset.isManaged
-        || tags.indexOf('Unmanaged') > -1 && dataset.isManaged) {
+    if ((tags.indexOf('Managed') > -1) && !dataset.isManaged
+        || (tags.indexOf('Unmanaged') > -1) && dataset.isManaged) {
       isReturned = false;
     }
 

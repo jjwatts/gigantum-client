@@ -5,8 +5,8 @@ import { connect } from 'react-redux';
 import {
   setHelperVisibility,
   setResizeHelper,
-} from 'JS/redux/reducers/helper';
-import { setHelperVisible } from 'JS/redux/reducers/footer';
+} from 'JS/redux/actions/helper';
+import { setHelperVisible } from 'JS/redux/actions/footer';
 // assets
 import './Helper.scss';
 

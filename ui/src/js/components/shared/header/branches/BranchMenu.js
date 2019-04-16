@@ -4,8 +4,8 @@ import { boundMethod } from 'autobind-decorator';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
-import { setSidepanelVisible } from 'JS/redux/reducers/labbook/labbook';
+import { setErrorMessage } from 'JS/redux/actions/footer';
+import { setSidepanelVisible } from 'JS/redux/actions/labbook/labbook';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 import LinkedLocalDatasetsQuery from 'Components/shared/header/actionsSection/queries/LinkedLocalDatasetsQuery';

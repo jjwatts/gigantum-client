@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import StartContainerMutation from 'Mutations/container/StartContainerMutation';
 import StopContainerMutation from 'Mutations/container/StopContainerMutation';
 // store
-import { setErrorMessage, setInfoMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage, setInfoMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // assets
 import './LocalLabbookPanel.scss';

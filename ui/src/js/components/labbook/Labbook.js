@@ -14,10 +14,10 @@ import Loadable from 'react-loadable';
 import { boundMethod } from 'autobind-decorator';
 // store
 import store from 'JS/redux/store';
-import { setContainerMenuWarningMessage } from 'JS/redux/reducers/labbook/environment/environment';
-import { setMergeMode, setBuildingState, setStickyDate } from 'JS/redux/reducers/labbook/labbook';
-import { setCallbackRoute } from 'JS/redux/reducers/routes';
-import { setInfoMessage } from 'JS/redux/reducers/footer';
+import { setContainerMenuWarningMessage } from 'JS/redux/actions/labbook/environment/environment';
+import { setMergeMode, setBuildingState, setStickyDate } from 'JS/redux/actions/labbook/labbook';
+import { setCallbackRoute } from 'JS/redux/actions/routes';
+import { setInfoMessage } from 'JS/redux/actions/footer';
 // utils
 import { getFilesFromDragEvent } from 'JS/utils/html-dir-content';
 import BranchMutations from 'Components/shared/utils/BranchMutations';

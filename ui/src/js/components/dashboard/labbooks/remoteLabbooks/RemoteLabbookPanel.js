@@ -9,7 +9,7 @@ import ImportRemoteLabbookMutation from 'Mutations/ImportRemoteLabbookMutation';
 import BuildImageMutation from 'Mutations/container/BuildImageMutation';
 // store
 import store from 'JS/redux/store';
-import { setWarningMessage, setMultiInfoMessage } from 'JS/redux/reducers/footer';
+import { setWarningMessage, setMultiInfoMessage } from 'JS/redux/actions/footer';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // components

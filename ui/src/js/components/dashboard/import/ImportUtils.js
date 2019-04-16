@@ -2,7 +2,7 @@
 import uuidv4 from 'uuid/v4';
 // store
 import store from 'JS/redux/store';
-import { setUploadMessageRemove } from 'JS/redux/reducers/footer';
+import { setUploadMessageRemove } from 'JS/redux/actions/footer';
 // config
 import config from 'JS/config';
 

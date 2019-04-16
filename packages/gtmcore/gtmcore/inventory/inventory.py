@@ -1,14 +1,14 @@
 import os
 import shutil
 import uuid
-import json
 import datetime
 from natsort import natsorted
 from pkg_resources import resource_filename
 import pathlib
 import subprocess
+import glob
 
-from typing import Optional, Generator, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict
 
 from gtmcore.exceptions import GigantumException
 from gtmcore.labbook.schemas import CURRENT_SCHEMA as LABBOOK_CURRENT_SCHEMA
@@ -83,6 +83,55 @@ class InventoryManager(object):
         lb = self.load_labbook_from_directory(final_path)
         return lb
 
+    @staticmethod
+    def update_linked_dataset(labbook: LabBook, username: str, init: bool = False) -> None:
+        """
+
+        Args:
+            labbook:
+            username:
+            init:
+
+        Returns:
+
+        """
+        # List all existing linked datasets IN this repository
+        existing_dataset_abs_paths = glob.glob(os.path.join(labbook.root_dir, '.gigantum', 'datasets', "*/*"))
+
+        if len(labbook.git.repo.submodules) > 0:
+            for submodule in labbook.git.list_submodules():
+                try:
+                    namespace, dataset_name = submodule['name'].split("&")
+                    rel_submodule_dir = os.path.join('.gigantum', 'datasets', namespace, dataset_name)
+                    submodule_dir = os.path.join(labbook.root_dir, rel_submodule_dir)
+
+                    # If submodule is currently present, init/update it, don't remove it!
+                    if submodule_dir in existing_dataset_abs_paths:
+                        existing_dataset_abs_paths.remove(submodule_dir)
+
+                    if init:
+                        # Optionally Init submodule
+                        call_subprocess(['git', 'submodule', 'init', rel_submodule_dir],
+                                        cwd=labbook.root_dir, check=True)
+                    # Update submodule
+                    call_subprocess(['git', 'submodule', 'update', rel_submodule_dir],
+                                    cwd=labbook.root_dir, check=True)
+
+                    ds = InventoryManager().load_dataset_from_directory(submodule_dir)
+                    ds.namespace = namespace
+                    manifest = Manifest(ds, username)
+                    manifest.link_revision()
+
+                except Exception as err:
+                    logger.error(f"Failed to initialize linked Dataset (submodule reference): {submodule['name']}. "
+                                 f"This may be an actual error or simply due to repository permissions")
+                    logger.exception(err)
+                    continue
+
+        # Clean out lingering dataset files if you previously had a dataset linked, but now don't
+        for submodule_dir in existing_dataset_abs_paths:
+            shutil.rmtree(submodule_dir)
+
     def put_labbook(self, path: str, username: str, owner: str) -> LabBook:
         """ Take given path to a candidate labbook and insert it
         into its proper place in the file system.
@@ -99,28 +148,7 @@ class InventoryManager(object):
             lb = self._put_labbook(path, username, owner)
 
             # Init dataset submodules if present
-            if len(lb.git.repo.submodules) > 0:
-
-                # Link datasets
-                for submodule in lb.git.list_submodules():
-                    try:
-
-                        namespace, dataset_name = submodule['name'].split("&")
-                        rel_submodule_dir = os.path.join('.gigantum', 'datasets', namespace, dataset_name)
-                        submodule_dir = os.path.join(lb.root_dir, rel_submodule_dir)
-                        call_subprocess(['git', 'submodule', 'init', rel_submodule_dir],
-                                        cwd=lb.root_dir, check=True)
-                        call_subprocess(['git', 'submodule', 'update', rel_submodule_dir],
-                                        cwd=lb.root_dir, check=True)
-
-                        ds = InventoryManager().load_dataset_from_directory(submodule_dir)
-                        ds.namespace = namespace
-                        manifest = Manifest(ds, username)
-                        manifest.link_revision()
-
-                    except Exception as err:
-                        logger.exception(f"Failed to import submodule: {submodule['name']}")
-                        continue
+            self.update_linked_dataset(lb, username, init=True)
 
             return lb
         except Exception as e:

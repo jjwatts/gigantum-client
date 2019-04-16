@@ -144,13 +144,18 @@ def _set_upstream_branch(repository: Repository, branch_name: str, feedback_cb: 
     call_subprocess(set_upstream_tokens, cwd=repository.root_dir)
 
 
-def _pull(repository: Repository, branch_name: str, override: str, feedback_cb: Callable) -> None:
+def _pull(repository: Repository, branch_name: str, override: str, feedback_cb: Callable,
+          username: Optional[str] = None) -> None:
     # TODO(billvb) Refactor to BranchManager
     feedback_cb(f"Pulling from remote branch \"{branch_name}\"...")
     cp = repository.git.commit_hash
     try:
         call_subprocess(f'git pull'.split(), cwd=repository.root_dir)
-        call_subprocess(f'git submodule update --recursive'.split(), cwd=repository.root_dir)
+        if isinstance(repository, LabBook):
+            if not username:
+                raise ValueError("Current logged in username required to checkout a Project with a linked dataset")
+            InventoryManager().update_linked_dataset(repository, username, init=True)
+
     except subprocess.CalledProcessError as cp_error:
         if 'Automatic merge failed' in cp_error.stdout.decode():
             feedback_cb(f"Detected merge conflict, resolution method = {override}")
@@ -194,7 +199,7 @@ def sync_branch(repository: Repository, username: Optional[str], override: str,
         return 0
     else:
         pulled_updates_count = bm.get_commits_behind()
-        _pull(repository, branch_name, override, feedback_callback)
+        _pull(repository, branch_name, override, feedback_callback, username=username)
         should_push = not pull_only
         if should_push:
             # Skip pushing back up if set to pull_only

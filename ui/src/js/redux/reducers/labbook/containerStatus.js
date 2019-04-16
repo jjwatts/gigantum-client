@@ -1,20 +1,4 @@
-import dispatcher from 'JS/redux/dispatcher';
-
-/**
- * constants
- */
-export const UPDATE_CONTAINER_STATUS = 'UPDATE_CONTAINER_STATUS';
-export const RESET_DETAIL_STORE = 'RESET_DETAIL_STORE';
-export const UPDATE_CONTAINER_MENU_VISIBILITY = 'UPDATE_CONTAINER_MENU_VISIBILITY';
-export const IS_LOOKING_UP_PACKAGES = 'IS_LOOKING_UP_PACKAGES';
-
-/**
- * actions
- */
-
-export const setContainerStatus = status => dispatcher(UPDATE_CONTAINER_STATUS, { status });
-export const setContainerMenuVisibility = containerMenuOpen => dispatcher(UPDATE_CONTAINER_MENU_VISIBILITY, { containerMenuOpen });
-export const setLookingUpPackagesState = isLookingUpPackages => dispatcher(IS_LOOKING_UP_PACKAGES, { isLookingUpPackages });
+import * as types from 'JS/redux/constants/constants';
 
 export default (
   state = {
@@ -24,22 +8,22 @@ export default (
   },
   action,
 ) => {
-  if (action.type === UPDATE_CONTAINER_STATUS) {
+  if (action.type === types.UPDATE_CONTAINER_STATUS) {
     return {
       ...state,
       status: action.payload.status,
     };
-  } if (action.type === UPDATE_CONTAINER_MENU_VISIBILITY) {
+  } if (action.type === types.UPDATE_CONTAINER_MENU_VISIBILITY) {
     return {
       ...state,
       containerMenuOpen: action.payload.containerMenuOpen,
     };
-  } if (action.type === RESET_DETAIL_STORE) {
+  } if (action.type === types.RESET_DETAIL_STORE) {
     return {
       ...state,
       detailMode: false,
     };
-  } if (action.type === IS_LOOKING_UP_PACKAGES) {
+  } if (action.type === types.IS_LOOKING_UP_PACKAGES) {
     return {
       ...state,
       isLookingUpPackages: action.payload.isLookingUpPackages,

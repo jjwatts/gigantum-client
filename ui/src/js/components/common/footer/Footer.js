@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+import { boundMethod } from 'autobind-decorator';
 // store
 import {
   setUpdateMessageStackItemVisibility,
@@ -11,8 +12,8 @@ import {
   setResetFooter,
   setRemoveMessage,
   setToggleMessageList,
-} from 'JS/redux/reducers/footer';
-import { setPauseUpload } from 'JS/redux/reducers/labbook/fileBrowser/fileBrowserWrapper';
+} from 'JS/redux/actions/footer';
+import { setPauseUpload } from 'JS/redux/actions/shared/fileBrowser/fileBrowserWrapper';
 // // components
 import FooterNotificationList from './FooterNotificationList';
 import FooterUploadBar from './FooterUploadBar';
@@ -20,16 +21,6 @@ import FooterUploadBar from './FooterUploadBar';
 import './Footer.scss';
 
 class Footer extends Component {
-  constructor(props) {
-    super(props);
-
-    this._clearState = this._clearState.bind(this);
-    this._toggleMessageList = this._toggleMessageList.bind(this);
-    this._showMessageBody = this._showMessageBody.bind(this);
-    this._resize = this._resize.bind(this);
-    this._openLabbook = this._openLabbook.bind(this);
-  }
-
   /**
     subscribe to store to update state
   */
@@ -38,17 +29,11 @@ class Footer extends Component {
   }
 
   /**
-    unsubscribe from event listeners
-  */
-  componentWillUnmount() {
-    window.removeEventListener('resize', this._resize);
-  }
-
-  /**
    hides messages in stack after 15 seconds
   */
   componentDidUpdate() {
-    this.props.messageStack.forEach((messageItem) => {
+    const { props } = this;
+    props.messageStack.forEach((messageItem) => {
       const timeInSeconds = 15 * 1000;
       if (!messageItem.error) {
         if (!messageItem.isMultiPart || (messageItem.isMultiPart && messageItem.isLast)) {
@@ -60,18 +45,33 @@ class Footer extends Component {
     });
   }
 
+  /**
+    unsubscribe from event listeners
+  */
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._resize);
+  }
+
+  /**
+    @param {} -
+    opens project in view
+  */
+  @boundMethod
   _openLabbook() {
+    const { props } = this;
     this._clearState();
-    this.props.history.replace(`/projects/${this.props.labbookName}`);
+    props.history.replace(`/projects/${props.labbookName}`);
   }
 
   /**
     @param {}
     add scroll listener to pop up footer
   */
+  @boundMethod
   _clearState() {
+    const { props } = this;
     document.getElementById('footerProgressBar').style.opacity = 0;
-    this.props.setResetFooter();
+    props.setResetFooter();
 
     setTimeout(() => {
       document.getElementById('footerProgressBar').style.width = '0%';
@@ -90,42 +90,46 @@ class Footer extends Component {
   }
 
   /**
-  @param {}
-  gets upload message which tracks progess
- */
+    @param {}
+    gets upload message which tracks progess
+  */
   _closeFooter() {
     setUploadMessageRemove('', '', 0);
   }
 
   /**
-  @param {object} messageItem
-  gets upload message which tracks progess
- */
+    @param {object} messageItem
+    gets upload message which tracks progess
+  */
   _removeMessage(messageItem) {
     setRemoveMessage(messageItem.id);
   }
-  /**
-  @param {}
-  toggles messages list to collapsed or expanded
-  updates redux store
-  @return {}
- */
 
+  /**
+    @param {}
+    toggles messages list to collapsed or expanded
+    updates redux store
+    @return {}
+  */
+  @boundMethod
   _toggleMessageList() {
-    this.props.setToggleMessageList(!this.props.messageListOpen, true);
+    const { props } = this;
+    props.setToggleMessageList(!props.messageListOpen, true);
   }
 
   /**
-  @param {number}
-  toggles view of message body for a stack item
-  updates redux store
-  @return {}
- */
+    @param {number}
+    toggles view of message body for a stack item
+    updates redux store
+    @return {}
+   */
+   @boundMethod
   _showMessageBody(index) {
-    if (!this.props.viewHistory) {
-      this.props.setUpdateMessageStackItemVisibility(index);
+    const { props } = this;
+    if (!props.viewHistory) {
+      props.setUpdateMessageStackItemVisibility(index);
     } else {
-      this.props.setUpdateHistoryStackItemVisibility(index);
+      props.setUpdateHistoryStackItemVisibility(index);
     }
   }
 
@@ -133,27 +137,28 @@ class Footer extends Component {
     * @param {}
     * update store to risize component
   */
+  @boundMethod
   _resize() {
-    this.props.setResizeFooter();
+    const { props } = this;
+    props.setResizeFooter();
   }
 
   render() {
+    const { props, state } = this;
     const bodyWidth = document.body.clientWidth;
 
     const footerClass = classNames({
       Footer: true,
-      'Footer--expand': (this.props.open) || this.props.uploadOpen,
-      'Footer--expand-extra': (this.props.open && this.props.uploadOpen),
+      'Footer--expand': (props.open) || props.uploadOpen,
+      'Footer--expand-extra': (props.open && props.uploadOpen),
     });
-
     const footerButtonClass = classNames({
       'Footer__disc-button': true,
-      'Footer__disc-button--open': this.props.messageListOpen,
+      'Footer__disc-button--open': props.messageListOpen,
       'Footer__dist-button--side-view': bodyWidth < 1600,
-      'Footer__disc-button--helper-open': this.props.helperVisible,
-      'Footer__disc-button--bottom': !this.props.messageListOpen && this.props.uploadOpen,
+      'Footer__disc-button--helper-open': props.helperVisible,
+      'Footer__disc-button--bottom': !props.messageListOpen && props.uploadOpen,
     });
-
 
     return (
       <div className="Footer__container">
@@ -176,11 +181,12 @@ class Footer extends Component {
           />
 
         </div>
-      </div>);
+      </div>
+    );
   }
 }
 
-const mapStateToProps = (state, ownProps) => state.footer;
+const mapStateToProps = state => state.footer;
 
 const mapDispatchToProps = dispatch => ({
   setUpdateMessageStackItemVisibility,

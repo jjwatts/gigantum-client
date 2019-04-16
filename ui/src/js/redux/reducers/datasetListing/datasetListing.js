@@ -1,14 +1,4 @@
-import dispatcher from 'JS/redux/dispatcher';
-
-/**
- * constants
- */
-export const SET_FILTER_TEXT = 'SET_FILTER_TEXT';
-
-/**
- * actions
- */
-export const setFilterText = filterText => dispatcher(SET_FILTER_TEXT, { filterText });
+import * as types from 'JS/redux/constants/constants';
 
 export default (
   state = {
@@ -16,7 +6,7 @@ export default (
   },
   action,
 ) => {
-  if (action.type === SET_FILTER_TEXT) {
+  if (action.type === types.SET_FILTER_TEXT) {
     return {
       ...state,
       filterText: action.payload.filterText,

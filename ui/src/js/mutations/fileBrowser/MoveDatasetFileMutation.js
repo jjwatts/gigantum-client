@@ -5,7 +5,7 @@ import {
 import RelayRuntime from 'relay-runtime';
 import environment from 'JS/createRelayEnvironment';
 
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 const mutation = graphql`
   mutation MoveDatasetFileMutation($input: MoveDatasetFileInput!){

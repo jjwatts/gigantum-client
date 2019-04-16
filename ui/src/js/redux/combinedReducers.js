@@ -11,7 +11,6 @@ import datasetListing from './reducers/datasetListing/datasetListing';
 import dataset from './reducers/dataset/dataset';
 // labbook reducers
 import labbook from './reducers/labbook/labbook';
-import detailView from './reducers/labbook/detail';
 import containerStatus from './reducers/labbook/containerStatus';
 // labbooks/overview reducers
 import overview from './reducers/labbook/overview/overview';
@@ -19,15 +18,14 @@ import overview from './reducers/labbook/overview/overview';
 import environment from './reducers/labbook/environment/environment';
 import packageDependencies from './reducers/labbook/environment/packageDependencies';
 // labbooks/fileBrowser reducers
-import fileBrowser from './reducers/labbook/fileBrowser/fileBrowserWrapper';
+import fileBrowser from './reducers/shared/fileBrowser/fileBrowserWrapper';
 // labbooks/branchMenu/collaborators reducers
-import collaborators from './reducers/labbook/branchMenu/collaborators/collaborators';
+import collaborators from './reducers/shared/collaborators/collaborators';
 
 export default combineReducers({
   footer,
   overview,
   labbook,
-  detailView,
   routes,
   containerStatus,
   environment,

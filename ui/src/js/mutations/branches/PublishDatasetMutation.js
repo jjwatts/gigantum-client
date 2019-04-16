@@ -4,7 +4,7 @@ import {
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
 import uuidv4 from 'uuid/v4';
-import { setMultiInfoMessage } from 'JS/redux/reducers/footer';
+import { setMultiInfoMessage } from 'JS/redux/actions/footer';
 import FooterUtils from 'Components/common/footer/FooterUtils';
 
 const mutation = graphql`

@@ -8,7 +8,7 @@ import Moment from 'moment';
 import ImportRemoteDatasetMutation from 'Mutations/ImportRemoteDatasetMutation';
 // store
 import store from 'JS/redux/store';
-import { setWarningMessage, setMultiInfoMessage } from 'JS/redux/reducers/footer';
+import { setWarningMessage, setMultiInfoMessage } from 'JS/redux/actions/footer';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // components

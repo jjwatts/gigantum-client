@@ -2,8 +2,8 @@
 import React, { Component } from 'react';
 import { createFragmentContainer, graphql } from 'react-relay';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
-import { setBuildingState } from 'JS/redux/reducers/labbook/labbook';
+import { setErrorMessage } from 'JS/redux/actions/footer';
+import { setBuildingState } from 'JS/redux/actions/labbook/labbook';
 import store from 'JS/redux/store';
 // mutations
 import BuildImageMutation from 'Mutations/container/BuildImageMutation';

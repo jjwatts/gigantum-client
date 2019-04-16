@@ -6,8 +6,8 @@ import { connect } from 'react-redux';
 import environment from 'JS/createRelayEnvironment';
 // store
 import store from 'JS/redux/store';
-import { setCollaborators, setCanManageCollaborators } from 'JS/redux/reducers/labbook/branchMenu/collaborators/collaborators';
-import { setInfoMessage } from 'JS/redux/reducers/footer';
+import { setCollaborators, setCanManageCollaborators } from 'JS/redux/actions/shared/collaborators/collaborators';
+import { setInfoMessage } from 'JS/redux/actions/footer';
 // components
 import CollaboratorsModal from './CollaboratorsModal';
 // assets

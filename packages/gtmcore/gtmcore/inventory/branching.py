@@ -1,32 +1,12 @@
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-import re
 import subprocess
 
-import git
+from gtmcore.labbook import LabBook
 from typing import Optional, List, Tuple
 
 from gtmcore.exceptions import GigantumException
 from gtmcore.logging import LMLogger
-# from gtmcore.repository import LabBook
 from gtmcore.inventory import Repository
+from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.configuration.utils import call_subprocess
 
 logger = LMLogger.get_logger()
@@ -180,11 +160,12 @@ class BranchManager(object):
     def _workon_branch(self, branch_name: str) -> None:
         """Checkouts a branch as the working revision. """
 
-        #if branch_name not in self.branches:
-        #    raise InvalidBranchName(f'Target branch `{branch_name}` does not exist')
-
         self.repository.sweep_uncommitted_changes(extra_msg="Save state on branch change")
         self.repository.checkout_branch(branch_name=branch_name)
+        if isinstance(self.repository, LabBook):
+            if not self.username:
+                raise ValueError("Current logged in username required to checkout a Project with a linked dataset")
+            InventoryManager().update_linked_dataset(self.repository, self.username, init=True)
         logger.info(f'Checked out branch {self.active_branch} in {str(self.repository)}')
 
     def workon_branch(self, branch_name: str) -> None:
@@ -206,8 +187,6 @@ class BranchManager(object):
         Args:
             other_branch: Name of other branch to merge from
         """
-
-
         if other_branch not in self.branches_local:
             raise InvalidBranchName(f'Branch {other_branch} not found')
 

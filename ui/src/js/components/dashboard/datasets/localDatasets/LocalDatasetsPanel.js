@@ -4,7 +4,7 @@ import Highlighter from 'react-highlight-words';
 import { Link } from 'react-router-dom';
 import Moment from 'moment';
 // store
-import { setErrorMessage, setInfoMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage, setInfoMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // assets
 import './LocalDatasetsPanel.scss';

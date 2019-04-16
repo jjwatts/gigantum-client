@@ -9,11 +9,11 @@ import { boundMethod } from 'autobind-decorator';
 import store from 'JS/redux/store';
 import {
   setPackageMenuVisible,
-} from 'JS/redux/reducers/labbook/environment/packageDependencies';
-import { setErrorMessage, setWarningMessage } from 'JS/redux/reducers/footer';
-import { setContainerMenuWarningMessage } from 'JS/redux/reducers/labbook/environment/environment';
-import { setBuildingState } from 'JS/redux/reducers/labbook/labbook';
-import { setLookingUpPackagesState } from 'JS/redux/reducers/labbook/containerStatus';
+} from 'JS/redux/actions/labbook/environment/packageDependencies';
+import { setErrorMessage, setWarningMessage } from 'JS/redux/actions/footer';
+import { setContainerMenuWarningMessage } from 'JS/redux/actions/labbook/environment/environment';
+import { setBuildingState } from 'JS/redux/actions/labbook/labbook';
+import { setLookingUpPackagesState } from 'JS/redux/actions/labbook/containerStatus';
 // Mutations
 import AddPackageComponentsMutation from 'Mutations/environment/AddPackageComponentsMutation';
 import RemovePackageComponentsMutation from 'Mutations/environment/RemovePackageComponentsMutation';

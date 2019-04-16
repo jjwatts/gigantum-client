@@ -3,13 +3,13 @@ import React, { Component } from 'react';
 import classNames from 'classnames';
 import Moment from 'moment';
 // store
-import { setUpdateHistoryView } from 'JS/redux/reducers/footer';
+import { setUpdateHistoryView } from 'JS/redux/actions/footer';
 // assets
 import './FooterNotificationList.scss';
 
 export default class FooterNotificationList extends Component {
   render() {
-    const { props, state } = this;
+    const { props } = this;
     const messageList = props.parentState.viewHistory ? props.parentState.messageStackHistory : props.parentState.messageStack;
 
     const messageListOpenItems = messageList.filter(message => message.messageBodyOpen);

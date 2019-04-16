@@ -4,7 +4,7 @@ import {
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 const mutation = graphql`
   mutation DeleteCollaboratorMutation($input: DeleteLabbookCollaboratorInput!){

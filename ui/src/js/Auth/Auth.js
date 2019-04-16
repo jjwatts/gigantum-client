@@ -4,7 +4,7 @@ import RemoveUserIdentityMutation from 'Mutations/RemoveUserIdentityMutation';
 // queries
 import SessionCheck from 'JS/Auth/sessionCheck';
 // store
-import { setLogout, setLoginError } from 'JS/redux/reducers/login';
+import { setLogout, setLoginError } from 'JS/redux/actions/login';
 // variables
 import { AUTH_CONFIG } from './auth0-variables';
 

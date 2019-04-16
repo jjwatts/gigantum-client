@@ -4,7 +4,7 @@ import {
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
 // redux store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 // utils
 import FooterUtils from 'Components/common/footer/FooterUtils';
 

@@ -5,7 +5,7 @@ import store from 'JS/redux/store';
 import environment from 'JS/createRelayEnvironment';
 import classNames from 'classnames';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 // mutations
 import ModifyDatasetLinkMutation from 'Mutations/ModifyDatasetLinkMutation';
 // component

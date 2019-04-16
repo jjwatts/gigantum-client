@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { graphql, QueryRenderer } from 'react-relay';
 import queryString from 'querystring';
 // redux
-import { setCallbackRoute } from 'JS/redux/reducers/routes';
+import { setCallbackRoute } from 'JS/redux/actions/routes';
 // components
 import environment from 'JS/createRelayEnvironment';
 import Loader from 'Components/common/Loader';

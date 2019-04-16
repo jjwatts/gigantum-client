@@ -19,8 +19,8 @@ import UserIdentity from 'JS/Auth/UserIdentity';
 // config
 import config from 'JS/config';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
-import { setFilterText } from 'JS/redux/reducers/labbookListing/labbookListing';
+import { setErrorMessage } from 'JS/redux/actions/footer';
+import { setFilterText } from 'JS/redux/actions/labbookListing/labbookListing';
 // assets
 import './Labbooks.scss';
 

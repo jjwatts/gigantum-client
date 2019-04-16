@@ -8,7 +8,7 @@ import SyncDatasetMutation from 'Mutations/branches/SyncDatasetMutation';
 import Modal from 'Components/common/Modal';
 // store
 import store from 'JS/redux/store';
-import { setMultiInfoMessage } from 'JS/redux/reducers/footer';
+import { setMultiInfoMessage } from 'JS/redux/actions/footer';
 // assets
 import './ForceSync.scss';
 

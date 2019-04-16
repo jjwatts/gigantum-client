@@ -7,7 +7,7 @@ import DeleteRemoteLabbookMutation from 'Mutations/DeleteRemoteLabbookMutation';
 import ButtonLoader from 'Components/common/ButtonLoader';
 import Modal from 'Components/common/Modal';
 // store
-import { setErrorMessage, setWarningMessage, setInfoMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage, setWarningMessage, setInfoMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // assets
 import './DeleteLabbook.scss';

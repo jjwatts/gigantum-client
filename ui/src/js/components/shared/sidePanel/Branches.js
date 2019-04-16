@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { boundMethod } from 'autobind-decorator';
 import shallowCompare from 'react-addons-shallow-compare';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 // components
 import ForceMerge from 'Components/shared/modals/ForceMerge';
 import SidePanel from './SidePanel';

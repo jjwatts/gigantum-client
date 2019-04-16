@@ -6,7 +6,7 @@ import CreateLabbookMutation from 'Mutations/CreateLabbookMutation';
 import CreateDatasetMutation from 'Mutations/CreateDatasetMutation';
 import BuildImageMutation from 'Mutations/container/BuildImageMutation';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 // components
 import Loader from 'Components/common/Loader';
 import ButtonLoader from 'Components/common/ButtonLoader';

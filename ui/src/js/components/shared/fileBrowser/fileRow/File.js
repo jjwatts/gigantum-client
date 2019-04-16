@@ -10,8 +10,8 @@ import TextTruncate from 'react-text-truncate';
 import config from 'JS/config';
 // store
 import store from 'JS/redux/store';
-import { setMergeMode } from 'JS/redux/reducers/labbook/labbook';
-import { setErrorMessage, setInfoMessage, setWarningMessage } from 'JS/redux/reducers/footer';
+import { setMergeMode } from 'JS/redux/actions/labbook/labbook';
+import { setErrorMessage, setInfoMessage, setWarningMessage } from 'JS/redux/actions/footer';
 // mutations
 import StartContainerMutation from 'Mutations/container/StartContainerMutation';
 import StartDevToolMutation from 'Mutations/container/StartDevToolMutation';

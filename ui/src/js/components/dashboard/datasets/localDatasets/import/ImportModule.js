@@ -11,7 +11,7 @@ import config from 'JS/config';
 import UserIdentity from 'JS/Auth/UserIdentity';
 // store
 import store from 'JS/redux/store';
-import { setUploadMessageRemove } from 'JS/redux/reducers/footer';
+import { setUploadMessageRemove } from 'JS/redux/actions/footer';
 // mutations
 import ImportRemoteDatasetMutation from 'Mutations/ImportRemoteDatasetMutation';
 // components

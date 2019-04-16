@@ -5,7 +5,7 @@ import {
 import environment from 'JS/createRelayEnvironment';
 import uuidv4 from 'uuid/v4';
 import FooterUtils from 'Components/common/footer/FooterUtils';
-import { setMultiInfoMessage } from 'JS/redux/reducers/footer';
+import { setMultiInfoMessage } from 'JS/redux/actions/footer';
 
 const mutation = graphql`
   mutation PublishLabbookMutation($input: PublishLabbookInput!){

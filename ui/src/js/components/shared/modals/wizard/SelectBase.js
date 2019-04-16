@@ -1,9 +1,7 @@
 // vendor
-import React, { Fragment, Component } from 'react';
+import React, { Component } from 'react';
 import { QueryRenderer, graphql } from 'react-relay';
-import Slider from 'react-slick';
 import classNames from 'classnames';
-import ReactMarkdown from 'react-markdown';
 import { boundMethod } from 'autobind-decorator';
 // environment
 import environment from 'JS/createRelayEnvironment';
@@ -14,8 +12,6 @@ import BaseCard from './BaseCard';
 import BaseDatasetCard from './BaseDatasetCard';
 // utilities
 import {
-  flattenCombineNodeValues,
-  searchTagsForMatch,
   createProjectFilters,
   filterProjects,
   createDatasetFilters,
@@ -159,7 +155,7 @@ export default class SelectBase extends Component {
               });
 
               const filterCategories = createProjectFilters(queryProps.availableBases.edges);
-              const filteredProjects = filterProjects(queryProps.availableBases.edges, filterCategories, state.tags);
+              const filteredProjects = filterProjects(queryProps.availableBases.edges, state.tags);
               return (
                 <div className={innerContainer}>
                   <div className="SelectBase__select-container">

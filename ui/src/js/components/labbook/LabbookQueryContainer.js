@@ -4,7 +4,7 @@ import { QueryRenderer, graphql } from 'react-relay';
 // environment
 import environment from 'JS/createRelayEnvironment';
 // store
-import { setUpdateAll } from 'JS/redux/reducers/routes';
+import { setUpdateAll } from 'JS/redux/actions/routes';
 // components
 import Loader from 'Components/common/Loader';
 import Labbook from './Labbook';

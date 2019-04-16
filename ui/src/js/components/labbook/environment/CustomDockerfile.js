@@ -9,9 +9,9 @@ import Tooltip from 'Components/common/Tooltip';
 import AddCustomDockerMutation from 'Mutations/AddCustomDockerMutation';
 // store
 import store from 'JS/redux/store';
-import { setContainerMenuWarningMessage } from 'JS/redux/reducers/labbook/environment/environment';
+import { setContainerMenuWarningMessage } from 'JS/redux/actions/labbook/environment/environment';
 // config
-import { setErrorMessage, setWarningMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage, setWarningMessage } from 'JS/redux/actions/footer';
 import config from 'JS/config';
 // assets
 import './CustomDockerfile.scss';

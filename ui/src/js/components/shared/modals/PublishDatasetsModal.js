@@ -10,7 +10,7 @@ import BuildImageMutation from 'Mutations/container/BuildImageMutation';
 // component
 import Modal from 'Components/common/Modal';
 // store
-import { setErrorMessage, setMultiInfoMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage, setMultiInfoMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // assets
 import './PublishDatasetsModal.scss';

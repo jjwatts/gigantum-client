@@ -3,12 +3,9 @@ import {
   compose,
   applyMiddleware,
 } from 'redux';
-
 import reducers from './combinedReducers';
 import { persistPreferences } from '../utils/localStorage';
-
 import { getPreferences } from './preferences/preferences';
-
 
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
@@ -19,7 +16,6 @@ const localStorageMiddleware = store => next => (action) => {
 
   return result;
 };
-
 
 export default createStore(
   reducers,

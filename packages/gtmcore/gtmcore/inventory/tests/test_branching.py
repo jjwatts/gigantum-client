@@ -144,7 +144,7 @@ class TestBranching(object):
             call_subprocess('git checkout -b remote-branch'.split(), cwd=tempdir)
             call_subprocess('git checkout master'.split(), cwd=tempdir)
             lb.git.add_remote('origin', tempdir)
-            bm = BranchManager(lb)
+            bm = BranchManager(lb, username=TEST_USER)
             bm.fetch()
             assert 'remote-branch' in bm.branches_remote
 
@@ -158,7 +158,6 @@ class TestBranching(object):
             # Confirm branch exists locally, but is gone on remote.
             assert 'remote-branch' in bm.branches_local
             assert 'remote-branch' not in bm.branches_remote
-
 
     def test_merge_conflict_basic(self, mock_labbook_lfs_disabled):
         """ Test a basic merge-conflict scenario with a conflict on one file.

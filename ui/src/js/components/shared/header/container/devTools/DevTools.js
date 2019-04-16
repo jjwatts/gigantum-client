@@ -4,12 +4,12 @@ import classNames from 'classnames';
 import { boundMethod } from 'autobind-decorator';
 // store
 import store from 'JS/redux/store';
-import { setContainerState } from 'JS/redux/reducers/labbook/overview/overview';
-import { setContainerStatus, setContainerMenuVisibility } from 'JS/redux/reducers/labbook/containerStatus';
-import { setContainerMenuWarningMessage, setCloseEnvironmentMenus } from 'JS/redux/reducers/labbook/environment/environment';
-import { setPackageMenuVisible } from 'JS/redux/reducers/labbook/environment/packageDependencies';
-import { setBuildingState, setMergeMode } from 'JS/redux/reducers/labbook/labbook';
-import { setErrorMessage, setInfoMessage, setWarningMessage } from 'JS/redux/reducers/footer';
+import { setContainerState } from 'JS/redux/actions/labbook/overview/overview';
+import { setContainerStatus, setContainerMenuVisibility } from 'JS/redux/actions/labbook/containerStatus';
+import { setContainerMenuWarningMessage, setCloseEnvironmentMenus } from 'JS/redux/actions/labbook/environment/environment';
+import { setPackageMenuVisible } from 'JS/redux/actions/labbook/environment/packageDependencies';
+import { setBuildingState, setMergeMode } from 'JS/redux/actions/labbook/labbook';
+import { setErrorMessage, setInfoMessage, setWarningMessage } from 'JS/redux/actions/footer';
 // assets
 import './DevTools.scss';
 

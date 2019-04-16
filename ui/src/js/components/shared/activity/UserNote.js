@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { WithContext as ReactTags } from 'react-tag-input';
 // mutations
 import CreateUserNoteMutation from 'Mutations/CreateUserNoteMutation';
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 // store
 import store from 'JS/redux/store';
 // assets

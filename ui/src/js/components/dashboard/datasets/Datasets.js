@@ -19,8 +19,8 @@ import UserIdentity from 'JS/Auth/UserIdentity';
 // config
 import config from 'JS/config';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
-import { setFilterText } from 'JS/redux/reducers/datasetListing/datasetListing';
+import { setErrorMessage } from 'JS/redux/actions/footer';
+import { setFilterText } from 'JS/redux/actions/datasetListing/datasetListing';
 // assets
 import './Datasets.scss';
 

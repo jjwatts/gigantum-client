@@ -11,8 +11,8 @@ import DownloadDatasetFilesMutation from 'Mutations/DownloadDatasetFilesMutation
 import CompleteBatchUploadTransactionMutation from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
 // store
 import store from 'JS/redux/store';
-import { setErrorMessage } from 'JS/redux/reducers/footer';
-import { setIsProcessing } from 'JS/redux/reducers/dataset/dataset';
+import { setErrorMessage } from 'JS/redux/actions/footer';
+import { setIsProcessing } from 'JS/redux/actions/dataset/dataset';
 
 class FileBrowserMutations {
   /**

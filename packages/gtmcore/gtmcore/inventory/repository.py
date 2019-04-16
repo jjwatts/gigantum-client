@@ -267,7 +267,12 @@ class Repository(object):
                     self._checkout_id = cf.read()
             else:
                 # Create a new checkout ID and file
-                self._checkout_id = f"{self.key}|{self.git.get_current_branch_name()}|{uuid.uuid4().hex[0:10]}"
+                try:
+                    self._checkout_id = f"{self.key}|{self.active_branch}|{uuid.uuid4().hex[0:10]}"
+                except TypeError:
+                    # You're in a submodule trying to get a checkout ID of a dataset. Since no branch name, use commit
+                    self._checkout_id = f"{self.key}|{self.git.commit_hash}|{uuid.uuid4().hex[0:10]}"
+
                 self._checkout_id = self._checkout_id.replace('|', '-')
                 with open(checkout_file, 'wt') as cf:
                     cf.write(self._checkout_id)

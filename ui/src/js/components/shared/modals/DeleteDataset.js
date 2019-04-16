@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 // config
 import config from 'JS/config';
 // store
-import { setErrorMessage, setWarningMessage, setInfoMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage, setWarningMessage, setInfoMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // Mutations
 import DeleteDatasetMutation from 'Mutations/DeleteDatasetMutation';

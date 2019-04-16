@@ -9,8 +9,8 @@ import { connect } from 'react-redux';
 import Loadable from 'react-loadable';
 // store
 import store from 'JS/redux/store';
-import { setStickyState } from 'JS/redux/reducers/dataset/dataset';
-import { setCallbackRoute } from 'JS/redux/reducers/routes';
+import { setStickyState } from 'JS/redux/actions/dataset/dataset';
+import { setCallbackRoute } from 'JS/redux/actions/routes';
 // config
 import Config from 'JS/config';
 // utils

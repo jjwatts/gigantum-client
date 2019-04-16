@@ -5,7 +5,7 @@ import TextTruncate from 'react-text-truncate';
 // config
 import config from 'JS/config';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // Mutations
 import RemoveFavoriteMutation from 'Mutations/fileBrowser/RemoveFavoriteMutation';

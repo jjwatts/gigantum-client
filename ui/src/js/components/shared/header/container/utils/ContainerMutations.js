@@ -5,7 +5,7 @@ import StartDevToolMutation from 'Mutations/container/StartDevToolMutation';
 import BuildImageMutation from 'Mutations/container/BuildImageMutation';
 import CancelBuildMutation from 'Mutations/container/CancelBuildMutation';
 // store
-import { setBuildingState } from 'JS/redux/reducers/labbook/labbook';
+import { setBuildingState } from 'JS/redux/actions/labbook/labbook';
 
 class ContainerMutations {
   /**

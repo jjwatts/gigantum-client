@@ -8,9 +8,9 @@ import AddDatasetFileMutation from 'Mutations/fileBrowser/AddDatasetFileMutation
 import CompleteBatchUploadTransactionMutation from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
 import CompleteDatasetUploadTransactionMutation from 'Mutations/fileBrowser/CompleteDatasetUploadTransactionMutation';
 import store from 'JS/redux/store';
-import { setUploadMessageUpdate, setUploadMessageRemove, setWarningMessage } from 'JS/redux/reducers/footer';
-import { setFinishedUploading, setPauseChunkUpload } from 'JS/redux/reducers/labbook/fileBrowser/fileBrowserWrapper';
-import { setIsProcessing } from 'JS/redux/reducers/dataset/dataset';
+import { setUploadMessageUpdate, setUploadMessageRemove, setWarningMessage } from 'JS/redux/actions/footer';
+import { setFinishedUploading, setPauseChunkUpload } from 'JS/redux/actions/shared/fileBrowser/fileBrowserWrapper';
+import { setIsProcessing } from 'JS/redux/actions/dataset/dataset';
 import config from 'JS/config';
 
 const uploadImportChunk = (file, chunk, accessToken, getChunkCallback, type) => {

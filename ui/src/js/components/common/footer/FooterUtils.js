@@ -1,15 +1,15 @@
 // vendor
 import JobStatus from 'JS/utils/JobStatus';
-import store from 'JS/redux/store';
 import AnsiUp from 'ansi_up';
-import { setMultiInfoMessage, setErrorMessage } from 'JS/redux/reducers/footer';
+// store
+import { setMultiInfoMessage, setErrorMessage } from 'JS/redux/actions/footer';
 // mutations
 import FetchLabbookEdgeMutation from 'Mutations/FetchLabbookEdgeMutation';
 import FetchDatasetEdgeMutation from 'Mutations/FetchDatasetEdgeMutation';
 import FetchDatasetFilesMutation from 'Mutations/FetchDatasetFilesMutation';
 import FetchLabbookDatasetFilesMutation from 'Mutations/FetchLabbookDatasetFilesMutation';
 
-const ansi_up = new AnsiUp();
+const ansiUp = new AnsiUp();
 
 const FooterUtils = {
   /**
@@ -48,7 +48,7 @@ const FooterUtils = {
               ? fullMessage.slice(0, fullMessage.length - 1)
               : fullMessage;
 
-            let html = ansi_up.ansi_to_html(fullMessage);
+            let html = ansiUp.ansi_to_html(fullMessage);
 
             const lastIndex = (fullMessage.lastIndexOf('\n') > -1)
               ? fullMessage.lastIndexOf('\n')

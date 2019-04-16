@@ -10,7 +10,7 @@ import './DatasetActionsMenu.scss';
 import ModifyDatasetLinkMutation from 'Mutations/ModifyDatasetLinkMutation';
 // store
 import store from 'JS/redux/store';
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 export default class DatasetActionsMenu extends Component {
   constructor(props) {

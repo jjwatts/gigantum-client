@@ -1,60 +1,5 @@
 import uuidv4 from 'uuid/v4';
-import dispatcher from 'JS/redux/dispatcher';
-
-/**
- * constants
- */
-// messages that have a constant state
-export const ERROR_MESSAGE = 'ERROR_MESSAGE';
-export const INFO_MESSAGE = 'INFO_MESSAGE';
-export const WARNING_MESSAGE = 'WARNING_MESSAGE';
-export const REMOVE_MESSAGE = 'REMOVE_MESSAGE';
-// loaders with updating state
-// file updating
-export const UPLOAD_MESSAGE_SETTER = 'UPLOAD_MESSAGE_SETTER';
-export const UPLOAD_MESSAGE_UPDATE = 'UPLOAD_MESSAGE_UPDATE';
-export const UPLOAD_MESSAGE_REMOVE = 'UPLOAD_MESSAGE_REMOVE';
-export const IMPORT_MESSAGE_SUCCESS = 'IMPORT_MESSAGE_SUCCESS';
-//
-export const RESET_FOOTER_STORE = 'RESET_FOOTER_STORE';
-export const TOGGLE_MESSAGE_LIST = 'TOGGLE_MESSAGE_LIST';
-export const HIDE_MESSAGE_LIST = 'HIDE_MESSAGE_LIST';
-
-export const MULTIPART_INFO_MESSAGE = 'MULTIPART_INFO_MESSAGE';
-export const MULTIPART_ERROR_MESSAGE = 'MULTIPART_ERROR_MESSAGE';
-
-export const UPDATE_MESSAGE_STACK_ITEM_VISIBILITY = 'UPDATE_MESSAGE_STACK_ITEM_VISIBILITY';
-export const UPDATE_HISTORY_STACK_ITEM_VISIBILITY = 'UPDATE_HISTORY_STACK_ITEM_VISIBILITY';
-
-
-export const RESIZE_FOOTER = 'RESIZE_FOOTER';
-export const UPDATE_HISTORY_VIEW = 'UPDATE_HISTORY_VIEW';
-export const HELPER_VISIBLE = 'HELPER_VISIBLE';
-
-
-/**
- * actions
- */
-export const setErrorMessage = (message, messageBody) => dispatcher(ERROR_MESSAGE, { message, messageBody });
-export const setWarningMessage = message => dispatcher(WARNING_MESSAGE, { message });
-export const setInfoMessage = message => dispatcher(INFO_MESSAGE, { message });
-export const setMultiInfoMessage = (id, message, isLast, error, messageBody) => dispatcher(MULTIPART_INFO_MESSAGE, {
-  id, message, isLast, error, messageBody,
-});
-export const setUploadMessageSetter = (uploadMessage, id, totalFiles) => dispatcher(UPLOAD_MESSAGE_SETTER, { uploadMessage, id, totalFiles });
-export const setUploadMessageUpdate = (uploadMessage, fileCount, progessBarPercentage, uploadError) => dispatcher(UPLOAD_MESSAGE_UPDATE, {
-  uploadMessage, fileCount, progessBarPercentage, uploadError,
-});
-export const setUploadMessageRemove = (uploadMessage, id, progessBarPercentage) => dispatcher(UPLOAD_MESSAGE_REMOVE, { uploadMessage, id, progessBarPercentage });
-export const setHelperVisible = helperVisible => dispatcher(HELPER_VISIBLE, { helperVisible });
-export const setUpdateHistoryView = () => dispatcher(UPDATE_HISTORY_VIEW, {});
-export const setResizeFooter = () => dispatcher(RESIZE_FOOTER, {});
-export const setResetFooter = () => dispatcher(RESET_FOOTER_STORE, {});
-export const setRemoveMessage = id => dispatcher(REMOVE_MESSAGE, { id });
-export const setToggleMessageList = (messageListOpen, viewHistory) => dispatcher(TOGGLE_MESSAGE_LIST, { messageListOpen, viewHistory });
-export const setUpdateMessageStackItemVisibility = index => dispatcher(UPDATE_MESSAGE_STACK_ITEM_VISIBILITY, { index });
-export const setUpdateHistoryStackItemVisibility = index => dispatcher(UPDATE_HISTORY_STACK_ITEM_VISIBILITY, { index });
-
+import * as types from 'JS/redux/constants/constants';
 
 let tempId = 0;
 const messageStackHistory = sessionStorage.getItem('messageStackHistory') ? JSON.parse(sessionStorage.getItem('messageStackHistory')) : [];
@@ -89,13 +34,9 @@ export default (state = {
     return messageStackHistory;
   };
   const date = new Date();
-  if (action.type === ERROR_MESSAGE) {
-    const id = ERROR_MESSAGE + tempId++;
-
-
+  if (action.type === types.ERROR_MESSAGE) {
+    const id = types.ERROR_MESSAGE + tempId++;
     const messageStack = state.messageStack;
-
-
     let messageStackHistory = state.messageStackHistory;
 
 
@@ -129,13 +70,9 @@ export default (state = {
       messageListOpen: true,
       viewHistory: false,
     };
-  } if (action.type === INFO_MESSAGE) { // this is for only updating a single message
-    const id = INFO_MESSAGE + tempId++;
-
-
+  } if (action.type === types.INFO_MESSAGE) { // this is for only updating a single message
+    const id = types.INFO_MESSAGE + tempId++;
     const messageStack = state.messageStack;
-
-
     let messageStackHistory = state.messageStackHistory;
 
 
@@ -171,8 +108,8 @@ export default (state = {
       messageListOpen: true,
       viewHistory: false,
     };
-  } if (action.type === WARNING_MESSAGE) { // this is for only updating a single message
-    const id = INFO_MESSAGE + tempId++;
+  } if (action.type === types.WARNING_MESSAGE) { // this is for only updating a single message
+    const id = types.INFO_MESSAGE + tempId++;
     const messageStack = state.messageStack;
     let messageStackHistory = state.messageStackHistory;
 
@@ -207,7 +144,7 @@ export default (state = {
       messageListOpen: true,
       viewHistory: false,
     };
-  } if (action.type === REMOVE_MESSAGE) { // this is for only updating a single message
+  } if (action.type === types.REMOVE_MESSAGE) { // this is for only updating a single message
     const messageStack = [];
 
     state.messageStack.forEach((messageItem) => {
@@ -230,7 +167,7 @@ export default (state = {
       messageListOpen,
 
     };
-  } if (action.type === UPLOAD_MESSAGE_SETTER) {
+  } if (action.type === types.UPLOAD_MESSAGE_SETTER) {
     const message = {
       message: action.payload.currentMessage,
       id: action.payload.id,
@@ -257,7 +194,7 @@ export default (state = {
         : 0,
       viewHistory: false,
     };
-  } if (action.type === UPLOAD_MESSAGE_UPDATE) {
+  } if (action.type === types.UPLOAD_MESSAGE_UPDATE) {
     const message = {
       message: action.payload.uploadMessage,
       id: action.payload.id,
@@ -290,7 +227,7 @@ export default (state = {
       uploadError,
       success: false,
     };
-  } if (action.type === UPLOAD_MESSAGE_REMOVE) {
+  } if (action.type === types.UPLOAD_MESSAGE_REMOVE) {
     const message = {
       message: action.payload.uploadMessage,
       id: action.payload.id,
@@ -318,7 +255,7 @@ export default (state = {
       labbookName: '',
       labbookSuccess: false,
     };
-  } if (action.type === IMPORT_MESSAGE_SUCCESS) {
+  } if (action.type === types.IMPORT_MESSAGE_SUCCESS) {
     const message = {
       message: action.payload.uploadMessage,
       id: action.payload.id,
@@ -344,7 +281,7 @@ export default (state = {
       success: true,
       labbookSuccess: true,
     };
-  } if (action.type === TOGGLE_MESSAGE_LIST) {
+  } if (action.type === types.TOGGLE_MESSAGE_LIST) {
     const messageStack = [];
 
     const messageStackHistory = state.messageStackHistory.map((message) => {
@@ -359,27 +296,17 @@ export default (state = {
       messageStack,
       messageStackHistory,
     };
-  } if (action.type === HIDE_MESSAGE_LIST) {
+  } if (action.type === types.HIDE_MESSAGE_LIST) {
     return {
       ...state,
       messageListOpen: false,
     };
-  } if (action.type === MULTIPART_INFO_MESSAGE) {
+  } if (action.type === types.MULTIPART_INFO_MESSAGE) {
     let messageStackHistory = state.messageStackHistory;
-
-
     const messageStack = state.messageStack;
-
-
     let previousHistoryIndex = 0;
-
-
     let previousIndex = 0;
-
-
     let messageBodyOpen = false;
-
-
     let messageListOpen = state.messageListOpen;
 
     const doesMessageExist = messageStack.filter((message, index) => {
@@ -390,7 +317,6 @@ export default (state = {
 
       return message.id === action.payload.id;
     });
-
 
     const doesHistoryMessageExist = messageStackHistory.filter((message, index) => {
       if (message.id === action.payload.id) {
@@ -439,7 +365,6 @@ export default (state = {
       messageStack.unshift(message);
     }
 
-
     if (doesHistoryMessageExist.length > 0) {
       messageStackHistory.splice(previousHistoryIndex, 1, message);
     } else {
@@ -447,7 +372,6 @@ export default (state = {
     }
 
     messageStackHistory = checkHistoryStackLength(messageStackHistory);
-
     sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
 
     return {
@@ -463,7 +387,7 @@ export default (state = {
       messageListOpen,
       viewHistory: ((doesHistoryMessageExist.length > 0) && doesHistoryMessageExist[0].dismissed && state.viewHistory),
     };
-  } if (action.type === RESET_FOOTER_STORE) {
+  } if (action.type === types.RESET_FOOTER_STORE) {
     return {
       ...state,
       open: false,
@@ -477,9 +401,8 @@ export default (state = {
       messageListOpen: false,
       viewHistory: false,
     };
-  } if (action.type === UPDATE_MESSAGE_STACK_ITEM_VISIBILITY) {
+  } if (action.type === types.UPDATE_MESSAGE_STACK_ITEM_VISIBILITY) {
     const messageStack = state.messageStack;
-
     messageStack[action.payload.index].messageBodyOpen = !messageStack[action.payload.index].messageBodyOpen;
 
     return {
@@ -487,12 +410,11 @@ export default (state = {
       messageStack,
       uuid: uuidv4(),
     };
-  } if (action.type === UPDATE_HISTORY_STACK_ITEM_VISIBILITY) {
+  } if (action.type === types.UPDATE_HISTORY_STACK_ITEM_VISIBILITY) {
     const messageStackHistory = state.messageStackHistory;
     const messageStackItem = messageStackHistory[action.payload.index];
 
     messageStackItem.messageBodyOpen = !messageStackItem.messageBodyOpen;
-
     messageStackHistory[action.payload.index] = messageStackItem;
 
     return {
@@ -500,14 +422,13 @@ export default (state = {
       messageStackHistory,
       uuid: uuidv4(),
     };
-  } if (action.type === RESIZE_FOOTER) {
+  } if (action.type === types.RESIZE_FOOTER) {
     return {
       ...state,
       resize: uuidv4(),
     };
-  } if (action.type === UPDATE_HISTORY_VIEW) {
+  } if (action.type === types.UPDATE_HISTORY_VIEW) {
     const messageStack = [];
-
     const messageStackHistory = state.messageStackHistory.map((message) => {
       message.dismissed = true;
       return message;
@@ -519,7 +440,7 @@ export default (state = {
       messageStack,
       messageStackHistory,
     };
-  } if (action.type === HELPER_VISIBLE) {
+  } if (action.type === types.HELPER_VISIBLE) {
     return {
       ...state,
       helperVisible: action.payload.helperVisible,

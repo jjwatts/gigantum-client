@@ -6,7 +6,7 @@ import validation from 'JS/utils/Validation';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // store
-import { setMultiInfoMessage } from 'JS/redux/reducers/footer';
+import { setMultiInfoMessage } from 'JS/redux/actions/footer';
 // components
 import LoginPrompt from 'Components/shared/modals/LoginPrompt';
 // assets

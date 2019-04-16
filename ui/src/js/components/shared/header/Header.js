@@ -8,8 +8,7 @@ import {
   setPublishingState,
   setExportingState,
   setModalVisible,
-  setUpdateDetailView,
-} from 'JS/redux/reducers/labbook/labbook';
+} from 'JS/redux/actions/labbook/labbook';
 // config
 import Config from 'JS/config';
 // components
@@ -30,24 +29,10 @@ class Header extends Component {
       hovered: false,
     };
     // bind functions here
-    this._setSelectedComponent = this._setSelectedComponent.bind(this);
     this._showLabbookModal = this._showLabbookModal.bind(this);
     this._hideLabbookModal = this._hideLabbookModal.bind(this);
     this._setHoverState = this._setHoverState.bind(this);
     this._checkOverflow = this._checkOverflow.bind(this);
-  }
-
-  /**
-    @param {string} componentName - input string componenetName
-    updates state of selectedComponent
-    updates history prop
-  */
-  _setSelectedComponent = (componentName) => {
-    if (componentName !== this.props.selectedComponent) {
-      if (store.getState().detailView.selectedComponent === true) {
-        setUpdateDetailView(false);
-      }
-    }
   }
 
   /**

@@ -10,6 +10,8 @@
     "window": true
   },
   "rules": {
+    "import/no-cycle": 2,
+    "import/no-self-import": 2,
     "class-methods-use-this": 1,
     "import/no-extraneous-dependencies": 1,
     "import/no-unresolved": 1,
@@ -32,7 +34,7 @@
     "no-shadow": 1,
     "prefer-destructuring": 1,
     "no-param-reassign": 1,
-    "no-underscore-dangle": 1,
+    "no-underscore-dangle": 0,
     "react/no-unused-state": 1,
     "react/prop-types": 1,
     "react/jsx-filename-extension": 0,

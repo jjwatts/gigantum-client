@@ -2,20 +2,11 @@
 import uuidv4 from 'uuid/v4';
 // store
 import {
-  setErrorMessage,
   setWarningMessage,
   setInfoMessage,
   setUploadMessageSetter,
-  setUploadMessageRemove,
-} from 'JS/redux/reducers/footer';
-import {
-  setStartedUploading,
-  setPauseUpload,
-  setPauseUploadData,
-  setResetChunkUpload,
-} from 'JS/redux/reducers/labbook/fileBrowser/fileBrowserWrapper';
-import { setUpdateDetailView } from 'JS/redux/reducers/labbook/labbook';
-import store from 'JS/redux/store';
+} from 'JS/redux/actions/footer';
+import { setStartedUploading } from 'JS/redux/actions/shared/fileBrowser/fileBrowserWrapper';
 // utilities
 import ChunkUploader from 'JS/utils/ChunkUploader';
 import config from 'JS/config';

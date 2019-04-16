@@ -18,7 +18,7 @@ import WriteLabbookReadmeMutation from 'Mutations/WriteLabbookReadmeMutation';
 import WriteDatasetReadmeMutation from 'Mutations/WriteDatasetReadmeMutation';
 // store
 import store from 'JS/redux/store';
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 // assets
 import './Overview.scss';
 

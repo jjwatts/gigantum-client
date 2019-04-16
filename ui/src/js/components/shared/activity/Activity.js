@@ -1,7 +1,7 @@
 // vendor
 import React, { Component, Fragment } from 'react';
 import classNames from 'classnames';
-import { setContainerMenuWarningMessage } from 'JS/redux/reducers/labbook/environment/environment';
+import { setContainerMenuWarningMessage } from 'JS/redux/actions/labbook/environment/environment';
 import { boundMethod } from 'autobind-decorator';
 // store
 import store from 'JS/redux/store';

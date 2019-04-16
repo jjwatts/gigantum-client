@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 // store
-import { setCallbackRoute } from 'JS/redux/reducers/routes';
+import { setCallbackRoute } from 'JS/redux/actions/routes';
 // config
 import config from 'JS/config';
 // components

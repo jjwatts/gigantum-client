@@ -9,7 +9,7 @@ import PublishDatasetMutation from 'Mutations/branches/PublishDatasetMutation';
 // component
 import Modal from 'Components/common/Modal';
 // store
-import { setErrorMessage, setInfoMessage, setMultiInfoMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage, setInfoMessage, setMultiInfoMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // assets
 import './VisibilityModal.scss';

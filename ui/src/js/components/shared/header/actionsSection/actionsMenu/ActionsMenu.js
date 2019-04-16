@@ -17,9 +17,9 @@ import {
   setWarningMessage,
   setInfoMessage,
   setMultiInfoMessage,
-} from 'JS/redux/reducers/footer';
+} from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
-import { setContainerMenuWarningMessage, setContainerMenuVisibility } from 'JS/redux/reducers/labbook/environment/environment';
+import { setContainerMenuWarningMessage, setContainerMenuVisibility } from 'JS/redux/actions/labbook/environment/environment';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 import LinkedLocalDatasetsQuery from 'Components/shared/header/actionsSection/queries/LinkedLocalDatasetsQuery';
@@ -46,7 +46,7 @@ class ActionsMenu extends Component {
       showLoginPrompt: false,
       exporting: false,
       deleteModalVisible: false,
-      remoteUrl: this.props.remoteUrl,
+      remoteUrl: props.remoteUrl,
       publishDisabled: false,
       justOpened: true,
       setPublic: false,

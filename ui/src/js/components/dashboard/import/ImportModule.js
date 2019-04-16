@@ -13,7 +13,7 @@ import Modal from 'Components/common/Modal';
 import Loader from 'Components/common/Loader';
 // store
 import store from 'JS/redux/store';
-import { setUploadMessageRemove } from 'JS/redux/reducers/footer';
+import { setUploadMessageRemove } from 'JS/redux/actions/footer';
 // mutations
 import ImportRemoteDatasetMutation from 'Mutations/ImportRemoteDatasetMutation';
 import ImportRemoteLabbookMutation from 'Mutations/ImportRemoteLabbookMutation';

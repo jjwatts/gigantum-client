@@ -12,7 +12,7 @@ import Modal from 'Components/common/Modal';
 import validation from 'JS/utils/Validation';
 import BuildImageMutation from 'Mutations/container/BuildImageMutation';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // assets
 import './CreateBranch.scss';

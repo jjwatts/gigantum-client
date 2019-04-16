@@ -5,7 +5,7 @@ import Modal from 'Components/common/Modal';
 // Mutations
 import DeleteExperimentalBranchMutation from 'Mutations/branches/DeleteExperimentalBranchMutation';
 // store
-import { setErrorMessage, setInfoMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage, setInfoMessage } from 'JS/redux/actions/footer';
 // assets
 import './DeleteBranch.scss';
 

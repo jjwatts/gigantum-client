@@ -11,7 +11,7 @@ import DeleteDatasetCollaboratorMutation from 'Mutations/DeleteDatasetCollaborat
 import ButtonLoader from 'Components/common/ButtonLoader';
 import Modal from 'Components/common/Modal';
 // store
-import { setErrorMessage } from 'JS/redux/reducers/footer';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 // config
 import config from 'JS/config';
 import fetchQuery from 'JS/fetch';
