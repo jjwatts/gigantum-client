@@ -20,18 +20,21 @@ class SidePanel extends Component {
   */
   @boundMethod
   _togglePanel() {
-    const { state } = this;
-    this.setState({ isPanelOpen: !state.isPanelOpen });
+    this.setState((state) => {
+      const isPanelOpen = !state.isPanelOpen;
+      return { isPanelOpen };
+    });
   }
 
   render() {
-    const { props, state } = this;
-    
-    const isPushedDownTwice = ((window.location.hostname === config.demoHostName) || props.diskLow) 
-      && props.isDeprecated;
-    const isPushedDownOnce = (((window.location.hostname === config.demoHostName) || props.diskLow) || props.isDeprecated) 
+    const { props } = this;
+
+    const isPushedDownTwice = ((window.location.hostname === config.demoHostName)
+      || props.diskLow) && props.isDeprecated;
+    const isPushedDownOnce = (((window.location.hostname === config.demoHostName)
+      || props.diskLow) || props.isDeprecated)
       && !isPushedDownTwice;
-    
+
     // declare css here
     const sidePanelCSS = classNames({
       SidePanel: true,
