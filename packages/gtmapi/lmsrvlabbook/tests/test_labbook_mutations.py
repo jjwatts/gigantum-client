@@ -19,11 +19,13 @@
 # SOFTWARE.
 import os
 import json
+from mock import patch
 
 from gtmcore.fixtures import ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
 
 from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped, fixture_working_dir
+from gtmcore.dispatcher import Dispatcher
 
 import pytest
 from gtmcore.files import FileOperations
@@ -125,6 +127,92 @@ class TestLabBookServiceMutations(object):
         assert 'errors' not in r
         assert r['data']['deleteLabbook']['success'] is True
         assert not os.path.exists(labbook_dir)
+
+    def test_delete_labbook_with_linked_dataset_exists(self, fixture_working_dir_env_repo_scoped):
+        """Test deleting a LabBook with a linked dataset, while the dataset still exists (shouldn't clean up)"""
+        def dispatcher_mock(self, function_ref, kwargs, metadata):
+            # If you get here, a cleanup job was scheduled, which shouldn't have happened since dataset still there
+            assert "CLEANUP SHOULD NOT HAVE BEEN SCHEDULED"
+
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook1", description="Cats labbook 1")
+        lb_root_dir = lb.root_dir
+        assert os.path.exists(lb_root_dir)
+
+        ds = im.create_dataset('default', 'default', "dataset2", storage_type="gigantum_object_v1", description="test")
+        im.link_dataset_to_labbook(f"{ds.root_dir}/.git", "default", "dataset2", lb)
+
+        delete_query = f"""
+        mutation delete {{
+            deleteLabbook(input: {{
+                owner: "default",
+                labbookName: "labbook1",
+                confirm: true
+            }}) {{
+                success
+            }}
+        }}
+        """
+        with patch.object(Dispatcher, 'dispatch_task', dispatcher_mock):
+            r = fixture_working_dir_env_repo_scoped[2].execute(delete_query)
+
+        assert 'errors' not in r
+        assert r['data']['deleteLabbook']['success'] is True
+        assert not os.path.exists(lb_root_dir)
+        assert os.path.exists(ds.root_dir)
+
+    def test_delete_labbook_with_linked_dataset(self, fixture_working_dir_env_repo_scoped):
+        """Test deleting a LabBook with a linked dataset that has been deleted as well, should clean up"""
+        class JobResponseMock(object):
+            def __init__(self, key):
+                self.key_str = key
+
+        def dispatcher_mock(self, function_ref, kwargs, metadata):
+            assert kwargs['logged_in_username'] == 'default'
+            assert kwargs['dataset_owner'] == 'default'
+            assert kwargs['dataset_name'] == 'dataset22'
+            assert ".labmanager/datasets/default/default/dataset22" in kwargs['cache_location']
+            assert metadata['method'] == 'clean_dataset_file_cache'
+
+            with open("/tmp/mock_reached", 'wt') as tf:
+                tf.write("reached")
+
+            return JobResponseMock("rq:job:00923477-d46b-479c-ad0c-2dffcfdfb6b10")
+
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook1", description="Cats labbook 1")
+        lb_root_dir = lb.root_dir
+        assert os.path.exists(lb_root_dir)
+        assert os.path.exists("/tmp/mock_reached") is False
+
+        ds = im.create_dataset('default', 'default', "dataset22", storage_type="gigantum_object_v1", description="test")
+        ds_root_dir = ds.root_dir
+        im.link_dataset_to_labbook(f"{ds.root_dir}/.git", "default", "dataset22", lb)
+        im.delete_dataset('default', 'default', "dataset22")
+
+        delete_query = f"""
+        mutation delete {{
+            deleteLabbook(input: {{
+                owner: "default",
+                labbookName: "labbook1",
+                confirm: true
+            }}) {{
+                success
+            }}
+        }}
+        """
+        try:
+            with patch.object(Dispatcher, 'dispatch_task', dispatcher_mock):
+                r = fixture_working_dir_env_repo_scoped[2].execute(delete_query)
+
+            assert 'errors' not in r
+            assert r['data']['deleteLabbook']['success'] is True
+            assert not os.path.exists(lb_root_dir)
+            assert not os.path.exists(ds_root_dir)
+            assert os.path.exists("/tmp/mock_reached") is True
+        finally:
+            if os.path.exists("/tmp/mock_reached"):
+                os.remove("/tmp/mock_reached")
 
     def test_update_labbook_description(self, mock_create_labbooks, fixture_working_dir_env_repo_scoped):
         labbook_dir = os.path.join(mock_create_labbooks[1], 'default', 'default', 'labbooks', 'labbook1')

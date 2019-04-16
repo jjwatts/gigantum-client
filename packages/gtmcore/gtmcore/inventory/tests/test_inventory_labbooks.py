@@ -232,6 +232,39 @@ class TestInventory(object):
         finally:
             shutil.rmtree(new_location)
 
+    def test_delete_labbook_no_linked_datasets(self, mock_config_file):
+        """Test trying to create a labbook with a name that already exists locally"""
+        inv_manager = InventoryManager(mock_config_file[0])
+        inv_manager.create_labbook("test", "test", "labbook1", description="my first labbook")
+        inv_manager.load_labbook("test", "test", "labbook1")
+
+        dataset_delete_jobs = inv_manager.delete_labbook("test", "test", "labbook1")
+        assert dataset_delete_jobs == []
+
+        with pytest.raises(InventoryException):
+            inv_manager.load_labbook("test", "test", "labbook1")
+
+    def test_delete_labbook_linked_dataset(self, mock_config_file):
+        """Test trying to create a labbook with a name that already exists locally"""
+        inv_manager = InventoryManager(mock_config_file[0])
+        inv_manager.create_labbook("test", "test", "labbook1", description="my first labbook")
+        lb = inv_manager.load_labbook("test", "test", "labbook1")
+
+        auth = GitAuthor(name="test", email="user1@test.com")
+        ds = inv_manager.create_dataset("test", "test", "dataset1", "gigantum_object_v1",
+                                        description="my first dataset",
+                                        author=auth)
+
+        inv_manager.link_dataset_to_labbook(f"{ds.root_dir}/.git", "test", "dataset1", lb)
+
+        dataset_delete_jobs = inv_manager.delete_labbook("test", "test", "labbook1")
+        assert len(dataset_delete_jobs) == 1
+        assert dataset_delete_jobs[0].namespace == "test"
+        assert dataset_delete_jobs[0].name == "dataset1"
+
+        with pytest.raises(InventoryException):
+            inv_manager.load_labbook("test", "test", "labbook1")
+
 
 class TestCreateLabbooks(object):
 

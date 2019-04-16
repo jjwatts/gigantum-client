@@ -7,6 +7,7 @@ from pkg_resources import resource_filename
 import pathlib
 import subprocess
 import glob
+from typing import NamedTuple
 
 from typing import Optional, List, Tuple, Dict
 
@@ -33,6 +34,10 @@ class InventoryException(GigantumException):
     pass
 
 
+# Named tuple for Dataset cleanup jobs that need to be scheduled
+DatasetCleanupJob = NamedTuple('DatasetCleanupJob', [('namespace', str), ('name', str), ('cache_root', str)])
+
+
 class InventoryManager(object):
     """ This class absorbs the complexity of accepting data structures into the client's
         working directory. We need this class because interacting with the "inventory"
@@ -53,13 +58,23 @@ class InventoryManager(object):
         return isinstance(other, InventoryManager) \
                and self.inventory_root == other.inventory_root
 
-    def query_owner(self, repository: Repository) -> str:
+    @staticmethod
+    def query_owner(repository: Repository) -> str:
         """Returns the Repository's owner in the Inventory. """
         tokens = repository.root_dir.rsplit('/', 3)
         # expected pattern: gigantum/<username>/<owner>/<labbook or dataset>/<project or dataset name>
         if len(tokens) < 3 or tokens[-2] not in ['labbooks', 'datasets']:
             raise InventoryException(f'Unexpected root in {str(repository)}')
         return tokens[-3]
+
+    @staticmethod
+    def query_owner_of_linked_dataset(dataset: Dataset) -> str:
+        """Returns the Dataset's owner when embedded in a Project repository. """
+        tokens = dataset.root_dir.rsplit('/', 3)
+        # expected pattern: <Project root>/.gigantum/datasets/<owner>/<dataset name>
+        if len(tokens) < 4 or tokens[-3] != 'datasets':
+            raise InventoryException(f'Unexpected root in {str(dataset)}')
+        return tokens[-2]
 
     def _put_labbook(self, path: str, username: str, owner: str) -> LabBook:
         # Validate that given path contains labbook
@@ -412,6 +427,45 @@ class InventoryManager(object):
 
             return labbook.root_dir
 
+    def delete_labbook(self, username: str, owner: str, labbook_name: str) -> List[DatasetCleanupJob]:
+        """Delete a Labbook from this Gigantum working directory.
+
+        Args:
+            username: Active username
+            owner: Namespace of the Labbook
+            labbook_name: Name of the Labbook
+
+        Returns:
+            None
+
+        """
+        lb = self.load_labbook(username, owner, labbook_name)
+
+        # Get list of datasets and cache roots to schedule for cleanup
+        submodules = lb.git.list_submodules()
+        datasets_to_schedule = list()
+        for submodule in submodules:
+            try:
+                submodule_dataset_owner, submodule_dataset_name = submodule['name'].split("&")
+                rel_submodule_dir = os.path.join('.gigantum', 'datasets',
+                                                 submodule_dataset_owner, submodule_dataset_name)
+                submodule_dir = os.path.join(lb.root_dir, rel_submodule_dir)
+                ds = self.load_dataset_from_directory(submodule_dir)
+                ds.namespace = self.query_owner_of_linked_dataset(ds)
+                m = Manifest(ds, username)
+                datasets_to_schedule.append(DatasetCleanupJob(namespace=submodule_dataset_owner,
+                                                              name=submodule_dataset_name,
+                                                              cache_root=m.cache_mgr.cache_root))
+            except Exception as err:
+                # Skip errors
+                logger.warning(f"Error occurred and ignored while processing submodules during Project delete: {err}")
+                continue
+
+        # Remove labbook contents
+        shutil.rmtree(lb.root_dir, ignore_errors=True)
+
+        return datasets_to_schedule
+
     def create_dataset(self, username: str, owner: str, dataset_name: str, storage_type: str,
                        description: Optional[str] = None, author: Optional[GitAuthor] = None) -> Dataset:
         """Create a new Dataset in this Gigantum working directory.
@@ -533,7 +587,7 @@ class InventoryManager(object):
 
             return dataset
 
-    def delete_dataset(self, username: str, owner: str, dataset_name: str) -> None:
+    def delete_dataset(self, username: str, owner: str, dataset_name: str) -> DatasetCleanupJob:
         """Delete a Dataset from this Gigantum working directory.
 
         Args:
@@ -549,10 +603,13 @@ class InventoryManager(object):
 
         # Delete dataset contents from file cache
         m = Manifest(ds, username)
-        shutil.rmtree(m.cache_mgr.cache_root, ignore_errors=True)
 
         # Delete dataset repository from working dir
         shutil.rmtree(ds.root_dir, ignore_errors=True)
+
+        return DatasetCleanupJob(namespace=owner,
+                                 name=dataset_name,
+                                 cache_root=m.cache_mgr.cache_root)
 
     def put_dataset(self, path: str, username: str, owner: str) -> Dataset:
         try:

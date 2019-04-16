@@ -23,15 +23,12 @@ import shutil
 
 import flask
 import graphene
-import requests
 
-from gtmcore.configuration import Configuration
 from gtmcore.container.container import ContainerOperations
 from gtmcore.dispatcher import (Dispatcher, jobs)
-
+from gtmcore.dataset.manifest import Manifest
 
 from gtmcore.inventory.inventory import InventoryManager
-from gtmcore.exceptions import GigantumException
 from gtmcore.logging import LMLogger
 from gtmcore.files import FileOperations
 from gtmcore.activity import ActivityStore, ActivityDetailRecord, ActivityDetailType, ActivityRecord, ActivityType
@@ -39,7 +36,6 @@ from gtmcore.environment import ComponentManager
 
 from lmsrvcore.api.mutations import ChunkUploadMutation, ChunkUploadInput
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
-from lmsrvcore.auth.identity import parse_token
 
 from lmsrvlabbook.api.connections.labbookfileconnection import LabbookFavoriteConnection
 from lmsrvlabbook.api.connections.labbookfileconnection import LabbookFileConnection
@@ -136,11 +132,27 @@ class DeleteLabbook(graphene.ClientIDMutation):
 
             lb, docker_removed = ContainerOperations.delete_image(labbook=lb, username=username)
             if not docker_removed:
-                raise ValueError(f'Cannot delete docker image for {str(lb)} - unable to delete LB from disk')
+                raise ValueError(f'Cannot delete docker image for {str(lb)} - unable to delete Project from disk')
 
-            # TODO - gtmcore should contain routine to properly delete a labbook
-            shutil.rmtree(lb.root_dir, ignore_errors=True)
+            datasets_to_schedule = InventoryManager().delete_labbook(username, owner, labbook_name)
 
+            # Schedule jobs to clean the file cache for any linked datasets (if no other references exist)
+            for cleanup_job in datasets_to_schedule:
+                # Schedule Job to clear file cache if dataset is no longer in use
+                job_metadata = {'method': 'clean_dataset_file_cache'}
+                job_kwargs = {
+                    'logged_in_username': username,
+                    'dataset_owner': cleanup_job.namespace,
+                    'dataset_name': cleanup_job.name,
+                    'cache_location': cleanup_job.cache_root
+                }
+                dispatcher = Dispatcher()
+                job_key = dispatcher.dispatch_task(jobs.clean_dataset_file_cache, metadata=job_metadata,
+                                                   kwargs=job_kwargs)
+                logger.info(f"Dispatched clean_dataset_file_cache({ cleanup_job.namespace}/{cleanup_job.name})"
+                            f" to Job {job_key}")
+
+            # Verify Delete worked
             if os.path.exists(lb.root_dir):
                 logger.error(f'Deleted {str(lb)} but root directory {lb.root_dir} still exists!')
                 return DeleteLabbook(success=False)

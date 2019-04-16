@@ -23,13 +23,16 @@ import os
 import time
 from typing import Callable, Optional, List
 import sys
+import shutil
 
 from rq import get_current_job
 
 from gtmcore.activity.monitors.devenv import DevEnvMonitorManager
 from gtmcore.labbook import LabBook
+from gtmcore.configuration import Configuration
+from gtmcore.dataset.cache import get_cache_manager_class
 
-from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.inventory.inventory import InventoryManager, InventoryException
 from gtmcore.inventory import Repository
 
 from gtmcore.logging import LMLogger
@@ -536,5 +539,56 @@ def download_dataset_files(logged_in_username: str, access_token: str, id_token:
             sys.exit(-1)
 
     except Exception as err:
+        logger.exception(err)
+        raise
+
+
+def clean_dataset_file_cache(logged_in_username: str, dataset_owner: str, dataset_name: str,
+                             cache_location: str, config_file: str = None) -> None:
+    """Method to import a dataset from a zip file
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        dataset_owner: Owner of the labbook if this dataset is linked
+        dataset_name: Name of the labbook if this dataset is linked
+        cache_location: Absolute path to the file cache (inside the container) for this dataset
+        config_file:
+
+    Returns:
+        None
+    """
+    logger = LMLogger.get_logger()
+
+    p = os.getpid()
+    try:
+        logger.info(f"(Job {p}) Starting clean_dataset_file_cache(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        im = InventoryManager(config_file=config_file)
+
+        # Check for dataset
+        try:
+            im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+            logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} still exists. Skipping file cache clean.")
+            return
+        except InventoryException:
+            # Dataset not found, move along
+            pass
+
+        # Check for submodule references
+        for lb in im.list_labbooks(logged_in_username):
+            submodules = lb.git.list_submodules()
+            for submodule in submodules:
+                submodule_dataset_owner, submodule_dataset_name = submodule['name'].split("&")
+                if submodule_dataset_owner == dataset_owner and submodule_dataset_name == dataset_name:
+                    logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} still referenced by {str(lb)}."
+                                f" Skipping file cache clean.")
+                    return
+
+        # If you get here the dataset no longer exists and is not used by any projects, clear files
+        shutil.rmtree(cache_location)
+
+    except Exception as err:
+        logger.error(f"(Job {p}) Error in clean_dataset_file_cache job")
         logger.exception(err)
         raise

@@ -2,9 +2,11 @@ import pytest
 import os
 import responses
 import flask
+from mock import patch
 
 from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped, fixture_working_dir
+from gtmcore.dispatcher import Dispatcher
 
 from gtmcore.inventory.inventory import InventoryManager
 
@@ -372,6 +374,19 @@ class TestDatasetMutations(object):
         assert result['data']['dataset']['name'] == "test-dataset-35"
 
     def test_delete_local_dataset(self, fixture_working_dir):
+        class JobResponseMock(object):
+            def __init__(self, key):
+                self.key_str = key
+
+        def dispatcher_mock(self, function_ref, kwargs, metadata):
+            assert kwargs['logged_in_username'] == 'default'
+            assert kwargs['dataset_owner'] == 'default'
+            assert kwargs['dataset_name'] == 'dataset100'
+            assert ".labmanager/datasets/default/default/dataset100" in kwargs['cache_location']
+            assert metadata['method'] == 'clean_dataset_file_cache'
+
+            return JobResponseMock("rq:job:00923477-d46b-479c-ad0c-2b66fdfdfb6b10")
+
         im = InventoryManager(fixture_working_dir[0])
         ds = im.create_dataset('default', 'default', "dataset100", storage_type="gigantum_object_v1", description="100")
         dataset_dir = ds.root_dir
@@ -386,7 +401,10 @@ class TestDatasetMutations(object):
                 }
                 """
         variables = {"datasetName": "dataset100", "owner": "default"}
-        result = fixture_working_dir[2].execute(query, variable_values=variables)
+
+        with patch.object(Dispatcher, 'dispatch_task', dispatcher_mock):
+            result = fixture_working_dir[2].execute(query, variable_values=variables)
+
         assert "errors" not in result
         assert result['data']['deleteDataset']['localDeleted'] is True
         assert result['data']['deleteDataset']['remoteDeleted'] is False
