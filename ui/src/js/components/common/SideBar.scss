@@ -32,14 +32,6 @@
   @include flex(flex-start, column);
 }
 
-.SideBar__title {
-  color: $white;
-}
-
-.SideBar__list-item {
-  width: 100%;
-}
-
 .SideBar__nav {
   align-items: center;
   height: 50%;
@@ -49,6 +41,12 @@
     top: calc(50% - 24px);
   }
 }
+
+.SideBar__list-item {
+  width: 100%;
+}
+
+
 
 .SideBar__nav-item {
   align-content: center;
@@ -128,23 +126,5 @@
   &--labbooks:hover {
     background: url('~Images/icons/labbooks-selected.svg') no-repeat center center;
     background-size: 40px;
-  }
-}
-
-.SideBar__button {
-  background-color: none;
-  border: 1px solid $white;
-  color: $white;
-
-  &:hover {
-    background-color: $white;
-    border: 1px solid $white;
-    border-width: 0px;
-    color: $azure;
-  }
-
-  &--logout {
-    position: absolute;
-    top: 20px;
   }
 }

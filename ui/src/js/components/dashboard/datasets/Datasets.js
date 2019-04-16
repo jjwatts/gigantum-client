@@ -3,6 +3,7 @@ import React, { Component, Fragment } from 'react';
 import queryString from 'querystring';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+import { boundMethod } from 'autobind-decorator';
 // components
 import WizardModal from 'Components/shared/modals/wizard/WizardModal';
 import Loader from 'Components/common/Loader';
@@ -10,8 +11,8 @@ import LocalDatasetsContainer, { LocalDatasets } from 'Components/dashboard/data
 import RemoteDatasets from 'Components/dashboard/datasets/remoteDatasets/RemoteDatasets';
 import LoginPrompt from 'Components/shared/modals/LoginPrompt';
 import Tooltip from 'Components/common/Tooltip';
-import FilterByDropdown from 'Components/dashboard/filters/FilterByDropdown';
-import SortByDropdown from 'Components/dashboard/filters/SortByDropdown';
+import FilterByDropdown from 'Components/dashboard/shared/filters/FilterByDropdown';
+import SortByDropdown from 'Components/dashboard/shared/filters/SortByDropdown';
 // utils
 import Validation from 'JS/utils/Validation';
 // queries
@@ -32,8 +33,14 @@ class Datasets extends Component {
       filter,
       orderBy,
       sort,
-    } = queryString.parse(this.props.history.location.search.slice(1));
+    } = queryString.parse(props.history.location.search.slice(1));
 
+    const paths = props.history.location.pathname.split('/');
+    let sectionRoute = paths.length > 2 ? paths[2] : 'local';
+
+    if (paths[2] !== 'cloud' && paths[2] !== 'local') {
+      sectionRoute = 'local';
+    }
     this.state = {
       datasetModalVisible: false,
       oldDatasetName: '',
@@ -43,27 +50,12 @@ class Datasets extends Component {
       filter: filter || 'all',
       sortMenuOpen: false,
       refetchLoading: false,
-      selectedSection: 'local',
+      selectedSection: sectionRoute,
       showLoginPrompt: false,
       orderBy: orderBy || 'modified_on',
       sort: sort || 'desc',
       filterMenuOpen: false,
     };
-
-    this._closeSortMenu = this._closeSortMenu.bind(this);
-    this._closeFilterMenu = this._closeFilterMenu.bind(this);
-    this._goToDataset = this._goToDataset.bind(this);
-    this._showModal = this._showModal.bind(this);
-    this._filterSearch = this._filterSearch.bind(this);
-    this._setSortFilter = this._setSortFilter.bind(this);
-    this._closeLoginPromptModal = this._closeLoginPromptModal.bind(this);
-    this._filterDatasets = this._filterDatasets.bind(this);
-    this._setFilter = this._setFilter.bind(this);
-    this._changeSearchParam = this._changeSearchParam.bind(this);
-    this._hideSearchClear = this._hideSearchClear.bind(this);
-    this._setFilterValue = this._setFilterValue.bind(this);
-    this._toggleSortMenu = this._toggleSortMenu.bind(this);
-    this._toggleFilterMenu = this._toggleFilterMenu.bind(this);
   }
 
   /**
@@ -71,20 +63,13 @@ class Datasets extends Component {
     * subscribe to store to update state
     * set unsubcribe for store
   */
-  UNSAFE_componentWillMount() {
-    const paths = this.props.history.location.pathname.split('/');
-    let sectionRoute = paths.length > 2 ? paths[2] : 'local';
-
-    if (paths[2] !== 'cloud' && paths[2] !== 'local') {
-      sectionRoute = 'local';
-    }
-
-    this.setState({ selectedSection: sectionRoute });
-
+  componentDidMount() {
     document.title = 'Gigantum';
 
     window.addEventListener('click', this._closeSortMenu);
     window.addEventListener('click', this._closeFilterMenu);
+    window.addEventListener('scroll', this._captureScroll);
+    window.addEventListener('click', this._hideSearchClear);
   }
 
   /**
@@ -114,6 +99,7 @@ class Datasets extends Component {
     * fires when user identity returns invalid session
     * prompts user to revalidate their session
   */
+  @boundMethod
   _closeLoginPromptModal() {
     this.setState({
       showLoginPrompt: false,
@@ -125,11 +111,12 @@ class Datasets extends Component {
     * fires when sort menu is open and the user clicks elsewhere
     * hides the sort menu dropdown from the view
   */
-
+  @boundMethod
   _closeSortMenu(evt) {
+    const { state } = this;
     const isSortMenu = evt && evt.target && evt.target.className && (evt.target.className.indexOf('Dropdown__sort-selector') > -1);
 
-    if (!isSortMenu && this.state.sortMenuOpen) {
+    if (!isSortMenu && state.sortMenuOpen) {
       this.setState({ sortMenuOpen: false });
     }
   }
@@ -139,23 +126,14 @@ class Datasets extends Component {
     * fires when filter menu is open and the user clicks elsewhere
     * hides the filter menu dropdown from the view
   */
+  @boundMethod
   _closeFilterMenu(evt) {
+    const { state } = this;
     const isFilterMenu = evt.target.className.indexOf('Dropdown__filter-selector') > -1;
 
-    if (!isFilterMenu && this.state.filterMenuOpen) {
+    if (!isFilterMenu && state.filterMenuOpen) {
       this.setState({ filterMenuOpen: false });
     }
-  }
-
-
-  /**
-    * @param {}
-    * fires when a componet mounts
-    * adds a scoll listener to trigger pagination
-  */
-  componentDidMount() {
-    window.addEventListener('scroll', this._captureScroll);
-    window.addEventListener('click', this._hideSearchClear);
   }
 
   /**
@@ -163,8 +141,12 @@ class Datasets extends Component {
     * fires on window clock
     * hides search cancel button when clicked off
   */
+  @boundMethod
   _hideSearchClear(evt) {
-    if (this.state.showSearchCancel && evt.target.className !== 'Datasets__search-cancel' && evt.target.className !== 'Datasets__search no--margin') {
+    const { state } = this;
+    if (state.showSearchCancel
+      && (evt.target.className !== 'Datasets__search-cancel')
+      && (evt.target.className !== 'Datasets__search no--margin')) {
       this.setState({ showSearchCancel: false });
     }
   }
@@ -173,15 +155,16 @@ class Datasets extends Component {
     *  @param {string} datasetName - inputs a dataset name
     *  routes to that dataset
   */
-  _goToDataset = (datasetName, owner) => {
+  @boundMethod
+  _goToDataset(datasetName, owner) {
     this.setState({ datasetName, owner });
   }
-
 
   /**
     *  @param {string} datasetName
     *  closes dataset modal and resets state to initial state
-  */
+    */
+  @boundMethod
   _closeDataset(datasetName) {
     this.setState({
       datasetModalVisible: false,
@@ -192,9 +175,10 @@ class Datasets extends Component {
   }
 
   /**
-    *  @param {event} evt
-    *  sets new dataset title to state
+  *  @param {event} evt
+  *  sets new dataset title to state
   */
+  @boundMethod
   _setDatasetTitle(evt) {
     const isValid = Validation.datasetName(evt.target.value);
     if (isValid) {
@@ -208,46 +192,65 @@ class Datasets extends Component {
   }
 
   /**
-   * @param {string} filter
-   sets state updates filter
+  * @param {string} filter
+  sets state updates filter
   */
+  @boundMethod
   _setFilter(filter) {
     this.setState({ filterMenuOpen: false, filter });
     this._changeSearchParam({ filter });
   }
 
   /**
-     sets state for filter menu
-  */
+   sets state for filter menu
+   */
+  @boundMethod
   _toggleFilterMenu() {
-    this.setState({ filterMenuOpen: !this.state.filterMenuOpen });
+    const { state } = this;
+    this.setState({ filterMenuOpen: !state.filterMenuOpen });
   }
 
   /**
-   sets state for sort menu
+  sets state for sort menu
   */
+  @boundMethod
   _toggleSortMenu() {
-    this.setState({ sortMenuOpen: !this.state.sortMenuOpen });
+    const { state } = this;
+    this.setState({ sortMenuOpen: !state.sortMenuOpen });
   }
 
   /**
-   * @param {string} section
-   replaces history and checks session
+  * @param {string} section
+  replaces history and checks session
   */
+  @boundMethod
   _setSection(section) {
+    const { props } = this;
     if (section === 'cloud') {
       this._viewRemote();
     } else {
-      this.props.history.replace(`../datasets/${section}${this.props.history.location.search}`);
+      props.history.replace(`../datasets/${section}${props.history.location.search}`);
     }
   }
 
   /**
-   * @param {object} dataset
-   * returns true if dataset's name or description exists in filtervalue, else returns false
+  * @param {object} dataset
+  * returns true if dataset's name or description exists in filtervalue, else returns false
   */
+  @boundMethod
   _filterSearch(dataset) {
-    if (dataset.node && dataset.node.name && (this.props.filterText === '' || dataset.node.name.toLowerCase().indexOf(this.props.filterText.toLowerCase()) > -1 || (dataset.node.description && dataset.node.description.toLowerCase().indexOf(this.props.filterText.toLowerCase()) > -1))) {
+    const { props } = this;
+    const hasNoFileText = (props.filterText === '');
+    const nameMatches = dataset.node
+      && dataset.node.name
+      && (dataset.node.name.toLowerCase().indexOf(props.filterText.toLowerCase()) > -1);
+    const descriptionMatches = dataset.node
+      && dataset.node.description
+      && (dataset.node.description.toLowerCase().indexOf(props.filterText.toLowerCase()) > -1);
+
+    if (hasNoFileText
+      || nameMatches
+      || descriptionMatches) {
       return true;
     }
     return false;
@@ -259,22 +262,27 @@ class Datasets extends Component {
    * @param {Boolean} isLoading
    * @return {array} filteredDatasets
   */
+  @boundMethod
   _filterDatasets(datasetList, filter, isLoading) {
+    const { state } = this;
     if (isLoading) {
       return [];
     }
-    const datasets = this.state.selectedSection === 'local' ? datasetList.localDatasets.edges : datasetList.remoteDatasets.edges;
+    const datasets = state.selectedSection === 'local' ? datasetList.localDatasets.edges : datasetList.remoteDatasets.edges;
     const username = localStorage.getItem('username');
     const self = this;
-
-
     let filteredDatasets = [];
 
-
     if (filter === 'owner') {
-      filteredDatasets = datasets.filter(dataset => ((dataset.node.owner === username) && self._filterSearch(dataset)));
+      filteredDatasets = datasets.filter(
+        dataset => ((dataset.node.owner === username)
+        && self._filterSearch(dataset)),
+      );
     } else if (filter === 'others') {
-      filteredDatasets = datasets.filter(dataset => (dataset.node.owner !== username && self._filterSearch(dataset)));
+      filteredDatasets = datasets.filter(
+        dataset => (dataset.node.owner !== username
+          && self._filterSearch(dataset)),
+      );
     } else {
       filteredDatasets = datasets.filter(dataset => self._filterSearch(dataset));
     }
@@ -287,7 +295,9 @@ class Datasets extends Component {
     * fires when handleSortFilter triggers refetch
     * references child components and triggers their refetch functions
   */
+  @boundMethod
   _showModal() {
+    // TODO remove refs this is deprecated
     this.refs.wizardModal._showModal();
   }
 
@@ -296,10 +306,12 @@ class Datasets extends Component {
     * fires when setSortFilter validates user can sort
     * triggers a refetch with new sort parameters
   */
+  @boundMethod
   _handleSortFilter(orderBy, sort) {
+    const { props } = this;
     this.setState({ sortMenuOpen: false, orderBy, sort });
     this._changeSearchParam({ orderBy, sort });
-    this.props.refetchSort(orderBy, sort);
+    props.refetchSort(orderBy, sort);
   }
 
   /**
@@ -307,16 +319,18 @@ class Datasets extends Component {
     * fires when user selects a sort option
     * checks session and selectedSection state before handing off to handleSortFilter
   */
+  @boundMethod
   _setSortFilter(orderBy, sort) {
-    if (this.state.selectedSection === 'remoteDatasets') {
+    const { props, state } = this;
+    if (state.selectedSection === 'remoteDatasets') {
       UserIdentity.getUserIdentity().then((response) => {
         if (navigator.onLine) {
           if (response.data) {
             if (response.data.userIdentity.isSessionValid) {
               this._handleSortFilter(orderBy, sort);
             } else {
-              this.props.auth.renewToken(true, () => {
-                if (!this.state.showLoginPrompt) {
+              props.auth.renewToken(true, () => {
+                if (!state.showLoginPrompt) {
                   this.setState({ showLoginPrompt: true });
                 }
               }, () => {
@@ -324,7 +338,7 @@ class Datasets extends Component {
               });
             }
           }
-        } else if (!this.state.showLoginPrompt) {
+        } else if (!state.showLoginPrompt) {
           this.setState({ showLoginPrompt: true });
         }
       });
@@ -338,23 +352,25 @@ class Datasets extends Component {
     * fires when user selects remote dataset view
     * checks user auth before changing selectedSection state
   */
+  @boundMethod
   _viewRemote() {
+    const { props, state } = this;
     UserIdentity.getUserIdentity().then((response) => {
       if (navigator.onLine) {
         if (response.data && response.data.userIdentity.isSessionValid) {
-          this.props.history.replace(`../datasets/cloud${this.props.history.location.search}`);
+          props.history.replace(`../datasets/cloud${props.history.location.search}`);
           this.setState({ selectedSection: 'cloud' });
         } else {
-          this.props.auth.renewToken(true, () => {
-            if (!this.state.showLoginPrompt) {
+          props.auth.renewToken(true, () => {
+            if (!state.showLoginPrompt) {
               this.setState({ showLoginPrompt: true });
             }
           }, () => {
-            this.props.history.replace(`../datasets/cloud${this.props.history.location.search}`);
+            props.history.replace(`../datasets/cloud${props.history.location.search}`);
             this.setState({ selectedSection: 'cloud' });
           });
         }
-      } else if (!this.state.showLoginPrompt) {
+      } else if (!state.showLoginPrompt) {
         this.setState({ showLoginPrompt: true });
       }
     });
@@ -364,9 +380,10 @@ class Datasets extends Component {
   *  @param {evt}
   *  sets the filterValue in state
   */
+  @boundMethod
   _setFilterValue(evt) {
     setFilterText(evt.target.value);
-
+    // TODO remove refs this is deprecated
     if (this.refs.datasetSearch.value !== evt.target.value) {
       this.refs.datasetSearch.value = evt.target.value;
     }
@@ -376,14 +393,31 @@ class Datasets extends Component {
     *  @param {object} newValues
     *  changes the query params to new sort and filter values
   */
+  @boundMethod
   _changeSearchParam(newValues) {
-    const searchObj = Object.assign({}, queryString.parse(this.props.history.location.search.slice(1)), newValues);
-    this.props.history.replace(`..${this.props.history.location.pathname}?${queryString.stringify(searchObj)}`);
+    const { props } = this;
+    const searchObj = Object.assign(
+      {},
+      queryString.parse(props.history.location.search.slice(1)),
+      newValues,
+    );
+    props.history.replace(`..${props.history.location.pathname}?${queryString.stringify(searchObj)}`);
+  }
+
+  /**
+    *  @param {} -
+    *  forces state update ad sets to local view
+  */
+  @boundMethod
+  _forceLocalView() {
+    this.setState({
+      selectedSection: 'local',
+      showLoginPrompt: true,
+    });
   }
 
   render() {
-    const { props } = this;
-
+    const { props, state } = this;
     const datasetsCSS = classNames({
       Datasets: true,
       'Datasets--demo': (window.location.hostname === config.demoHostName) || props.diskLow,
@@ -393,13 +427,12 @@ class Datasets extends Component {
       const localNavItemCSS = classNames({
         Tab: true,
         'Tab--local': true,
-        'Tab--selected': this.state.selectedSection === 'local',
+        'Tab--selected': state.selectedSection === 'local',
       });
-
       const cloudNavItemCSS = classNames({
         Tab: true,
         'Tab--cloud': true,
-        'Tab--selected': this.state.selectedSection === 'cloud',
+        'Tab--selected': state.selectedSection === 'cloud',
       });
 
       return (
@@ -409,7 +442,7 @@ class Datasets extends Component {
           <WizardModal
             ref="wizardModal"
             handler={this.handler}
-            history={this.props.history}
+            history={props.history}
             datasets
             {...props}
           />
@@ -428,7 +461,7 @@ class Datasets extends Component {
                 <a onClick={() => this._setSection('cloud')}>Cloud</a>
               </li>
 
-              <hr className={`Datasets__navigation-slider Datasets__navigation-slider--${this.state.selectedSection}`} />
+              <hr className={`Datasets__navigation-slider Datasets__navigation-slider--${state.selectedSection}`} />
 
               <Tooltip section="cloudLocal" />
             </ul>
@@ -436,28 +469,28 @@ class Datasets extends Component {
           </div>
           <div className="Datasets__subheader grid">
             <div className="Datasets__search-container column-2-span-6 padding--0">
-              {
-                  this.state.showSearchCancel
-                  && (this.props.filterText.length !== 0)
-                  && (
-                  <Fragment>
-                    <div
-                      className="Datasets__search-cancel"
-                      onClick={() => this._setFilterValue({ target: { value: '' } })}
-                    />
-                    <div className="Datasets__search-cancel--text">Clear</div>
-                  </Fragment>
-                  )
-                }
-              <input
-                type="text"
-                ref="datasetSearch"
-                className="Datasets__search margin--0"
-                placeholder="Filter Datasets by name or description"
-                defaultValue={this.props.filterText}
-                onKeyUp={evt => this._setFilterValue(evt)}
-                onFocus={() => this.setState({ showSearchCancel: true })}
-              />
+              <div className="Input Input--clear">
+                { (props.filterText.length !== 0)
+                    && (
+                      <button
+                        type="button"
+                        className="Input__clear Btn Btn--flat"
+                        onClick={() => this._setFilterValue({ target: { value: '' } })}
+                      >
+                       Clear
+                      </button>
+                    )
+                  }
+                <input
+                  type="text"
+                  ref="datasetSearch"
+                  className="Datasets__search margin--0"
+                  placeholder="Filter Datasets by name or description"
+                  defaultValue={props.filterText}
+                  onKeyUp={evt => this._setFilterValue(evt)}
+                  onFocus={() => this.setState({ showSearchCancel: true })}
+                />
+               </div>
             </div>
 
             <FilterByDropdown
@@ -472,51 +505,50 @@ class Datasets extends Component {
               setSortFilter={this._setSortFilter}
             />
           </div>
-          {
-            props.loading
-              ? (
-                <LocalDatasets
-                  loading
-                  showModal={this._showModal}
-                  filterDatasets={this._filterDatasets}
-                  section={this.props.section}
-                  history={this.props.history}
-                />
-              )
-              : this.state.selectedSection === 'local'
-                ? (
-                  <LocalDatasetsContainer
-                    datasetListId={props.datasetList.id}
-                    localDatasets={props.datasetList.datasetList}
-                    showModal={this._showModal}
-                    goToDataset={this._goToDataset}
-                    filterDatasets={this._filterDatasets}
-                    filterState={this.state.filter}
-                    setFilterValue={this._setFilterValue}
-                    changeRefetchState={bool => this.setState({ refetchLoading: bool })}
-                    {...props}
-                  />
-                )
-                : (
-                  <RemoteDatasets
-                    datasetListId={props.datasetList.datasetList.id}
-                    remoteDatasets={props.datasetList.datasetList}
-                    showModal={this._showModal}
-                    goToLabbook={this._goToLabbook}
-                    filterDatasets={this._filterDatasets}
-                    filterState={this.state.filter}
-                    setFilterValue={this._setFilterValue}
-                    forceLocalView={() => {
-                      this.setState({ selectedSection: 'local' });
-                      this.setState({ showLoginPrompt: true });
-                    }}
-                    changeRefetchState={bool => this.setState({ refetchLoading: bool })}
-                    {...props}
-                  />
-                )
+          { (!props.loading) && (state.selectedSection === 'local')
+            && (
+              <LocalDatasetsContainer
+                datasetListId={props.datasetList.id}
+                localDatasets={props.datasetList.datasetList}
+                showModal={this._showModal}
+                goToDataset={this._goToDataset}
+                filterDatasets={this._filterDatasets}
+                filterState={state.filter}
+                setFilterValue={this._setFilterValue}
+                changeRefetchState={bool => this.setState({ refetchLoading: bool })}
+                {...props}
+              />
+            )
+          }
+          { (!props.loading) && (state.selectedSection === 'cloud')
+            && (
+              <RemoteDatasets
+                datasetListId={props.datasetList.datasetList.id}
+                remoteDatasets={props.datasetList.datasetList}
+                showModal={this._showModal}
+                goToLabbook={this._goToLabbook}
+                filterDatasets={this._filterDatasets}
+                filterState={state.filter}
+                setFilterValue={this._setFilterValue}
+                forceLocalView={() => { this._forceLocalView(); }}
+                changeRefetchState={bool => this.setState({ refetchLoading: bool })}
+                {...props}
+              />
+            )
+          }
+          { props.loading
+            && (
+              <LocalDatasets
+                loading
+                showModal={this._showModal}
+                filterDatasets={this._filterDatasets}
+                section={props.section}
+                history={props.history}
+              />
+            )
           }
           {
-            this.state.showLoginPrompt
+            state.showLoginPrompt
             && <LoginPrompt closeModal={this._closeLoginPromptModal} />
           }
         </div>
@@ -542,15 +574,15 @@ class Datasets extends Component {
             </div>
           );
         }
-        this.props.auth.login();
+        props.auth.login();
       });
-    } else {
-      return (<Loader />);
     }
+
+    return (<Loader />);
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
+const mapStateToProps = state => ({
   filterText: state.datasetListing.filterText,
 });
 

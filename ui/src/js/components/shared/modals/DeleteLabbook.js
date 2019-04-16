@@ -189,7 +189,7 @@ export default class DeleteLabbook extends Component {
                 Cancel
               </button>
               <ButtonLoader
-                className="Btn--last"
+                className="Btn Btn--wide Btn--last"
                 buttonState={this.state.deleteLabbookButtonState}
                 buttonText={deleteText}
                 params={{}}

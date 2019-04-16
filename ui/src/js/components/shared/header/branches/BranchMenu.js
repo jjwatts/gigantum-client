@@ -14,7 +14,7 @@ import CreateBranch from 'Components/shared/modals/CreateBranch';
 import ForceSync from 'Components/shared/modals/ForceSync';
 import Branches from 'Components/shared/sidePanel/Branches';
 import VisibilityModal from 'Components/shared/modals/VisibilityModal';
-import PublishDatasetsModal from 'Components/shared/modals/PublishDatasetsModal';
+import PublishDatasetsModal from 'Components/shared/modals/publishDataset/PublishDatasetsModal';
 import LoginPrompt from 'Components/shared/modals/LoginPrompt';
 // utils
 import BranchMutations from '../../utils/BranchMutations';
@@ -29,21 +29,43 @@ import './BranchMenu.scss';
 */
 const extraxtActiveBranch = (branches) => {
   const activeBranch = branches.filter(branch => branch.isActive)[0] || {};
-
-
   const filteredBranches = branches.filter(branch => !branch.isActive);
-
-
-  const branchMenuList = (filteredBranches.length > 3) ? filteredBranches.slice(0, 3) : filteredBranches;
-
-
+  const branchMenuList = (filteredBranches.length > 3)
+    ? filteredBranches.slice(0, 3) : filteredBranches;
   const otherBranchCount = filteredBranches.length - branchMenuList.length;
+
   return ({
     activeBranch,
     filteredBranches,
     branchMenuList,
     otherBranchCount,
   });
+};
+
+
+const getSyncTooltip = (props, data) => {
+  const {
+    hasWriteAccess,
+    syncOrPublish,
+    sectionCollabs,
+    activeBranch,
+  } = data;
+  let syncTooltip = props.isLocked ? `Cannot ${syncOrPublish} while Project is in use` : '';
+  syncTooltip = (activeBranch.branchName !== 'master' && !props.defaultRemote) ? 'Must publish Master branch first' : syncTooltip;
+  syncTooltip = !props.defaultRemote ? 'Publish' : syncTooltip;
+  syncTooltip = props.defaultRemote && !sectionCollabs ? 'Please wait while Project data is being fetched' : syncTooltip;
+  syncTooltip = !hasWriteAccess ? 'Pull' : 'Sync';
+
+  return syncTooltip;
+};
+
+
+const getManagedToolip = (props, data) => {
+  const { state, defaultDatasetMessage } = data;
+  let managedTooltip = props.isLocked ? 'Cannot Manage Branches while Project is in use' : 'Manage Branches';
+  managedTooltip = state.isDataset ? defaultDatasetMessage : 'Manage Branches';
+
+  return managedTooltip;
 };
 
 class BranchMenu extends Component {
@@ -445,12 +467,23 @@ class BranchMenu extends Component {
     const { props, state } = this;
     const { collaborators } = props;
     const sectionCollabs = collaborators && collaborators[props.section.name] || null;
-    const defaultDatasetMessage = 'Datasets does not currently support branching features';
+    const defaultDatasetMessage = 'Datasets currently does not support branching features';
     const isPullOnly = props.defaultRemote && !hasWriteAccess && sectionCollabs;
-    const syncOrPublish = props.defaultRemote ? isPullOnly ? 'Pull' : 'Sync' : 'Publish';
+    let syncOrPublish = props.defaultRemote ? 'Sync' : 'Publish';
+    syncOrPublish = isPullOnly ? 'Pull' : syncOrPublish;
+
+    const data = {
+      defaultDatasetMessage,
+      hasWriteAccess,
+      syncOrPublish,
+      sectionCollabs,
+      activeBranch,
+      state,
+    };
+    // TODO FIX this, nesting ternary operations is bad
     return {
-      syncTooltip: props.isLocked ? `Cannot ${syncOrPublish} while Project is in use` : (activeBranch.branchName !== 'master' && !props.defaultRemote) ? 'Must publish Master branch first' : !props.defaultRemote ? 'Publish' : props.defaultRemote && !sectionCollabs ? 'Please wait while Project data is being fetched' : !hasWriteAccess ? 'Pull' : 'Sync',
-      manageTooltip: props.isLocked ? 'Cannot Manage Branches while Project is in use' : state.isDataset ? defaultDatasetMessage : 'Manage Branches',
+      syncTooltip: getSyncTooltip(props, data),
+      manageTooltip: getManagedToolip(props, data),
       createTooltip: props.isLocked ? 'Cannot Create Branch while Project is in use' : state.isDataset ? defaultDatasetMessage : 'Create Branch',
       resetTooltip: state.isDataset ? defaultDatasetMessage : props.isLocked ? 'Cannot Reset Branch while Project is in use' : !activeBranch.isRemote ? 'Branch must be remote' : activeBranch.commitsAhead === undefined ? 'Please wait while branch data is being fetched' : upToDate ? 'Branch up to date' : 'Reset Branch to Remote',
       switchTooltip: props.isLocked ? 'Cannot switch branches while Project is in use' : state.isDataset ? defaultDatasetMessage : '',
@@ -466,7 +499,6 @@ class BranchMenu extends Component {
    @boundMethod
     _toggleSyncModal() {
       const { state } = this;
-      console.log(state.forceSyncModalVisible);
 
       this.setState({
         forceSyncModalVisible: !state.forceSyncModalVisible,
@@ -476,61 +508,29 @@ class BranchMenu extends Component {
 
    render() {
      const { props, state } = this;
-
-
      const { branches } = props;
-
-
      const branchMenuCSS = classNames({
        BranchMenu: true,
        hidden: props.isSticky,
      });
-
-
      const {
        activeBranch,
        filteredBranches,
        branchMenuList,
        otherBranchCount,
      } = extraxtActiveBranch(branches);
-
-
      const { collaborators } = props;
-
-
      const sectionCollabs = collaborators && collaborators[props.section.name] || null;
-
-
      const waitingOnCollabs = !sectionCollabs;
-
-
-     const hasWriteAccess = this.props.defaultRemote ? this._hasWriteAccess(activeBranch) : true;
-
-
+     const hasWriteAccess = props.defaultRemote ? this._hasWriteAccess(activeBranch) : true;
      const upToDate = activeBranch.commitsAhead === 0 && activeBranch.commitsBehind === 0;
-
-
-     const allowSync = !((activeBranch.branchName !== 'master') && !this.props.defaultRemote) && !props.isLocked && hasWriteAccess;
-
-
-     const allowSyncPull = !((activeBranch.branchName !== 'master') && !this.props.defaultRemote) && !props.isLocked && props.defaultRemote;
-
-
+     const allowSync = !((activeBranch.branchName !== 'master') && !props.defaultRemote) && !props.isLocked && hasWriteAccess;
+     const allowSyncPull = !((activeBranch.branchName !== 'master') && !props.defaultRemote) && !props.isLocked && props.defaultRemote;
      const allowReset = !props.isLocked && !upToDate && activeBranch.isRemote && (activeBranch.commitsAhead !== undefined);
-
-
      const statusText = activeBranch.isRemote ? 'Local & Remote' : 'Local only';
-
-
      const showPullOnly = props.defaultRemote && !hasWriteAccess && !waitingOnCollabs;
-
-
      const disableDropdown = !allowSyncPull || !props.defaultRemote || showPullOnly;
-
-
      const syncButtonDisabled = (showPullOnly && !allowSyncPull) || (!props.defaultRemote && !allowSync) || props.defaultRemote && !allowSync && !showPullOnly;
-
-
      const {
        syncTooltip,
        manageTooltip,
@@ -539,49 +539,35 @@ class BranchMenu extends Component {
        switchTooltip,
        commitTooltip,
      } = this._getTooltipText(activeBranch, hasWriteAccess, upToDate);
-
-
      const syncButtonText = props.defaultRemote ? showPullOnly ? 'Pull' : 'Sync' : 'Publish';
 
-
+     // declare css here
      const switchDropdownCSS = classNames({
        'BranchMenu__dropdown-menu': true,
        hidden: !state.switchMenuVisible,
      });
-
-
      const drodownButtonCSS = classNames({
        'BranchMenu__dropdown-btn': true,
        'BranchMenu__dropdown-btn--disabled': props.isLocked || state.isDataset,
        'BranchMenu__dropdown-btn--open': state.switchMenuVisible,
        'Tooltip-data Tooltip-data': props.isLocked || state.isDataset,
      });
-
-
      const branchNameCSS = classNames({
        'BranchMenu__branch-name': !state.switchingBranch,
        hidden: state.switchingBranch,
      });
-
-
      const branchSwitchingNameCSS = classNames({
        'BranchMenu__branch-name BranchMenu__branch-name--switching': state.switchingBranch,
        hidden: !state.switchingBranch,
      });
-
-
      const syncMenuDropdownCSS = classNames({
        'BranchMenu__dropdown-menu': state.syncMenuVisible && !disableDropdown,
        hidden: !state.syncMenuVisible,
      });
-
-
      const syncMenuDropdownButtonCSS = classNames({
        'Btn--branch Btn--action Btn--branch--sync-dropdown': true,
        'Btn--branch--sync-open': state.syncMenuVisible,
      });
-
-
      const syncCSS = classNames({
        'Btn--branch Btn--action Btn--branch--sync': true,
        'Btn--branch--sync--publish': !props.defaultRemote,
@@ -589,29 +575,21 @@ class BranchMenu extends Component {
        'Btn--branch--sync--upToDate': props.defaultRemote && (upToDate || (activeBranch.commitsAhead === undefined)) && !showPullOnly,
        'Tooltip-data': !state.commitsHovered,
      });
-
-
      const manageCSS = classNames({
        'Btn--branch Btn--action Btn--branch--manage': true,
        'Tooltip-data': true,
      });
-
-
      const resetCSS = classNames({
        'Btn--branch Btn--action Btn--branch--reset': true,
        'Tooltip-data': true,
      });
-
-
      const createCSS = classNames({
        'Btn--branch Btn--action Btn--branch--create': true,
        'Tooltip-data': true,
      });
-
-
      const popupCSS = classNames({
        BranchMenu__popup: true,
-       hidden: !this.state.popupVisible,
+       hidden: !state.popupVisible,
      });
 
      return (
@@ -637,168 +615,160 @@ class BranchMenu extends Component {
                className="BranchMenu__status Tooltip-data Tooltip-data--small"
                data-tooltip={statusText}
              >
-               {
-                      activeBranch.isLocal
-                        ? <div className="BranchMenu__status--local" />
-                        : <div />
-                    }
-               {
-                      activeBranch.isRemote
-                        ? <div className="BranchMenu__status--remote" />
-                        : <div />
-                    }
+               { activeBranch.isLocal
+                 ? <div className="BranchMenu__status--local" />
+                 : <div />
+               }
+               { activeBranch.isRemote
+                 ? <div className="BranchMenu__status--remote" />
+                 : <div />
+               }
              </div>
            </div>
            <div className={switchDropdownCSS}>
              <h5 className="BranchMenu__h5">Quick Switch</h5>
              <ul className="BranchMenu__ul">
-               {
-                      branchMenuList.map((branch) => {
-                        const cloudIconCSS = classNames({
-                          BranchMenu__icon: true,
-                          'BranchMenu__icon--cloud': branch.isRemote,
-                          'BranchMenu__icon--empty': !branch.isRemote,
-                        });
+               { branchMenuList.map((branch) => {
+                 const cloudIconCSS = classNames({
+                   BranchMenu__icon: true,
+                   'BranchMenu__icon--cloud': branch.isRemote,
+                   'BranchMenu__icon--empty': !branch.isRemote,
+                 });
+                 const localIconCSS = classNames({
+                   BranchMenu__icon: true,
+                   'BranchMenu__icon--local': branch.isLocal,
+                   'BranchMenu__icon--empty': !branch.isLocal,
+                 });
 
+                 return (
+                   <li
+                     onClick={() => this._switchBranch(branch)}
+                     key={branch.branchName}
+                     className="BranchMenu__list-item"
+                   >
+                     <div className="BranchMenu__text">{branch.branchName}</div>
+                     <div className="BranchMenu__icons">
+                       <div className={cloudIconCSS} />
+                       <div className={localIconCSS} />
+                     </div>
+                   </li>
+                 );
+               })
+               }
 
-                        const localIconCSS = classNames({
-                          BranchMenu__icon: true,
-                          'BranchMenu__icon--local': branch.isLocal,
-                          'BranchMenu__icon--empty': !branch.isLocal,
-                        });
-
-                        return (
-                          <li
-                            onClick={() => this._switchBranch(branch)}
-                            key={branch.branchName}
-                            className="BranchMenu__list-item"
-                          >
-                            <div className="BranchMenu__text">{branch.branchName}</div>
-                            <div className="BranchMenu__icons">
-                              <div className={cloudIconCSS} />
-                              <div className={localIconCSS} />
-                            </div>
-                          </li>
-                        );
-                      })
-                    }
-
-               {
-                      (otherBranchCount > 0)
-                      && <div className="BranchMenu__other-text">{`+${otherBranchCount} others` }</div>
-                    }
+               { (otherBranchCount > 0)
+                 && <div className="BranchMenu__other-text">{`+${otherBranchCount} others` }</div>
+               }
 
                { (filteredBranches.length === 0)
-                      && (
-                      <li
-                        className="BranchMenu__list-item BranchMenu__list-item--create"
-                        onClick={() => this._setModalState('createBranchVisible')}
+                  && (
+                    <li
+                      className="BranchMenu__list-item BranchMenu__list-item--create"
+                      onClick={() => this._setModalState('createBranchVisible')}
                       >
-                        No other branches.
-                        <button
-                          className="Btn--flat"
-                        >
-                          Create a new branch?
-                        </button>
-                      </li>
-                      )
-                    }
+                      No other branches.
+                      <button
+                        type="button"
+                        className="Btn--flat"
+                      >
+                      Create a new branch?
+                      </button>
+                    </li>
+                  )
+                }
              </ul>
              <div className="BranchMenu__menu-button">
                <button
+                 type="button"
                  onClick={() => this._toggleSidePanel(true)}
                  className="BranchMenu__button Btn--flat"
                >
-                        Manage Branches
+                 Manage Branches
                </button>
              </div>
            </div>
          </div>
-         {
-          !this.state.action
-            ? (
-              <div className="BranchMenu__buttons">
-                <button
-                  onClick={() => this._toggleSidePanel(true)}
-                  className={manageCSS}
-                  disabled={props.isLocked || state.isDataset}
-                  data-tooltip={manageTooltip}
-                  type="Submit"
-                />
-                <button
-                  className={createCSS}
-                  type="Submit"
-                  disabled={props.isLocked || state.isDataset}
-                  data-tooltip={createTooltip}
-                  onClick={() => this._setModalState('createBranchVisible')}
-                />
-                <div className="BranchMenu__reset-container">
-                  <button
-                    className={resetCSS}
-                    type="Submit"
-                    disabled={!allowReset || state.isDataset}
-                    data-tooltip={resetTooltip}
-                    onClick={() => this._toggleResetPopup(!allowReset || state.isDataset)}
-                  />
-                  <div className={popupCSS}>
-                    <p>You are about to reset this branch. Resetting a branch will get rid of local changes. Click 'Confirm' to proceed.</p>
-                    <div className="flex justify--space-around">
-                      <button
-                        className="Btn--flat"
-                        onClick={(evt) => { this._toggleResetPopup(); }}
-                      >
+         { !state.action
+           ? (
+             <div className="BranchMenu__buttons">
+               <button
+                 onClick={() => this._toggleSidePanel(true)}
+                 className={manageCSS}
+                 disabled={props.isLocked || state.isDataset}
+                 data-tooltip={manageTooltip}
+                 type="button"
+               />
+               <button
+                 className={createCSS}
+                 type="button"
+                 disabled={props.isLocked || state.isDataset}
+                 data-tooltip={createTooltip}
+                 onClick={() => this._setModalState('createBranchVisible')}
+               />
+               <div className="BranchMenu__reset-container">
+                 <button
+                   className={resetCSS}
+                   type="button"
+                   disabled={!allowReset || state.isDataset}
+                   data-tooltip={resetTooltip}
+                   onClick={() => this._toggleResetPopup(!allowReset || state.isDataset)}
+                 />
+                 <div className={popupCSS}>
+                   <p>You are about to reset this branch. Resetting a branch will get rid of local changes. Click 'Confirm' to proceed.</p>
+                   <div className="flex justify--space-around">
+                     <button
+                       type="button"
+                       className="Btn--flat"
+                       onClick={() => { this._toggleResetPopup(); }}
+                     >
                       Cancel
-                      </button>
-                      <button
-                        className="BranchMenu__reset-confirm"
-                        onClick={() => this._resetBranch()}
-                      >
-                    Confirm
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="BranchMenu__sync-container">
-                  <button
-                    className={syncCSS}
-                    onClick={() => { this._handleSyncButton(showPullOnly, allowSync, allowSyncPull); }}
-                    disabled={syncButtonDisabled}
-                    data-tooltip={syncTooltip}
-                    type="Submit"
-                  >
-                    {
-                  !upToDate && allowSync && (activeBranch.commitsAhead !== undefined)
-                  && (
-                  <div
-                    className="BranchMenu__sync-status Tooltip-data Tooltip-data--small"
-                    data-tooltip={commitTooltip}
-                    onMouseEnter={() => this._hovercommits(true)}
-                    onMouseLeave={() => this._hovercommits(false)}
-                  >
-                    {
-                      (activeBranch.commitsBehind !== 0)
-                      && <div className="BranchMenu__sync-status--commits-behind">{ activeBranch.commitsBehind }</div>
-                    }
-                    {
-                      activeBranch.commitsAhead !== 0
-                      && <div className="BranchMenu__sync-status--commits-ahead">{ activeBranch.commitsAhead }</div>
-                    }
-                  </div>
-                  )
-                }
+                     </button>
+                     <button
+                      type="button"
+                       className="BranchMenu__reset-confirm"
+                       onClick={() => this._resetBranch()}
+                     >
+                     Confirm
+                     </button>
+                   </div>
+                 </div>
+               </div>
+               <div className="BranchMenu__sync-container">
+                 <button
+                   className={syncCSS}
+                   onClick={() => { this._handleSyncButton(showPullOnly, allowSync, allowSyncPull); }}
+                   disabled={syncButtonDisabled}
+                   data-tooltip={syncTooltip}
+                   type="button"
+                 >
+                   { !upToDate && allowSync && (activeBranch.commitsAhead !== undefined)
+                    && (
                     <div
-                      className="Btn--branch--text"
+                      className="BranchMenu__sync-status Tooltip-data Tooltip-data--small"
+                      data-tooltip={commitTooltip}
+                      onMouseEnter={() => this._hovercommits(true)}
+                      onMouseLeave={() => this._hovercommits(false)}
                     >
-                      {syncButtonText}
+                      {
+                        (activeBranch.commitsBehind !== 0)
+                        && <div className="BranchMenu__sync-status--commits-behind">{ activeBranch.commitsBehind }</div>
+                      }
+                      {
+                        activeBranch.commitsAhead !== 0
+                        && <div className="BranchMenu__sync-status--commits-ahead">{ activeBranch.commitsAhead }</div>
+                      }
                     </div>
-                  </button>
+                    )
+                  }
+                  <div className="Btn--branch--text">{syncButtonText}</div>
+               </button>
 
-                  <button
-                    className={syncMenuDropdownButtonCSS}
-                    disabled={disableDropdown}
-                    onClick={() => { this._toggleSyncDropdown(); }}
-                    type="Submit"
-                  />
+               <button
+                 className={syncMenuDropdownButtonCSS}
+                 disabled={disableDropdown}
+                 onClick={() => { this._toggleSyncDropdown(); }}
+                 type="Submit"
+               />
 
                   <div className={syncMenuDropdownCSS}>
                     <h5 className="BranchMenu__h5">Remote Action</h5>
@@ -814,20 +784,20 @@ class BranchMenu extends Component {
                     </li>
                     )
                   }
-                      <li
-                        className="BranchMenu__list-item"
-                        onClick={() => this._handleSyncButton(true, allowSync, allowSyncPull)}
-                      >
-                      Pull (Pull-only)
-                      </li>
-                    </ul>
-                  </div>
-
-                </div>
+                  <li
+                    className="BranchMenu__list-item"
+                    onClick={() => this._handleSyncButton(true, allowSync, allowSyncPull)}
+                  >
+                    Pull (Pull-only)
+                  </li>
+                </ul>
               </div>
-            )
-            : <div className="BranchMenu__action">{state.action}</div>
-          }
+
+            </div>
+          </div>
+          )
+          : <div className="BranchMenu__action">{state.action}</div>
+         }
 
          <CreateBranch
            modalVisible={state.createBranchVisible}

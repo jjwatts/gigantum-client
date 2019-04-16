@@ -16,52 +16,23 @@
 
 .VisibilityModal__private{
   align-items: center;
+  padding: 0 0 0 70px;
+  background: url(~Images/icons/lock.svg) no-repeat 30px center;
+  background-size: 20px;
 
   @include flex(space-between, row);
-  label{
-    min-width: 110px;
-    padding-left: 60px;
-    height: 36px;
-    line-height: 39px;
-    
-    cursor: pointer;
-    text-align: left;
-
-    color: $slateBlue;
-    background: url(~Images/icons/lock.svg) no-repeat 30px center;
-    background-size: 20px;
-  }
-  input{
-    cursor: pointer;
-  }
 }
 
 .VisibilityModal__public{
   align-items: center;
-
+  padding: 0 0 0 70px;
+  background: url(~Images/icons/earth.svg) no-repeat 30px center;
+  background-size: 20px;
   @include flex(space-between, row);
-  label{
-    min-width: 110px;
-    padding-left: 60px;
-    height: 36px;
-    line-height: 39px;
-
-    cursor: pointer;
-    text-align: left;
-
-    color: $slateBlue;
-    background: url(~Images/icons/earth.svg) no-repeat 30px center;
-    background-size: 20px;
-  }
-  input{
-    cursor: pointer;
-  }
 }
 
 .VisibilityModal__paragraph{
   min-width: 640px;
   max-width: 640px;
   padding: 0 0 0 80px;
-
-  color: $romanSilver;
 }

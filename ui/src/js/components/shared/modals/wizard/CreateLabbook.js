@@ -47,7 +47,6 @@ export default class CreateLabbook extends React.Component {
       this.props.createLabbookCallback(name, description);
     }
   }
-
   /**
   *  @param {}
   *  closes login prompt modal
@@ -117,8 +116,8 @@ export default class CreateLabbook extends React.Component {
     return (
       <div className="CreateLabbook">
         {
-          this.state.showLoginPrompt
-          && <LoginPrompt closeModal={this._closeLoginPromptModal} />
+          this.state.showLoginPrompt &&
+          <LoginPrompt closeModal={this._closeLoginPromptModal} />
         }
         <div>
           <div className="CreateLabbook__name">

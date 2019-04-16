@@ -1,8 +1,7 @@
 @import '~Styles/_imports.scss';
 
 
-.RemoteDatasets__row{
-
+.RemoteDatasets__row {
 
   &--icon {
     height: 68px;
@@ -25,8 +24,7 @@
   }
 }
 
-.RemoteDatasets__paragraph{
-  color: $romanSilver;
+.RemoteDatasets__paragraph {
 
   font-size: 14px;
 
@@ -58,7 +56,7 @@
   }
 }
 
-.RemoteDatasets__private{
+.RemoteDatasets__private {
   align-self: flex-end;
 
   width: 24px;
@@ -70,7 +68,7 @@
 
 }
 
-.RemoteDatasets__public{
+.RemoteDatasets__public {
   align-self: flex-end;
 
   width: 24px;
@@ -93,153 +91,7 @@
 /*****************************
   RemoteDatasets cloud
 ******************************/
-.RemoteDatasets__icon{
-  width: 20px;
-  height: 20px;
-  margin-left: 5px;
-  padding: 0;
 
-  border: none;
-}
-
-.RemoteDatasets__icon--cloud-download{
-  background: url('~Images/icons/download.svg') no-repeat 7px center;
-  background-size: 20px;
-  color: $romanSilver;
-  width: 125px;
-  height: 26px;
-  border-radius: 0;
-  padding: 2px 0 2px 21px;
-  border: 1px solid $romanSilver;
-
-  &:hover,
-   :focus{
-    background: url('~Images/icons/download-azure.svg') no-repeat 7px center;
-    background-size: 20px;
-    width: 125px;
-    height: 26px;
-    border-radius: 0;
-    padding: 2px 0 2px 21px;
-    border: 1px solid $azure;
-    color: $azure;
-  }
-
-  &:disabled{
-    background: $background-color url('~Images/icons/download.svg') no-repeat 7px center;
-    background-size: 20px;
-    width: 125px;
-    height: 26px;
-    border-radius: 0;
-    padding: 2px 0 2px 21px;
-    border: 1px solid $romanSilver;
-    color: $romanSilver;
-  }
-}
-
-.RemoteDatasets__icon--cloud{
-  background: url('~Images/icons/download-check.svg') no-repeat 7px center;
-  background-size: 20px;
-  color: $romanSilver;
-  height: 26px;
-  width: 125px;
-  border-radius: 0;
-  padding: 2px 0 2px 21px;
-  border: 1px solid $romanSilver;
-
-  &:hover,
-   :focus {
-    background: $background-color url('~Images/icons/download-check.svg') no-repeat 7px center;
-    background-size: 20px;
-    height: 26px;
-    width: 125px;
-    border-radius: 0;
-    padding: 2px 0 2px 21px;
-    border: 1px solid $romanSilver;
-  }
-
-  &:disabled{
-    background: $background-color url('~Images/icons/download-check.svg') no-repeat 7px center;
-    background-size: 20px;
-    height: 26px;
-    width: 125px;
-    border-radius: 0;
-    padding: 2px 0 2px 21px;
-    border: 1px solid $romanSilver;
-  }
-  &:hover:after{
-    content: attr(data-tooltip);
-    position: absolute;
-    min-width: 100px;
-    font-weight: 100;
-    line-height: 1.3em;
-    font-size: 16px;
-    margin: 0;
-    background: $azure;
-    color: $white;
-    padding: 5px;
-    border-radius: 5px;
-    left: 30px;
-    top: 50px;
-    z-index: 1;
-    font-size: .7em;
-  }
-}
-
-.RemoteDatasets__icon--delete{
-  background: url('~Images/icons/trash.svg') no-repeat 7px center;
-  background-size: 20px;
-  color: $romanSilver;
-  height: 26px;
-  width: 125px;
-  border-radius: 0;
-  padding: 2px 0 2px 21px;
-  border: 1px solid $romanSilver;
-
-  &:hover,
-   :focus {
-    background: url('~Images/icons/trash-azure.svg') no-repeat 7px center;
-    background-size: 20px;
-    height: 26px;
-    width: 125px;
-    border-radius: 0;
-    padding: 2px 0 2px 21px;
-    border: 1px solid $azure;
-    color: $azure;
-  }
-}
-
-.RemoteDatasets__icon--delete-disabled,
-.RemoteDatasets__icon--delete-disabled:hover,
-.RemoteDatasets__icon--delete-disabled:focus,
-.RemoteDatasets__icon--delete-disabled:disabled{
-  cursor: auto;
-  background: $background-color url('~Images/icons/trash.svg') no-repeat 7px center;
-  background-size: 20px;
-  height: 26px;
-  width: 125px;
-  border-radius: 0;
-  padding: 2px 0 2px 21px;
-  border: 1px solid $romanSilver;
-
-  &:hover:after{
-    content: attr(data-tooltip);
-    position: absolute;
-    min-width: 100px;
-    font-weight: 100;
-    line-height: 1.3em;
-    font-size: 16px;
-    margin: 0;
-    background: $azure;
-    color: $white;
-    padding: 5px;
-    border-radius: 5px;
-    left: 30px;
-    top: 50px;
-    z-index: 1;
-    font-size: .7em;
-  }
-}
-
-.RemoteDatasets__description--blank{
+.RemoteDatasets__description--blank {
   font-style: italic;
 }

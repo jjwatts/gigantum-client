@@ -17,3 +17,134 @@
   background: $slateBlueOpaque;
   z-index: index($elements, modalCover);
 }
+
+
+
+
+/*****************************
+  Button cloud
+******************************/
+.Button__icon{
+  width: 20px;
+  height: 20px;
+  margin-left: 5px;
+  padding: 0;
+
+  color: $azure !important;
+
+  border: 1px solid $azure;
+}
+
+.Button__icon--cloud-download{
+  background: url('~Images/icons/download-azure.svg') no-repeat 7px center;
+  background-size: 20px;
+  color: $azure;
+  width: 125px;
+  height: 26px;
+  border-radius: 0;
+  padding: 2px 0 2px 21px;
+  border: 1px solid $azure;
+
+  &:hover,
+  &:focus{
+    background: url('~Images/icons/download-azure.svg') no-repeat 7px center;
+    background-size: 20px;
+    width: 125px;
+    height: 26px;
+    border-radius: 0;
+    padding: 2px 0 2px 21px;
+    border: 1px solid $azure;
+    color: $azure;
+  }
+
+  &:disabled,
+  &:disabled:hover {
+    background: $background-color url('~Images/icons/download.svg') no-repeat 7px center;
+    background-color: $background-color !important;
+    background-size: 20px;
+    width: 125px;
+    height: 26px;
+    border-radius: 0;
+    padding: 2px 0 2px 21px;
+    border: 1px solid $romanSilver !important;
+    color: $romanSilver !important;
+  }
+}
+
+.Button__icon--cloud {
+  background: url('~Images/icons/download-check.svg') no-repeat 7px center;
+  background-size: 20px;
+  color: $romanSilver;
+  height: 26px;
+  width: 125px;
+  border-radius: 0;
+  padding: 2px 0 2px 21px;
+  border: 1px solid $azure;
+  color:  $azure;
+
+  &:hover,
+  &:focus {
+    background: $background-color url('~Images/icons/download-check.svg') no-repeat 7px center;
+    background-size: 20px;
+    height: 26px;
+    width: 125px;
+    border-radius: 0;
+    padding: 2px 0 2px 21px;
+    border: 1px solid $azure;
+  }
+
+  &:disabled,
+  &:disabled:hover {
+    background: $background-color url('~Images/icons/download-check.svg') no-repeat 7px center;
+    background-color: $background-color !important;
+    background-size: 20px;
+    height: 26px;
+    width: 125px;
+    border-radius: 0;
+    padding: 2px 0 2px 21px;
+    color: $romanSilver !important;
+    border: 1px solid $romanSilver !important;
+  }
+}
+
+.Button__icon--delete{
+  background: url('~Images/icons/trash-azure.svg') no-repeat 7px center;
+  background-size: 20px;
+  color: $romanSilver;
+  height: 26px;
+  width: 125px;
+  border-radius: 0;
+  padding: 2px 0 2px 21px;
+  border: 1px solid $azure;
+
+  &:hover,
+  &:focus {
+    background: url('~Images/icons/trash-azure.svg') no-repeat 7px center;
+    background-size: 20px;
+    height: 26px;
+    width: 125px;
+    border-radius: 0;
+    padding: 2px 0 2px 21px;
+    border: 1px solid $azure;
+    color: $azure;
+  }
+}
+
+.Button__icon--delete-disabled:disabled,
+.Button__icon--delete-disabled:disabled:hover{
+  cursor: auto;
+  background: $background-color url('~Images/icons/trash.svg') no-repeat 7px center;
+  background-color: $background-color !important;
+  background-size: 20px;
+  height: 26px;
+  width: 125px;
+  border-radius: 0;
+  padding: 2px 0 2px 21px;
+  color: $romanSilver !important;
+  border: 1px solid $romanSilver !important;
+
+}
+
+.RemoteDatasets__description--blank{
+  font-style: italic;
+}

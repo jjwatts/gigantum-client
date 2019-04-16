@@ -29,8 +29,10 @@ class Helper extends Component {
     * subscribe to store to update state
   */
   componentDidMount() {
+    const { props } = this;
     window.addEventListener('resize', this._resize);
-    this.props.auth.isAuthenticated().then((response) => {
+
+    props.auth.isAuthenticated().then((response) => {
       const guideShown = localStorage.getItem('guideShown');
       if (!guideShown && response) {
         this.setState({ showPopup: true });
@@ -46,7 +48,8 @@ class Helper extends Component {
     * update store
   */
   _toggleIsVisible() {
-    this.props.setHelperVisibility(!this.props.isVisible);
+    const { props } = this;
+    props.setHelperVisibility(!props.isVisible);
   }
 
   /**
@@ -54,8 +57,9 @@ class Helper extends Component {
     * toggles menu view
   */
   _toggleMenuView() {
-    setHelperVisible(!this.state.helperMenuOpen);
-    this.setState({ helperMenuOpen: !this.state.helperMenuOpen });
+    const { state } = this;
+    setHelperVisible(!state.helperMenuOpen);
+    this.setState({ helperMenuOpen: !state.helperMenuOpen });
   }
 
   /**
@@ -63,28 +67,28 @@ class Helper extends Component {
     * update store to risize component
   */
   _resize() {
-    this.props.setResizeHelper();
+    const { props } = this;
+    props.setResizeHelper();
   }
 
   render() {
-    const bodyWidth = document.body.clientWidth;
+    const { props, state } = this;
 
     const menuCSS = classNames({
-      Helper__menu: this.state.helperMenuOpen,
-      hidden: !this.state.helperMenuOpen,
-      'Helper__men--footer-open': this.props.footerVisible,
+      Helper__menu: state.helperMenuOpen,
+      hidden: !state.helperMenuOpen,
+      'Helper__men--footer-open': props.footerVisible,
     });
 
     const helperButtonCSS = classNames({
       Helper__button: true,
-      'Helper__button--open': this.state.helperMenuOpen,
-      'Helper__button--bottom': this.props.uploadOpen && !this.state.helperMenuOpen,
+      'Helper__button--open': state.helperMenuOpen,
+      'Helper__button--bottom': props.uploadOpen && !state.helperMenuOpen,
     });
 
     return (
       <div className="Helper">
-        {
-        this.state.showPopup
+        { state.showPopup
         && (
         <Fragment>
           <div className="Helper__prompt">
@@ -94,6 +98,7 @@ class Helper extends Component {
 
             <div>
               <button
+                type="button"
                 className="button--green"
                 onClick={() => this.setState({ showPopup: false })}
               >
@@ -116,9 +121,7 @@ class Helper extends Component {
             onClick={() => window.open('https://feedback.gigantum.com')}
           >
             <h5>Feedback</h5>
-            <div
-              className="Helper__feedback-button"
-            />
+            <div className="Helper__feedback-button"/>
           </div>
           <div
             className="Helper__menu-discussion"
@@ -158,7 +161,7 @@ class Helper extends Component {
 }
 
 
-const mapStateToProps = (state, ownProps) => ({
+const mapStateToProps = state => ({
   resize: state.helper.resize,
   isVisible: state.helper.isVisible,
   footerVisible: state.helper.footerVisible,

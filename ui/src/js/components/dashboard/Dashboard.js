@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { graphql, QueryRenderer } from 'react-relay';
 import queryString from 'querystring';
+import { boundMethod } from 'autobind-decorator'
 // redux
 import { setCallbackRoute } from 'JS/redux/actions/routes';
 // components
@@ -33,15 +34,18 @@ export default class DashboardContainer extends Component {
   constructor(props) {
     super(props);
 
-    const { orderBy, sort } = queryString.parse(this.props.history.location.search.slice(1));
+    const { orderBy, sort } = queryString.parse(props.history.location.search.slice(1));
 
     this.state = {
       selectedComponent: props.match.path,
       orderBy: orderBy || 'modified_on',
       sort: sort || 'desc',
     };
+  }
+
+  componentDidMount() {
+    const { props } = this;
     setCallbackRoute(props.history.location.pathname);
-    this._refetchSort = this._refetchSort.bind(this);
   }
 
   /**
@@ -59,8 +63,10 @@ export default class DashboardContainer extends Component {
     * @param {string, string} orderBy, sort
     * sets state of orderBy and sort, passed to child components
   */
+  @boundMethod
   _refetchSort(orderBy, sort) {
-    if (this.state.orderBy !== orderBy || this.state.sort !== sort) {
+    const { state } = this;
+    if (state.orderBy !== orderBy || state.sort !== sort) {
       this.setState({ orderBy, sort });
     }
   }
@@ -72,7 +78,7 @@ export default class DashboardContainer extends Component {
   *  @return {jsx}
   */
   _displaySelectedComponent() {
-    const { state, props } = this;
+    const { props, state } = this;
     const paths = props.history.location.pathname.split('/');
     const sectionRoute = paths.length > 2 ? paths[2] : 'local';
 
@@ -101,17 +107,17 @@ export default class DashboardContainer extends Component {
           sort: state.sort,
         }}
         render={(response) => {
-          const { error } = response;
-          const renderProps = response.props;
+          const { error } = this;
+          const queryProps = response.props;
           if (error) {
             console.log(error);
-          } else if (renderProps) {
+          } else if (queryProps) {
             if (state.selectedComponent === '/datasets/:labbookSection') {
               if (sectionRoute === 'cloud') {
                 return (
                   <RemoteDatasetsContainer
                     auth={props.auth}
-                    datasetList={renderProps}
+                    datasetList={queryProps}
                     history={props.history}
                     section={sectionRoute}
                     refetchSort={this._refetchSort}
@@ -122,7 +128,7 @@ export default class DashboardContainer extends Component {
               return (
                 <LocalDatasetsContainer
                   auth={props.auth}
-                  datasetList={renderProps}
+                  datasetList={queryProps}
                   history={props.history}
                   section={sectionRoute}
                   refetchSort={this._refetchSort}
@@ -134,7 +140,7 @@ export default class DashboardContainer extends Component {
               return (
                 <RemoteLabbooksContainer
                   auth={props.auth}
-                  labbookList={renderProps}
+                  labbookList={queryProps}
                   history={props.history}
                   refetchSort={this._refetchSort}
                   diskLow={props.diskLow}
@@ -145,7 +151,7 @@ export default class DashboardContainer extends Component {
             return (
               <LocalLabbooksContainer
                 auth={props.auth}
-                labbookList={renderProps}
+                labbookList={queryProps}
                 history={props.history}
                 refetchSort={this._refetchSort}
                 diskLow={props.diskLow}
@@ -156,7 +162,7 @@ export default class DashboardContainer extends Component {
               return (
                 <LocalDatasetsContainer
                   auth={props.auth}
-                  datasetList={renderProps}
+                  datasetList={queryProps}
                   history={props.history}
                   section={sectionRoute}
                   refetchSort={this._refetchSort}
@@ -169,7 +175,7 @@ export default class DashboardContainer extends Component {
             return (
               <LocalLabbooksContainer
                 auth={props.auth}
-                labbookList={renderProps}
+                labbookList={queryProps}
                 history={props.history}
                 section={sectionRoute}
                 refetchSort={this._refetchSort}

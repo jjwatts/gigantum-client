@@ -68,8 +68,8 @@ const Navigation = (props) => {
 
 Navigation.propTypes = {
   sectionType: PropTypes.string.isRequired,
-  match: PropTypes.isRequired,
-  location: PropTypes.isRequired,
+  match: PropTypes.object.isRequired,
+  location: PropTypes.object.isRequired,
   owner: PropTypes.string.isRequired,
 };
 

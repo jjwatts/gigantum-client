@@ -4,10 +4,12 @@ import {
   createPaginationContainer,
   graphql,
 } from 'react-relay';
+import { boundMethod } from 'autobind-decorator';
 // components
 import LocalLabbookPanel from 'Components/dashboard/labbooks/localLabbooks/LocalLabbookPanel';
-import CardLoader from 'Components/dashboard/loaders/CardLoader';
-import ImportModule from 'Components/dashboard/import/ImportModule';
+import CardLoader from 'Components/dashboard/shared/loaders/CardLoader';
+import ImportModule from 'Components/dashboard/shared/import/ImportModule';
+import NoResults from 'Components/dashboard/shared/NoResults';
 // helpers
 import ContainerLookup from './lookups/ContainerLookup';
 import VisibilityLookup from './lookups/VisibilityLookup';
@@ -16,37 +18,29 @@ import './LocalLabbooks.scss';
 
 
 export class LocalLabbooks extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isPaginating: false,
-      containerList: new Map(),
-      visibilityList: new Map(),
-    };
-
-    this._captureScroll = this._captureScroll.bind(this);
-    this._loadMore = this._loadMore.bind(this);
-    this._containerLookup = this._containerLookup.bind(this);
-    this._visibilityLookup = this._visibilityLookup.bind(this);
-    this._fetchDemo = this._fetchDemo.bind(this);
-  }
+  state = {
+    isPaginating: false,
+    containerList: new Map(),
+    visibilityList: new Map(),
+  };
 
   /** *
   * @param {}
   * adds event listener for pagination and fetches container status
   */
   componentDidMount() {
+    const { props } = this;
     this.mounted = true;
-    if (!this.props.loading) {
+    if (!props.loading) {
       window.addEventListener('scroll', this._captureScroll);
 
       this._containerLookup();
       this._visibilityLookup();
 
-      if (this.props.labbookList
-         && this.props.localLabbooks.localLabbooks
-         && this.props.localLabbooks.localLabbooks.edges
-         && this.props.localLabbooks.localLabbooks.edges.length === 0) {
+      if (props.labbookList
+         && props.localLabbooks.localLabbooks
+         && props.localLabbooks.localLabbooks.edges
+         && props.localLabbooks.localLabbooks.edges.length === 0) {
         this._fetchDemo();
       }
     }
@@ -63,17 +57,94 @@ export class LocalLabbooks extends Component {
     window.removeEventListener('scroll', this._captureScroll);
   }
 
+  /**
+    *  @param {}
+    *  loads more labbooks using the relay pagination container
+  */
+  @boundMethod
+  _loadMore() {
+    const { props } = this;
+    this.setState({
+      isPaginating: true,
+    });
+
+    if (props.localLabbooks.localLabbooks.pageInfo.hasNextPage) {
+      props.relay.loadMore(
+        10, // Fetch the next 10 items
+        () => {
+          this.setState({
+            isPaginating: false,
+          });
+
+          this._visibilityLookup();
+        },
+      );
+    }
+  }
+
+  /**
+    *  @param {}
+    *  fires when user scrolls
+    *  if nextPage exists and user is scrolled down, it will cause loadmore to fire
+  */
+  @boundMethod
+  _captureScroll() {
+    const { props, state } = this;
+    const root = document.getElementById('root');
+    const distanceY = window.innerHeight + document.documentElement.scrollTop + 200;
+    const expandOn = root.offsetHeight;
+
+    if (props.localLabbooks.localLabbooks) {
+      if ((distanceY > expandOn) && !state.isPaginating
+        && props.localLabbooks.localLabbooks.pageInfo.hasNextPage) {
+        this._loadMore();
+      }
+    }
+  }
+
+  /** *
+  * @param {}
+  * calls ContainerLookup query and attaches the returned data to the state
+  */
+  @boundMethod
+  _containerLookup() {
+    const { props, state } = this;
+    const self = this;
+
+    const idArr = props.localLabbooks.localLabbooks.edges.map(edges => edges.node.id);
+
+    ContainerLookup.query(idArr).then((res) => {
+      if (res && res.data
+        && res.data.labbookList
+        && res.data.labbookList.localById) {
+        const containerListCopy = new Map(state.containerList);
+
+        res.data.labbookList.localById.forEach((node) => {
+          containerListCopy.set(node.id, node);
+        });
+        if (self.mounted) {
+          self.setState({ containerList: containerListCopy });
+          this.containerLookup = setTimeout(() => {
+            self._containerLookup();
+          }, 10000);
+        }
+      }
+    });
+  }
+
   /** *
     * @param {integer} count
     * attempts to fetch a demo if no labbooks are present, 3 times
   */
+  @boundMethod
   _fetchDemo(count = 0) {
+    const { props } = this;
     if (count < 3) {
       const self = this;
-      const relay = this.props.relay;
+      const { relay } = props;
       setTimeout(() => {
         relay.refetchConnection(20, (response, error) => {
-          if (self.props.localLabbooks.localLabbooks.edges.length > 0) {
+          if (props.localLabbooks.localLabbooks.edges.length > 0) {
             self._containerLookup();
             self._visibilityLookup();
           } else {
@@ -88,14 +159,14 @@ export class LocalLabbooks extends Component {
   * @param {}
   * calls VisibilityLookup query and attaches the returned data to the state
   */
+  @boundMethod
   _visibilityLookup() {
+    const { props } = this;
     const self = this;
+    const idArr = props.localLabbooks.localLabbooks.edges.map(edges => edges.node.id);
+    let index = 0;
 
-    const idArr = this.props.localLabbooks.localLabbooks.edges.map(edges => edges.node.id);
-
-    const index = 0;
-
-    function query(ids, index) {
+    function query(ids) {
       const subsetIds = idArr.slice(index, index + 10);
 
       VisibilityLookup.query(subsetIds).then((res) => {
@@ -124,147 +195,58 @@ export class LocalLabbooks extends Component {
     query(idArr, index);
   }
 
-
-  /** *
-  * @param {}
-  * calls ContainerLookup query and attaches the returned data to the state
-  */
-  _containerLookup() {
-    const self = this;
-
-    const idArr = this.props.localLabbooks.localLabbooks.edges.map(edges => edges.node.id);
-
-    ContainerLookup.query(idArr).then((res) => {
-      if (res && res.data
-        && res.data.labbookList
-        && res.data.labbookList.localById) {
-        const containerListCopy = new Map(this.state.containerList);
-
-        res.data.labbookList.localById.forEach((node) => {
-          containerListCopy.set(node.id, node);
-        });
-        if (self.mounted) {
-          self.setState({ containerList: containerListCopy });
-          this.containerLookup = setTimeout(() => {
-            self._containerLookup();
-          }, 10000);
-        }
-      }
-    });
-  }
-
-  /**
-    *  @param {}
-    *  fires when user scrolls
-    *  if nextPage exists and user is scrolled down, it will cause loadmore to fire
-  */
-  _captureScroll = () => {
-    const root = document.getElementById('root');
-
-
-    const distanceY = window.innerHeight + document.documentElement.scrollTop + 200;
-
-
-    const expandOn = root.offsetHeight;
-
-    if (this.props.localLabbooks.localLabbooks) {
-      if ((distanceY > expandOn) && !this.state.isPaginating
-
-      && this.props.localLabbooks.localLabbooks.pageInfo.hasNextPage) {
-        this._loadMore();
-      }
-    }
-  }
-
-  /**
-    *  @param {}
-    *  loads more labbooks using the relay pagination container
-  */
-  _loadMore = () => {
-    this.setState({
-      isPaginating: true,
-    });
-
-    if (this.props.localLabbooks.localLabbooks.pageInfo.hasNextPage) {
-      this.props.relay.loadMore(
-        10, // Fetch the next 10 items
-        (ev) => {
-          this.setState({
-            isPaginating: false,
-          });
-
-          this._visibilityLookup();
-        },
-      );
-    }
-  }
-
   render() {
-    const labbookList = this.props.localLabbooks;// labbookList is passed as localLabbooks
+    const { props, state } = this;
+    const labbookList = props.localLabbooks;// labbookList is passed as localLabbooks
 
-    if ((labbookList && labbookList.localLabbooks && labbookList.localLabbooks.edges) || this.props.loading) {
-      const labbooks = !this.props.loading ? this.props.filterLabbooks(labbookList.localLabbooks.edges, this.props.filterState) : [];
-
-      const importVisible = (this.props.section === 'local' || !this.props.loading) && !this.props.filterText;
+    if ((labbookList && labbookList.localLabbooks && labbookList.localLabbooks.edges)
+      || props.loading) {
+      const labbooks = !props.loading
+        ? props.filterLabbooks(labbookList.localLabbooks.edges, props.filterState)
+        : [];
+      const importVisible = (props.section === 'local' || !props.loading) && !props.filterText;
+      const isLoadingMore = state.isPaginating || props.loading;
 
       return (
 
         <div className="Labbooks__listing">
 
           <div className="grid">
-            {
-              importVisible
-
+            { importVisible
                 && (
                 <ImportModule
                   ref="ImportModule_localLabooks"
-                  {...this.props}
+                  {...props}
                   section="labbook"
                   title="Add Project"
-                  showModal={this.props.showModal}
-                  history={this.props.history}
+                  showModal={props.showModal}
+                  history={props.history}
                 />
                 )
-
             }
-            {
-              labbooks.length ? labbooks.map((edge, index) => {
-                const visibility = this.state.visibilityList.has(edge.node.id) ? this.state.visibilityList.get(edge.node.id).visibility : 'loading';
-                return (
-                  <LocalLabbookPanel
-                    key={`${edge.node.owner}/${edge.node.name}`}
-                    ref={`LocalLabbookPanel${edge.node.name}`}
-                    className="LocalLabbooks__panel"
-                    edge={edge}
-                    history={this.props.history}
-                    node={this.state.containerList.has(edge.node.id) && this.state.containerList.get(edge.node.id)}
-                    visibility={visibility}
-                    filterText={this.props.filterText}
-                    goToLabbook={this.props.goToLabbook}
-                  />
-                );
-              })
+            { labbooks.length ? labbooks.map((edge) => {
+              const visibility = state.visibilityList.has(edge.node.id)
+                ? state.visibilityList.get(edge.node.id).visibility
+                : 'loading';
+              const node = state.containerList.has(edge.node.id)
+                && state.containerList.get(edge.node.id);
 
-                : !this.props.loading && this.props.filterText
-
-                && (
-                <div className="Labbooks__no-results">
-
-                  <h3 className="Labbooks__h3">No Results Found</h3>
-
-                  <p className="Labbooks__paragraph--margin">
-                    Edit your filters above or
-                    <span
-                      className="Labbooks__span"
-                      onClick={() => this.props.setFilterValue({ target: { value: '' } })}
-                    >
-                    clear
-                    </span>
-                    to try again.
-                  </p>
-
-                </div>
-                )
+              return (
+                <LocalLabbookPanel
+                  key={`${edge.node.owner}/${edge.node.name}`}
+                  ref={`LocalLabbookPanel${edge.node.name}`}
+                  className="LocalLabbooks__panel"
+                  edge={edge}
+                  history={props.history}
+                  node={node}
+                  visibility={visibility}
+                  filterText={props.filterText}
+                  goToLabbook={props.goToLabbook}
+                />
+              );
+            })
+              : !props.loading && props.filterText
+                && <NoResults setFilterValue={props.setFilterValue} />
             }
 
             {
@@ -272,7 +254,7 @@ export class LocalLabbooks extends Component {
                 <CardLoader
                   key={`LocalLabbooks_paginationLoader${index}`}
                   index={index}
-                  isLoadingMore={this.state.isPaginating || this.props.loading}
+                  isLoadingMore={isLoadingMore}
                 />
               ))
             }

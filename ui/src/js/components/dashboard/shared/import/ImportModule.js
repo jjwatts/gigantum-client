@@ -270,7 +270,7 @@ export default class ImportModule extends Component {
     evt.dataTransfer.effectAllowed = 'none';
     evt.dataTransfer.dropEffect = 'none';
     this._getBlob(dataTransfer);
-    console.log(evt, dataTransfer);
+
     return false;
   }
 
@@ -358,7 +358,7 @@ export default class ImportModule extends Component {
                 id: '',
               },
             });
-            console.log(response.jobStatus.status);
+
             if (response.jobStatus.status === 'finished') {
               self._clearState();
               ImportUtils.dispatchFinishedStatus(response.jobStatus.result, self.props, self._buildImage);
@@ -661,7 +661,6 @@ export default class ImportModule extends Component {
   *  @return {}
   */
   _buildImage(name, owner, id) {
-    console.log(owner, name);
     BuildImageMutation(owner, name, false, (response, error) => {
       if (error) {
         console.error(error);

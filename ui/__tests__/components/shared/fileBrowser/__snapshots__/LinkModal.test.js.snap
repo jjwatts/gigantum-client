@@ -10,16 +10,17 @@ exports[`Test LinkModal 1`] = `
     onClick={[Function]}
   />
   <div
-    className="Modal__content large-long dataset"
+    className="Modal__content Modal__content--large-long dataset"
     style={
       Object {
         "overflow": "hidden",
       }
     }
   >
-    <div
-      className="Modal__close"
+    <button
+      className="Modal__close Btn Btn--flat"
       onClick={[Function]}
+      type="button"
     />
     <div
       className="Modal__container"

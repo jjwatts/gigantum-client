@@ -2,7 +2,6 @@
 import React, { Component, Fragment } from 'react';
 import ReactDom from 'react-dom';
 import classNames from 'classnames';
-import { boundMethod } from 'autobind-decorator';
 // assets
 import './Modal.scss';
 
@@ -23,14 +22,15 @@ export default class Modal extends Component {
     const { props } = this;
     const modalContentCSS = classNames({
       Modal__content: true,
-      [props.size]: props.size, // large, medium, small
+      [`Modal__content--${props.size}`]: props.size, // large, medium, small
       [props.icon]: !!props.icon,
     });
     const modalContainerCSS = classNames({
       'Modal__sub-container': true,
       'Modal__sub-container--nopadding': props.noPadding,
     });
-    const overflow = (this.props.overlfow === 'visible') ? 'visible' : 'hidden';
+    const overflow = (props.overlfow === 'visible') ? 'visible' : 'hidden';
+
     return (
       ReactDom.createPortal(
         <div className="Modal">
@@ -42,8 +42,9 @@ export default class Modal extends Component {
           <div className={modalContentCSS} style={{ overflow }}>
             { props.handleClose
               && (
-              <div
-                className="Modal__close"
+              <button
+                type="button"
+                className="Modal__close Btn Btn--flat"
                 onClick={() => props.handleClose()}
               />
               )

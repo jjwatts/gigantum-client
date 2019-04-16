@@ -6,7 +6,6 @@ input[type="text"] {
   line-height: 20px;
   margin: 5px 0;
   border: 0;
-  outline: none;
   width: 100%;
   border: 1px solid $romanSilver;
   padding: 0 20px;
@@ -18,6 +17,7 @@ input[type="text"] {
 input[type="text"]:focus {
   padding: 0 20px;
   background: $white;
+  outline: none;
   @include boxShadow();
 
 }
@@ -40,6 +40,34 @@ input[type="text"].full--border:focus {
   box-shadow: 0 1px 0 0 $turquise !important;
   border-radius: 8px;
 }
+
+.Input {
+  position: relative;
+
+  &--clear {
+     width: 100%;
+  }
+}
+
+
+.Input__clear {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  padding: 7px 30px 7px 20px;
+  color: $romanSilver;
+  text-decoration: none;
+  background: url('~Images/icons/close.svg') no-repeat center right;
+  background-size: 24px;
+
+  &:hover {
+    color: $romanSilver;
+    padding: 7px 30px 7px 20px;
+    text-decoration: none;
+    background: url('~Images/icons/close.svg') no-repeat center right;
+    background-size: 26px;
+  }
+ }
 
 textarea {
   width: 100%;

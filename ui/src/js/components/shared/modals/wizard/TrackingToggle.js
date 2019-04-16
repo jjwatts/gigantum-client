@@ -5,48 +5,54 @@ import classNames from 'classnames';
 import './TrackingToggle.scss';
 
 export default class TrackingToggle extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isTrackingOn: true,
-    };
-  }
+  state = {
+    isTrackingOn: true,
+  };
 
   /**
-    @param {}
+    @param {evt}
     updates trackingOn state
     updates parents state via setTracking prop
   */
-  _toggleTrackingState() {
-    const { state } = this;
+  _toggleTrackingState(evt) {
+    if ((evt.type === 'click') || (evt.key === 'Enter')) {
+      const { props, state } = this;
 
-    this.setState({ isTrackingOn: !state.isTrackingOn });
+      this.setState((prevState) => {
+        return { isTrackingOn: !prevState.isTrackingOn };
+      });
 
-    this.props.setTracking(!state.isTrackingOn);
+      props.setTracking(!state.isTrackingOn);
+    }
   }
 
   render() {
+    const { state } = this;
     const toggleCondition = classNames({
       TrackingToggle__label: true,
-      'TrackingToggle__label--on': this.state.isTrackingOn,
-      'TrackingToggle__label--off': !this.state.isTrackingOn,
+      'TrackingToggle__label--on': state.isTrackingOn,
+      'TrackingToggle__label--off': !state.isTrackingOn,
     });
 
     const toggleCheckboxCondition = classNames({
       TrackingToggle__checkbox: true,
-      'TrackingToggle__checkbox--on': this.state.isTrackingOn,
-      'TrackingToggle__checkbox--off': !this.state.isTrackingOn,
+      'TrackingToggle__checkbox--on': state.isTrackingOn,
+      'TrackingToggle__checkbox--off': !state.isTrackingOn,
     });
 
-    const trackingState = this.state.isTrackingOn ? 'Enabled' : 'Disabled';
+    const trackingState = state.isTrackingOn ? 'Enabled' : 'Disabled';
+
     return (
       <div
         className="TrackingToggle"
-        onClick={() => this._toggleTrackingState()}
+        onClick={evt => this._toggleTrackingState(evt)}
+        onKeyUp={evt => this._toggleTrackingState(evt)}
+        tabIndex="0"
+        role="button"
       >
         <div className="TrackingToggle__text">
           Input/Output Version Tracking
-          {trackingState}
+          {` ${trackingState}`}
         </div>
         <span className={toggleCheckboxCondition}>
 
@@ -60,8 +66,8 @@ export default class TrackingToggle extends React.Component {
               id="TrackingToggle__input"
               className="TrackingToggle__input"
               type="checkbox"
-              checked={this.state.isTrackingOn}
-              onChange={() => this.state.isTrackingOn}
+              checked={state.isTrackingOn}
+              onChange={() => state.isTrackingOn}
             />
           </label>
         </span>

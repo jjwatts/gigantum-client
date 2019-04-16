@@ -4,6 +4,7 @@ import uuidv4 from 'uuid/v4';
 import Highlighter from 'react-highlight-words';
 import classNames from 'classnames';
 import Moment from 'moment';
+import { boundMethod } from 'autobind-decorator';
 // muations
 import ImportRemoteDatasetMutation from 'Mutations/ImportRemoteDatasetMutation';
 // store
@@ -20,89 +21,10 @@ import './RemoteDatasetsPanel.scss';
 import config from 'JS/config';
 
 export default class RemoteDatasetPanel extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      datasetName: props.edge.node.name,
-      owner: props.edge.node.owner,
-      isImporting: false,
-      showLoginPrompt: false,
-    };
-    this._importingState = this._importingState.bind(this);
-    this._clearState = this._clearState.bind(this);
-    this._closeLoginPromptModal = this._closeLoginPromptModal.bind(this);
-    this._handleDelete = this._handleDelete.bind(this);
-  }
-
-  /**
-    * @param {object} edge
-    * validates user's session and then triggers toggleDeleteModal which passes parameters to the DeleteDataset component
-  */
-  _handleDelete(edge) {
-    if (localStorage.getItem('username') !== edge.node.owner) {
-      setWarningMessage('You can only delete remote Datasets that you have created.');
-    } else {
-      UserIdentity.getUserIdentity().then((response) => {
-        if (navigator.onLine) {
-          if (response.data) {
-            if (response.data.userIdentity.isSessionValid) {
-              this.props.toggleDeleteModal({
-                remoteId: edge.node.id, remoteOwner: edge.node.owner, remoteDatasetName: edge.node.name, existsLocally: this.props.existsLocally,
-              });
-            } else {
-              this.props.auth.renewToken(true, () => {
-                this.setState({ showLoginPrompt: true });
-              }, () => {
-                this.props.toggleDeleteModal({
-                  remoteId: edge.node.id, remoteOwner: edge.node.owner, remoteDatasetName: edge.node.name, existsLocally: this.props.existsLocally,
-                });
-              });
-            }
-          }
-        } else {
-          this.setState({ showLoginPrompt: true });
-        }
-      });
-    }
-  }
-
-  /**
-    * @param {}
-    * fires when user identity returns invalid session
-    * prompts user to revalidate their session
-  */
-  _closeLoginPromptModal() {
-    this.setState({
-      showLoginPrompt: false,
-    });
-  }
-
-  /**
-    *  @param {}
-    *  changes state of isImporting to false
-  */
-  _clearState = () => {
-    if (document.getElementById('dashboard__cover')) {
-      document.getElementById('dashboard__cover').classList.add('hidden');
-    }
-    this.setState({
-      isImporting: false,
-    });
-  }
-
-  /**
-    *  @param {}
-    *  changes state of isImporting to true
-  */
-  _importingState = () => {
-    if (document.getElementById('dashboard__cover')) {
-      document.getElementById('dashboard__cover').classList.remove('hidden');
-    }
-    this.setState({
-      isImporting: true,
-    });
-  }
+  state = {
+    isImporting: false,
+    showLoginPrompt: false,
+  };
 
   /**
     *  @param {String} owner
@@ -110,7 +32,9 @@ export default class RemoteDatasetPanel extends Component {
     *  @param {String} remote
     *  handles importing dataset mutation
   */
-  _handleImportDataset = (owner, datasetName, remote) => {
+  @boundMethod
+  _handleImportDataset(owner, datasetName, remote) {
+    const { props } = this;
     const id = uuidv4();
     ImportRemoteDatasetMutation(
       owner,
@@ -123,11 +47,11 @@ export default class RemoteDatasetPanel extends Component {
           console.error(error);
           setMultiInfoMessage(id, 'ERROR: Could not import remote Dataset', null, true, error);
         } else if (response) {
-          const datasetName = response.importRemoteDataset.newDatasetEdge.node.name;
-          const owner = response.importRemoteDataset.newDatasetEdge.node.owner;
-          setMultiInfoMessage(id, `Successfully imported remote Dataset ${datasetName}`, true, false);
+          const { newDatasetEdge } = response.importRemoteDataset;
+          const { name } = newDatasetEdge.node;
+          setMultiInfoMessage(id, `Successfully imported remote Dataset ${name}`, true, false);
 
-          this.props.history.replace(`/datasets/${owner}/${datasetName}`);
+          props.history.replace(`/datasets/${owner}/${name}`);
         }
       },
     );
@@ -138,61 +62,138 @@ export default class RemoteDatasetPanel extends Component {
     *  imports dataset from remote url, builds the image, and redirects to imported dataset
     *  @return {}
   */
- importDataset = (owner, datasetName) => {
-   const self = this;
-   const id = uuidv4();
-   const remote = `https://repo.${config.domain}/${owner}/${datasetName}`;
+  @boundMethod
+  _importDataset(owner, datasetName) {
+    const { props } = this;
+    const id = uuidv4();
+    const remote = `https://repo.${config.domain}/${owner}/${datasetName}`;
 
-   UserIdentity.getUserIdentity().then((response) => {
-     if (navigator.onLine) {
-       if (response.data) {
-         if (response.data.userIdentity.isSessionValid) {
-           this._importingState();
-           setMultiInfoMessage(id, 'Importing Dataset please wait', false, false);
-           this._handleImportDataset(owner, datasetName, remote);
-         } else {
-           this.props.auth.renewToken(true, () => {
-             this.setState({ showLoginPrompt: true });
-           }, () => {
-             this.importDataset(owner, datasetName);
-           });
-         }
-       }
-     } else {
-       this.setState({ showLoginPrompt: true });
-     }
-   });
- }
-
- render() {
-   const edge = this.props.edge;
-
-   const descriptionCss = classNames({
-     'RemoteDatasets__row RemoteDatasets__row--text': true,
-     blur: this.state.isImporting,
-   });
-
-   const deleteCSS = classNames({
-     RemoteDatasets__icon: true,
-     'RemoteDatasets__icon--delete': localStorage.getItem('username') === edge.node.owner,
-     'RemoteDatasets__icon--delete-disabled': localStorage.getItem('username') !== edge.node.owner,
-   });
-
-   return (
-     <div
-       key={edge.node.name}
-       className="Card Card--300 column-4-span-3 flex flex--column justify--space-between"
-     >
-       {
-
+    UserIdentity.getUserIdentity().then((response) => {
+      if (navigator.onLine) {
+        if (response.data) {
+          if (response.data.userIdentity.isSessionValid) {
+            this._importingState();
+            setMultiInfoMessage(id, 'Importing Dataset please wait', false, false);
+            this._handleImportDataset(owner, datasetName, remote);
+          } else {
+            props.auth.renewToken(true, () => {
+              this.setState({ showLoginPrompt: true });
+            }, () => {
+              this._importDataset(owner, datasetName);
+            });
+          }
         }
-       <div className="RemoteDatasets__row RemoteDatasets__row--icon">
-         {
-          this.props.existsLocally
+      } else {
+        this.setState({ showLoginPrompt: true });
+      }
+    });
+  }
+
+  /**
+   *  @param {}
+   *  changes state of isImporting to false
+   */
+  @boundMethod
+  _clearState() {
+    if (document.getElementById('dashboard__cover')) {
+      document.getElementById('dashboard__cover').classList.add('hidden');
+    }
+    this.setState({
+      isImporting: false,
+    });
+  }
+
+  /**
+     * @param {}
+     * fires when user identity returns invalid session
+     * prompts user to revalidate their session
+  */
+  @boundMethod
+  _closeLoginPromptModal() {
+    this.setState({ showLoginPrompt: false });
+  }
+
+  /**
+    *  @param {}
+    *  changes state of isImporting to true
+   */
+  @boundMethod
+  _importingState() {
+    if (document.getElementById('dashboard__cover')) {
+      document.getElementById('dashboard__cover').classList.remove('hidden');
+    }
+    this.setState({ isImporting: true });
+  }
+
+  /**
+  * @param {object} edge
+  * validates user's session and then triggers toggleDeleteModal
+  * which passes parameters to the DeleteDataset component
+  */
+  @boundMethod
+  _handleDelete(edge) {
+    const { props } = this;
+    if (localStorage.getItem('username') !== edge.node.owner) {
+      setWarningMessage('You can only delete remote Datasets that you have created.');
+    } else {
+      UserIdentity.getUserIdentity().then((response) => {
+        if (navigator.onLine) {
+          if (response.data) {
+            if (response.data.userIdentity.isSessionValid) {
+              props.toggleDeleteModal({
+                remoteId: edge.node.id,
+                remoteOwner: edge.node.owner,
+                remoteDatasetName: edge.node.name,
+                existsLocally: props.existsLocally,
+              });
+            } else {
+              props.auth.renewToken(true, () => {
+                this.setState({ showLoginPrompt: true });
+              }, () => {
+                props.toggleDeleteModal({
+                  remoteId: edge.node.id,
+                  remoteOwner: edge.node.owner,
+                  remoteDatasetName: edge.node.name,
+                  existsLocally: props.existsLocally,
+                });
+              });
+            }
+          }
+        } else {
+          this.setState({ showLoginPrompt: true });
+        }
+      });
+    }
+  }
+
+  render() {
+    const { props, state } = this;
+    const { edge } = props;
+    const deleteTooltipText = localStorage.getItem('username') !== edge.node.owner ? 'Only owners and admins can delete a remote Dataset' : '';
+    const deleteDisabled = state.isImporting || (localStorage.getItem('username') !== edge.node.owner);
+    // declare css here
+    const descriptionCss = classNames({
+      'RemoteDatasets__row RemoteDatasets__row--text': true,
+      blur: state.isImporting,
+    });
+    const deleteCSS = classNames({
+      Button__icon: true,
+      'Button__icon--delete': localStorage.getItem('username') === edge.node.owner,
+      'Button__icon--delete-disabled Tooltip-data': localStorage.getItem('username') !== edge.node.owner,
+    });
+
+    return (
+      <div
+        key={edge.node.name}
+        className="Card Card--300 column-4-span-3 flex flex--column justify--space-between"
+      >
+        <div className="RemoteDatasets__row RemoteDatasets__row--icon">
+          { props.existsLocally
             ? (
               <button
-                className="RemoteDatasets__icon RemoteDatasets__icon--cloud"
-                data-tooltip="Dataset exists locally"
+                type="button"
+                className="Button__icon Button__icon--cloud Tooltip-data"
+                data-tooltip="This Dataset has already been imported"
                 disabled
               >
               Imported
@@ -200,86 +201,77 @@ export default class RemoteDatasetPanel extends Component {
             )
             : (
               <button
-                disabled={this.state.isImporting}
-                className="RemoteDatasets__icon RemoteDatasets__icon--cloud-download"
-                onClick={() => this.importDataset(edge.node.owner, edge.node.name)}
+                type="button"
+                disabled={state.isImporting}
+                className="Button__icon Button__icon--cloud-download"
+                onClick={() => this._importDataset(edge.node.owner, edge.node.name)}
               >
               Import
               </button>
             )
         }
-         <button
-           className={deleteCSS}
-           data-tooltip={localStorage.getItem('username') !== edge.node.owner ? 'Can only delete remote datasets created by you' : ''}
-           disabled={this.state.isImporting || localStorage.getItem('username') !== edge.node.owner}
-           onClick={() => this._handleDelete(edge)}
-         >
-          Delete
-         </button>
+          <button
+            type="button"
+            className={deleteCSS}
+            data-tooltip={deleteTooltipText}
+            disabled={deleteDisabled}
+            onClick={() => this._handleDelete(edge)}
+          >
+            Delete
+          </button>
 
-       </div>
+        </div>
 
-       <div className={descriptionCss}>
-
-         <div className="RemoteDatasets__row RemoteDatasets__row--title">
-           <h6
-             className="RemoteDatasets__panel-title"
-           >
-             <Highlighter
-               highlightClassName="LocalDatasets__highlighted"
-               searchWords={[store.getState().datasetListing.filterText]}
-               autoEscape={false}
-               caseSensitive={false}
-               textToHighlight={edge.node.name}
-             />
-           </h6>
-
-         </div>
-
-         <p className="RemoteDatasets__paragraph RemoteDatasets__paragraph--owner">{edge.node.owner}</p>
-         <p className="RemoteDatasets__paragraph RemoteDatasets__paragraph--owner">{`Created on ${Moment(edge.node.creationDateUtc).format('MM/DD/YY')}`}</p>
-         <p className="RemoteDatasets__paragraph RemoteDatasets__paragraph--owner">{`Modified ${Moment(edge.node.modifiedDateUtc).fromNow()}`}</p>
-
-         <p
-           className="RemoteDatasets__paragraph RemoteDatasets__paragraph--description"
-         >
-           {
-          edge.node.description && edge.node.description.length
-            ? (
+        <div className={descriptionCss}>
+          <div className="RemoteDatasets__row RemoteDatasets__row--title">
+            <h6 className="RemoteDatasets__panel-title">
               <Highlighter
                 highlightClassName="LocalDatasets__highlighted"
                 searchWords={[store.getState().datasetListing.filterText]}
                 autoEscape={false}
                 caseSensitive={false}
-                textToHighlight={edge.node.description}
+                textToHighlight={edge.node.name}
               />
-            )
-            : (
-              <span
-                className="RemoteDatasets__description--blank"
-              >
-            No description provided
-              </span>
-            )
-         }
-         </p>
-       </div>
-       { !(edge.node.visibility === 'local')
-       && <div data-tooltip={`${edge.node.visibility}`} className={`Tooltip-Listing RemoteDatasets__${edge.node.visibility} Tooltip-data Tooltip-data--small`} />
-        }
-       {
-          this.state.isImporting
-          && (
-          <div className="RemoteDatasets__loader">
-            <Loader />
+            </h6>
           </div>
-          )
+
+          <p className="RemoteDatasets__paragraph RemoteDatasets__paragraph--owner">{edge.node.owner}</p>
+          <p className="RemoteDatasets__paragraph RemoteDatasets__paragraph--owner">{`Created on ${Moment(edge.node.creationDateUtc).format('MM/DD/YY')}`}</p>
+          <p className="RemoteDatasets__paragraph RemoteDatasets__paragraph--owner">{`Modified ${Moment(edge.node.modifiedDateUtc).fromNow()}`}</p>
+          <p className="RemoteDatasets__paragraph RemoteDatasets__paragraph--description">
+
+            { edge.node.description && edge.node.description.length
+              ? (
+                <Highlighter
+                  highlightClassName="LocalDatasets__highlighted"
+                  searchWords={[store.getState().datasetListing.filterText]}
+                  autoEscape={false}
+                  caseSensitive={false}
+                  textToHighlight={edge.node.description}
+                />
+              )
+              : <span className="RemoteDatasets__description--blank"> No description provided </span>
+           }
+          </p>
+        </div>
+
+        { !(edge.node.visibility === 'local')
+        && (
+          <div
+            data-tooltip={`${edge.node.visibility}`}
+            className={`Tooltip-Listing RemoteDatasets__${edge.node.visibility} Tooltip-data Tooltip-data--small`}
+          />
+        )
+       }
+
+        { state.isImporting
+          && <div className="RemoteDatasets__loader"><Loader /></div>
         }
 
-       {
-          this.state.showLoginPrompt
+        { state.showLoginPrompt
           && <LoginPrompt closeModal={this._closeLoginPromptModal} />
         }
-     </div>);
- }
+      </div>
+    );
+  }
 }

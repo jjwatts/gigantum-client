@@ -9,7 +9,6 @@ import SyncDatasetMutation from 'Mutations/branches/SyncDatasetMutation';
 import SyncLabbookMutation from 'Mutations/branches/SyncLabbookMutation';
 import WorkonExperimentalBranchMutation from 'Mutations/branches/WorkonExperimentalBranchMutation';
 import BuildImageMutation from 'Mutations/container/BuildImageMutation';
-
 // store
 import store from 'JS/redux/store';
 import { setErrorMessage } from 'JS/redux/actions/footer';

@@ -2,28 +2,32 @@
 
 .Lightbox{
   z-index: index($elements, modal);
-  width: 100%;
-  height: 100%;
   top: 0;
   left: 0;
+
+  width: 100%;
+  height: 100%;
 }
 
 .Lightbox__cover{
     position: fixed;
-    top: 0px;
-    bottom: 0px;
-    right: 0px;
-    left: 0px;
-    background-color: $slateBlue;
-    animation: fade-in-modal forwards .25s;
-    opacity: 0.5;
     z-index: index($elements, modal);
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+
+    opacity: 0.5;
+    background-color: $slateBlue;
+
+    @include animation('fade-in-modal forwards .25s');
 }
 
 .Lightbox__container{
-    z-index: index($elements, modal);
     position: fixed;
-    left: 50%;
+    z-index: index($elements, modal);
     top: 50%;
+    left: 50%;
+
     transform: translate(-50%, -50%);
 }

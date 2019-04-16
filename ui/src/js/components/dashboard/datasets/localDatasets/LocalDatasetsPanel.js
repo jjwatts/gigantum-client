@@ -4,56 +4,44 @@ import Highlighter from 'react-highlight-words';
 import { Link } from 'react-router-dom';
 import Moment from 'moment';
 // store
-import { setErrorMessage, setInfoMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // assets
 import './LocalDatasetsPanel.scss';
 /**
 *  dataset panel is to only render the edge passed to it
 */
-
 export default class LocalDatasetPanel extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      datasetName: props.edge.node.name,
-      owner: props.edge.node.owner,
-    };
+  /** *
+  * @param {} -
+  * triggers parent function goToDataset
+  * redirects to dataset
+  */
+  _goToDataset() {
+    const { props } = this;
+    const { edge } = props;
+    if (props.goToDataset) {
+      props.goToDataset(edge.node.name, edge.node.owner);
+    }
   }
 
   render() {
-    const edge = this.props.edge;
-    const status = this.state.status;
-    const textStatus = this.state.textStatus;
-    const link = this.props.noLink ? '#' : `/datasets/${edge.node.owner}/${edge.node.name}`;
+    const { props } = this;
+    const { edge } = props;
+    const link = props.noLink ? '#' : `/datasets/${edge.node.owner}/${edge.node.name}`;
     return (
       <Link
         to={link}
-        onClick={() => {
-          if (this.props.goToDataset) {
-            this.props.goToDataset(edge.node.name, edge.node.owner);
-          }
-        }}
+        onClick={() => this._goToDataset()}
         key={`local${edge.node.name}`}
         className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
       >
-
         <div className="LocalDatasets__row--icons" />
-
         <div className="LocalDatasets__row--text">
-
           <div>
-
             <h6
               className="LocalDatasets__panel-title"
-              onClick={() => {
-                if (this.props.goToDataset) {
-                  this.props.goToDataset(edge.node.name, edge.node.owner);
-                }
-              }}
+              onClick={() => this._goToDataset()}
             >
-
               <Highlighter
                 highlightClassName="LocalDatasets__highlighted"
                 searchWords={[store.getState().datasetListing.filterText]}
@@ -61,12 +49,11 @@ export default class LocalDatasetPanel extends Component {
                 caseSensitive={false}
                 textToHighlight={edge.node.name}
               />
-
             </h6>
 
           </div>
 
-          <p className="LocalDatasets__paragraph LocalDatasets__paragraph--owner ">{edge.node.owner}</p>
+          <p className="LocalDatasets__paragraph LocalDatasets__paragraph--owner">{edge.node.owner}</p>
           <p className="LocalDatasets__paragraph LocalDatasets__paragraph--owner">{`Created on ${Moment(edge.node.createdOnUtc).format('MM/DD/YY')}`}</p>
           <p className="LocalDatasets__paragraph LocalDatasets__paragraph--owner">{`Modified ${Moment(edge.node.modifiedOnUtc).fromNow()}`}</p>
 
@@ -86,14 +73,15 @@ export default class LocalDatasetPanel extends Component {
           </p>
 
         </div>
-        { !(this.props.visibility === 'local')
+        { !(props.visibility === 'local')
           && (
           <div
-            data-tooltip={`${this.props.visibility}`}
-            className={`Tooltip LocalDatasetPanel__${this.props.visibility} Tooltip-data Tooltip-data--small`}
+            data-tooltip={`${props.visibility}`}
+            className={`Tooltip LocalDatasetPanel__${props.visibility} Tooltip-data Tooltip-data--small`}
           />
           )
         }
-      </Link>);
+      </Link>
+    );
   }
 }

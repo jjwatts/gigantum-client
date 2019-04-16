@@ -4,10 +4,12 @@ import {
   createPaginationContainer,
   graphql,
 } from 'react-relay';
+import { boundMethod } from 'autobind-decorator';
 // components
 import RemoteLabbookPanel from 'Components/dashboard/labbooks/remoteLabbooks/RemoteLabbookPanel';
 import DeleteLabbook from 'Components/shared/modals/DeleteLabbook';
-import CardLoader from 'Components/dashboard/loaders/CardLoader';
+import CardLoader from 'Components/dashboard/shared/loaders/CardLoader';
+import NoResults from 'Components/dashboard/shared/NoResults';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // store
@@ -36,16 +38,31 @@ class RemoteLabbooks extends Component {
     loads more remote labbooks on mount
   */
   componentDidMount() {
-    if (this.props.remoteLabbooks.remoteLabbooks && this.props.remoteLabbooks.remoteLabbooks.pageInfo.hasNextPage) {
+    const { props } = this;
+    if (props.remoteLabbooks.remoteLabbooks
+      && props.remoteLabbooks.remoteLabbooks.pageInfo.hasNextPage) {
       this._loadMore();
     }
+
+    UserIdentity.getUserIdentity().then((response) => {
+      if (navigator.onLine) {
+        if (response.data) {
+          if (!response.data.userIdentity.isSessionValid) {
+            props.auth.renewToken();
+          }
+        }
+      } else {
+        props.forceLocalView();
+      }
+    });
   }
 
   /*
     loads more remote labbooks if available
   */
   UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.remoteLabbooks.remoteLabbooks && nextProps.remoteLabbooks.remoteLabbooks.pageInfo.hasNextPage) {
+    if (nextProps.remoteLabbooks.remoteLabbooks
+      && nextProps.remoteLabbooks.remoteLabbooks.pageInfo.hasNextPage) {
       this._loadMore();
     }
   }
@@ -54,8 +71,11 @@ class RemoteLabbooks extends Component {
     *  @param {}
     *  loads more labbooks using the relay pagination container
   */
-  _loadMore = () => {
+  @boundMethod
+  _loadMore() {
+    const { props } = this;
     const self = this;
+
     UserIdentity.getUserIdentity().then((response) => {
       if (navigator.onLine) {
         if (response.data) {
@@ -64,10 +84,10 @@ class RemoteLabbooks extends Component {
               isPaginating: true,
             });
 
-            if (this.props.remoteLabbooks.remoteLabbooks.pageInfo.hasNextPage) {
-              this.props.relay.loadMore(
+            if (props.remoteLabbooks.remoteLabbooks.pageInfo.hasNextPage) {
+              props.relay.loadMore(
                 8, // Fetch the next 8 items
-                (ev) => {
+                () => {
                   this.setState({
                     isPaginating: false,
                   });
@@ -75,15 +95,15 @@ class RemoteLabbooks extends Component {
               );
             }
           } else {
-            this.props.auth.renewToken(true, () => {
-              this.props.forceLocalView();
+            props.auth.renewToken(true, () => {
+              props.forceLocalView();
             }, () => {
               self._loadMore();
             });
           }
         }
       } else {
-        this.props.forceLocalView();
+        props.forceLocalView();
       }
     });
   }
@@ -92,7 +112,7 @@ class RemoteLabbooks extends Component {
     *  @param {object} deleteData
     *  changes the delete modal's visibility and changes the data passed to it
   */
-
+  @boundMethod
   _toggleDeleteModal(deleteData) {
     if (deleteData) {
       this.setState({
@@ -113,8 +133,12 @@ class RemoteLabbooks extends Component {
   }
 
   render() {
-    if (this.props.remoteLabbooks && this.props.remoteLabbooks.remoteLabbooks !== null) {
-      const labbooks = this.props.filterLabbooks(this.props.remoteLabbooks.remoteLabbooks.edges, this.props.filterState);
+    const { props, state } = this;
+    if (props.remoteLabbooks && props.remoteLabbooks.remoteLabbooks !== null) {
+      const labbooks = props.filterLabbooks(
+        props.remoteLabbooks.remoteLabbooks.edges,
+        props.filterState,
+      );
 
       return (
         <div className="Labbooks__listing">
@@ -124,78 +148,48 @@ class RemoteLabbooks extends Component {
               ? labbooks.map(edge => (
                 <RemoteLabbookPanel
                   toggleDeleteModal={this._toggleDeleteModal}
-                  labbookListId={this.props.remoteLabbooksId}
+                  labbookListId={props.remoteLabbooksId}
                   key={edge.node.owner + edge.node.name}
                   ref={`RemoteLabbookPanel${edge.node.name}`}
                   edge={edge}
-                  history={this.props.history}
+                  history={props.history}
                   existsLocally={edge.node.isLocal}
-                  auth={this.props.auth}
+                  auth={props.auth}
                 />
               ))
-              : !this.state.isPaginating
+              : !state.isPaginating
             && store.getState().labbookListing.filterText
-
-            && (
-            <div className="Labbooks__no-results">
-
-              <h3 className="Labbooks__h3">No Results Found</h3>
-
-              <p>
-                Edit your filters above or
-                <span
-                  className="Labbooks__span"
-                  onClick={() => this.props.setFilterValue({ target: { value: '' } })}
-                >
-                clear
-                </span>
-                to try again.
-              </p>
-
-            </div>
-            )
+            && <NoResults />
           }
             {
             Array(5).fill(1).map((value, index) => (
               <CardLoader
                 key={`RemoteLabbooks_paginationLoader${index}`}
                 index={index}
-                isLoadingMore={this.state.isPaginating}
+                isLoadingMore={state.isPaginating}
               />
             ))
           }
           </div>
-          {
-          this.state.deleteModalVisible
-          && (
-          <DeleteLabbook
-            handleClose={() => { this._toggleDeleteModal(); }}
-            labbookListId={this.props.labbookListId}
-            remoteId={this.state.deleteData.remoteId}
-            remoteConnection="RemoteLabbooks_remoteLabbooks"
-            toggleModal={this._toggleDeleteModal}
-            remoteOwner={this.state.deleteData.remoteOwner}
-            remoteLabbookName={this.state.deleteData.remoteLabbookName}
-            existsLocally={this.state.deleteData.existsLocally}
-            remoteDelete
-            history={this.props.history}
-          />
-          )
+          { state.deleteModalVisible
+            && (
+              <DeleteLabbook
+                handleClose={() => { this._toggleDeleteModal(); }}
+                labbookListId={props.labbookListId}
+                remoteId={state.deleteData.remoteId}
+                remoteConnection="RemoteLabbooks_remoteLabbooks"
+                toggleModal={this._toggleDeleteModal}
+                remoteOwner={state.deleteData.remoteOwner}
+                remoteLabbookName={state.deleteData.remoteLabbookName}
+                existsLocally={state.deleteData.existsLocally}
+                remoteDelete
+                history={props.history}
+              />
+            )
         }
         </div>
       );
     }
-    UserIdentity.getUserIdentity().then((response) => {
-      if (navigator.onLine) {
-        if (response.data) {
-          if (!response.data.userIdentity.isSessionValid) {
-            this.props.auth.renewToken();
-          }
-        }
-      } else {
-        this.props.forceLocalView();
-      }
-    });
 
     return (<div />);
   }

@@ -47,7 +47,7 @@ export default class SideBar extends Component {
   render() {
     const { props, state } = this;
     const isLabbooks = (window.location.href.indexOf('projects') > 0) || (window.location.href.indexOf('datasets') === -1);
-
+    // declare css here
     const sidebarCSS = classNames({
       'SideBar col-sm-1': state.authenticated || state.authenticated === null,
       hidden: !(state.authenticated || state.authenticated === null),
@@ -58,25 +58,20 @@ export default class SideBar extends Component {
       'SideBar__icon--labbooks-selected': isLabbooks,
       'SideBar__icon SideBar__icon--labbooks': !isLabbooks,
     });
-
-
     const datasetCSS = classNames({
       SideBar__icon: true,
       'SideBar__icon SideBar__icon--datasets': isLabbooks,
       'SideBar__icon SideBar__icon--datasets-selected': !isLabbooks,
     });
-
-
     const labbookSideBarItemCSS = classNames({
       'SideBar__nav-item SideBar__nav-item--labbooks': true,
       'SideBar__nav-item--selected': isLabbooks,
     });
-
-
     const datasetSideBarItemCSS = classNames({
       'SideBar__nav-item SideBar__nav-item--datasets': true,
       'SideBar__nav-item--selected': !isLabbooks,
     });
+
     return (
       <div className={sidebarCSS}>
         <div className="SideBar__inner-container">

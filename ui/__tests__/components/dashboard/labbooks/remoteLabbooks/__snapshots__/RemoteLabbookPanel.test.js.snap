@@ -9,17 +9,19 @@ exports[`Test RemoteLabbooks rendering 1`] = `
     className="RemoteLabbooks__row RemoteLabbooks__row--icon"
   >
     <button
-      className="RemoteLabbooks__icon RemoteLabbooks__icon--cloud Tooltip-data Tooltip-data--small"
-      data-tooltip="Project exists locally"
+      className="Button__icon Button__icon--cloud Tooltip-data"
+      data-tooltip="This Project has already been imported"
       disabled={true}
+      type="button"
     >
       Imported
     </button>
     <button
-      className="RemoteLabbooks__icon RemoteLabbooks__icon--delete"
+      className="Button__icon Button__icon--delete"
       data-tooltip=""
       disabled={false}
       onClick={[Function]}
+      type="button"
     >
       Delete
     </button>
@@ -70,7 +72,7 @@ exports[`Test RemoteLabbooks rendering 1`] = `
     </p>
   </div>
   <div
-    className="Tooltip-Listing RemoteLabbooks__private   Tooltip-data Tooltip-data--small"
+    className="Tooltip-Listing RemoteLabbooks__private Tooltip-data Tooltip-data--small"
     data-tooltip="private"
   />
 </div>

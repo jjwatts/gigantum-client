@@ -23,7 +23,7 @@ export default class ErrorBoundary extends Component {
     }
     if (this.state.hasError) {
       return (
-        <div className={`ErrorBoundary ${this.props.type}`}>
+        <div className={`ErrorBoundary ErrorBoundary--${this.props.type}`}>
           <p>{text}</p>
         </div>
       );

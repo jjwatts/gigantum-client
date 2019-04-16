@@ -84,13 +84,18 @@ exports[`DashboardLocal Renders a snapshot 1`] = `
     <div
       className="Labbooks__search-container column-2-span-6 padding--0"
     >
-      <input
-        defaultValue=""
-        onFocus={[Function]}
-        onKeyUp={[Function]}
-        placeholder="Filter Projects by name or description"
-        type="text"
-      />
+      <div
+        className="Input Input--clear"
+      >
+        <input
+          className="margin--0"
+          defaultValue=""
+          onFocus={[Function]}
+          onKeyUp={[Function]}
+          placeholder="Filter Projects by name or description"
+          type="text"
+        />
+      </div>
     </div>
     <div
       className="DashboardDropdown column-4-span-3 padding--0"
@@ -341,10 +346,8 @@ exports[`DashboardLocal Renders a snapshot 1`] = `
           <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
           >
-            <span
-              className="LocalLabbooks__description--blank"
-            >
-              No description provided
+            <span>
+               No description provided
             </span>
           </p>
         </div>
@@ -506,10 +509,8 @@ exports[`DashboardLocal Renders a snapshot 1`] = `
           <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
           >
-            <span
-              className="LocalLabbooks__description--blank"
-            >
-              No description provided
+            <span>
+               No description provided
             </span>
           </p>
         </div>
@@ -587,10 +588,8 @@ exports[`DashboardLocal Renders a snapshot 1`] = `
           <p
             className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
           >
-            <span
-              className="LocalLabbooks__description--blank"
-            >
-              No description provided
+            <span>
+               No description provided
             </span>
           </p>
         </div>

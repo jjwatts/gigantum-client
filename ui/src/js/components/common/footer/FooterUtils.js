@@ -82,11 +82,12 @@ const FooterUtils = {
               document.getElementById('loader').classList.add('hidden');
 
               if ((type === 'syncLabbook') || (type === 'publishLabbook') || (type === 'publishDataset') || (type === 'syncDataset')) {
-                successCall();
                 const section = type.indexOf('Dataset') > -1 ? 'dataset' : 'labbook';
                 const metaDataArr = JSON.parse(response.data.jobStatus.jobMetadata)[section].split('|');
                 const owner = metaDataArr[1];
                 const labbookName = metaDataArr[2];
+                successCall(owner, labbookName);
+
                 section === 'labbook'
                   ? FetchLabbookEdgeMutation(
                     owner,

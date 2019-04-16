@@ -1,7 +1,7 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
 import { mount } from 'enzyme';
-import LabbookPaginationLoader from 'Components/dashboard/loaders/CardLoader';
+import LabbookPaginationLoader from 'Components/dashboard/shared/loaders/CardLoader';
 import relayTestingUtils from '@gigantum/relay-testing-utils';
 
 describe('Snapshot LabbookPaginationLoader', () => {

@@ -20,8 +20,8 @@ export default class Home extends Component {
     sets authentication response to the state
   */
   componentDidMount() {
-    const { state } = this;
-    this.props.auth.isAuthenticated().then((response) => {
+    const { props, state } = this;
+    props.auth.isAuthenticated().then((response) => {
       let isAuthenticated = response;
       if (isAuthenticated === null) {
         isAuthenticated = false;
@@ -44,7 +44,8 @@ export default class Home extends Component {
   }
 
   render() {
-    const { state, props } = this;
+    const { props, state } = this;
+    const { loadingRenew } = props;
     return (
       <div className="Home">
         {
@@ -64,8 +65,9 @@ export default class Home extends Component {
           !state.authenticated && state.authenticated !== null && (
           <Login
             auth={props.auth}
+            loadingRenew={loadingRenew}
+            userIdentityReturned={props.userIdentityReturned}
             diskLow={props.diskLow}
-            loadingRenew={props.loadingRenew}
           />
           )
         }

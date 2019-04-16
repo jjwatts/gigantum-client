@@ -20,6 +20,7 @@
 
   &--on {
     border: 1px solid $azure;
+
   }
   &--off {
     border: 1px solid $romanSilver;
@@ -67,7 +68,7 @@
    border: 0px !important;
 }
 
-.TrackingToggle input:checked + label {
+.TrackingToggle__checkbox--on label {
   margin-left:20px;
 
   background-color: $azure;
@@ -75,6 +76,6 @@
   color:white;
 }
 
-.TrackingToggle__input:checked + label:before {
+.TrackingToggle__checkbox--on label:before {
   content:attr(data-on);
 }

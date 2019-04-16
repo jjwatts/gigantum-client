@@ -70,10 +70,8 @@ exports[`Test LocalLabbooks rendering 1`] = `
     <p
       className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description"
     >
-      <span
-        className="LocalLabbooks__description--blank"
-      >
-        No description provided
+      <span>
+         No description provided
       </span>
     </p>
   </div>

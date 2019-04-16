@@ -70,7 +70,7 @@
 
     &--left:hover::before {
       top: calc(50% - 7px);
-      right: calc(100% + 2px);
+      left: -8px;
 
       @include triangle('right', 7px, $slateBlue);
     }
@@ -78,7 +78,7 @@
 
     &--left:hover::after {
       top: calc(50% - 10px);
-      right: calc(100% + 16px);
+      left: -168px;
     }
 
     &--top-offset:hover::before {

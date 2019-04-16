@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import classNames from 'classnames';
 import YouTube from 'react-youtube';
 import Loadable from 'react-loadable';
+import Auth from 'JS/Auth/Auth';
 import {
   BrowserRouter as Router,
   Route,
@@ -18,10 +19,13 @@ import Prompt from 'Components/common/Prompt';
 import Helper from 'Components/common/Helper';
 // config
 import config from 'JS/config';
+// auth
+import UserIdentity from 'JS/Auth/UserIdentity';
 // assets
 import './Routes.scss';
 
 const Loading = () => <div />;
+const auth = new Auth();
 
 const Home = Loadable({
   loader: () => import('Components/home/Home'),
@@ -44,8 +48,9 @@ class Routes extends Component {
     super(props);
     this.state = {
       hasError: false,
-      forceLoginScreen: this.props.forceLoginScreen,
-      loadingRenew: this.props.loadingRenew,
+      forceLoginScreen: true,
+      loadingRenew: true,
+      userIdentityReturned: false,
       showYT: false,
       showDefaultMessage: true,
       diskLow: false,
@@ -61,7 +66,49 @@ class Routes extends Component {
   */
   componentDidMount() {
     this._checkSysinfo()
+    const self = this;
     this._flipDemoHeaderText();
+
+    UserIdentity.getUserIdentity().then((response) => {
+      const expiresAt = JSON.stringify((new Date().getTime() * 1000) + new Date().getTime());
+      let forceLoginScreen = true;
+      let loadingRenew = false;
+
+      if (response.data) {
+        if (response.data.userIdentity && ((response.data.userIdentity.isSessionValid && navigator.onLine) || !navigator.onLine)) {
+          localStorage.setItem('family_name', response.data.userIdentity.familyName);
+          localStorage.setItem('given_name', response.data.userIdentity.givenName);
+          localStorage.setItem('email', response.data.userIdentity.email);
+          localStorage.setItem('username', response.data.userIdentity.username);
+          localStorage.setItem('expires_at', expiresAt);
+          forceLoginScreen = false;
+        } else if (response.data.userIdentity && localStorage.getItem('access_token')) {
+          loadingRenew = true;
+          auth.renewToken(null, null, () => {
+            setTimeout(() => {
+              self.setState({ loadingRenew: false });
+            }, 2000);
+          }, true, () => {
+            self.setState({ forceLoginScreen: true, loadingRenew: false });
+          });
+        } else if (!response.data.userIdentity && !localStorage.getItem('access_token')) {
+          localStorage.removeItem('family_name');
+          localStorage.removeItem('given_name');
+          localStorage.removeItem('email');
+          localStorage.removeItem('username');
+          localStorage.removeItem('expires_at');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('id_token');
+          forceLoginScreen = true;
+        }
+      }
+
+      this.setState({
+        forceLoginScreen,
+        loadingRenew,
+        userIdentityReturned: true,
+      });
+    });
   }
 
   /**
@@ -77,9 +124,10 @@ class Routes extends Component {
     changes text of demo header message
   */
   _flipDemoHeaderText() {
+    const { state } = this;
     const self = this;
     setTimeout(() => {
-      self.setState({ showDefaultMessage: !this.state.showDefaultMessage });
+      self.setState({ showDefaultMessage: !state.showDefaultMessage });
       self._flipDemoHeaderText();
     }, 15000);
   }
@@ -89,7 +137,8 @@ class Routes extends Component {
     logs user out in using auth0
   */
   login() {
-    this.props.auth.login();
+    const { props } = this;
+    auth.login();
   }
 
   /**
@@ -97,7 +146,8 @@ class Routes extends Component {
     logs user out using auth0
   */
   logout() {
-    this.props.auth.logout();
+    const { props } = this;
+    auth.logout();
   }
 
   /**
@@ -105,7 +155,8 @@ class Routes extends Component {
     sets state of forceloginscreen
   */
   _setForceLoginScreen(forceLoginScreen) {
-    if (forceLoginScreen !== this.state.forceLoginScreen) {
+    const { state } = this;
+    if (forceLoginScreen !== state.forceLoginScreen) {
       this.setState({ forceLoginScreen });
     }
   }
@@ -137,8 +188,11 @@ class Routes extends Component {
   }
 
   render() {
-    const { state, props } = this;
+    const { props, state } = this;
     if (!state.hasError) {
+      // declare variables
+      const demoText = "You're using the Gigantum web demo. Data is wiped hourly. To continue using Gigantum ";
+      // declare css
       const headerCSS = classNames({
         HeaderBar: true,
         'is-demo': (window.location.hostname === config.demoHostName) || state.diskLow,
@@ -147,7 +201,16 @@ class Routes extends Component {
         Routes__main: true,
       });
 
-      const demoText = "You're using the Gigantum web demo. Data is wiped hourly. To continue using Gigantum ";
+      if (state.forceLoginScreen) {
+        return (
+          <Home
+            userIdentityReturned={state.userIdentityReturned}
+            history={history}
+            auth={auth}
+            {...props}
+          />
+        );
+      }
 
       return (
 
@@ -225,7 +288,7 @@ class Routes extends Component {
                   }
                   <div className={headerCSS} />
                   <SideBar
-                    auth={props.auth}
+                    auth={auth}
                     history={history}
                     diskLow={state.diskLow}
                   />
@@ -234,13 +297,14 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/"
-                      render={renderProps => (
+                      render={parentProps => (
                         <Home
                           loadingRenew={state.loadingRenew}
+                          userIdentityReturned={state.userIdentityReturned}
                           history={history}
+                          auth={auth}
                           diskLow={state.diskLow}
-                          auth={props.auth}
-                          {...renderProps}
+                          {...parentProps}
                         />
                       )
                     }
@@ -249,13 +313,14 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/login"
-                      render={renderProps => (
+                      render={parentProps => (
                         <Home
+                          userIdentityReturned={state.userIdentityReturned}
                           loadingRenew={state.loadingRenew}
                           history={history}
+                          auth={auth}
                           diskLow={state.diskLow}
-                          auth={props.auth}
-                          {...renderProps}
+                          {...parentProps}
                         />
                       )
                       }
@@ -276,13 +341,14 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/datasets/:labbookSection"
-                      render={renderProps => (
+                      render={parentProps => (
                         <Home
+                          userIdentityReturned={state.userIdentityReturned}
                           loadingRenew={state.loadingRenew}
                           history={history}
-                          auth={props.auth}
+                          auth={auth}
                           diskLow={state.diskLow}
-                          {...renderProps}
+                          {...parentProps}
                         />
                       )
                       }
@@ -292,13 +358,14 @@ class Routes extends Component {
                     <Route
                       exact
                       path="/projects/:labbookSection"
-                      render={renderProps => (
+                      render={parentProps => (
                         <Home
+                          userIdentityReturned={state.userIdentityReturned}
                           loadingRenew={state.loadingRenew}
                           history={history}
-                          auth={props.auth}
+                          auth={auth}
                           diskLow={state.diskLow}
-                          {...renderProps}
+                          {...parentProps}
                         />
                       )
                       }
@@ -306,7 +373,7 @@ class Routes extends Component {
 
                     <Route
                       path="/datasets/:owner/:datasetName"
-                      auth={props.auth}
+                      auth={auth}
                       render={(parentProps) => {
                         if (state.forceLoginScreen) {
                           return <Redirect to="/login" />;
@@ -316,12 +383,13 @@ class Routes extends Component {
                           <DatasetQueryContainer
                             datasetName={parentProps.match.params.datasetName}
                             owner={parentProps.match.params.owner}
-                            auth={props.auth}
+                            auth={auth}
                             history={history}
                             diskLow={state.diskLow}
                             {...props}
                             {...parentProps}
-                          />);
+                          />
+                        );
                       }
 
                       }
@@ -329,7 +397,7 @@ class Routes extends Component {
 
                     <Route
                       path="/projects/:owner/:labbookName"
-                      auth={props.auth}
+                      auth={auth}
                       render={(parentProps) => {
                         if (state.forceLoginScreen) {
                           return <Redirect to="/login" />;
@@ -339,24 +407,21 @@ class Routes extends Component {
                           <LabbookQueryContainer
                             labbookName={parentProps.match.params.labbookName}
                             owner={parentProps.match.params.owner}
-                            auth={props.auth}
+                            auth={auth}
                             history={history}
                             diskLow={state.diskLow}
                             {...props}
                             {...parentProps}
-                          />);
+                          />
+                        );
                       }
 
                       }
                     />
 
-                    <Helper
-                      auth={props.auth}
-                    />
+                    <Helper auth={auth} />
 
-                    <Prompt
-                      ref="prompt"
-                    />
+                    <Prompt ref="prompt" />
 
                     <Footer
                       ref="footer"

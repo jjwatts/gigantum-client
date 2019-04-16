@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+import { boundMethod } from 'autobind-decorator';
 // store
 import store from 'JS/redux/store';
 // config
@@ -9,19 +10,13 @@ import config from 'JS/config';
 import './Tooltip.scss';
 
 class Tooltip extends Component {
-  constructor(props) {
-    super(props);
-    const { isVisible } = store.getState().helper;
-    this.state = {
-      toolTipExpanded: false,
-      isVisible,
-    };
-    this._hideTooltip = this._hideTooltip.bind(this);
-  }
-
+  state = {
+    toolTipExpanded: false,
+    isVisible: store.getState().helper,
+  };
 
   static getDerivedStateFromProps(props, state) {
-    const toolTipExpanded = state.toolTipExpanded;
+    const { toolTipExpanded } = state;
     return {
       ...state,
       toolTipExpanded: props.isVisible ? toolTipExpanded : false,
@@ -49,8 +44,11 @@ class Tooltip extends Component {
    *  closes tooltip box when tooltip is open and the tooltip has not been clicked on
    *
   */
+  @boundMethod
   _hideTooltip(evt) {
-    if (this.state.toolTipExpanded && (evt.target.className.indexOf(this.props.section) === -1)) {
+    const { props, state } = this;
+    if (state.toolTipExpanded
+       && (evt.target.className.indexOf(props.section) === -1)) {
       this.setState({ toolTipExpanded: false });
     }
   }
@@ -106,7 +104,7 @@ class Tooltip extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
+const mapStateToProps = state => ({
   isVisible: state.helper.isVisible,
 });
 

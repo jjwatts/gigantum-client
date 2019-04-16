@@ -4,48 +4,60 @@ import {
   createPaginationContainer,
   graphql,
 } from 'react-relay';
-// components
-import RemoteDatasetPanel from 'Components/dashboard/datasets/remoteDatasets/RemoteDatasetsPanel';
-import DeleteDataset from 'Components/shared/modals/DeleteDataset';
-import CardLoader from 'Components/dashboard/loaders/CardLoader';
+import { boundMethod } from 'autobind-decorator';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // store
 import store from 'JS/redux/store';
+// components
+import RemoteDatasetPanel from 'Components/dashboard/datasets/remoteDatasets/RemoteDatasetsPanel';
+import DeleteDataset from 'Components/shared/modals/DeleteDataset';
+import CardLoader from 'Components/dashboard/shared/loaders/CardLoader';
+import NoResults from 'Components/dashboard/shared/NoResults';
 // assets
 import './RemoteDatasets.scss';
 
 class RemoteDatasets extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      deleteData: {
-        remoteId: null,
-        remoteOwner: null,
-        remoteDatasetName: null,
-        existsLocally: null,
-      },
-      deleteModalVisible: false,
-      isPaginating: false,
-    };
-    this._toggleDeleteModal = this._toggleDeleteModal.bind(this);
-    this._loadMore = this._loadMore.bind(this);
-  }
+  state = {
+    deleteData: {
+      remoteId: null,
+      remoteOwner: null,
+      remoteDatasetName: null,
+      existsLocally: null,
+    },
+    deleteModalVisible: false,
+    isPaginating: false,
+  };
 
   /*
     loads more remote datasets on mount
   */
   componentDidMount() {
-    if (this.props.remoteDatasets.remoteDatasets && this.props.remoteDatasets.remoteDatasets.pageInfo.hasNextPage) {
+    const { props } = this;
+    if (props.remoteDatasets.remoteDatasets
+      && props.remoteDatasets.remoteDatasets.pageInfo.hasNextPage) {
       this._loadMore();
     }
+
+    UserIdentity.getUserIdentity().then((response) => {
+      if (navigator.onLine) {
+        if (response.data) {
+          if (!response.data.userIdentity.isSessionValid) {
+            props.auth.renewToken();
+          }
+        }
+      } else {
+        props.forceLocalView();
+      }
+    });
   }
 
   /*
     loads more remote datasets if available
   */
   UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.remoteDatasets.remoteDatasets && nextProps.remoteDatasets.remoteDatasets.pageInfo.hasNextPage) {
+    if (nextProps.remoteDatasets.remoteDatasets
+      && nextProps.remoteDatasets.remoteDatasets.pageInfo.hasNextPage) {
       this._loadMore();
     }
   }
@@ -54,8 +66,10 @@ class RemoteDatasets extends Component {
     *  @param {}
     *  loads more datasets using the relay pagination container
   */
-  _loadMore = () => {
+  @boundMethod
+  _loadMore() {
     const self = this;
+    const { props } = this;
     UserIdentity.getUserIdentity().then((response) => {
       if (navigator.onLine) {
         if (response.data) {
@@ -64,10 +78,10 @@ class RemoteDatasets extends Component {
               isPaginating: true,
             });
 
-            if (this.props.remoteDatasets.remoteDatasets.pageInfo.hasNextPage) {
-              this.props.relay.loadMore(
+            if (props.remoteDatasets.remoteDatasets.pageInfo.hasNextPage) {
+              props.relay.loadMore(
                 8, // Fetch the next 8 items
-                (ev) => {
+                () => {
                   this.setState({
                     isPaginating: false,
                   });
@@ -75,15 +89,15 @@ class RemoteDatasets extends Component {
               );
             }
           } else {
-            this.props.auth.renewToken(true, () => {
-              this.props.forceLocalView();
+            props.auth.renewToken(true, () => {
+              props.forceLocalView();
             }, () => {
               self._loadMore();
             });
           }
         }
       } else {
-        this.props.forceLocalView();
+        props.forceLocalView();
       }
     });
   }
@@ -92,7 +106,7 @@ class RemoteDatasets extends Component {
     *  @param {object} deleteData
     *  changes the delete modal's visibility and changes the data passed to it
   */
-
+  @boundMethod
   _toggleDeleteModal(deleteData) {
     if (deleteData) {
       this.setState({
@@ -113,8 +127,9 @@ class RemoteDatasets extends Component {
   }
 
   render() {
-    if (this.props.remoteDatasets && this.props.remoteDatasets.remoteDatasets !== null) {
-      const datasets = this.props.filterDatasets(this.props.remoteDatasets, this.props.filterState);
+    const { props, state } = this;
+    if (props.remoteDatasets && props.remoteDatasets.remoteDatasets !== null) {
+      const datasets = props.filterDatasets(props.remoteDatasets, props.filterState);
 
       return (
         <div className="Datasets__listing">
@@ -124,79 +139,50 @@ class RemoteDatasets extends Component {
               ? datasets.map(edge => (
                 <RemoteDatasetPanel
                   toggleDeleteModal={this._toggleDeleteModal}
-                  datasetListId={this.props.remoteDatasetsId}
+                  datasetListId={props.remoteDatasetsId}
                   key={edge.node.owner + edge.node.name}
                   ref={`RemoteDatasetPanel${edge.node.name}`}
                   edge={edge}
-                  history={this.props.history}
+                  history={props.history}
                   existsLocally={edge.node.isLocal}
-                  auth={this.props.auth}
+                  auth={props.auth}
                 />
               ))
-              : !this.state.isPaginating
-            && store.getState().datasetListing.filterText
-
-            && (
-            <div className="Datasets__no-results">
-
-              <h3 className="Datasets__h3">No Results Found</h3>
-
-              <p>
-                Edit your filters above or
-                <span
-                  className="Datasets__span"
-                  onClick={() => this.props.setFilterValue({ target: { value: '' } })}
-                >
-                clear
-                </span>
-                to try again.
-              </p>
-
-            </div>
-            )
-          }
+              : !state.isPaginating
+                && store.getState().datasetListing.filterText
+                && <NoResults setFilterValue={props.setFilterValue} />
+            }
             {
-            Array(5).fill(1).map((value, index) => (
-              <CardLoader
-                key={`RemoteDatasets_paginationLoader${index}`}
-                index={index}
-                isLoadingMore={this.state.isPaginating}
-              />
-            ))
-          }
+              Array(5).fill(1).map((value, index) => (
+                <CardLoader
+                  key={`RemoteDatasets_paginationLoader${index}`}
+                  index={index}
+                  isLoadingMore={state.isPaginating}
+                />
+              ))
+            }
           </div>
           {
-            this.state.deleteModalVisible
+            state.deleteModalVisible
             && (
             <DeleteDataset
               sectionType="dataset"
               handleClose={() => { this._toggleDeleteModal(); }}
-              datasetListId={this.props.datasetListId}
-              remoteId={this.state.deleteData.remoteId}
+              datasetListId={props.datasetListId}
+              remoteId={state.deleteData.remoteId}
               remoteConnection="RemoteDatasets_remoteDatasets"
               toggleModal={this._toggleDeleteModal}
-              remoteOwner={this.state.deleteData.remoteOwner}
-              remoteDatasetName={this.state.deleteData.remoteDatasetName}
-              existsLocally={this.state.deleteData.existsLocally}
+              remoteOwner={state.deleteData.remoteOwner}
+              remoteDatasetName={state.deleteData.remoteDatasetName}
+              existsLocally={state.deleteData.existsLocally}
               remoteDelete
-              history={this.props.history}
+              history={props.history}
             />
             )
           }
         </div>
       );
     }
-    UserIdentity.getUserIdentity().then((response) => {
-      if (navigator.onLine) {
-        if (response.data) {
-          if (!response.data.userIdentity.isSessionValid) {
-            this.props.auth.renewToken();
-          }
-        }
-      } else {
-        this.props.forceLocalView();
-      }
-    });
 
     return (<div />);
   }

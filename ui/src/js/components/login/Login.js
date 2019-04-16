@@ -1,6 +1,7 @@
 // vendor
 import React, { Component } from 'react';
 import store from 'JS/redux/store';
+import Loader from 'Components/common/Loader';
 // config
 import config from 'JS/config';
 // assets
@@ -18,7 +19,8 @@ export default class Login extends Component {
     login through Auth0
   */
   login() {
-    this.props.auth.login();
+    const { props } = this;
+    props.auth.login();
   }
 
   /**
@@ -26,55 +28,55 @@ export default class Login extends Component {
     logout through Auth0
   */
   logout() {
-    this.props.auth.logout();
+    const { props } = this;
+    props.auth.logout();
   }
 
   render() {
+    const { props } = this;
     const errorType = sessionStorage.getItem('LOGIN_ERROR_TYPE');
-
-
     const errorDescription = sessionStorage.getItem('LOGIN_ERROR_DESCRIPTION');
     return (
       <div className="Login">
-        {
-          <div className="Login__panel">
-            { (window.location.hostname === config.demoHostName)
+        { props.userIdentityReturned
+          && (
+            <div className="Login__panel">
+              { (window.location.hostname === config.demoHostName)
                 && (
-                <div className="demo-header">
-                  Login or create an account to try out Gigantum.
-                  <a
-                    href="https://docs.gigantum.com/docs/frequently-asked-questions#section-why-do-i-need-to-log-in"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                      Why?
-                  </a>
-                </div>
+                  <div className="demo-header">
+                    Login or create an account to try out Gigantum.
+                    <a
+                      href="https://docs.gigantum.com/docs/frequently-asked-questions#section-why-do-i-need-to-log-in"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                        Why?
+                    </a>
+                  </div>
                 )
-            }
-
-            { errorType
-              && (
-              <div className="LoginError">
-                <div className="Login__error">
-                  <div className="Login__error-type">
-                    <div className="Login__error-exclamation" />
-                    <div>{errorType}</div>
+              }
+              { errorType
+                && (
+                  <div className="LoginError">
+                    <div className="Login__error">
+                      <div className="Login__error-type">
+                        <div className="Login__error-exclamation" />
+                        <div>{errorType}</div>
+                      </div>
+                      <div className="Login__error-description">
+                        {errorDescription}
+                      </div>
+                    </div>
                   </div>
-                  <div className="Login__error-description">
-                    {errorDescription}
-                  </div>
-                </div>
-              </div>
-              )
-            }
+                )
+               }
 
-            <div className="Login__logo" />
+              <div className="Login__logo" />
 
-            {
-              this.props.loadingRenew
+              { props.loadingRenew
                 ? (
                   <button
+                    type="button"
                     disabled
                     className="Login__button--loading"
                   >
@@ -84,14 +86,19 @@ export default class Login extends Component {
                 )
                 : (
                   <button
+                    type="button"
                     className="Login__button"
                     onClick={this.login.bind(this)}
                   >
                     Log In
                   </button>
                 )
-            }
-          </div>
+              }
+            </div>
+          )
+        }
+        {
+          props.userIdentityReturned && <Loader />
         }
       </div>
     );

@@ -4,6 +4,7 @@ import Highlighter from 'react-highlight-words';
 import { Link } from 'react-router-dom';
 import Moment from 'moment';
 import classNames from 'classnames';
+import { boundMethod } from 'autobind-decorator';
 // muations
 import StartContainerMutation from 'Mutations/container/StartContainerMutation';
 import StopContainerMutation from 'Mutations/container/StopContainerMutation';
@@ -12,25 +13,20 @@ import { setErrorMessage, setInfoMessage } from 'JS/redux/actions/footer';
 import store from 'JS/redux/store';
 // assets
 import './LocalLabbookPanel.scss';
+
 /**
 *  labbook panel is to only render the edge passed to it
 */
 
 export default class LocalLabbookPanel extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      exportPath: '',
-      status: 'loading',
-      textStatus: '',
-      labbookName: props.edge.node.name,
-      owner: props.edge.node.owner,
-      cssClass: 'loading',
-    };
-    this._getContainerStatusText = this._getContainerStatusText.bind(this);
-    this._stopStartContainer = this._stopStartContainer.bind(this);
-  }
+  state = {
+    exportPath: '',
+    status: 'loading',
+    textStatus: '',
+    labbookName: this.props.edge.node.name,
+    owner: this.props.edge.node.owner,
+    cssClass: 'loading',
+  };
 
   /** *
   * @param {Object} nextProps
@@ -61,26 +57,11 @@ export default class LocalLabbookPanel extends Component {
   }
 
   /** *
-  * @param {string, string} containerStatus, imageStatus
-  * returns corrent container status by checking both container and imagestatus
-  */
-  _getContainerStatusText(containerStatus, imageStatus) {
-    let status = 'Running';
-    status = (containerStatus === 'NOT_RUNNING') ? 'Stopped' : status;
-    status = (imageStatus === 'BUILD_IN_PROGRESS') ? 'Building' : status;
-    status = (imageStatus === 'BUILD_FAILED') ? 'Rebuild' : status;
-    status = (imageStatus === 'DOES_NOT_EXIST') ? 'Rebuild' : status;
-
-    const textStatus = (newStatus === 'Rebuild') ? 'Stopped' : textStatus;
-
-    return { status: textStatus, cssClass: newStatus };
-  }
-
-  /** *
   * @param {string} status
   * fires when a componet mounts
   * adds a scoll listener to trigger pagination
   */
+  @boundMethod
   _stopStartContainer(evt, status) {
     evt.preventDefault();
     evt.stopPropagation();
@@ -98,14 +79,11 @@ export default class LocalLabbookPanel extends Component {
     }
   }
 
-  _rebuildContainer() {
-
-  }
-
   /** *
   * @param {string} status
   * starts labbook conatainer
   */
+  @boundMethod
   _startContainerMutation() {
     const self = this;
 
@@ -130,6 +108,7 @@ export default class LocalLabbookPanel extends Component {
   * @param {string} status
   * stops labbbok conatainer
   */
+  @boundMethod
   _stopContainerMutation() {
     const { owner, labbookName } = this.state;
 
@@ -156,6 +135,7 @@ export default class LocalLabbookPanel extends Component {
   * @param {object,string} evt,status
   * stops labbbok conatainer
   ** */
+  @boundMethod
   _updateTextStatusOver(evt, isOver, status) {
     const newStatus = status;
     if (isOver) {
@@ -173,6 +153,7 @@ export default class LocalLabbookPanel extends Component {
   * @param {objectstring} evt,status
   * stops labbbok conatainer
   ** */
+  @boundMethod
   _updateTextStatusOut(evt, status) {
     if (status !== 'loading') {
       this.setState({ textStatus: status });
@@ -181,17 +162,12 @@ export default class LocalLabbookPanel extends Component {
 
   render() {
     const { props, state } = this;
-
-
     const { edge } = props;
-
-
     const {
       status,
       textStatus,
       cssClass,
     } = state;
-
 
     const containerCSS = classNames({
       [`ContainerStatus__container-state ContainerStatus__containerStatus--state ${cssClass} box-shadow`]: true,
@@ -265,25 +241,22 @@ export default class LocalLabbookPanel extends Component {
                   />
                 )
                 : (
-                  <span
-                    className="LocalLabbooks__description--blank"
-                  >
-              No description provided
-                  </span>
+                  <span> No description provided</span>
                 )
             }
           </p>
 
         </div>
 
-        { !(this.props.visibility === 'local')
+        { !(props.visibility === 'local')
           && (
           <div
-            data-tooltip={`${this.props.visibility}`}
-            className={`Tooltip-Listing LocalLabbookPanel__${this.props.visibility} Tooltip-data Tooltip-data--small`}
+            data-tooltip={`${props.visibility}`}
+            className={`Tooltip-Listing LocalLabbookPanel__${props.visibility} Tooltip-data Tooltip-data--small`}
           />
           )
         }
-      </Link>);
+      </Link>
+    );
   }
 }

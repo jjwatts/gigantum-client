@@ -19,8 +19,8 @@
 .Modal__container{
   height: calc(100% - 70px);
   padding: 20px;
-  hr{
-    width: calc(100% - 2px) !important !important;
+  hr {
+    width: calc(100% - 2px) !important;
     margin-top: 10px;
     margin-bottom: 10px;
 
@@ -31,7 +31,12 @@
   }
 }
 
-.Modal__sub-container{
+.Modal__button-container {
+   width: 100%;
+   @include flex(flex-end, row);
+}
+
+.Modal__sub-container {
   height: calc(100% - 60px);
   padding: 0 20px;
 
@@ -45,44 +50,47 @@
   }
 }
 
-.Modal__content.large{
-  padding: 0 60px 20px 60px;
+.Modal__content{
 
-  @include modal(500px, 960px);
-}
+  &--large{
+    padding: 0 60px 20px 60px;
 
-.Modal__content.large-long{
-  padding: 0 60px 20px 60px;
-  position: fixed;
-  left: 50%;
-  top: 15px;
-  bottom: 15px;
-  z-index: 16;
-  width: 960px;
-  max-height: 1000px;
-  margin: 0 0 0 -480px;
-  border: 1px solid #fefefe;
-  border-radius: 8px;
-  background-color: #fefefe;
-  box-shadow: 0 0px 12px 0 rgba(0, 0, 0, 0.1);
-
-  @include animation('slide-up-fade-in forwards .25s');
-
-  .Modal__container {
-    height: 100%;
+    @include modal(500px, 960px);
   }
-}
 
-.Modal__content.medium{
-  @include modal(440px, 660px);
-}
+  &--large-long{
+    padding: 0 60px 20px 60px;
+    position: fixed;
+    left: 50%;
+    top: 15px;
+    bottom: 15px;
+    z-index: 16;
+    width: 960px;
+    max-height: 1000px;
+    margin: 0 0 0 -480px;
+    border: 1px solid #fefefe;
+    border-radius: 8px;
+    background-color: #fefefe;
+    box-shadow: 0 0px 12px 0 rgba(0, 0, 0, 0.1);
 
-.Modal__content.small{
-  padding: 0;
+    @include animation('slide-up-fade-in forwards .25s');
 
-  @include modal(200px, 300px);
-  p {
-    line-height: 20px;
+    .Modal__container {
+      height: 100%;
+    }
+  }
+
+  &--medium{
+    @include modal(440px, 735px);
+  }
+
+  &--small{
+    padding: 0;
+
+    @include modal(200px, 300px);
+    p {
+      line-height: 20px;
+    }
   }
 }
 
@@ -102,6 +110,11 @@
 
 .Modal__close{
   @include close();
+
+  &:hover {
+    background-size: 32px;
+    padding: 7px 20px;
+  }
 }
 
 .Modal__pre-header{
@@ -121,6 +134,7 @@
   padding: 40px 0 5px 20px;
 
   text-align: center;
+  white-space: nowrap;
 
   color: $azure;
   background-size: 50px;
@@ -198,6 +212,4 @@
     background: url('~Images/icons/branches/delete.svg') no-repeat center center;
     background-size: 60px;
   }
-
-
 }

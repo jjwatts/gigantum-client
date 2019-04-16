@@ -94,11 +94,12 @@ export default class Prompt extends Component {
   _handlePing = () => {
     pingServer()
       .then((response) => {
-        if (updateAvailable !== this.state.updateAvailable) {
+        const { state } = this;
+        if (updateAvailable !== state.updateAvailable) {
           this.setState({ updateAvailable });
         }
         if (response) {
-          if (this.state.failureCount > 0) {
+          if (state.failureCount > 0) {
             window.location.reload();
           }
 
@@ -113,7 +114,7 @@ export default class Prompt extends Component {
           this.intervalId = setInterval(this._handlePing.bind(this), 10000);
         } else {
           this.setState({
-            failureCount: this.state.failureCount + 1,
+            failureCount: state.failureCount + 1,
             promptState: false,
           });
 
@@ -126,35 +127,29 @@ export default class Prompt extends Component {
 
 
   render() {
-    const { props, state } = this;
+    const { state } = this;
+    // variables here
     const failedTwiceOrMore = (state.failureCount >= 2);
     const failedEightTimesOrMore = (state.failureCount >= 8);
     const lessThanEight = (state.failureCount < 8);
+    // decalre css here
     const promptInfoCSS = classNames({
       Prompt__info: true,
       hidden: state.promptState,
     });
-
-
     const propmptLogoCSS = classNames({
       Prompt__logo: true,
       'Prompt__logo--final': failedEightTimesOrMore,
       'Prompt__logo--raised': failedTwiceOrMore && !failedEightTimesOrMore,
     });
-
-
     const loadingMessageCSS = classNames({
       'Prompt__loading-text': ((lessThanEight) && failedTwiceOrMore),
       hidden: !((failedTwiceOrMore) && lessThanEight),
     });
-
-
     const failureContainerCSS = classNames({
       'Prompt__failure-container': failedEightTimesOrMore,
       hidden: !failedEightTimesOrMore,
     });
-
-
     const updateAvailableCSS = classNames({
       Prompt__refresh: state.updateAvailable,
       hidden: !state.updateAvailable,
@@ -184,6 +179,7 @@ export default class Prompt extends Component {
           </div>
           <div>
             <button
+              type="button"
               className="button--green"
               onClick={() => window.location.reload()}
             >

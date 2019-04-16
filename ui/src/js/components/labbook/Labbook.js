@@ -36,7 +36,7 @@ import LabbookLookupMutation from 'Mutations/LabbookLookupMutation';
 import MigrateProjectMutation from 'Mutations/MigrateProjectMutation';
 // query
 import fetchMigrationInfoQuery from './queries/fetchMigrationInfoQuery';
-import fetchPagkageLatestVersion from './queries/fetchPackageLatestVersionQuery';
+import fetchPackageLatestVersion from './queries/fetchPackageLatestVersionQuery';
 // assets
 import './Labbook.scss';
 
@@ -81,6 +81,7 @@ class Labbook extends Component {
     // bind functions here
     this._toggleBranchesView = this._toggleBranchesView.bind(this);
     this._branchViewClickedOff = this._branchViewClickedOff.bind(this);
+
     setCallbackRoute(props.location.pathname);
   }
 
@@ -213,29 +214,23 @@ class Labbook extends Component {
   @boundMethod
   _fetchPackageVersion() {
     const { props, state } = this;
-
-
     const { owner, name } = props.labbook;
-
-
     const currentTimestamp = new Date().getTime();
-
-
     const timestamp = localStorage.getItem('latestVersionTimestamp');
-
-
     const delayRefetch = timestamp && ((currentTimestamp - timestamp) < 120000);
+
     if (!state.isFetchingPackages && !delayRefetch) {
       this.setState({ isFetchingPackages: true });
       const date = new Date();
       localStorage.setItem('latestVersionTimestamp', date.getTime());
-      fetchPagkageLatestVersion.getPackageVersions(owner, name, 1000, null).then((response) => {
-        if (response.labbook) {
+
+      fetchPackageLatestVersion.getPackageVersions(owner, name, 1000, null).then((response, error) => {
+        if (response && response.labbook) {
           const packageLatestVersions = response.labbook.environment.packageDependencies.edges;
           this.setState({ packageLatestVersions });
         }
         localStorage.setItem('latestVersionTimestamp', 0);
-        if (this.state.queuePackageFetch) {
+        if (state.queuePackageFetch) {
           this.setState({
             isFetchingPackages: false,
             queuePackageFetch: false,
@@ -259,10 +254,9 @@ class Labbook extends Component {
   */
   _fetchMigrationInfo() {
     const { props } = this;
-
-
     const { owner, name } = props.labbook;
     const self = this;
+
     fetchMigrationInfoQuery.getLabook(owner, name).then((response) => {
       if (response.labbook) {
         const {
@@ -300,16 +294,11 @@ class Labbook extends Component {
   *  @return {}
   */
   _fetchStatus(isLabbookUpdate) {
-    const { props, state } = this;
-
-
+    const { props } = this;
     const { owner, name } = props.labbook;
-
-
     const self = this;
-
-
     const { isBuilding } = props;
+
     if (this.mounted) {
       if (!isLabbookUpdate) {
         LabbookContainerStatusMutation(owner, name, (error, response) => {
@@ -320,15 +309,19 @@ class Labbook extends Component {
             }
           }
           setTimeout(() => {
-            const isLabbookUpdate = (count === 20);
-            self._fetchStatus(isLabbookUpdate);
-            count = isLabbookUpdate ? 0 : (count + 1);
+            const canLabbookUpdate = (count === 20);
+            self._fetchStatus(canLabbookUpdate);
+            count = canLabbookUpdate ? 0 : (count + 1);
           }, 3 * 1000);
         });
       } else {
         LabbookLookupMutation(owner, name, (error, response) => {
           if (response && response.fetchLabbookEdge && response.fetchLabbookEdge.newLabbookEdge) {
-            const { branches, collaborators, canManageCollaborators } = response.fetchLabbookEdge.newLabbookEdge.node;
+            const {
+              branches,
+              collaborators,
+              canManageCollaborators,
+            } = response.fetchLabbookEdge.newLabbookEdge.node;
             self.setState({
               branches,
               collaborators,
@@ -336,9 +329,9 @@ class Labbook extends Component {
             });
           }
           setTimeout(() => {
-            const isLabbookUpdate = (count === 20);
-            self._fetchStatus(isLabbookUpdate);
-            count = isLabbookUpdate ? 0 : (count + 1);
+            const canLabbookUpdate = (count === 20);
+            self._fetchStatus(canLabbookUpdate);
+            count = canLabbookUpdate ? 0 : (count + 1);
           }, 3 * 1000);
         });
       }
@@ -374,7 +367,9 @@ class Labbook extends Component {
   */
   @boundMethod
   _migrateProject() {
-    const { owner, name } = this.props.labbook;
+    const { props, state } = this;
+    const { owner, name } = props.labbook;
+
     this.setState({ buttonState: 'loading' });
     MigrateProjectMutation(owner, name, (response, error) => {
       if (error) {
@@ -388,27 +383,29 @@ class Labbook extends Component {
           isDeprecated: false,
           shouldMigrate: false,
         });
-        const oldBranches = this.props.labbook.branches.filter((branch => branch.branchName.startsWith('gm.workspace')));
+        const oldBranches = props.labbook.branches.filter((branch => branch.branchName.startsWith('gm.workspace')));
         oldBranches.forEach(({ branchName }, index) => {
           const data = {
             branchName,
             deleteLocal: true,
             deleteRemote: true,
           };
-          this.state.branchMutations.deleteBranch(data, (response, error) => {
-            if (error) {
-              console.log(error);
+
+          state.branchMutations.deleteBranch(data, (deleteResponse, delteError) => {
+            if (delteError) {
               this.setState({ buttonState: 'error' });
+
               setTimeout(() => {
                 this.setState({ buttonState: '' });
               }, 2000);
             }
+
             if (index === oldBranches.length - 1) {
               this.setState({
                 migrateComplete: true,
+                buttonState: 'finished',
               });
               setInfoMessage('Project migrated successfully');
-              this.setState({ buttonState: 'finished' });
               setTimeout(() => {
                 this.setState({ buttonState: '' });
               }, 2000);
@@ -470,28 +467,24 @@ class Labbook extends Component {
   */
   _getMigrationInfo() {
     const { props, state } = this;
-
-
     const isOwner = (localStorage.getItem('username') === props.labbook.owner);
-
-
     const {
       isDeprecated,
       shouldMigrate,
     } = state;
-
-
     const isPublished = typeof props.labbook.defaultRemote === 'string';
 
     let migrationText = '';
     let showMigrationButton = false;
 
-    if ((isOwner && isDeprecated && shouldMigrate && isPublished) || (isDeprecated && !isPublished && shouldMigrate)) {
+    if ((isOwner && isDeprecated && shouldMigrate && isPublished)
+        || (isDeprecated && !isPublished && shouldMigrate)) {
       migrationText = 'This Project needs to be migrated to the latest Project format';
       showMigrationButton = true;
     } else if (!isOwner && isDeprecated && shouldMigrate && isPublished) {
       migrationText = 'This Project needs to be migrated to the latest Project format. The project owner must migrate and sync this project to update.';
-    } else if ((isDeprecated && !isPublished && !shouldMigrate) || (isDeprecated && isPublished && !shouldMigrate)) {
+    } else if ((isDeprecated && !isPublished && !shouldMigrate)
+      || (isDeprecated && isPublished && !shouldMigrate)) {
       migrationText = 'This project has been migrated. Master is the new primary branch. Old branches should be removed.';
     }
 
@@ -500,30 +493,22 @@ class Labbook extends Component {
 
   render() {
     const { props, state } = this;
-
-
     const isLockedBrowser = {
       locked: (props.isPublishing || props.isSyncing || props.isExporting),
       isPublishing: props.isPublishing,
       isExporting: props.isExporting,
       isSyncing: props.isSyncing,
     };
-
-
     const isLocked = props.isBuilding || props.isSyncing || props.isPublishing || state.isLocked;
 
     if (props.labbook) {
       const { labbook, branchesOpen } = props;
-
-
       const sidePanelVisible = !isLocked && props.sidePanelVisible;
-
-
       const branchName = '';
-
-
       const isDemo = (window.location.hostname === Config.demoHostName) || props.diskLow;
-
+      const { migrationText, showMigrationButton } = this._getMigrationInfo();
+      const oldBranches = labbook.branches.filter((branch => branch.branchName.startsWith('gm.workspace') && branch.branchName !== labbook.activeBranchName));
+      const migrationModalType = state.migrateComplete ? 'large' : 'large-long';
 
       const labbookCSS = classNames({
         Labbook: true,
@@ -534,26 +519,13 @@ class Labbook extends Component {
         'Labbook--demo-deprecated': state.isDeprecated && isDemo,
         'Labbook--sidePanelVisible': sidePanelVisible,
       });
-
-
       const deprecatedCSS = classNames({
         Labbook__deprecated: true,
         'Labbook__deprecated--demo': isDemo,
       });
-
-
       const migrationButtonCSS = classNames({
         'Tooltip-data': state.isLocked,
       });
-
-
-      const { migrationText, showMigrationButton } = this._getMigrationInfo();
-
-
-      const oldBranches = labbook.branches.filter((branch => branch.branchName.startsWith('gm.workspace') && branch.branchName !== labbook.activeBranchName));
-
-
-      const migrationModalType = state.migrateComplete ? 'large' : 'large-long';
 
       return (
         <div className={labbookCSS}>
