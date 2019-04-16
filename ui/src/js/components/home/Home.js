@@ -27,7 +27,6 @@ export default class Home extends Component {
         isAuthenticated = false;
       }
       if (isAuthenticated !== state.authenticated) {
-        console.log(state.authenticated, isAuthenticated)
         this.setState({ authenticated: isAuthenticated });
       }
     });

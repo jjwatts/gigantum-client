@@ -51,7 +51,7 @@ export default class SideBar extends Component {
     const sidebarCSS = classNames({
       'SideBar col-sm-1': state.authenticated || state.authenticated === null,
       hidden: !(state.authenticated || state.authenticated === null),
-      'SideBar--demo': window.location.hostname === config.demoHostName || props.diskLow,
+      'SideBar--demo': (window.location.hostname === config.demoHostName) || props.diskLow,
     });
     const projectsCSS = classNames({
       SideBar__icon: true,
