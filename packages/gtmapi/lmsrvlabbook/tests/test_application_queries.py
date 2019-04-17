@@ -48,4 +48,3 @@ class TestLabManagerQueries(object):
         assert r['data']['appHealth']['diskAvailableGb'] > 0.1
         assert r['data']['appHealth']['diskAvailableGb'] > 6.0
         assert r['data']['appHealth']['diskUseWarning'] in (True, False)
-        assert False
