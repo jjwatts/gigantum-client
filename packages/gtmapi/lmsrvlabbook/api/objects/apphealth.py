@@ -37,10 +37,4 @@ class AppHealthMonitor(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         return self._get_cached_telemetry()['disk']['total']
 
     def resolve_disk_use_warning(self, info):
-        disk_avail = self._get_cached_telemetry()['disk']['available']
-
-        threshold_gb = 2.5
-        if disk_avail < threshold_gb:
-            return True
-        else:
-            return False
+        return self._get_cached_telemetry()['disk']['lowDiskWarning']

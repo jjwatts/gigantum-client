@@ -3,6 +3,8 @@ from typing import Tuple
 
 from gtmcore.configuration.utils import call_subprocess
 
+DISK_WARNING_THRESHOLD_GB = 2.5
+
 
 def service_telemetry():
     # TODO: Use a dataclass to represent this
@@ -22,7 +24,8 @@ def service_telemetry():
         },
         'disk': {
             'total': disk_total,
-            'available': disk_avail
+            'available': disk_avail,
+            'lowDiskWarning': disk_total < DISK_WARNING_THRESHOLD_GB
         },
         'rq': {
             # Total workers, and workers idle/available
