@@ -5,6 +5,7 @@ from gtmcore.configuration.utils import call_subprocess
 
 
 def service_telemetry():
+    # TODO: Use a dataclass to represent this
     t0 = time.time()
     mem_total, mem_avail = _calc_mem_free()
     disk_total, disk_avail = _calc_disk_free()
@@ -36,10 +37,19 @@ def _calc_mem_free() -> Tuple[int, int]:
     return mem_total, mem_available
 
 
-def _calc_disk_free() -> Tuple[int, int]:
+def _calc_disk_free() -> Tuple[float, float]:
     disk_results = call_subprocess("df -h /".split(), cwd='/').split('\n')
     _, disk_size, disk_used, disk_avail, use_pct, _ = disk_results[1].split()
-    return disk_size, disk_avail
+
+    disk_size_num, disk_size_unit = float(disk_used[:-1]), disk_used[-1]
+    if disk_size_unit == 'M':
+        disk_size_num /= 1000.0
+
+    disk_avail_num, disk_avail_unit = float(disk_avail[:-1]), disk_avail[-1]
+    if disk_avail_unit == 'M':
+        disk_avail_num /= 1000.0
+
+    return disk_size_num, disk_avail_num
 
 
 def _calc_rq_free() -> Tuple[int, int]:
