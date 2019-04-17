@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import YouTube from 'react-youtube';
 import Loadable from 'react-loadable';
 import Auth from 'JS/Auth/Auth';
+import { boundMethod } from 'autobind-decorator';
 import {
   BrowserRouter as Router,
   Route,
@@ -55,6 +56,7 @@ class Routes extends Component {
       showYT: false,
       showDefaultMessage: true,
       diskLow: false,
+      available: 0,
     };
 
     this._setForceLoginScreen = this._setForceLoginScreen.bind(this);
@@ -164,6 +166,15 @@ class Routes extends Component {
   }
 
   /**
+    hides disk warning
+  */
+  @boundMethod
+  _hideDiskWarning() {
+    sessionStorage.setItem('hideDiskWarning', true);
+    this.forceUpdate();
+  }
+
+  /**
     shows sysinfo header if available size is too small
   */
   _checkSysinfo() {
@@ -176,11 +187,8 @@ class Routes extends Component {
     }).then((response) => {
       if (response.status === 200 && (response.headers.get('content-type') === 'application/json')) {
         response.json().then((res) => {
-          const { available } = res.disk;
-          const size = available.slice(0, available.length - 1);
-          const sizeType = available.slice(-1);
-          const diskLow = !((sizeType === 'T') || ((sizeType === 'G') && (Number(size) > 5)));
-          self.setState({ diskLow });
+          const { available, lowDiskWarning } = res.disk;
+          self.setState({ diskLow: true, available });
         });
       }
     }).catch(() => false);
@@ -188,13 +196,14 @@ class Routes extends Component {
 
   render() {
     const { props, state } = this;
+    const showDiskLow = state.diskLow && !sessionStorage.getItem('hideDiskWarning');
     if (!state.hasError) {
       // declare variables
       const demoText = "You're using the Gigantum web demo. Data is wiped hourly. To continue using Gigantum ";
       // declare css
       const headerCSS = classNames({
         HeaderBar: true,
-        'is-demo': (window.location.hostname === config.demoHostName) || state.diskLow,
+        'is-demo': (window.location.hostname === config.demoHostName) || showDiskLow,
       });
       const routesCSS = classNames({
         Routes__main: true,
@@ -252,8 +261,12 @@ class Routes extends Component {
                       ))
                   }
                   {
-                    state.diskLow
-                    && <DiskHeader />
+                    showDiskLow
+                    && (
+                    <DiskHeader
+                      available={state.available}
+                      hideDiskWarning={this._hideDiskWarning}
+                    />)
                   }
                   {
                     state.showYT
@@ -275,7 +288,7 @@ class Routes extends Component {
                   <SideBar
                     auth={auth}
                     history={history}
-                    diskLow={state.diskLow}
+                    diskLow={showDiskLow}
                   />
                   <div className={routesCSS}>
 
@@ -288,7 +301,7 @@ class Routes extends Component {
                           userIdentityReturned={state.userIdentityReturned}
                           history={history}
                           auth={auth}
-                          diskLow={state.diskLow}
+                          diskLow={showDiskLow}
                           {...parentProps}
                         />
                       )
@@ -304,7 +317,7 @@ class Routes extends Component {
                           loadingRenew={state.loadingRenew}
                           history={history}
                           auth={auth}
-                          diskLow={state.diskLow}
+                          diskLow={showDiskLow}
                           {...parentProps}
                         />
                       )
@@ -332,7 +345,7 @@ class Routes extends Component {
                           loadingRenew={state.loadingRenew}
                           history={history}
                           auth={auth}
-                          diskLow={state.diskLow}
+                          diskLow={showDiskLow}
                           {...parentProps}
                         />
                       )
@@ -349,7 +362,7 @@ class Routes extends Component {
                           loadingRenew={state.loadingRenew}
                           history={history}
                           auth={auth}
-                          diskLow={state.diskLow}
+                          diskLow={showDiskLow}
                           {...parentProps}
                         />
                       )
@@ -370,7 +383,7 @@ class Routes extends Component {
                             owner={parentProps.match.params.owner}
                             auth={auth}
                             history={history}
-                            diskLow={state.diskLow}
+                            diskLow={showDiskLow}
                             {...props}
                             {...parentProps}
                           />
@@ -394,7 +407,7 @@ class Routes extends Component {
                             owner={parentProps.match.params.owner}
                             auth={auth}
                             history={history}
-                            diskLow={state.diskLow}
+                            diskLow={showDiskLow}
                             {...props}
                             {...parentProps}
                           />

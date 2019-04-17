@@ -151,6 +151,11 @@ button {
     background-size: 10px !important;
   }
 
+  &--medium {
+    width: 30px;
+    height: 30px;
+  }
+
   &--no-underline {
     text-decoration: none;
   }
