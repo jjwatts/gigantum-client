@@ -9,7 +9,11 @@ def service_telemetry():
     t0 = time.time()
     mem_total, mem_avail = _calc_mem_free()
     disk_total, disk_avail = _calc_disk_free()
-    rq_total, rq_free = _calc_rq_free()
+    try:
+        rq_total, rq_free = _calc_rq_free()
+    except:
+        rq_total, rq_free = 0, 0
+        
     compute_time = time.time() - t0
     return {
         'memory': {
