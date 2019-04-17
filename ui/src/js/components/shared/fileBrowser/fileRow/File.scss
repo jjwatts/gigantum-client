@@ -25,34 +25,16 @@
 
     @extend .UserSelect--none;
 
-    &--background {
-      background: $white;
+    &--noDrag {
+      background: $background-color !important;
+      cursor: not-allowed !important;
+    }
+    &--canDrag {
+      cursor: copy !important;
     }
 
     &--hover {
-
       background: $fileBrowserHover;
-
-      .ActionsMenu__item {
-        &--rename {
-            background: url('~Images/icons/rename-dark.svg') no-repeat 50% 50%;
-            background-size: 20px;
-        }
-
-        &--delete {
-            background: url('~Images/icons/trash-dark.svg') no-repeat 50% 50%;
-            background-size: 20px;
-        }
-        &--AddSubfolder {
-          background: url('~Images/icons/folder-add-dark.svg') no-repeat 50% 50%;
-          background-size: 20px;
-        }
-
-        &--favorite-off {
-            background: url('~Images/icons/star__off-dark.svg') no-repeat 50% 50%;
-            background-size: 20px;
-        }
-      }
     }
 }
 

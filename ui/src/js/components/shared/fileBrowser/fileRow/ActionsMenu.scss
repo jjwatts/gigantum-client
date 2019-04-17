@@ -16,8 +16,8 @@
   .ActionsMenu__item {
       position: relative;
 
-      width: 20px;
-      height: 20px;
+      width: 23px;
+      height: 23px;
 
       margin: 0 5px;
 
@@ -56,18 +56,6 @@
           }
       }
 
-      &--AddSubfolder {
-          background: url('~Images/icons/folder-add.svg') no-repeat 50% 50%;
-          background-size: 20px;
-          margin-right: 5px;
-
-          &:hover {
-              //change color here
-              background: url('~Images/icons/folder-add.svg') no-repeat 50% 50%;
-              background-size: 20px;
-          }
-      }
-
       &--menu {
           width: 50px;
 
@@ -95,7 +83,7 @@
   width: 140px;
   position: absolute;
   top: 34px;
-  right: -60px;
+  right: -52px;
   text-align: center;
   z-index: index($elements, popup);
   p{

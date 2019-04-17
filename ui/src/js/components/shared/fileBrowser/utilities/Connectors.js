@@ -74,9 +74,12 @@ const dragSource = {
   },
 
   beginDrag(props, monitor) {
+
     return {
       isDragging: true,
       fileData: props.fileData,
+      isLocal: props.isLocal,
+      section: props.section,
     };
   },
 
@@ -85,21 +88,16 @@ const dragSource = {
       return;
     }
 
-    const item = monitor.getItem();
     const dropResult = monitor.getDropResult();
-
     const fileNameParts = props.fileData.edge.node.key.split('/');
-
     const fileName = fileNameParts[fileNameParts.length - 1];
 
-    if (dropResult.fileData) {
+    if (dropResult.fileData && !((props.section === 'data') && !dropResult.isLocal)) {
       const pathArray = dropResult.fileData.edge.node.key.split('/');
       // remove filename or empty string
       pathArray.pop();
       const path = pathArray.join('/');
-
       const newKey = path ? `${path}/${fileName}` : `${fileName}`;
-
       const newKeyArray = dropResult.fileData.edge.node.key.split('/');
       const fileKeyArray = props.fileData.edge.node.key.split('/');
 
@@ -128,7 +126,6 @@ const dragSource = {
           };
 
           searchChildren(currentHead);
-
           const moveLabbookFileData = {
             newKey,
             edge: props.fileData.edge,
@@ -205,8 +202,10 @@ const uploadDirContent = (dndItem, props, mutationData, fileSizeData) => {
 
 const targetSource = {
   canDrop(props, monitor) {
+    const item = monitor.getItem()
     const { uploading } = store.getState().fileBrowser;
-    return monitor.isOver({ shallow: true }) && !uploading;
+    const mouseoverAllowed = !uploading && !(props.section === 'data' && !item.isLocal);
+    return monitor.isOver({ shallow: true }) && mouseoverAllowed;
   },
   drop(props, monitor, component, comp) {
     // TODO: clean up this code, some of this logic is being duplicated. make better use of functions
@@ -307,7 +306,6 @@ const targetSource = {
           };
 
           searchChildren(currentHead);
-
           const moveLabbookFileData = {
             newKey,
             edge: item.fileData.edge,
@@ -359,6 +357,7 @@ const targetSource = {
 function targetCollect(connect, monitor) {
   // TODO: clean up this code, removal of file drop containers removes the need for some of this logic.
   // decide if drop zone should appear;
+  const item = monitor.getItem();
   const currentTargetId = monitor.targetId;
   const isOverCurrent = monitor.isOver({ shallow: true });
   let isOver = monitor.isOver({});
@@ -403,7 +402,10 @@ function targetCollect(connect, monitor) {
   }
   const { uploading } = store.getState().fileBrowser;
   isOver = isOver && !uploading;
-
+  if (item && ((item.section === 'data') && !item.isLocal)) {
+    // empty object expected for collect
+    return {};
+  }
   return {
     connectDropTarget: connect.dropTarget(),
     canDrop,

@@ -3,7 +3,7 @@ button {
   padding-top: 7px;
   padding-bottom: 7px;
   margin: 0 12.5px;
-
+  outline: none;
   cursor: pointer;
 
   color: $white;
@@ -36,7 +36,12 @@ button {
    &:hover {
     @include boxShadowDark();
   }
-
+  &--noStyle{
+    width: auto;
+    background: transparent;
+    color: $jet;
+    box-shadow: none !important;
+  }
   // flat button
   &--flat {
       width: auto;
@@ -124,6 +129,12 @@ button {
   &--round {
      border-radius: 15px;
   }
+  &--bordered {
+    border: 1px solid $azure;
+    &:disabled{
+      border: 1px solid $romanSilver;
+    }
+  }
 
   &--medium {
     height: 34px;
@@ -139,7 +150,6 @@ button {
     height: 20px;
     background-size: 10px !important;
   }
-
 
   &--no-underline {
     text-decoration: none;
@@ -234,99 +244,177 @@ button {
 
   &__delete {
      background: url(~Images/icons/trash-azure.svg) no-repeat center center;
-     background-size: 20px;
-     border: 0px;
+     background-size: 18px;
 
      &:focus {
-       background: url(~Images/icons/trash-azure.svg) no-repeat center center;
-       background-size: 20px;
-       border: 0px;
+       background: $azure url(~Images/icons/trash-white.svg) no-repeat center center;
+       background-size: 18px;
+
      }
 
      &:hover {
-       background: url(~Images/icons/trash-azure.svg) no-repeat center center;
-       background-size: 22px;
-       border: 0px;
+       background: $azure url(~Images/icons/trash-white.svg) no-repeat center center;
+       background-size: 18px;
+
      }
 
      &:disabled {
        background: transparent url(~Images/icons/trash.svg) no-repeat center center !important;
-       background-size: 20px;
-       border: 0px;
+       background-size: 18px;
+
      }
   }
 
   &__rename {
     background: url(~Images/icons/rename-azure.svg) no-repeat center center;
     background-size: 20px;
-    border: 0px;
 
     &:focus {
-      background: url(~Images/icons/rename-azure.svg) no-repeat center center;
+      background: $azure url(~Images/icons/rename-white.svg) no-repeat center center;
       background-size: 20px;
-      border: 0px;
+
     }
 
     &:hover {
-      background: url(~Images/icons/rename-azure.svg) no-repeat center center;
-      background-size: 22px;
-      border: 0px;
+      background: $azure url(~Images/icons/rename-white.svg) no-repeat center center;
+      background-size: 20px;
+
     }
 
     &:disabled {
       background: transparent url(~Images/icons/rename.svg) no-repeat center center !important;
       background-size: 20px;
-      border: 0px;
+
     }
+ }
+
+ &__addFolder {
+  background: url(~Images/icons/folder-add-new-azure.svg) no-repeat center center;
+  background-size: 18px;
+
+  &:focus {
+    background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat center center;
+    background-size: 18px;
+
+  }
+
+  &:hover {
+    background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat center center;
+    background-size: 18px;
+
+  }
+
+  &:disabled {
+    background: transparent url(~Images/icons/folder-add-new.svg) no-repeat center center !important;
+    background-size: 18px;
+
+  }
+ }
+
+ &__addDataset {
+  background: url(~Images/icons/database-add-azure.svg) no-repeat center center;
+  background-size: 18px;
+
+  &:focus {
+    background: $azure url(~Images/icons/database-add-hover.svg) no-repeat center center;
+    background-size: 18px;
+
+  }
+
+  &:hover {
+    background: $azure url(~Images/icons/database-add-hover.svg) no-repeat center center;
+    background-size: 18px;
+
+  }
+
+  &:disabled {
+    background: transparent url(~Images/icons/database-add.svg) no-repeat center center !important;
+    background-size: 18px;
+
+  }
+ }
+
+
+ &__upArrow {
+  background: url(~Images/icons/update-azure.svg) no-repeat center center;
+  background-size: 18px;
+
+  &:focus {
+    background: $azure url(~Images/icons/update-white.svg) no-repeat center center;
+    background-size: 18px;
+
+  }
+
+  &:hover {
+    background: $azure url(~Images/icons/update-white.svg) no-repeat center center;
+    background-size: 18px;
+
+  }
+
+  &:disabled {
+    background: transparent url(~Images/icons/update-version.svg) no-repeat center center !important;
+    background-size: 18px;
+
+  }
  }
 
  &__Favorite-off {
   background: url(~Images/icons/star__off-azure.svg) no-repeat center center;
-  background-size: 20px;
-  border: 0px;
+  background-size: 18px;
 
   &:focus {
-    background: url(~Images/icons/star__off-azure.svg) no-repeat center center;
-    background-size: 20px;
-    border: 0px;
+    background: $azure url(~Images/icons/star__off-white.svg) no-repeat center center;
+    background-size: 18px;
   }
 
   &:hover {
-    background: url(~Images/icons/star__off-azure.svg) no-repeat center center;
-    background-size: 22px;
-    border: 0px;
+    background: $azure url(~Images/icons/star__off-white.svg) no-repeat center center;
+    background-size: 18px;
   }
 
   &:disabled {
     background: url(~Images/icons/star__off.svg) no-repeat center center;
-    background-size: 20px;
-    border: 0px;
+    background-size: 18px;
   }
 }
 
 &__Favorite-on {
   background: url(~Images/icons/star__on.svg) no-repeat center center;
-  background-size: 20px;
-  border: 0px;
+  background-size: 18px;
 
   &:focus {
-    background: url(~Images/icons/star__on.svg) no-repeat center center;
-    background-size: 20px;
-    border: 0px;
+    background: $azure url(~Images/icons/star__on.svg) no-repeat center center;
+    background-size: 18px;
   }
 
   &:hover {
-    background: url(~Images/icons/star__on.svg) no-repeat center center;
-    background-size: 22px;
-    border: 0px;
+    background: $azure url(~Images/icons/star__on.svg) no-repeat center center;
+    background-size: 18px;
   }
 
   &:disabled {
     background: url(~Images/icons/star__on.svg) no-repeat center center;
-    background-size: 20px;
-    border: 0px;
+    background-size: 18px;
   }
 }
+
+  &__download {
+    background: url('~Images/icons/database-download-azure.svg') no-repeat 50% 50%;
+    background-size: 20px;
+    margin-right: 5px;
+
+    &:hover {
+        //change color here
+        background: url('~Images/icons/database-download-azure.svg') no-repeat 50% 50%;
+        background-size: 22px;
+    }
+  }
+
+  &__downloaded {
+    background: url('~Images/icons/database-grey-local.svg') no-repeat 50% 50%;
+    background-size: 20px;
+    margin-right: 5px;
+  }
 
   &__redirect {
      right: 15px;

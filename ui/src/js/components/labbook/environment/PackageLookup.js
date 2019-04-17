@@ -26,7 +26,7 @@ const PackageLookup = {
     const variables = { name, owner, input };
 
     return new Promise((resolve, reject) => {
-      const fetchData = function () {
+      const fetchData = () => {
         fetchQuery(PackageLookupQuery(), variables).then((response) => {
           resolve(response);
         }).catch((error) => {

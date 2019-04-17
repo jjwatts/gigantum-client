@@ -208,7 +208,7 @@ class Folder extends Component {
         props.updateChildState(props.fileData.edge.node.key, state.isSelected, state.isIncomplete, state.expanded, state.addFolderVisible);
       });
     }
-    if (evt.target.classList.contains('ActionsMenu__item--AddSubfolder')) {
+    if (evt.target.classList.contains('Btn__addFolder')) {
       this.setState({ expanded: true }, () => {
         props.updateChildState(props.fileData.edge.node.key, state.isSelected, state.isIncomplete, state.expanded, state.addFolderVisible);
       });
@@ -217,13 +217,12 @@ class Folder extends Component {
 
   /**
     *  @param {jsx} render
-    *  @param {Boolean} blockDrag
     *  sets elements to be selected and parent
     */
-  connectDND(render, blockDrag) {
+  connectDND(render) {
     let renderType;
     const { props, state } = this;
-    if ((state.isDragging || props.parentIsDragged) && !blockDrag) {
+    if ((state.isDragging || props.parentIsDragged)) {
       renderType = props.connectDragSource(render);
     } else {
       renderType = props.connectDropTarget(render);
@@ -463,41 +462,11 @@ class Folder extends Component {
     return array;
   }
 
-  /**
-   *  @param {} -
-   *  checks to see if the file is local/downloaded
-   *  @return {boolean}
-   */
-  _getIsLocal() {
-    const { props } = this;
-    let isLocal = true;
-    const searchChildren = (parent) => {
-      if (parent.children) {
-        Object.keys(parent.children).forEach((childKey) => {
-          if (parent.children[childKey].edge) {
-            if (parent.children[childKey].edge.node.isLocal === false) {
-              isLocal = false;
-            }
-            searchChildren(parent.children[childKey]);
-          }
-        });
-      }
-    };
-
-    if (props.fileData) {
-      searchChildren(props.fileData);
-    } else {
-      isLocal = props.fileData.edge.node.isLocal;
-    }
-
-    return isLocal;
-  }
-
   render() {
     const { props, state } = this;
     const { node } = props.fileData.edge;
-    const isLocal = this._getIsLocal();
-
+    const isLocal = props.checkLocal(props.fileData);
+    const cantDrag = !isLocal && props.section === 'data';
     const { children, index } = props.fileData;
 
 
@@ -514,6 +483,8 @@ class Folder extends Component {
       Folder__row: true,
       'Folder__row--expanded': state.expanded,
       'Folder__row--hover': state.hover,
+      'Folder__row--noDrag': props.isDragging && cantDrag,
+      'Folder__row--canDrag': props.isDragging && !cantDrag,
     });
 
 
@@ -527,7 +498,7 @@ class Folder extends Component {
 
     const folderChildCSS = classNames({
       Folder__child: true,
-      hidden: !this.state.expanded,
+      hidden: !state.expanded,
     });
 
 
@@ -541,7 +512,6 @@ class Folder extends Component {
     const folderCSS = classNames({
       Folder: true,
       'Folder--highlight': isOver,
-      'Folder--background': props.isDragging,
     });
 
 
@@ -656,6 +626,7 @@ class Folder extends Component {
                         parentDownloading={props.parentDownloading}
                         setFolderIsDownloading={this._setFolderIsDownloading}
                         isLocal={isLocal}
+                        isDragging={props.isDragging}
                       />
                       )
                     }
@@ -687,6 +658,7 @@ class Folder extends Component {
                           mutations={props.mutations}
                           mutationData={props.mutationData}
                           fileData={children[file]}
+                          isLocal={props.checkLocal(children[file])}
                           isSelected={state.isSelected}
                           multiSelect={props.multiSelect}
                           setIncomplete={this._setIncomplete}
@@ -704,12 +676,14 @@ class Folder extends Component {
                           section={props.section}
                           isDownloading={state.isDownloading || props.isDownloading}
                           codeDirUpload={props.codeDirUpload}
+                          checkLocal={props.checkLocal}
                         />
                       );
                     } if ((children && children[file] && children[file].edge && !children[file].edge.node.isDir)) {
                       return (
                         <File
                           filename={file}
+                          isLocal={props.checkLocal(children[file])}
                           mutations={props.mutations}
                           mutationData={props.mutationData}
                           ref={children[file].edge.node.key}
@@ -729,6 +703,7 @@ class Folder extends Component {
                           parentDownloading={state.downloadingAll}
                           isDownloading={state.isDownloading || props.isDownloading}
                           updateChildState={props.updateChildState}
+                          checkLocal={props.checkLocal}
                         />
                       );
                     } if (children[file]) {
@@ -742,7 +717,7 @@ class Folder extends Component {
     );
 
     return (
-      this.connectDND(folder, !isLocal && props.section === 'data')
+      this.connectDND(folder)
     );
   }
 }

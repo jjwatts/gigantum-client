@@ -43,7 +43,10 @@ class AddSubfolder extends Component {
   *  @return {}
   */
   _clickedOffInput(evt) {
-    if (!(evt.target.className.indexOf('AddSubfolder') > -1) && !(evt.target.className.indexOf('FileBrowser__button--add-folder') > -1) && (this.props.addFolderVisible || this.props.addFolderVisible === undefined)) {
+    if (!(evt.target.className.indexOf('AddSubfolder') > -1)
+      && !(evt.target.className.indexOf('__addFolder') > -1)
+      && !(evt.target.className.indexOf('FileBrowser__button--add-folder') > -1)
+      && (this.props.addFolderVisible || this.props.addFolderVisible === undefined)) {
       this._clearState();
       if (this.props.setAddFolderVisible) {
         this.props.setAddFolderVisible(false);

@@ -33,6 +33,7 @@ const fixtures = {
   connectDragSource: jsx => jsx,
   connectDropTarget: jsx => jsx,
   closeLinkModal: jest.fn(),
+  checkLocal: jest.fn(),
   setState: jest.fn(),
   updateChildState: jest.fn(),
   codeDirUpload: jest.fn(),
@@ -54,7 +55,7 @@ const fixtures = {
       isSelected: false,
       isIncomplete: false,
       isAddingFolder: false,
-    }
+    },
   },
   section: 'code',
 };

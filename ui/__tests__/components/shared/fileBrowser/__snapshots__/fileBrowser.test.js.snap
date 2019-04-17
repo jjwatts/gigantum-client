@@ -11,6 +11,41 @@ exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
   }
 >
   <div
+    className="FileBrowser__menu"
+  >
+    <h5>
+      Files
+    </h5>
+    <div
+      className="FileBrowser__menu-buttons"
+    >
+      <button
+        className="FileBrowser__button Btn--round Btn--bordered Btn__upArrow"
+        onClick={[Function]}
+        type="button"
+      />
+      <span>
+        Upload Files
+      </span>
+      <button
+        className="FileBrowser__button Btn--round Btn--bordered Btn__addFolder"
+        onClick={[Function]}
+        type="button"
+      />
+      <span>
+        New Folder
+      </span>
+      <button
+        className="FileBrowser__button Btn--round Btn--bordered Btn__addDataset"
+        data-tooltip="Link Dataset"
+        onClick={[Function]}
+      />
+      <span>
+        Link Dataset
+      </span>
+    </div>
+  </div>
+  <div
     className="FileBrowser__tools flex justify--space-between"
   >
     <div
@@ -36,7 +71,7 @@ exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
         onClick={[Function]}
       />
       <button
-        className="Btn Btn--round Btn__delete hidden"
+        className="Btn Btn--round Btn__delete Btn--noShadow Btn--action hidden"
         onClick={[Function]}
       />
       <div
@@ -62,37 +97,30 @@ exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
         </div>
       </div>
     </div>
-    <div
-      className="FileBrowser__header--name flex justify--start"
+    <button
+      className="FileBrowser__name-text FileBrowser__header--name flex justify--start Btn--noStyle FileBroser__sort--asc"
       onClick={[Function]}
+      type="button"
     >
-      <div
-        className="FileBrowser__name-text FileBroser__sort--asc"
-      >
-        File
-      </div>
-    </div>
-    <div
-      className="FileBrowser__header--size"
+      File
+    </button>
+    <button
+      className="FileBrowser__header--size Btn--noStyle"
       onClick={[Function]}
+      type="button"
     >
       Size
-    </div>
-    <div
-      className="FileBrowser__header--date"
+    </button>
+    <button
+      className="FileBrowser__header--date Btn--noStyle"
       onClick={[Function]}
+      type="button"
     >
       Modified
-    </div>
+    </button>
     <div
       className="FileBrowser__header--menu flex flex--row justify--right"
-    >
-      <button
-        className="FileBrowser__button FileBrowser__button--add-folder Tooltip-data Tooltip-data--small"
-        data-tooltip="Add Folder"
-        onClick={[Function]}
-      />
-    </div>
+    />
   </div>
   <div
     className="FileBrowser__body"

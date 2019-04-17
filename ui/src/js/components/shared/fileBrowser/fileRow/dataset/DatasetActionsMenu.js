@@ -223,67 +223,41 @@ export default class DatasetActionsMenu extends Component {
     downloadText = props.isParent ? 'Download All' : downloadText;
     downloadText = props.folder ? 'Download Directory' : downloadText;
     downloadText = state.showSessionValidMessage ? 'A valid session is required to download a dataset file.' : downloadText;
+    downloadText = props.isDragging && !isLocal ? 'File is not downloaded. Download file to move it.' : downloadText;
 
     return downloadText;
   }
 
   render() {
     const { props, state } = this;
-
-
     const { isLocal } = props;
-
-
     const fileIsNotLocal = ((!props.edge.node.isLocal || (props.folder)) && !isLocal);
-
-
     const fileIsLocal = (props.edge.node.isLocal && isLocal);
-
-
     const blockDownload = props.folder ? false : props.edge.node.isLocal || isLocal;
-
-
-    const manageCSS = classNames({
-      DatasetActionsMenu__item: true,
-      'DatasetActionsMenu__item--manage': true,
-    });
-
-
+    const downloadText = this._getTooltipText();
+    const isLoading = state.fileDownloading || ((props.parentDownloading || props.isDownloading) && !fileIsLocal);
+    const showDownloadIcon = (props.section !== 'data') && !state.fileDownloading && !isLoading;
     const popupCSS = classNames({
       DatasetActionsMenu__popup: true,
       hidden: !state.popupVisible,
       ToolTip__message: true,
     });
-
-
-    const removeCSS = classNames({
-      'DatasetActionsMenu__item DatasetActionsMenu__item--remove': true,
-    });
-
-
-    const isLoading = state.fileDownloading || ((props.parentDownloading || props.isDownloading) && !fileIsLocal);
-
-
     const downloadCSS = classNames({
-      DatasetActionsMenu__item: true,
+      'DatasetActionsMenu__item Btn--noShadow': true,
       'Tooltip-data Tooltip-data--small': !isLoading,
-      'Tooltip-data--visible': state.showSessionValidMessage,
-      'DatasetActionsMenu__item--download': fileIsNotLocal && (props.section !== 'data') && !state.fileDownloading && !isLoading,
-      'DatasetActionsMenu__item--downloaded': fileIsLocal && (props.section !== 'data') && !state.fileDownloading && !isLoading,
-      'DatasetActionsMenu__item--download-grey': (fileIsNotLocal) && (props.section === 'data') && !state.fileDownloading && !isLoading,
-      'DatasetActionsMenu__item--downloaded-grey': fileIsLocal && (props.section === 'data') && !state.fileDownloading && !isLoading,
+      'Tooltip-data--visible': state.showSessionValidMessage || (!props.isLocal && props.isDragging),
+      'DatasetActionsMenu__item--download': fileIsNotLocal && showDownloadIcon,
+      'DatasetActionsMenu__item--downloaded': fileIsLocal && showDownloadIcon,
+      Btn__download: (fileIsNotLocal) && (props.section === 'data') && !state.fileDownloading && !isLoading,
+      Btn__downloaded: fileIsLocal && (props.section === 'data') && !state.fileDownloading && !isLoading,
       'DatasetActionsMenu__item--loading': isLoading,
     });
-
-
-    const downloadText = this._getTooltipText();
-
-
     const unlinkCSS = classNames({
       'DatasetActionsMenu__item DatasetActionsMenu__item--unlink': true,
       'DatasetActionsMenu__popup-visible': state.popupVisible,
       'Tooltip-data Tooltip-data--small': !state.popupVisible,
     });
+
     return (
 
       <div
@@ -317,7 +291,7 @@ export default class DatasetActionsMenu extends Component {
               </div>
               )
           }
-        <div
+        <button
           onClick={() => this._downloadFile(blockDownload)}
           className={downloadCSS}
           data-tooltip={downloadText}

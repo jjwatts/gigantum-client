@@ -76,13 +76,16 @@
     &--size{
         width: 100px;
         position: relative;
+        &:before{
+          left: 75px !important;
+        }
     }
 
     &--date{
         width: 140px;
         position: relative;
         &:before{
-          left: 100px !important;
+          left: 120px !important;
         }
     }
 
@@ -143,7 +146,7 @@
     width: 15px;
     height: 15px;
     left: 50px;
-    top: 4px;
+    top: 10px;
   }
   &--desc:before {
     background: url('~Images/icons/down-arrow-silver.svg') no-repeat center center;
@@ -153,7 +156,7 @@
     width: 15px;
     height: 15px;
     left: 50px;
-    top: 4px;
+    top: 7px;
   }
 }
 
@@ -183,38 +186,29 @@
 }
 
 .FileBrowser__button {
-  height: 30px;
-  width: 45px;
+  height: 23px;
+  width: 23px;
   margin: 0 10px;
   position: relative;
   border: 1px solid $azure;
 
-  &--add-folder {
-    background: transparent url(~Images/icons/folder-add-new.svg) no-repeat center center;
-    background-size: 30px;
-    &:hover {
-      background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat center center;
-    }
-  }
-
-  &--add-dataset {
-    background: transparent url(~Images/icons/database-add.svg) no-repeat center center;
-    background-size: 30px;
-    &:hover {
-      background: $azure url(~Images/icons/database-add-hover.svg) no-repeat center center;
-    }
-  }
   &--download-all {
+    height: 30px;
+    width: 45px;
     background: transparent url(~Images/icons/database-dark-download.svg) no-repeat center center;
     background-size: 25px;
     margin-right: -8px;
   }
   &--downloaded {
+    height: 30px;
+    width: 45px;
     background: $background-color url(~Images/icons/database-dark-local.svg) no-repeat center center;
     background-size: 25px;
     margin-right: -8px;
   }
   &--downloading{
+    height: 30px;
+    width: 45px;
     background: $background-color no-repeat center center;
     background-size: 25px;
     margin-right: -8px;
@@ -255,18 +249,12 @@
   z-index: 2;
 }
 
-@media screen and (max-width: 1021px) and (min-width: 0px) {
-//  .FileBrowser .ActionsMenu,
-//  .File__cell.File__cell--menu,
-//  .FileBrowser__header--menu {
-//    width: 130px !important;
-//  }
-//  .FileBrowser__header--date,
-//  .File__cell--date {
-//    width: 100px !important;
-//  }
-
-//  .SectionWrapper {
-//    width: calc(100% - 40px);
-//  }
+.FileBrowser__menu {
+  @include flex(space-between, row);
+  position: relative;
+  align-items: center;
+  border-bottom: 2px solid $romanSilver;
+  height: 50px;
+  width: 100%;
+  margin-bottom: 10px;
 }

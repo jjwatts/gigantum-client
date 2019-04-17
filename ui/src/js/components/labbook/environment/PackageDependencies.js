@@ -495,11 +495,12 @@ class PackageDependencies extends Component {
   *  get tabs data
   * */
   _getPackmanagerTabs() {
-    const tabs = this.props.base && this.props.base.packageManagers.map((packageName) => {
+    const { props } = this;
+    const tabs = props.base && props.base.packageManagers.map((packageName) => {
       let count = 0;
-      this.props.environment.packageDependencies.edges.forEach((edge) => {
+      props.environment.packageDependencies.edges.forEach((edge) => {
         if (packageName === edge.node.manager) {
-          count++;
+          count += 1;
         }
       });
       return { tabName: packageName, count };
@@ -512,18 +513,11 @@ class PackageDependencies extends Component {
   *  adds to removalpackages state pending removal of packages
   * */
   _addRemovalPackage(node) {
+    const { state } = this;
     const { manager, id, version } = node;
-
-
     const pkg = node.package;
-
-
-    const newRemovalPackages = Object.assign({}, this.state.removalPackages);
-
-
-    const newUpdatePackages = Object.assign({}, this.state.updatePackages);
-
-
+    const newRemovalPackages = Object.assign({}, state.removalPackages);
+    const newUpdatePackages = Object.assign({}, state.updatePackages);
     const updateAvailable = node.latestVersion && (node.version !== node.latestVersion);
 
     if (newRemovalPackages[manager]) {
@@ -570,13 +564,13 @@ class PackageDependencies extends Component {
   _updatePackages() {
     const { props, state } = this;
     const { status } = store.getState().containerStatus;
-    const canEditEnvironment = config.containerStatus.canEditEnvironment(status) && !this.props.isLocked;
+    const canEditEnvironment = config.containerStatus.canEditEnvironment(status) && !props.isLocked;
     const self = this;
 
     if (navigator.onLine) {
       if (canEditEnvironment) {
         const { labbookName, owner } = store.getState().routes;
-        const { environmentId } = this.props;
+        const { environmentId } = props;
         const filteredInput = [];
         const duplicates = [];
 
@@ -790,6 +784,7 @@ class PackageDependencies extends Component {
                 data-container-popup
                 onClick={() => this._toggleAddPackageMenu()}
                 className={addPackageCSS}
+                type="button"
               >
                 Add Packages
               </button>
@@ -813,8 +808,9 @@ class PackageDependencies extends Component {
                     onKeyUp={evt => this._updateVersion(evt)}
                   />
                   <button
-                    disabled={(this.state.packageName.length === 0)}
+                    disabled={(state.packageName.length === 0)}
                     onClick={() => this._addStatePackage()}
+                    type="button"
                     className="PackageDependencies__btn--margin Btn__plus Btn--round Btn--medium"
                   />
                 </div>
@@ -847,6 +843,7 @@ class PackageDependencies extends Component {
                                 <button
                                   className="PackageDependencies__btn--round PackageDependencies__btn--remove--adder"
                                   onClick={() => this._removeStatePackages(node, index)}
+                                  type="button"
                                 />
                                 )
                               }
@@ -858,7 +855,7 @@ class PackageDependencies extends Component {
                   </table>
 
                   <ButtonLoader
-                    buttonState={this.state.installDependenciesButtonState}
+                    buttonState={state.installDependenciesButtonState}
                     buttonText="Install Selected Packages"
                     className="Btn Btn--wide PackageDependencies__btn--absolute"
                     params={{}}
@@ -934,7 +931,7 @@ class PackageDependencies extends Component {
 
 const mapStateToProps = state => state.packageDependencies;
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = () => ({
   setPackageMenuVisible,
   setErrorMessage,
   setContainerMenuWarningMessage,

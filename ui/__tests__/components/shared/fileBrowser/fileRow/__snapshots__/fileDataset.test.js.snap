@@ -78,17 +78,22 @@ exports[`Dataset File component File Snapshot 1`] = `
         className="ActionsMenu"
         data-selenium-id="ActionsMenu"
       >
-        <div
-          className="ActionsMenu__item Tooltip-data Tooltip-data--small ActionsMenu__item--AddSubfolder visibility-hidden"
+        <button
+          className="ActionsMenu__item Tooltip-data Tooltip-data--small Btn--round Btn--bordered Btn__addFolder visibility-hidden"
           data-tooltip="Add Subfolder"
           onClick={[Function]}
+          type="button"
         />
-        <button
-          className="ActionsMenu__item Btn__delete Btn--noShadow Tooltip-data Tooltip-data--small"
-          data-tooltip="Must download before deleting"
-          disabled={true}
-          onClick={[Function]}
+        <div
+          className="relative"
         >
+          <button
+            className="ActionsMenu__item Btn__delete Btn--noShadow Btn--round Btn--bordered Tooltip-data Tooltip-data--small"
+            data-tooltip="Must download before deleting"
+            disabled={true}
+            onClick={[Function]}
+            type="button"
+          />
           <div
             className="ActionsMenu__popup hidden Tooltip__message"
           >
@@ -104,27 +109,30 @@ exports[`Dataset File component File Snapshot 1`] = `
               <button
                 className="File__btn--round File__btn--cancel"
                 onClick={[Function]}
+                type="button"
               />
               <button
                 className="File__btn--round File__btn--add"
                 onClick={[Function]}
+                type="button"
               />
             </div>
           </div>
-        </button>
+        </div>
         <button
-          className="ActionsMenu__item Btn__rename Btn--noShadow Tooltip-data Tooltip-data--small"
+          className="ActionsMenu__item Btn__rename Btn--noShadow Tooltip-data Tooltip-data--small Btn--bordered Btn--round"
           data-tooltip="Must download before renaming"
           disabled={true}
           onClick={[Function]}
+          type="button"
         />
       </div>
       <div
         className="DatasetActionsMenu"
         data-selenium-id="DatasetActionsMenu"
       >
-        <div
-          className="DatasetActionsMenu__item Tooltip-data Tooltip-data--small DatasetActionsMenu__item--download-grey"
+        <button
+          className="DatasetActionsMenu__item Btn--noShadow Tooltip-data Tooltip-data--small Btn__download"
           data-tooltip="Download"
           onClick={[Function]}
         />

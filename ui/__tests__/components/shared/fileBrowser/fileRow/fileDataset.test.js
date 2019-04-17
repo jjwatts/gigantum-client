@@ -81,7 +81,7 @@ describe('Dataset File component', () => {
       stopPropagation: () => {},
     };
 
-    await component.find('.DatasetActionsMenu__item--download-grey').simulate('click');
+    await component.find('.Btn__download').simulate('click');
 
     expect(fixtures.mutations.downloadDatasetFiles.mock.calls.length).toEqual(1);
   });

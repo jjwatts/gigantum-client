@@ -67,19 +67,6 @@
         }
     }
 
-    &--download-grey {
-        background: url('~Images/icons/database-grey-download.svg') no-repeat 50% 50%;
-        background-size: 20px;
-        margin-right: 5px;
-        align-self: right;
-
-        &:hover {
-            //change color here
-            background: url('~Images/icons/database-grey-download.svg') no-repeat 50% 50%;
-            background-size: 20px;
-        }
-    }
-
 
     &--downloaded {
       background: url('~Images/icons/database-local.svg') no-repeat 50% 50%;
@@ -89,13 +76,6 @@
       cursor: auto;
     }
 
-    &--downloaded-grey {
-        background: url('~Images/icons/database-grey-local.svg') no-repeat 50% 50%;
-        background-size: 20px;
-        margin-right: 5px;
-        align-self: right;
-        cursor: auto;
-      }
 
     &--loading {
         width: 20px;

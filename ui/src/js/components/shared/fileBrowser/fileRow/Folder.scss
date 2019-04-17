@@ -27,6 +27,15 @@
     @include flex(space-between, row);
     align-items: center;
 
+    &--noDrag {
+      background: $background-color !important;
+      cursor: not-allowed !important;
+    }
+    &--canDrag {
+      cursor: copy !important;
+    }
+
+
     &:hover {
 
       .ActionsMenu__item {

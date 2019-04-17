@@ -20,11 +20,11 @@ import Connectors from './utilities/Connectors';
 import FileFormatter, { fileHandler } from './utilities/FileFormatter';
 
 
-const checkLocal = (files) => {
+const checkLocalAll = (files) => {
   let isLocal = true;
   Object.keys(files).forEach((fileKey) => {
     if (files[fileKey].children) {
-      const isChildrenLocal = checkLocal(files[fileKey].children);
+      const isChildrenLocal = checkLocalAll(files[fileKey].children);
       if (isChildrenLocal === false) {
         isLocal = false;
       }
@@ -35,6 +35,30 @@ const checkLocal = (files) => {
   return isLocal;
 };
 
+
+const checkLocalIndividual = (files) => {
+  let isLocal = true;
+  const searchChildren = (parent) => {
+    if (parent.children) {
+      Object.keys(parent.children).forEach((childKey) => {
+        if (parent.children[childKey].edge) {
+          if (parent.children[childKey].edge.node.isLocal === false) {
+            isLocal = false;
+          }
+          searchChildren(parent.children[childKey]);
+        }
+      });
+    }
+  };
+
+  if (files.children) {
+    searchChildren(files);
+  } else {
+    isLocal = files.edge.node.isLocal;
+  }
+
+  return isLocal;
+};
 
 class FileBrowser extends Component {
   constructor(props) {
@@ -633,11 +657,7 @@ class FileBrowser extends Component {
   render() {
     const { props, state } = this;
     const files = this.state.files;
-
-
     const { mutationData } = this.state;
-
-
     const { isOver } = this.props;
     let folderKeys = files && Object.keys(files).filter(child => files[child].edge && files[child].edge.node.isDir) || [];
     folderKeys = this._childSort(folderKeys, state.sort, state.reverse, files, 'folder');
@@ -645,7 +665,7 @@ class FileBrowser extends Component {
     fileKeys = this._childSort(fileKeys, state.sort, state.reverse, files, 'files');
     const childrenKeys = folderKeys.concat(fileKeys);
     const { isSelected } = this._checkChildState();
-    const allFilesLocal = checkLocal(files);
+    const allFilesLocal = checkLocalAll(files);
     const uploadPromptText = this._getFilePromptText();
 
     const fileBrowserCSS = classNames({
@@ -654,14 +674,10 @@ class FileBrowser extends Component {
       'FileBrowser--highlight': isOver,
       'FileBrowser--dropzone': fileKeys.length === 0,
     });
-
-
     const deleteButtonCSS = classNames({
-      'Btn Btn--round Btn__delete': true,
+      'Btn Btn--round Btn__delete Btn--noShadow Btn--action': true,
       hidden: !isSelected,
     });
-
-
     const multiSelectButtonCSS = classNames({
       'Btn--multiSelect': true,
       'Btn Btn--round Btn--medium': true,
@@ -669,42 +685,30 @@ class FileBrowser extends Component {
       Btn__uncheck: state.multiSelect === 'none',
       Btn__partial: state.multiSelect === 'partial',
     });
-
-
     const nameHeaderCSS = classNames({
-      'FileBrowser__name-text': true,
+      'FileBrowser__name-text FileBrowser__header--name flex justify--start Btn--noStyle': true,
       'FileBroser__sort--asc': state.sort === 'az' && !state.reverse,
       'FileBroser__sort--desc': state.sort === 'az' && state.reverse,
     });
-
-
     const sizeHeaderCSS = classNames({
-      'FileBrowser__header--size': true,
+      'FileBrowser__header--size Btn--noStyle': true,
       'FileBroser__sort--asc': state.sort === 'size' && !state.reverse,
       'FileBroser__sort--desc': state.sort === 'size' && state.reverse,
     });
-
-
     const modifiedHeaderCSS = classNames({
-      'FileBrowser__header--date': true,
+      'FileBrowser__header--date Btn--noStyle': true,
       'FileBroser__sort--asc': state.sort === 'modified' && !state.reverse,
       'FileBroser__sort--desc': state.sort === 'modified' && state.reverse,
     });
-
-
     const popupCSS = classNames({
       FileBrowser__popup: true,
       hidden: !state.popupVisible,
       Tooltip__message: true,
     });
-
-
     const multiSelectCSS = classNames({
       'FileBrowser__multiselect flex justify--start': true,
       'box-shadow-50': isSelected,
     });
-
-
     const downloadAllCSS = classNames({
       'FileBrowser__button Tooltip-data Tooltip-data--small': true,
       'FileBrowser__button--download-all': !state.downloadingAll && !allFilesLocal,
@@ -760,7 +764,29 @@ class FileBrowser extends Component {
              />
              )
          }
-
+        <div className="FileBrowser__menu">
+          <h5>Files</h5>
+          <div className="FileBrowser__menu-buttons">
+            <button
+              className="FileBrowser__button Btn--round Btn--bordered Btn__upArrow"
+              onClick={() => this.setState({ addFolderVisible: !this.state.addFolderVisible })}
+              type="button"
+            />
+            <span>Upload Files</span>
+            <button
+              className="FileBrowser__button Btn--round Btn--bordered Btn__addFolder"
+              onClick={() => this.setState({ addFolderVisible: !this.state.addFolderVisible })}
+              type="button"
+            />
+            <span>New Folder</span>
+            <button
+              className="FileBrowser__button Btn--round Btn--bordered Btn__addDataset"
+              onClick={() => this.setState({ showLinkModal: true })}
+              data-tooltip="Link Dataset"
+            />
+            <span>Link Dataset</span>
+          </div>
+        </div>
         <div className="FileBrowser__tools flex justify--space-between">
 
           <div className="FileBrowser__search flex-1">
@@ -799,45 +825,31 @@ class FileBrowser extends Component {
               </div>
             </div>
           </div>
-          <div
-            className="FileBrowser__header--name flex justify--start"
+          <button
+            className={nameHeaderCSS}
             onClick={() => this._handleSort('az')}
+            type="button"
           >
-            <div className={nameHeaderCSS}>
-                  File
-            </div>
-          </div>
+            File
+          </button>
 
-          <div
+          <button
             className={sizeHeaderCSS}
             onClick={() => this._handleSort('size')}
+            type="button"
           >
-                  Size
-          </div>
+            Size
+          </button>
 
-          <div
+          <button
             className={modifiedHeaderCSS}
             onClick={() => this._handleSort('modified')}
+            type="button"
           >
-                  Modified
-          </div>
+            Modified
+          </button>
 
           <div className="FileBrowser__header--menu flex flex--row justify--right">
-            <button
-              className="FileBrowser__button FileBrowser__button--add-folder Tooltip-data Tooltip-data--small"
-              data-tooltip="Add Folder"
-              onClick={() => this.setState({ addFolderVisible: !this.state.addFolderVisible })}
-            />
-            {
-                  (this.props.section === 'input')
-                  && (
-                  <button
-                    className="FileBrowser__button FileBrowser__button--add-dataset Tooltip-data Tooltip-data--small"
-                    onClick={() => this.setState({ showLinkModal: true })}
-                    data-tooltip="Link Dataset"
-                  />
-                  )
-                }
             {
                   (this.props.section === 'data')
                   && (
@@ -845,6 +857,7 @@ class FileBrowser extends Component {
                     className={downloadAllCSS}
                     onClick={() => this._handleDownloadAll(allFilesLocal)}
                     data-tooltip={allFilesLocal ? 'Downloaded' : 'Download All'}
+                    type="button"
                   >
                     {
                       this.state.downloadingAll
@@ -902,6 +915,7 @@ class FileBrowser extends Component {
                     multiSelect={state.multiSelect}
                     mutationData={mutationData}
                     fileData={files[file]}
+                    isLocal={checkLocalIndividual(files[file])}
                     mutations={state.mutations}
                     setState={this._setState}
                     rowStyle={{}}
@@ -913,6 +927,7 @@ class FileBrowser extends Component {
                     parentDownloading={state.downloadingAll}
                     rootFolder
                     codeDirUpload={this._codeDirUpload}
+                    checkLocal={checkLocalIndividual}
                   />
                 );
               } if (isFile) {
@@ -924,6 +939,7 @@ class FileBrowser extends Component {
                     multiSelect={state.multiSelect}
                     mutationData={mutationData}
                     fileData={files[file]}
+                    isLocal={checkLocalIndividual(files[file])}
                     childrenState={state.childrenState}
                     mutations={state.mutations}
                     expanded
@@ -932,6 +948,7 @@ class FileBrowser extends Component {
                     updateParentDropZone={this._updateDropZone}
                     parentDownloading={state.downloadingAll}
                     updateChildState={this._updateChildState}
+                    checkLocal={checkLocalIndividual}
                   />
                 );
               } if (children[file]) {

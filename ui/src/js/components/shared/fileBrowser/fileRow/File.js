@@ -274,6 +274,7 @@ class File extends Component {
     const { node } = props.fileData.edge;
     const { index } = props.fileData;
     const fileName = props.filename;
+    const cantDrag = !props.fileData.edge.node.isLocal && props.section === 'data'
     const isNotebook = fileName.split('.')[fileName.split('.').length - 1] === 'ipynb';
     // TODO remove hard coded references when api is updated
     const isRFile = fileName.split('.')[fileName.split('.').length - 1] === 'Rmd';
@@ -281,7 +282,8 @@ class File extends Component {
     const fileRowCSS = classNames({
       File__row: true,
       'File__row--hover': state.hover,
-      'File__row--background': props.isDragging,
+      'File__row--noDrag': props.isDragging && cantDrag,
+      'File__row--canDrag': props.isDragging && !cantDrag,
     });
 
 
@@ -414,6 +416,8 @@ class File extends Component {
                       isDownloading={props.isDownloading}
                       parentDownloading={props.parentDownloading}
                       setFolderIsDownloading={props.setFolderIsDownloading}
+                      isLocal={props.fileData.edge.node.isLocal}
+                      isDragging={props.isDragging}
                     />
                     )
                   }
@@ -423,12 +427,12 @@ class File extends Component {
       </div>
     );
 
-    if (props.fileData.edge.node.isLocal) {
+    // if (props.fileData.edge.node.isLocal) {
       return (
         props.connectDragSource(file)
       );
-    }
-    return file;
+    // }
+    // return file;
   }
 }
 

@@ -5,17 +5,22 @@ exports[`ActionsMenu Component Renders a snapshot 1`] = `
   className="ActionsMenu"
   data-selenium-id="ActionsMenu"
 >
-  <div
-    className="ActionsMenu__item Tooltip-data Tooltip-data--small ActionsMenu__item--AddSubfolder visibility-hidden"
+  <button
+    className="ActionsMenu__item Tooltip-data Tooltip-data--small Btn--round Btn--bordered Btn__addFolder visibility-hidden"
     data-tooltip="Add Subfolder"
     onClick={[Function]}
+    type="button"
   />
-  <button
-    className="ActionsMenu__item Btn__delete Btn--noShadow Tooltip-data Tooltip-data--small"
-    data-tooltip="Delete"
-    disabled={false}
-    onClick={[Function]}
+  <div
+    className="relative"
   >
+    <button
+      className="ActionsMenu__item Btn__delete Btn--noShadow Btn--round Btn--bordered Tooltip-data Tooltip-data--small"
+      data-tooltip="Delete"
+      disabled={false}
+      onClick={[Function]}
+      type="button"
+    />
     <div
       className="ActionsMenu__popup hidden Tooltip__message"
     >
@@ -31,24 +36,28 @@ exports[`ActionsMenu Component Renders a snapshot 1`] = `
         <button
           className="File__btn--round File__btn--cancel"
           onClick={[Function]}
+          type="button"
         />
         <button
           className="File__btn--round File__btn--add"
           onClick={[Function]}
+          type="button"
         />
       </div>
     </div>
-  </button>
+  </div>
   <button
-    className="ActionsMenu__item Btn__rename Btn--noShadow Tooltip-data Tooltip-data--small"
+    className="ActionsMenu__item Btn__rename Btn--noShadow Tooltip-data Tooltip-data--small Btn--bordered Btn--round"
     data-tooltip="Rename"
     disabled={false}
     onClick={[Function]}
+    type="button"
   />
   <button
-    className="ActionsMenu__item Tooltip-data Tooltip-data--small Btn__Favorite-off Btn--noShadow"
+    className="ActionsMenu__item Tooltip-data Tooltip-data--small Btn--round Btn--bordered Btn__Favorite-off Btn--noShadow"
     data-tooltip="Favorite"
     onClick={[Function]}
+    type="button"
   />
 </div>
 `;

@@ -1,7 +1,6 @@
 // vendor
 import React, { Component, Fragment } from 'react';
 import { Route, Switch } from 'react-router-dom';
-import shallowCompare from 'react-addons-shallow-compare';
 import {
   createFragmentContainer,
   graphql,
@@ -86,13 +85,9 @@ class Labbook extends Component {
   }
 
   state = {
-    containerStatus: this.props.labbook.environment.containerStatus,
-    imageStatus: this.props.labbook.environment.imageStatus,
     isLocked: (this.props.labbook.environment.containerStatus !== 'NOT_RUNNING') || (this.props.labbook.environment.imageStatus === 'BUILD_IN_PROGRESS') || (this.props.labbook.environment.imageStatus === 'BUILD_QUEUED') || this.props.isBuilding || this.props.isSynching || this.props.isPublishing,
     collaborators: this.props.labbook.collaborators,
     canManageCollaborators: this.props.labbook.canManageCollaborators,
-    visibility: this.props.labbook.visibility,
-    defaultRemote: this.props.labbook.defaultRemote,
     branches: this.props.labbook.branches,
     deletedBranches: [],
     migrationInProgress: false,
@@ -118,7 +113,6 @@ class Labbook extends Component {
     const branchMap = new Map();
     const mergedBranches = [];
     const newDeletedBranches = state.deletedBranches.slice();
-    const { labbook } = nextProps;
 
     propBranches.forEach((branch) => {
       if (newDeletedBranches.indexOf(branch.id) === -1) {
@@ -875,11 +869,9 @@ class Labbook extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => state.labbook;
+const mapStateToProps = state => state.labbook;
 
-const mapDispatchToProps = dispatch => ({
-  setBuildingState,
-});
+const mapDispatchToProps = () => ({ setBuildingState });
 
 const LabbookContainer = connect(mapStateToProps, mapDispatchToProps)(Labbook);
 
