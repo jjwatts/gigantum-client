@@ -188,7 +188,7 @@ class Routes extends Component {
       if (response.status === 200 && (response.headers.get('content-type') === 'application/json')) {
         response.json().then((res) => {
           const { available, lowDiskWarning } = res.disk;
-          self.setState({ diskLow: true, available });
+          self.setState({ diskLow: lowDiskWarning, available });
         });
       }
     }).catch(() => false);
