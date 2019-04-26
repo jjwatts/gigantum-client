@@ -27,7 +27,12 @@ const ProjectPublish = (props) => {
 
   return (
     <Fragment>
-      <p>Select the visibility for the project and datasets to be published.</p>
+      <p className="text-center">Select the visibility for the project and datasets to be published.</p>
+      <p>
+        <b>
+        For collaborators to access a linked Dataset, the Dataset must be public or they must be added as a collaborator to the Dataset itself.
+        </b>
+      </p>
 
       <h5 className="PublishDatasetsModal__Label">Project</h5>
       <div className="PublishDatasetsModal__radio-container">

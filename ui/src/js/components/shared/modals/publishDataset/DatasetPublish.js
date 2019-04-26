@@ -49,7 +49,7 @@ const DatasetPublish = (props) => {
                   <span><b>Private</b></span>
                 </label>
               </div>
-              <div className="PublishDatasetsModal__private">
+              <div className="PublishDatasetsModal__public">
                 <label
                   htmlFor={`${name}_public`}
                   className="Radio"

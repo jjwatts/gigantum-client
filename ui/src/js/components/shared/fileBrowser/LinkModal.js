@@ -203,6 +203,11 @@ export default class LinkModal extends Component {
                           withoutContext
                         />
                         <div className="LinkModal__dataset-container">
+                          <p className="LinkModal__message">
+                            <b>
+                            For collaborators to access a linked Dataset, the Dataset must be public or they must be added as a collaborator to the Dataset itself.
+                            </b>
+                          </p>
                           {
                                             localDatasetEdges.map((edge) => {
                                               const node = edge.node;
