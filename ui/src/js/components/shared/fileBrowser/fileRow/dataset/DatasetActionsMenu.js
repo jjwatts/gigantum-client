@@ -240,7 +240,7 @@ export default class DatasetActionsMenu extends Component {
     const popupCSS = classNames({
       DatasetActionsMenu__popup: true,
       hidden: !state.popupVisible,
-      ToolTip__message: true,
+      Tooltip__message: true,
     });
     const downloadCSS = classNames({
       'DatasetActionsMenu__item Btn--round': true,
