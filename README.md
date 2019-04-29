@@ -11,16 +11,6 @@
 [![codecov](https://codecov.io/gh/gigantum/gigantum-client/branch/master/graph/badge.svg?token=1k6CENUN8G)](https://codecov.io/gh/gigantum/gigantum-client)
 [![FOSSA Status](https://app.fossa.io/api/projects/custom%2B6007%2FGigantum%20Client.svg?type=small)](https://app.fossa.io/projects/custom%2B6007%2FGigantum%20Client?ref=badge_small)
 
-
-Gigantum is an open-source, open-system for reproducability of scientific research.
-
--Monorepo containing the source and build tooling for the Gigantum Client, our solution for repoducible data science.-
-
-
-
-
-## Overview
-
 The **Gigantum Client** is a web application to manage the creation and sharing of data science projects. It is run 
 locally and is delivered via a Docker container. The Client is the core component of a larger ecosystem of tools 
 and services, including:
@@ -28,7 +18,18 @@ and services, including:
 - [Gigantum Desktop](https://github.com/gigantum/gigantum-desktop) - A desktop app to install and launch the Client 
 - [Gigantum CLI](https://github.com/gigantum/gigantum-cli) - A simple command line tool to install and launch the Client
 
-## Quickstart Guide (Setup and Build)
+## Gigantum Quickstart
+
+Gigantum is `pip`-installable, note that Docker needs to be installed (See instructions below).
+
+```bash
+pip install gigantum
+gigantum install && gigantum start
+```
+
+Then open your browser to http://localhost:10000!
+
+## Build and Run Gigantum from Source
 
 ### 1) Install Docker 
 
