@@ -8,6 +8,7 @@
 [Home](https://gigantum.com)
 &middot; [Demo](https://try.gigantum.com)
 &middot; [Docs](https://docs.gigantum.com)
+&middot; [Twitter](https://twitter.com/gigantumscience)
 &middot; [Community &amp; Support](https://spectrum.chat/gigantum)
 &middot; [Feedback](https://portal.prodpad.com/d47eb9fe-c779-11e8-97cd-06df22ffaf6f)
 
