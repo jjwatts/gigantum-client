@@ -18,7 +18,7 @@ and services, including:
 - [Gigantum Desktop](https://github.com/gigantum/gigantum-desktop) - A desktop app to install and launch the Client 
 - [Gigantum CLI](https://github.com/gigantum/gigantum-cli) - A simple command line tool to install and launch the Client
 
-## Gigantum Quickstart
+## Installation Quickstart
 
 Gigantum is `pip`-installable, note that Docker needs to be installed (See instructions below). Once installed, just open your browser to http://localhost:10000!
 
