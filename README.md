@@ -1,5 +1,10 @@
 # Gigantum Client
 
+[Web Home](https://gigantum.com)
+&middot; [Demo](https://try.gigantum.com)
+&middot; [Documentation](https://docs.gigantum.com)
+&middot; [Community and Support](https://spectrum.chat/gigantum)
+&middot; [Feedback](https://portal.prodpad.com/d47eb9fe-c779-11e8-97cd-06df22ffaf6f)
 
 [![CircleCI](https://circleci.com/gh/gigantum/gigantum-client/tree/master.svg?style=svg)](https://circleci.com/gh/gigantum/gigantum-client/tree/master)  [![codecov](https://codecov.io/gh/gigantum/gigantum-client/branch/master/graph/badge.svg?token=1k6CENUN8G)](https://codecov.io/gh/gigantum/gigantum-client) [![FOSSA Status](https://app.fossa.io/api/projects/custom%2B6007%2FGigantum%20Client.svg?type=small)](https://app.fossa.io/projects/custom%2B6007%2FGigantum%20Client?ref=badge_small)
 
