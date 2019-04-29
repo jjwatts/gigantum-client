@@ -40,7 +40,7 @@ Note, Docker must be running to build/run/test the Client.
 
 ### 2) Clone gigantum-client
 
-```
+```bash
 git clone git@github.com:gigantum/gigantum-client.git
 cd gigantum-client
 git submodule update --init --recursive
@@ -57,7 +57,7 @@ app)
 
 ### 3) Create virtual environment
 
-```
+```bash
 python -m venv gtm-env
 source gtm-env/bin/activate
 cd gtm && pip install -e . && cd ..
@@ -70,7 +70,7 @@ The command `gtm` is now available. Run `gtm -h` to see available commands.
 
 ### 4) Configure your development environment
 
-```
+```bash
 gtm dev setup
 ```
 
@@ -85,7 +85,7 @@ development container so that the API starts automatically, but the UI bundle is
 
 ### 5) Build application client container and start working
 
-```
+```bash
 gtm dev -v build
 ```
 
@@ -94,13 +94,13 @@ Once complete, you'll have a container available for use either via your termina
 
 ### 6) Starting and stopping the gigantum client from terminal
 
-```
+```bash
 gtm dev start
 ```
 
 In a new console session, enter the container and kick off the application:
 
-```
+```bash
 gtm dev attach
 /opt/setup.sh
 python3 service.py
@@ -110,7 +110,7 @@ Open your web browser to http://localhost:10000 to access the application.
 
 When finished, run:
 
-```
+```bash
 gtm dev stop
 ```
  
