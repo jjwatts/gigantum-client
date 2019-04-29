@@ -1,4 +1,4 @@
-# Gigantum Client
+[!Gigantum Banner](docs/img/Readme-Banner.png)
 
 [Home](https://gigantum.com)
 &middot; [Demo](https://try.gigantum.com)
