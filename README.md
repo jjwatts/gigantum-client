@@ -20,14 +20,14 @@ and services, including:
 
 ## Gigantum Quickstart
 
-Gigantum is `pip`-installable, note that Docker needs to be installed (See instructions below).
+Gigantum is `pip`-installable, note that Docker needs to be installed (See instructions below). Once installed, just open your browser to http://localhost:10000!
 
 ```bash
 pip install gigantum
 gigantum install && gigantum start
 ```
 
-Then open your browser to http://localhost:10000!
+Gigantum can also be delivered as a convenient desktop application, available on our [Downloads page](https://gigantum.com/download).
 
 ## Build and Run Gigantum from Source
 
