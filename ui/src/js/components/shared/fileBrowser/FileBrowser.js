@@ -823,6 +823,7 @@ class FileBrowser extends Component {
                   onClick={() => this.setState({ showLinkModal: true })}
                   data-tooltip="Link Dataset"
                   type="button"
+                  disabled={props.isLocked}
                 >
                   <div className="Btn--fileBrowser Btn--round Btn--bordered Btn__addDataset Btn" />
                   Link Dataset

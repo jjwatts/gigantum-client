@@ -30,8 +30,6 @@ class RemoteLabbooks extends Component {
       deleteModalVisible: false,
       isPaginating: false,
     };
-    this._toggleDeleteModal = this._toggleDeleteModal.bind(this);
-    this._loadMore = this._loadMore.bind(this);
   }
 
   /*

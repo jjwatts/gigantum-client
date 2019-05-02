@@ -292,6 +292,11 @@
   &:hover {
     text-decoration: underline;
   }
+  &:disabled {
+    background-color: transparent !important;
+    color: $romanSilver;
+    pointer-events: none;
+  }
 }
 
 .FileBrowser__newFolder {
@@ -307,6 +312,13 @@
     .Btn__addDataset {
       background: $azure url(~Images/icons/database-add-hover.svg) no-repeat center center;
       background-size: 18px;
+    }
+  }
+  &:disabled {
+    .Btn__addDataset {
+      background: url(~Images/icons/database-add-grey.svg) no-repeat center center !important;
+      background-size: 18px;
+      border: 1px solid $romanSilver;
     }
   }
 }

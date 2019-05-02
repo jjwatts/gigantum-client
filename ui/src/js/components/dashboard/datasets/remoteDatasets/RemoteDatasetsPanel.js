@@ -224,7 +224,7 @@ export default class RemoteDatasetPanel extends Component {
 
         <div className={descriptionCss}>
           <div className="RemoteDatasets__row RemoteDatasets__row--title">
-            <h6 className="RemoteDatasets__panel-title">
+            <h5 className="RemoteDatasets__panel-title">
               <Highlighter
                 highlightClassName="LocalDatasets__highlighted"
                 searchWords={[store.getState().datasetListing.filterText]}
@@ -232,7 +232,7 @@ export default class RemoteDatasetPanel extends Component {
                 caseSensitive={false}
                 textToHighlight={edge.node.name}
               />
-            </h6>
+            </h5>
           </div>
 
           <p className="RemoteDatasets__paragraph RemoteDatasets__paragraph--owner">{edge.node.owner}</p>

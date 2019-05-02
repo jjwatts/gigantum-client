@@ -99,6 +99,7 @@ class File extends Component {
     *  launches dev tool to appropriate file
     */
   _openDevTool(devTool, forceStart) {
+    const { props } = this;
     const { owner, labbookName } = store.getState().routes;
     const status = store.getState().containerStatus.status;
     const tabName = `${devTool}-${owner}-${labbookName}`;
@@ -132,10 +133,10 @@ class File extends Component {
         (response, error) => {
           if (response.startDevTool) {
             let path = `${window.location.protocol}//${window.location.hostname}${response.startDevTool.path}`;
-            if (path.includes(`/lab/tree/${this.props.section}`)) {
-              path = path.replace(`/lab/tree/${this.props.section}`, `/lab/tree/${this.props.section}/${this.props.filename}`);
+            if (path.includes(`/lab/tree/${props.section}`)) {
+              path = path.replace(`/lab/tree/${props.section}`, `/lab/tree/${props.section}/${props.fileData.edge.node.key}`);
             } else {
-              path = `${path}/lab/tree/${this.props.section}/${this.props.filename}`;
+              path = `${path}/lab/tree/${props.section}/${props.fileData.edge.node.key}`;
             }
 
             window[tabName] = window.open(path, tabName);

@@ -487,12 +487,6 @@ class Labbook extends Component {
 
   render() {
     const { props, state } = this;
-    const isLockedBrowser = {
-      locked: (props.isPublishing || props.isSyncing || props.isExporting),
-      isPublishing: props.isPublishing,
-      isExporting: props.isExporting,
-      isSyncing: props.isSyncing,
-    };
     const isLocked = props.isBuilding || props.isSyncing || props.isPublishing || state.isLocked;
 
     if (props.labbook) {
@@ -808,7 +802,7 @@ class Labbook extends Component {
                             labbook={labbook}
                             labbookId={labbook.id}
                             setContainerState={this._setContainerState}
-                            isLocked={isLockedBrowser}
+                            isLocked={isLocked}
                             section="code"
                           />
 
@@ -825,7 +819,7 @@ class Labbook extends Component {
                           <InputData
                             labbook={labbook}
                             labbookId={labbook.id}
-                            isLocked={isLockedBrowser}
+                            isLocked={isLocked}
                             section="input"
                           />
                         </ErrorBoundary>)}
@@ -841,7 +835,7 @@ class Labbook extends Component {
                           <OutputData
                             labbook={labbook}
                             labbookId={labbook.id}
-                            isLocked={isLockedBrowser}
+                            isLocked={isLocked}
                             section="output"
                           />
                         </ErrorBoundary>)}

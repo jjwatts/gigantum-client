@@ -136,7 +136,7 @@ const FooterUtils = {
                 successCall();
               }
             } else if (response.data.jobStatus.status === 'failed') {
-              const method = JSON.parse(response.data.jobStatus.jobMetadata).method;
+              const { method } = JSON.parse(response.data.jobStatus.jobMetadata);
               let reportedFailureMessage = response.data.jobStatus.failureMessage;
               let errorMessage = response.data.jobStatus.failureMessage;
 

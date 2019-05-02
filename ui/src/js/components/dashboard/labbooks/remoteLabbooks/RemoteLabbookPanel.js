@@ -242,7 +242,7 @@ export default class RemoteLabbookPanel extends Component {
        <div className={descriptionCss}>
 
          <div className="RemoteLabbooks__row RemoteLabbooks__row--title">
-           <h6 className="RemoteLabbooks__panel-title">
+           <h5 className="RemoteLabbooks__panel-title">
              <Highlighter
                highlightClassName="LocalLabbooks__highlighted"
                searchWords={[store.getState().labbookListing.filterText]}
@@ -250,7 +250,7 @@ export default class RemoteLabbookPanel extends Component {
                caseSensitive={false}
                textToHighlight={edge.node.name}
              />
-           </h6>
+           </h5>
 
          </div>
 

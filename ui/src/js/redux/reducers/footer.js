@@ -411,11 +411,19 @@ export default (state = {
       uuid: uuidv4(),
     };
   } if (action.type === types.UPDATE_HISTORY_STACK_ITEM_VISIBILITY) {
-    const messageStackHistory = state.messageStackHistory;
-    const messageStackItem = messageStackHistory[action.payload.index];
+    let newMessageStackHistory = state.messageStackHistory;
+    const messageStackItem = newMessageStackHistory[action.payload.index];
 
     messageStackItem.messageBodyOpen = !messageStackItem.messageBodyOpen;
-    messageStackHistory[action.payload.index] = messageStackItem;
+    newMessageStackHistory[action.payload.index] = messageStackItem;
+    newMessageStackHistory = newMessageStackHistory.map((message, index) => {
+      if (index === action.payload.index) {
+        return message;
+      }
+      const newMessage = message;
+      newMessage.messageBodyOpen = false;
+      return newMessage;
+    });
 
     return {
       ...state,

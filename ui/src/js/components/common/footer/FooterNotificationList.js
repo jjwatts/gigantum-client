@@ -35,7 +35,6 @@ export default class FooterNotificationList extends Component {
 
     height = height === 'auto' ? 'auto' : `${height}px`;
 
-
     return (
       <div className={footerMessageSectionClass}>
         <button

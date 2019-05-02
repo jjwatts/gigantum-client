@@ -600,7 +600,6 @@ export default class ImportModule extends Component {
 
     const failureCall = (error) => {
       this._clearState();
-      console.error(error);
       store.dispatch({
         type: 'MULTIPART_INFO_MESSAGE',
         payload: {
@@ -726,8 +725,6 @@ export default class ImportModule extends Component {
 
 const ImportModal = ({ self }) => {
   let owner = '';
-
-
   let name = '';
   const { props, state } = self;
   const importCSS = classNames({
