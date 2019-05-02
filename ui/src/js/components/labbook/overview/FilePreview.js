@@ -5,6 +5,7 @@ import {
   graphql,
 } from 'react-relay';
 import { Link } from 'react-router-dom';
+import { boundMethod } from 'autobind-decorator'
 // utilites
 import environment from 'JS/createRelayEnvironment';
 // store
@@ -73,10 +74,11 @@ export default class FilePreview extends Component {
     @param {String} section
     handles redirect and scrolling to top
   */
+  @boundMethod
   _handleRedirect(section) {
     const { owner, labbookName } = store.getState().routes;
     const { props } = this;
-    props.scrollToTop();
+    window.scrollTo(0, 0);
     props.history.push(`/projects/${owner}/${labbookName}/${section}`);
   }
 
@@ -118,7 +120,7 @@ export default class FilePreview extends Component {
                   name={labbookName}
                   sectionData={{
                     section: queryProps.labbook.input,
-                    sectionType: 'intput',
+                    sectionType: 'input',
                     sectionLink: 'InputData',
                     sectionTitle: 'Input Data',
                     sectionTooltip: 'inputDataOverview',
@@ -187,6 +189,7 @@ const FilePreviewSection = ({
                 owner={owner}
                 name={name}
                 sectionType={sectionType}
+                sectionTitle={sectionTitle}
                 sectionLink={sectionLink}
                 handleRedirect={self._handleRedirect}
               />

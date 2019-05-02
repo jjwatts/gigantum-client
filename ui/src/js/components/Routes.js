@@ -19,6 +19,7 @@ import Footer from 'Components/common/footer/Footer';
 import Prompt from 'Components/common/Prompt';
 import DiskHeader from 'Components/common/DiskHeader';
 import Helper from 'Components/common/Helper';
+import Loader from 'Components/common/Loader';
 // config
 import config from 'JS/config';
 // auth
@@ -50,7 +51,7 @@ class Routes extends Component {
     super(props);
     this.state = {
       hasError: false,
-      forceLoginScreen: true,
+      forceLoginScreen: null,
       loadingRenew: true,
       userIdentityReturned: false,
       showYT: false,
@@ -209,18 +210,8 @@ class Routes extends Component {
         Routes__main: true,
       });
 
-      if (state.forceLoginScreen) {
-        const match = {};
-        match.path = window.location.pathname.indexOf('datasets') > -1 ? '/datasets/:labbookSection' : '/projects/:labbookSection';
-        return (
-          <Home
-            userIdentityReturned={state.userIdentityReturned}
-            history={history}
-            auth={auth}
-            match={match}
-            {...props}
-          />
-        );
+      if (state.forceLoginScreen === null) {
+        return <Loader />;
       }
 
       return (
