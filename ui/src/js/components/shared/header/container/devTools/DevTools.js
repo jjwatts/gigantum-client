@@ -8,7 +8,7 @@ import { setContainerState } from 'JS/redux/actions/labbook/overview/overview';
 import { setContainerStatus, setContainerMenuVisibility } from 'JS/redux/actions/labbook/containerStatus';
 import { setContainerMenuWarningMessage, setCloseEnvironmentMenus } from 'JS/redux/actions/labbook/environment/environment';
 import { setPackageMenuVisible } from 'JS/redux/actions/labbook/environment/packageDependencies';
-import { setBuildingState, setMergeMode } from 'JS/redux/actions/labbook/labbook';
+import { setBuildingState, setMergeMode, updateTransitionState } from 'JS/redux/actions/labbook/labbook';
 import { setErrorMessage, setInfoMessage, setWarningMessage } from 'JS/redux/actions/footer';
 // assets
 import './DevTools.scss';
@@ -59,17 +59,10 @@ class DevTools extends Component {
   */
   @boundMethod
   _openDevToolMuation(developmentTool) {
-    const { props, state } = this;
-
-
+    const { props } = this;
     const { containerStatus, imageStatus } = props;
-
-
     const { owner, name } = props.labbook;
-
-
-    const tabName = `${developmentTool}-${owner}-${name}`;
-
+    let tabName = `${developmentTool}-${owner}-${name}`;
     const labbookCreationDate = Date.parse(`${this.props.creationDateUtc}Z`);
     const timeNow = Date.parse(new Date());
 
@@ -86,19 +79,16 @@ class DevTools extends Component {
       setWarningMessage('Could not launch development environment as the project is not ready.');
     } else if (status === 'Stopped') {
       setInfoMessage('Starting Project container. When done working, click Stop to shutdown the container.');
-      this.setState({
-        status: 'Starting',
-        contanerMenuRunning: false,
-      });
       setMergeMode(false, false);
-      props.updateStatus('Starting');
+      updateTransitionState('Starting');
+
       props.containerMutations.startContainer({ devTool: developmentTool }, (response, error) => {
         if (error) {
           setErrorMessage('Error Starting Dev tool', error);
         }
 
         if (response.startDevTool) {
-          const tabName = `${developmentTool}-${owner}-${name}`;
+          tabName = `${developmentTool}-${owner}-${name}`;
           let path = `${window.location.protocol}//${window.location.hostname}${response.startDevTool.path}`;
           if (developmentTool === 'notebook') {
             if (path.includes('/lab/tree')) {
@@ -114,13 +104,14 @@ class DevTools extends Component {
     } else if (window[tabName] && !window[tabName].closed) {
       window[tabName].focus();
     } else {
-      setInfoMessage(`Starting ${developmentTool}, make sure to allow popups.`);
       const data = { devTool: developmentTool };
+      setInfoMessage(`Starting ${developmentTool}, make sure to allow popups.`);
+
       props.containerMutations.startDevTool(
         data,
         (response, error) => {
           if (response.startDevTool) {
-            const tabName = `${developmentTool}-${owner}-${name}`;
+            tabName = `${developmentTool}-${owner}-${name}`;
             let path = `${window.location.protocol}//${window.location.hostname}${response.startDevTool.path}`;
             if (developmentTool === 'notebook') {
               if (path.includes('/lab/tree')) {
@@ -154,36 +145,13 @@ class DevTools extends Component {
 
   render() {
     const { props, state } = this;
-
-
-    const devTools = props.labbook.environment.base ? props.labbook.environment.base.developmentTools : [];
-
-
-    const jupyterButtonCss = classNames({
-      'DevTools-button': true,
-      'ContainerStatus__button--bottom': state.isMouseOver,
-    });
-
-
-    const containerMenuCSS = classNames({
-      'DevTools-menu': true,
-      hidden: !state.showDevList,
-      'DevTools-menu--hover': state.isMouseOver,
-    });
-
-
-    const expandToolsCSS = classNames({
-      'ContainerStatus__expand-tools': true,
-      'ContainerStatus__expand-tools--open': state.showDevList,
-    });
-
+    const devTools = props.labbook.environment.base
+      ? props.labbook.environment.base.developmentTools : [];
 
     const devtToolMenuCSS = classNames({
       'DevTools__dropdown-menu': true,
       hidden: !state.showDevList,
     });
-
-
     const buttonDropdownCSS = classNames({
       'DevTools__btn DevTools__btn--dropdown': true,
       'DevTools__btn--open': state.showDevList,
@@ -202,6 +170,7 @@ class DevTools extends Component {
           </button>
 
           <button
+            type="button"
             data-id="DevToolDropdown"
             className={buttonDropdownCSS}
             onClick={evt => this._toggleDevtoolMenu(evt)}
