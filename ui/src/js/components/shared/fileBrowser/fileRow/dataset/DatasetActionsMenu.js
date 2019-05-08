@@ -220,8 +220,8 @@ export default class DatasetActionsMenu extends Component {
   _getTooltipText(isLocal) {
     const { props, state } = this;
     let downloadText = isLocal ? 'Downloaded' : 'Download';
-    downloadText = props.isParent ? 'Download All' : downloadText;
     downloadText = props.folder && !isLocal ? 'Download Directory' : downloadText;
+    downloadText = props.isParent ? 'Download All' : downloadText;
     downloadText = state.showSessionValidMessage ? 'A valid session is required to download a dataset file.' : downloadText;
     downloadText = props.isDragging && !isLocal ? 'File is not downloaded. Download file to move it.' : downloadText;
 
@@ -231,8 +231,9 @@ export default class DatasetActionsMenu extends Component {
   render() {
     const { props, state } = this;
     const { isLocal } = props;
+    console.log(isLocal)
     const fileIsNotLocal = ((!props.edge.node.isLocal || (props.folder)) && !isLocal);
-    const fileIsLocal = (props.edge.node.isLocal && isLocal);
+    const fileIsLocal = (props.edge.node.isLocal && isLocal) || (props.isParent && isLocal);
     const blockDownload = props.folder ? false : props.edge.node.isLocal || isLocal;
     const downloadText = this._getTooltipText(fileIsLocal);
     const isLoading = state.fileDownloading || ((props.parentDownloading || props.isDownloading) && !fileIsLocal);

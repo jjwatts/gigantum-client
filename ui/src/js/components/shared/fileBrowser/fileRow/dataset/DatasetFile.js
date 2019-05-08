@@ -133,6 +133,7 @@ class File extends Component {
           <div className="File__cell File__cell--menu">
             <ActionsMenu
               edge={props.fileData.edge}
+              isLocal={props.fileData.edge.node.isLocal}
               mutationData={props.mutationData}
               mutations={props.mutations}
               renameEditMode={this._renameEditMode}

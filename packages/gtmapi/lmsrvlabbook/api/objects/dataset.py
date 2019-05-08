@@ -8,7 +8,7 @@ from lmsrvcore.auth.user import get_logged_in_username
 from lmsrvcore.api.interfaces import GitRepository
 
 from gtmcore.dataset.manifest import Manifest
-from gtmcore.workflows.gitlab import GitLabManager, ProjectPermissions
+from gtmcore.workflows.gitlab import GitLabManager, ProjectPermissions, GitLabException
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.inventory.branching import BranchManager
 
@@ -405,7 +405,7 @@ class Dataset(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             owner = InventoryManager().query_owner(dataset)
             d = mgr.repo_details(namespace=owner, repository_name=dataset.name)
             return d.get('visibility')
-        except ValueError:
+        except GitLabException:
             return "local"
 
     def resolve_visibility(self, info):

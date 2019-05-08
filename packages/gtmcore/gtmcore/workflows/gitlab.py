@@ -20,6 +20,7 @@
 import requests
 import subprocess
 import pexpect
+import time
 import re
 import os
 from enum import Enum
@@ -66,6 +67,10 @@ def check_and_add_user(admin_service: str, access_token: str, username: str) -> 
 
 
 class GitLabException(Exception):
+    pass
+
+
+class StaleCredentialsException(GitLabException):
     pass
 
 
@@ -124,37 +129,41 @@ class GitLabManager(object):
     @property
     def user_token(self) -> Optional[str]:
         """Method to get the user's API token from the auth microservice"""
-        if not self._gitlab_token:
+
+        if self._gitlab_token is None:
             # Get the token
             response = requests.get(f"https://{self.admin_service}/key",
-                                    headers={"Authorization": f"Bearer {self.access_token}"}, timeout=REQUEST_TIMEOUT)
+                                    headers={"Authorization": f"Bearer {self.access_token}"},
+                                    timeout=REQUEST_TIMEOUT)
             if response.status_code == 200:
                 self._gitlab_token = response.json()['key']
             elif response.status_code == 404:
                 # User not found so create it!
                 response = requests.post(f"https://{self.admin_service}/user",
-                                         headers={"Authorization": f"Bearer {self.access_token}"}, timeout=REQUEST_TIMEOUT)
+                                         headers={"Authorization": f"Bearer {self.access_token}"},
+                                         timeout=REQUEST_TIMEOUT)
                 if response.status_code != 201:
                     logger.error("Failed to create new user in GitLab")
                     logger.error(response.json())
-                    raise ValueError("Failed to create new user in GitLab")
+                    raise GitLabException("Failed to create new user in GitLab")
 
                 logger.info(f"Created new user in remote git server")
 
                 # New get the key so the current request that triggered this still succeeds
                 response = requests.get(f"https://{self.admin_service}/key",
-                                        headers={"Authorization": f"Bearer {self.access_token}"}, timeout=REQUEST_TIMEOUT)
+                                        headers={"Authorization": f"Bearer {self.access_token}"},
+                                        timeout=REQUEST_TIMEOUT)
                 if response.status_code == 200:
                     self._gitlab_token = response.json()['key']
                 else:
-                    logger.error("Failed to get user access key from server after creation. "
-                                 "Status Code: {response.status_code}")
+                    logger.error(f"Failed to get user access key from server after creation. "
+                                 f"Status Code: {response.status_code}")
                     logger.error(response.json())
-                    raise ValueError("Failed to get user access key from server after creation")
+                    raise GitLabException("Failed to get user access key from server after creation")
             else:
                 logger.error(f"Failed to get user access key from server. Status Code: {response.status_code}")
                 logger.error(response.json())
-                raise ValueError("Failed to get user access key from server")
+                raise GitLabException("Failed to get user access key from server")
 
         return self._gitlab_token
 
@@ -169,7 +178,8 @@ class GitLabManager(object):
         """
         # Call API to get ID of the user
         response = requests.get(f"https://{self.remote_host}/api/v4/users?username={username}",
-                                headers={"PRIVATE-TOKEN": self.user_token}, timeout=REQUEST_TIMEOUT)
+                                headers={"PRIVATE-TOKEN": self.user_token},
+                                timeout=REQUEST_TIMEOUT)
         if response.status_code != 200:
             logger.error(f"Failed to query for user ID from username. Status Code: {response.status_code}")
             logger.error(response.json())
@@ -199,7 +209,8 @@ class GitLabManager(object):
         # Call API to check for project
         repo_id = self.get_repository_id(namespace, repository_name)
         response = requests.get(f"https://{self.remote_host}/api/v4/projects/{repo_id}",
-                                headers={"PRIVATE-TOKEN": self.user_token}, timeout=REQUEST_TIMEOUT)
+                                headers={"PRIVATE-TOKEN": self.user_token},
+                                timeout=REQUEST_TIMEOUT)
 
         if response.status_code == 200:
             return True
@@ -252,7 +263,8 @@ class GitLabManager(object):
             """
         repo_id = self.get_repository_id(namespace, repository_name)
         response = requests.get(f"https://{self.remote_host}/api/v4/projects/{repo_id}",
-                                headers={"PRIVATE-TOKEN": self.user_token}, timeout=REQUEST_TIMEOUT)
+                                headers={"PRIVATE-TOKEN": self.user_token},
+                                timeout=REQUEST_TIMEOUT)
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 404:
@@ -353,7 +365,8 @@ class GitLabManager(object):
         # Remove project from quota service
         try:
             response = requests.delete(f"https://{self.admin_service}/webhook/{namespace}/{repository_name}",
-                                       headers={"Authorization": f"Bearer {self.access_token}"}, timeout=REQUEST_TIMEOUT)
+                                       headers={"Authorization": f"Bearer {self.access_token}"},
+                                       timeout=REQUEST_TIMEOUT)
             if response.status_code != 204:
                 logger.error(f"Failed to remove quota webhook: {response.status_code}")
                 logger.error(response.json)
@@ -367,7 +380,8 @@ class GitLabManager(object):
         # Call API to remove project
         repo_id = self.get_repository_id(namespace, repository_name)
         response = requests.delete(f"https://{self.remote_host}/api/v4/projects/{repo_id}",
-                                   headers={"PRIVATE-TOKEN": self.user_token}, timeout=REQUEST_TIMEOUT)
+                                   headers={"PRIVATE-TOKEN": self.user_token},
+                                   timeout=REQUEST_TIMEOUT)
 
         if response.status_code != 202:
             logger.error(f"Failed to remove remote repository. Status Code: {response.status_code}")
@@ -393,7 +407,8 @@ class GitLabManager(object):
         # Call API to get all collaborators
         repo_id = self.get_repository_id(namespace, repository_name)
         response = requests.get(f"https://{self.remote_host}/api/v4/projects/{repo_id}/members",
-                                headers={"PRIVATE-TOKEN": self.user_token}, timeout=REQUEST_TIMEOUT)
+                                headers={"PRIVATE-TOKEN": self.user_token},
+                                timeout=REQUEST_TIMEOUT)
 
         if response.status_code != 200:
             logger.error("Failed to get remote repository collaborators")
@@ -429,7 +444,8 @@ class GitLabManager(object):
         repo_id = self.get_repository_id(namespace, labbook_name)
         response = requests.post(f"https://{self.remote_host}/api/v4/projects/{repo_id}/members",
                                  headers={"PRIVATE-TOKEN": self.user_token},
-                                 json=data, timeout=REQUEST_TIMEOUT)
+                                 json=data,
+                                 timeout=REQUEST_TIMEOUT)
 
         if response.status_code != 201:
             logger.error("Failed to add collaborator")
@@ -461,7 +477,8 @@ class GitLabManager(object):
         # Call API to remove a collaborator
         repo_id = self.get_repository_id(namespace, labbook_name)
         response = requests.delete(f"https://{self.remote_host}/api/v4/projects/{repo_id}/members/{user_id}",
-                                   headers={"PRIVATE-TOKEN": self.user_token}, timeout=REQUEST_TIMEOUT)
+                                   headers={"PRIVATE-TOKEN": self.user_token},
+                                   timeout=REQUEST_TIMEOUT)
 
         if response.status_code != 204:
             logger.error("Failed to remove collaborator")

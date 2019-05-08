@@ -106,7 +106,7 @@ class GitWorkflow(ABC):
             raise e
 
     def sync(self, username: str, remote: str = "origin", override: MergeOverride = MergeOverride.ABORT,
-             feedback_callback: Callable = lambda _ : None, pull_only: bool = False,
+             feedback_callback: Callable = lambda _: None, pull_only: bool = False,
              access_token: Optional[str] = None, id_token: Optional[str] = None) -> int:
         """ Sync with remote GitLab repo (i.e., pull any upstream changes and push any new changes). Following
         a sync operation both the local repo and remote should be at the same revision.

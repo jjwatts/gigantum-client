@@ -374,7 +374,7 @@ class Dataset extends Component {
             <div className="DatasetBrowser__name">
               {datasetName}
             </div>
-            { (props.commitsBehind !== 0)
+            { (props.commitsBehind !== 0) && (props.commitsBehind !== null)
                         && (
                         <div
                           className="DatasetBrowser__commits Tooltip-data"
@@ -396,6 +396,7 @@ class Dataset extends Component {
               folder
               renameEditMode={this._renameEditMode}
               fullEdge={props.fileData}
+              isLocal={props.isLocal}
               isParent
               setFolderIsDownloading={this._setFolderIsDownloading}
               isDownloading={state.isDownloading || props.isDownloading}
@@ -430,6 +431,7 @@ class Dataset extends Component {
                               updateChildState={props.updateChildState}
                               isDownloading={state.isDownloading || props.isDownloading}
                               codeDirUpload={props.codeDirUpload}
+                              checkLocal={props.checkLocal}
                             />
                           );
                         } if ((children && children[file] && children[file].edge && !children[file].edge.node.isDir)) {
@@ -454,6 +456,7 @@ class Dataset extends Component {
                               isDownloading={state.isDownloading || props.isDownloading}
                               parentDownloading={props.parentDownloading}
                               updateChildState={props.updateChildState}
+                              checkLocal={props.checkLocal}
                             />
                           );
                         } if (children[file]) {

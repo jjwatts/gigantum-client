@@ -78,6 +78,7 @@
     &--loading {
         width: 20px;
         height: 20px;
+        background: transparent;
         border: 2px solid $grey;
         border-top: 2px solid $azure;
         border-radius: 50%;

@@ -261,7 +261,7 @@ class Folder extends Component {
 
   render() {
     const { props, state } = this;
-
+    const isLocal = props.checkLocal(props.fileData);
 
     const { node } = props.fileData.edge;
 
@@ -386,6 +386,7 @@ class Folder extends Component {
               folder
               renameEditMode={this._renameEditMode}
               fullEdge={props.fileData}
+              isLocal={isLocal}
               isDownloading={state.isDownloading || props.isDownloading}
               setFolderIsDownloading={this._setFolderIsDownloading}
             />

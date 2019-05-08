@@ -70,7 +70,7 @@ class TestGitLabManager(object):
                       json={'message': 'it failed'}, status=400)
 
         # Make sure error is raised when getting the key fails and returns !=200
-        with pytest.raises(ValueError):
+        with pytest.raises(GitLabException):
             _ = gitlab_mngr_fixture.user_token
 
     def test_repository_id(self):

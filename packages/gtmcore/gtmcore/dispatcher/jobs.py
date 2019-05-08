@@ -76,7 +76,7 @@ def publish_repository(repository: Repository, username: str, access_token: str,
                        public=public, feedback_callback=update_meta, id_token=id_token)
     except Exception as e:
         logger.exception(f"(Job {p}) Error on publish_repository: {e}")
-        raise
+        raise Exception("Could not publish - try to log out and log in again.")
 
 
 def sync_repository(repository: Repository, username: str, override: MergeOverride,
@@ -112,7 +112,7 @@ def sync_repository(repository: Repository, username: str, override: MergeOverri
         return cnt
     except Exception as e:
         logger.exception(f"(Job {p}) Error on sync_repository: {e}")
-        raise
+        raise Exception("Could not sync - try to log out and log in again.")
 
 
 def import_labbook_from_remote(remote_url: str, username: str, config_file: str = None) -> str:
