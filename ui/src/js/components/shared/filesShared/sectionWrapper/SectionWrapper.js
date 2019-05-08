@@ -207,6 +207,7 @@ export default class SectionWrapper extends Component {
                 toggleFavoriteRecent={this._toggleFavoriteRecent}
                 {...sectionProps}
                 linkedDatasets={sectionObject.linkedDatasets || null}
+                containerStatus={props.containerStatus}
 
               />
             </div>

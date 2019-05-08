@@ -104,6 +104,7 @@ class SectionBrowser extends Component {
           pageInfo: props[props.section].allFiles.pageInfo,
         };
       }
+
       return (
         <FileBrowser
           ref={inst => inst}
@@ -118,6 +119,7 @@ class SectionBrowser extends Component {
           mostRecentConnection={`MostRecent${capitalSection}_allFiles`}
           favorites={props.favorites}
           isLocked={props.isLocked}
+          containerStatus={props.containerStatus}
           {...props}
         />
       );

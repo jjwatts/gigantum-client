@@ -103,12 +103,12 @@ class File extends Component {
   _openDevTool(devTool, forceStart) {
     const { props } = this;
     const { owner, labbookName } = store.getState().routes;
-    const status = store.getState().containerStatus.status;
+    const status = props.containerStatus;
     const tabName = `${devTool}-${owner}-${labbookName}`;
 
-    if (status !== 'Stopped' && status !== 'Running') {
+    if ((status !== 'NOT_RUNNING') && (status !== 'RUNNING')) {
       setWarningMessage('Could not launch development environment as the project is not ready.');
-    } else if (status === 'Stopped' && !forceStart) {
+    } else if (status === 'NOT_RUNNING' && !forceStart) {
       setInfoMessage('Starting Project container. When done working, click Stop to shutdown the container.');
       updateTransitionState('Starting');
       setMergeMode(false, false);

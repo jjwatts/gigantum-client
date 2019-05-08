@@ -662,6 +662,7 @@ class Folder extends Component {
                     isDownloading={state.isDownloading || props.isDownloading}
                     codeDirUpload={props.codeDirUpload}
                     checkLocal={props.checkLocal}
+                    containerStatus={props.containerStatus}
                   />
                 );
               } if ((children && children[file] && children[file].edge && !children[file].edge.node.isDir)) {
@@ -689,6 +690,7 @@ class Folder extends Component {
                     isDownloading={state.isDownloading || props.isDownloading}
                     updateChildState={props.updateChildState}
                     checkLocal={props.checkLocal}
+                    containerStatus={props.containerStatus}
                   />
                 );
               } if (children[file]) {

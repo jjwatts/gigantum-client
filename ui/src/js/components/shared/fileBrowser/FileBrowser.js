@@ -107,10 +107,14 @@ class FileBrowser extends Component {
       if (datasetName && edges.length === 0) {
         const adjustedKey = `${datasetName}/`;
         childrenState[adjustedKey] = {
-          isSelected: (state.childrenState && state.childrenState[adjustedKey]) ? state.childrenState[adjustedKey].isSelected : false,
-          isIncomplete: (state.childrenState && state.childrenState[adjustedKey]) ? state.childrenState[adjustedKey].isIncomplete : false,
-          isExpanded: (state.childrenState && state.childrenState[adjustedKey]) ? state.childrenState[adjustedKey].isExpanded : false,
-          isAddingFolder: (state.childrenState && state.childrenState[adjustedKey]) ? state.childrenState[adjustedKey].isAddingFolder : false,
+          isSelected: (state.childrenState && state.childrenState[adjustedKey])
+            ? state.childrenState[adjustedKey].isSelected : false,
+          isIncomplete: (state.childrenState && state.childrenState[adjustedKey])
+            ? state.childrenState[adjustedKey].isIncomplete : false,
+          isExpanded: (state.childrenState && state.childrenState[adjustedKey])
+            ? state.childrenState[adjustedKey].isExpanded : false,
+          isAddingFolder: (state.childrenState && state.childrenState[adjustedKey])
+            ? state.childrenState[adjustedKey].isAddingFolder : false,
         };
       }
       edges.forEach((edge) => {
@@ -122,10 +126,14 @@ class FileBrowser extends Component {
               const tempKey = `${splitKey.slice(0, index).join('/')}/`;
               if (!childrenState[tempKey] && tempKey !== '/') {
                 childrenState[tempKey] = {
-                  isSelected: (state.childrenState && state.childrenState[tempKey]) ? state.childrenState[tempKey].isSelected : false,
-                  isIncomplete: (state.childrenState && state.childrenState[tempKey]) ? state.childrenState[tempKey].isIncomplete : false,
-                  isExpanded: (state.childrenState && state.childrenState[tempKey]) ? state.childrenState[tempKey].isExpanded : false,
-                  isAddingFolder: (state.childrenState && state.childrenState[tempKey]) ? state.childrenState[tempKey].isAddingFolder : false,
+                  isSelected: (state.childrenState && state.childrenState[tempKey])
+                    ? state.childrenState[tempKey].isSelected : false,
+                  isIncomplete: (state.childrenState && state.childrenState[tempKey])
+                    ? state.childrenState[tempKey].isIncomplete : false,
+                  isExpanded: (state.childrenState && state.childrenState[tempKey])
+                    ? state.childrenState[tempKey].isExpanded : false,
+                  isAddingFolder: (state.childrenState && state.childrenState[tempKey])
+                    ? state.childrenState[tempKey].isAddingFolder : false,
                   edge: {
                     node: {
                       isDir: true,
@@ -140,10 +148,14 @@ class FileBrowser extends Component {
             }
           });
           childrenState[key] = {
-            isSelected: (state.childrenState && state.childrenState[key]) ? state.childrenState[key].isSelected : false,
-            isIncomplete: (state.childrenState && state.childrenState[key]) ? state.childrenState[key].isIncomplete : false,
-            isExpanded: (state.childrenState && state.childrenState[key]) ? state.childrenState[key].isExpanded : false,
-            isAddingFolder: (state.childrenState && state.childrenState[key]) ? state.childrenState[key].isAddingFolder : false,
+            isSelected: (state.childrenState && state.childrenState[key])
+              ? state.childrenState[key].isSelected : false,
+            isIncomplete: (state.childrenState && state.childrenState[key])
+              ? state.childrenState[key].isIncomplete : false,
+            isExpanded: (state.childrenState && state.childrenState[key])
+              ? state.childrenState[key].isExpanded : false,
+            isAddingFolder: (state.childrenState && state.childrenState[key])
+              ? state.childrenState[key].isAddingFolder : false,
             edge,
           };
         }
@@ -970,6 +982,7 @@ class FileBrowser extends Component {
                   rootFolder
                   codeDirUpload={this._codeDirUpload}
                   checkLocal={checkLocalIndividual}
+                  containerStatus={props.containerStatus}
                 />
               );
             } if (isFile) {
@@ -991,6 +1004,7 @@ class FileBrowser extends Component {
                   parentDownloading={state.downloadingAll}
                   updateChildState={this._updateChildState}
                   checkLocal={checkLocalIndividual}
+                  containerStatus={props.containerStatus}
                 />
               );
             }
