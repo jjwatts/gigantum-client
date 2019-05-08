@@ -7,14 +7,16 @@ import AddCollaboratorMutation from 'Mutations/AddCollaboratorMutation';
 import AddDatasetCollaboratorMutation from 'Mutations/AddDatasetCollaboratorMutation';
 import DeleteCollaboratorMutation from 'Mutations/DeleteCollaboratorMutation';
 import DeleteDatasetCollaboratorMutation from 'Mutations/DeleteDatasetCollaboratorMutation';
-// components
-import ButtonLoader from 'Components/common/ButtonLoader';
-import Modal from 'Components/common/Modal';
+
 // store
 import { setErrorMessage } from 'JS/redux/actions/footer';
 // config
 import config from 'JS/config';
 import fetchQuery from 'JS/fetch';
+// components
+import ButtonLoader from 'Components/common/ButtonLoader';
+import Modal from 'Components/common/Modal';
+import NoCollaborators from './NoCollaborators';
 // assets
 import './CollaboratorsModal.scss';
 
@@ -219,6 +221,8 @@ export default class CollaboratorsModal extends Component {
       newPermissions,
     } = this.state;
 
+    const { props } = this;
+
     // waiting for backend updates
     if (!permissionOverride) {
       this.setState({ addCollaboratorButtonDisabled: true, buttonLoaderAddCollaborator: 'loading' });
@@ -228,93 +232,95 @@ export default class CollaboratorsModal extends Component {
       this.setState({ buttonLoaderRemoveCollaborator });
     }
 
-    this.props.sectionType === 'dataset'
-      ? AddDatasetCollaboratorMutation(
-        labbookName,
-        owner,
-        collaboratorName || newCollaborator,
-        permissionOverride || newPermissions,
-        (response, error) => {
-          const completeState = this.state.buttonLoaderRemoveCollaborator;
+    if (props.sectionType === 'dataset') {
+        AddDatasetCollaboratorMutation(
+          labbookName,
+          owner,
+          collaboratorName || newCollaborator,
+          permissionOverride || newPermissions,
+          (response, error) => {
+            const completeState = this.state.buttonLoaderRemoveCollaborator;
 
-          if (permissionOverride && completeState[collaboratorName]) {
-            if (error) {
-              completeState[collaboratorName] = 'error';
+            if (permissionOverride && completeState[collaboratorName]) {
+              if (error) {
+                completeState[collaboratorName] = 'error';
+              } else {
+                completeState[collaboratorName] = 'finished';
+              }
+              this.setState({ buttonLoaderRemoveCollaborator: completeState });
+
+              setTimeout(() => {
+                const postCompleteState = this.state.buttonLoaderRemoveCollaborator;
+                postCompleteState[collaboratorName] = '';
+                this.setState({ buttonLoaderAddCollaborator: postCompleteState });
+              }, 2000);
             } else {
-              completeState[collaboratorName] = 'finished';
+              completeState[newCollaborator] = '';
+
+              this.setState({ newCollaborator: '', addCollaboratorButtonDisabled: false, buttonLoaderRemoveCollaborator: completeState });
+
+              this.collaboratorSearch.value = '';
+
+              if (error) {
+                setErrorMessage('Could not add collaborator', error);
+
+                this.setState({ buttonLoaderAddCollaborator: 'error' });
+              } else {
+                this.setState({ buttonLoaderAddCollaborator: 'finished' });
+              }
+
+              setTimeout(() => {
+                this.setState({ buttonLoaderAddCollaborator: '' });
+              }, 2000);
             }
-            this.setState({ buttonLoaderRemoveCollaborator: completeState });
+          },
+        )
 
-            setTimeout(() => {
-              const postCompleteState = this.state.buttonLoaderRemoveCollaborator;
-              postCompleteState[collaboratorName] = '';
-              this.setState({ buttonLoaderAddCollaborator: postCompleteState });
-            }, 2000);
-          } else {
-            completeState[newCollaborator] = '';
+      } else {
+        AddCollaboratorMutation(
+          labbookName,
+          owner,
+          collaboratorName || newCollaborator,
+          permissionOverride || newPermissions,
+          (response, error) => {
+            const completeState = this.state.buttonLoaderRemoveCollaborator;
 
-            this.setState({ newCollaborator: '', addCollaboratorButtonDisabled: false, buttonLoaderRemoveCollaborator: completeState });
+            if (permissionOverride && completeState[collaboratorName]) {
+              if (error) {
+                completeState[collaboratorName] = 'error';
+              } else {
+                completeState[collaboratorName] = 'finished';
+              }
+              this.setState({ buttonLoaderRemoveCollaborator: completeState });
 
-            this.collaboratorSearch.value = '';
-
-            if (error) {
-              setErrorMessage('Could not add collaborator', error);
-
-              this.setState({ buttonLoaderAddCollaborator: 'error' });
+              setTimeout(() => {
+                const postCompleteState = this.state.buttonLoaderRemoveCollaborator;
+                postCompleteState[collaboratorName] = '';
+                this.setState({ buttonLoaderAddCollaborator: postCompleteState });
+              }, 2000);
             } else {
-              this.setState({ buttonLoaderAddCollaborator: 'finished' });
+              completeState[newCollaborator] = '';
+
+              this.setState({ newCollaborator: '', addCollaboratorButtonDisabled: false, buttonLoaderRemoveCollaborator: completeState });
+
+              this.collaboratorSearch.value = '';
+
+              if (error) {
+                setErrorMessage('Could not add collaborator', error);
+
+                this.setState({ buttonLoaderAddCollaborator: 'error' });
+              } else {
+                this.setState({ buttonLoaderAddCollaborator: 'finished' });
+              }
+
+              setTimeout(() => {
+                this.setState({ buttonLoaderAddCollaborator: '' });
+              }, 2000);
             }
+          },
+        )
 
-            setTimeout(() => {
-              this.setState({ buttonLoaderAddCollaborator: '' });
-            }, 2000);
-          }
-        },
-
-      )
-      : AddCollaboratorMutation(
-        labbookName,
-        owner,
-        collaboratorName || newCollaborator,
-        permissionOverride || newPermissions,
-        (response, error) => {
-          const completeState = this.state.buttonLoaderRemoveCollaborator;
-
-          if (permissionOverride && completeState[collaboratorName]) {
-            if (error) {
-              completeState[collaboratorName] = 'error';
-            } else {
-              completeState[collaboratorName] = 'finished';
-            }
-            this.setState({ buttonLoaderRemoveCollaborator: completeState });
-
-            setTimeout(() => {
-              const postCompleteState = this.state.buttonLoaderRemoveCollaborator;
-              postCompleteState[collaboratorName] = '';
-              this.setState({ buttonLoaderAddCollaborator: postCompleteState });
-            }, 2000);
-          } else {
-            completeState[newCollaborator] = '';
-
-            this.setState({ newCollaborator: '', addCollaboratorButtonDisabled: false, buttonLoaderRemoveCollaborator: completeState });
-
-            this.collaboratorSearch.value = '';
-
-            if (error) {
-              setErrorMessage('Could not add collaborator', error);
-
-              this.setState({ buttonLoaderAddCollaborator: 'error' });
-            } else {
-              this.setState({ buttonLoaderAddCollaborator: 'finished' });
-            }
-
-            setTimeout(() => {
-              this.setState({ buttonLoaderAddCollaborator: '' });
-            }, 2000);
-          }
-        },
-
-      );
+      }
   }
 
   /**
@@ -322,23 +328,27 @@ export default class CollaboratorsModal extends Component {
   *  deletes collaborators using mutation
   *  @return {}
   */
-  _removeCollaborator(evt, params) {
-    const { collaborator, button } = params;
+  _removeCollaborator(evt, data) {
+    const { props, state } = this;
+    const { collaborator, button } = data.params;
+    const { buttonLoaderRemoveCollaborator } = state;
 
-    const { buttonLoaderRemoveCollaborator } = this.state;
-
-    button.disabled = true;
+    if (button) {
+      button.disabled = true;
+    }
 
     buttonLoaderRemoveCollaborator[collaborator] = 'loading';
-
     this.setState({ buttonLoaderRemoveCollaborator });
-    if (this.props.sectionType === 'dataset') {
+
+    if (props.sectionType === 'dataset') {
       DeleteDatasetCollaboratorMutation(
-        this.state.labbookName,
-        this.state.owner,
+        state.labbookName,
+        state.owner,
         collaborator,
         (response, error) => {
-          this.refs[collaborator] && this.refs[collaborator].classList.remove('loading');
+          if (this.refs[collaborator]) {
+            this.refs[collaborator].classList.remove('loading');
+          }
 
           if (button) {
             button.disabled = false;
@@ -369,7 +379,9 @@ export default class CollaboratorsModal extends Component {
         this.state.owner,
         collaborator,
         (response, error) => {
-          this.refs[collaborator] && this.refs[collaborator].classList.remove('loading');
+          if (this.refs[collaborator]) {
+            this.refs[collaborator].classList.remove('loading');
+          }
 
           if (button) {
             button.disabled = false;
@@ -398,107 +410,98 @@ export default class CollaboratorsModal extends Component {
   }
 
   render() {
-    const { state } = this;
+    const { props, state } = this;
+    const disableAddButton = state.addCollaboratorButtonDisabled || !state.newCollaborator.length;
+
+    // declare css here
     const autoCompleteMenu = classNames({
       'CollaboratorsModal__auto-compelte-menu box-shadow': true,
-      'CollaboratorsModal__auto-compelte-menu--visible': this.state.colloboratorSearchList.length > 0,
+      'CollaboratorsModal__auto-compelte-menu--visible': state.colloboratorSearchList.length > 0,
     });
-
-
     const permissionsSelectorCSS = classNames({
       'CollaboratorModal__PermissionsSelector Dropdown': true,
-      'Dropdown--open': this.state.permissionMenuOpen,
+      'Dropdown--open': state.permissionMenuOpen,
       'CollaboratorModal__PermissionsSelector--add': true,
-      'Dropdown--collapsed': !this.state.permissionMenuOpen,
+      'Dropdown--collapsed': !state.permissionMenuOpen,
     });
-
-
     const permissionsMenuCSS = classNames({
       'CollaboratorModal__PermissionsMenu Dropdown__menu box-shadow': true,
-      hidden: !this.state.permissionMenuOpen,
+      hidden: !state.permissionMenuOpen,
     });
-
-
     const collaboratorList = classNames({
       CollaboratorsModal__list: true,
       'CollaboratorsModal__list--overflow': (state.userExpanded !== null),
     });
-    const disableAddButton = this.state.addCollaboratorButtonDisabled || !this.state.newCollaborator.length;
+
     return (
       <Modal
         header="Manage Collaborators"
         icon="user"
-        size="large"
+        size="large-long"
         overflow="visible"
-        handleClose={() => { this.props.toggleCollaborators(); }}
+        handleClose={() => { props.toggleCollaborators(); }}
         renderContent={() => (
-          <div>
-            {
-              this.props.canManageCollaborators
-                ? (
-                  <div className="CollaboratorsModal__add">
+          <div className="Modal__sizer">
+            { props.canManageCollaborators
+              ? (
+                <div className="CollaboratorsModal__add">
+                  <input
+                    className="CollaboratorsModal__input--collaborators"
+                    ref={el => this.collaboratorSearch = el}
 
-                    <input
-                      className="CollaboratorsModal__input--collaborators"
-                      ref={el => this.collaboratorSearch = el}
+                    onChange={evt => this._getUsers(evt)}
+                    onKeyUp={evt => this._getUsers(evt)}
 
-                      onChange={evt => this._getUsers(evt)}
-                      onKeyUp={evt => this._getUsers(evt)}
+                    type="text"
+                    placeholder="Add Collaborator"
 
-                      type="text"
-                      placeholder="Add Collaborator"
+                    disabled={this.state.addCollaboratorButtonDisabled}
+                  />
 
-                      disabled={this.state.addCollaboratorButtonDisabled}
-                    />
-
-                    <div className={autoCompleteMenu}>
-                      <ul className="CollaboratorsModal__list">
-                        {
-                  this.state.colloboratorSearchList.slice(0, 7).map((collaborator, index) => {
-                    const listItemCSS = classNames({
-                      CollaboratorsModal__listItem: true,
-                      'CollaboratorsModal__listItem--selected': (index === this.state.selectedIndex),
-                    });
-                    return (
-                      <li
-                        onClick={() => this._completeColloborator(collaborator)}
-                        className={listItemCSS}
-                        key={collaborator.username}
-                      >
-
-                        <div className="CollaboratorsModal__listItem--username">{collaborator.username}</div>
-
-                        <div className="CollaboratorsModal__listItem--name">{collaborator.name}</div>
+                  <div className={autoCompleteMenu}>
+                    <ul className="CollaboratorsModal__list">
+                      { state.colloboratorSearchList.slice(0, 7).map((collaborator, index) => {
+                        const listItemCSS = classNames({
+                          CollaboratorsModal__listItem: true,
+                          'CollaboratorsModal__listItem--selected': (index === this.state.selectedIndex),
+                        });
+                        return (
+                          <li
+                            onClick={() => this._completeColloborator(collaborator)}
+                            className={listItemCSS}
+                            key={collaborator.username}
+                          >
+                            <div className="CollaboratorsModal__listItem--username">{collaborator.username}</div>
+                            <div className="CollaboratorsModal__listItem--name">{collaborator.name}</div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                  <div className="CollaboratorsModal__permissions">
+                    <span
+                      className={permissionsSelectorCSS}
+                      onClick={() => this._togglePermissionsMenu()}
+                    >
+                      {this._getPermissions(this.state.newPermissions)}
+                    </span>
+                    <ul className={permissionsMenuCSS}>
+                      <li onClick={() => this._setPermission('readonly')}>
+                        <div className="CollaboratorsModal__permissions-header">Read</div>
+                        <div className="CollaboratorsModal__permissions-subtext">Read-only permissions. Can only pull updates</div>
                       </li>
-                    );
-                  })
-                }
-                      </ul>
-                    </div>
-                    <div className="CollaboratorsModal__permissions">
-                      <span
-                        className={permissionsSelectorCSS}
-                        onClick={() => this._togglePermissionsMenu()}
-                      >
-                        {this._getPermissions(this.state.newPermissions)}
-                      </span>
-                      <ul className={permissionsMenuCSS}>
-                        <li onClick={() => this._setPermission('readonly')}>
-                          <div className="CollaboratorsModal__permissions-header">Read</div>
-                          <div className="CollaboratorsModal__permissions-subtext">Read-only permissions. Can only pull updates</div>
-                        </li>
-                        <li onClick={() => this._setPermission('readwrite')}>
-                          <div className="CollaboratorsModal__permissions-header">Write</div>
-                          <div className="CollaboratorsModal__permissions-subtext">Read/Write permissions. Can sync to branches other than master</div>
-                        </li>
-                        <li onClick={() => this._setPermission('owner')}>
-                          <div className="CollaboratorsModal__permissions-header">Admin</div>
-                          <div className="CollaboratorsModal__permissions-subtext">Admin permissions. Can sync to master and manage collaborators</div>
-                        </li>
-                      </ul>
-                    </div>
-                    <ButtonLoader
-                      className="Btn__plus Btn--round Btn--medium"
+                      <li onClick={() => this._setPermission('readwrite')}>
+                        <div className="CollaboratorsModal__permissions-header">Write</div>
+                        <div className="CollaboratorsModal__permissions-subtext">Read/Write permissions. Can sync to branches other than master</div>
+                      </li>
+                      <li onClick={() => this._setPermission('owner')}>
+                        <div className="CollaboratorsModal__permissions-header">Admin</div>
+                        <div className="CollaboratorsModal__permissions-subtext">Admin permissions. Can sync to master and manage collaborators</div>
+                      </li>
+                    </ul>
+                   </div>
+                   <ButtonLoader
+                      className="ButtonLoader__collaborator Btn__plus Btn--round Btn--medium"
                       ref="addCollaborator"
 
                       buttonState={this.state.buttonLoaderAddCollaborator}
@@ -509,33 +512,9 @@ export default class CollaboratorsModal extends Component {
                       clicked={() => this._addCollaborator()}
                     />
 
-                  </div>
+                 </div>
                 )
-                : this.props.collaborators.length
-                  ? (
-                    <div className="CollaboratorsModal__message">
-              To add and edit collaborators,
-                      <b>
-                        {' Administrator '}
-                      </b>
-              access is required. Contact the Project
-                      <b>
-                        {' Owner '}
-                      </b>
-              or a Project
-                      <b>
-                        {' Administrator '}
-                      </b>
-              to manage collaborator settings.
-                    </div>
-                  )
-                  : (
-                    <div className="CollaboratorsModal__message">
-                      <b>
-                This project needs to be published before collaborators can be added.
-                      </b>
-                    </div>
-                  )
+                : <NoCollaborators />
             }
 
             <div className="CollaboratorsModal__collaborators">
@@ -555,8 +534,6 @@ export default class CollaboratorsModal extends Component {
                         'CollaboratorsModal__item CollaboratorsModal__item--me': collaborator.collaboratorUsername === localStorage.getItem('username'),
                         CollaboratorsModal__item: !(collaborator.collaboratorUsername === localStorage.getItem('username')),
                       });
-
-
                       const individualPermissionsSelectorCSS = classNames({
                         CollaboratorModal__PermissionsSelector: true,
                         'CollaboratorModal__PermissionsSelector--individual': true,
@@ -564,13 +541,12 @@ export default class CollaboratorsModal extends Component {
                         'CollaboratorModal__PermissionsSelector--disabled': (collaboratorName === localStorage.getItem('username')) || !this.props.canManageCollaborators || (collaboratorName === this.state.owner),
                         'CollaboratorModal__PermissionsSelector--collapsed': this.state.userExpanded !== collaboratorName,
                       });
-
-
                       const individualPermissionsMenuCSS = classNames({
                         'CollaboratorModal__PermissionsMenu box-shadow': true,
                         'CollaboratorModal__PermissionsMenu--individual': true,
                         hidden: this.state.userExpanded !== collaboratorName,
                       });
+
                       return (
 
                         <li
@@ -580,7 +556,7 @@ export default class CollaboratorsModal extends Component {
                         >
 
                           <div className="CollaboratorsModal__collaboratorName">{collaboratorName}</div>
-                          <div className="CollaboratorsModal__permissions CollaboratorsModal__permissions--individual">
+                          <div className="CollaboratorsModal__permissions CollaboratorsModal__permissions--individual CollaboratorsModal__permissions--small">
                             <span
                               className={individualPermissionsSelectorCSS}
                               onClick={() => this._togglePermissionsMenu(collaboratorName)}
@@ -607,7 +583,7 @@ export default class CollaboratorsModal extends Component {
                             ref={collaboratorName}
                             buttonState={this.state.buttonLoaderRemoveCollaborator[collaboratorName]}
                             buttonText=""
-                            className="Btn__remove Btn--round Btn--small"
+                            className="ButtonLoader__collaborator Btn__remove Btn--round Btn--small"
                             params={{ collaborator: collaboratorName, button: this }}
                             buttonDisabled={collaboratorName === localStorage.getItem('username') || !this.props.canManageCollaborators}
                             clicked={this._removeCollaborator}

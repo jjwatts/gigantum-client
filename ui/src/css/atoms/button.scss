@@ -270,7 +270,6 @@ button {
      &:disabled {
        background: transparent url(~Images/icons/trash.svg) no-repeat center center !important;
        background-size: 18px;
-
      }
   }
 
@@ -307,17 +306,33 @@ button {
 
   }
 
-  &:hover {
-    background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat left 4px top 2px;
-    background-size: 18px;
+    &:hover {
+      background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat left 4px top 2px;
+      background-size: 18px;
+   }
 
-  }
+   &:disabled {
+     background: transparent url(~Images/icons/folder-add-new.svg) no-repeat left 4px top 2px !important;
+     background-size: 18px;
+   }
+ }
 
-  &:disabled {
-    background: transparent url(~Images/icons/folder-add-new.svg) no-repeat left 4px top 2px !important;
-    background-size: 18px;
+ &__check {
+   background: url(~Images/icons/check-selected.svg) no-repeat center center;
+   background-size: 30px;
+   box-shadow: none !important;
 
-  }
+   &:focus {
+     background: url(~Images/icons/check-selected.svg) no-repeat center center;
+     border: 0px;
+     background-size: 30px;
+   }
+
+   &:hover {
+     background: url(~Images/icons/check-selected.svg) no-repeat center center;
+     border: 0px;
+      background-size: 34px;
+    }
  }
 
  &__addDataset {
@@ -482,6 +497,7 @@ button {
     background: url(~Images/icons/close.svg) no-repeat center center;
     background-size: 30px;
     border: 0px;
+    box-shadow: none !important;
 
     &:focus {
       background: url(~Images/icons/close.svg) no-repeat center center;

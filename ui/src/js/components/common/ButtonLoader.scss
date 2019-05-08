@@ -28,6 +28,30 @@
     background: $crimson url(~Images/icons/close-white.svg) no-repeat 50% 50% !important;
     background-size: 14px !important;
   }
+
+  &__collaborator,
+  &__collaborator:disabled,
+  &__collaborator:hover,
+  &__collaborator:focus {
+    transition: none;
+    height: 30px;
+    width: 30px;
+
+    background-position: center center;
+    background-size: 14px !important;
+
+    overflow: hidden;
+    position: relative;
+
+    &.ButtonLoader--loading {
+      background-image: none !important;
+    }
+
+    .ButtonLoader__icon {
+      top: calc(50% - 10px);
+      left: calc(50% - 10px);
+    }
+  }
 }
 
 .ButtonLoader__icon{
