@@ -256,7 +256,7 @@ export default class CollaboratorsModal extends Component {
                 const postCompleteState = this.state.buttonLoaderRemoveCollaborator;
                 postCompleteState[collaboratorName] = '';
                 this.setState({ buttonLoaderAddCollaborator: '' });
-              }, 500);
+              }, 2000);
             } else {
               completeState[newCollaborator] = '';
 
@@ -274,7 +274,7 @@ export default class CollaboratorsModal extends Component {
 
               setTimeout(() => {
                 this.setState({ buttonLoaderAddCollaborator: '' });
-              }, 500);
+              }, 2000);
             }
           },
         )
@@ -300,7 +300,7 @@ export default class CollaboratorsModal extends Component {
                 const postCompleteState = this.state.buttonLoaderRemoveCollaborator;
                 postCompleteState[collaboratorName] = '';
                 this.setState({ buttonLoaderAddCollaborator: '' });
-              }, 500);
+              }, 2000);
             } else {
               completeState[newCollaborator] = '';
 
@@ -321,7 +321,7 @@ export default class CollaboratorsModal extends Component {
                   buttonLoaderAddCollaborator: '',
                   addCollaboratorButtonDisabled: false,
                 });
-              }, 500);
+              }, 2000);
             }
           },
         )
