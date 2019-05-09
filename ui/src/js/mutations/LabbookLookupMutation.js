@@ -14,16 +14,6 @@ mutation LabbookLookupMutation($input: FetchLabbookEdgeInput!){
                 containerStatus
                 imageStatus
               }
-              collaborators{
-                id
-                owner
-                name
-                collaboratorUsername
-                permission
-              }
-              canManageCollaborators
-              visibility
-              defaultRemote
               branches {
                 id
                 owner

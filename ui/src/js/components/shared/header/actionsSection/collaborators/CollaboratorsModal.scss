@@ -61,7 +61,7 @@
   justify-content: flex-start;
   flex-direction: column !important;
 
-  height: 100%;
+  height: auto;
   &--overflow {
     overflow: hidden visible !important;
   }
@@ -242,9 +242,11 @@
 .CollaboratorsModal__permissions-header{
   font-weight: bold;
 }
+
 .CollaboratorsModal__permissions-subtext{
   font-size: 14px;
 }
+
 .CollaboratorsModal__permissions {
   align-self: flex-end;
   margin: 5px 0;
