@@ -82,6 +82,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                             'pip3'
                         ],
                         'readme': 'Empty for now',
+                        'revision': 2,
                         'schema': 1,
                         'tags': [
                             'ubuntu',
@@ -116,6 +117,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                             'apt'
                         ],
                         'readme': 'Empty for now',
+                        'revision': 0,
                         'schema': 1,
                         'tags': [
                             'busybox'
@@ -166,6 +168,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                             'pip3'
                         ],
                         'readme': 'Empty for now',
+                        'revision': 0,
                         'schema': 1,
                         'tags': [
                             'ubuntu',
@@ -213,6 +216,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                             'pip3'
                         ],
                         'readme': 'Empty for now',
+                        'revision': 0,
                         'schema': 1,
                         'tags': [
                             'ubuntu',
@@ -257,6 +261,7 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images 1'] = 
                             'pip3'
                         ],
                         'readme': 'Empty for now',
+                        'revision': 0,
                         'schema': 1,
                         'tags': [
                             'ubuntu',
@@ -536,4 +541,3 @@ snapshots['TestEnvironmentBaseImageQueries.test_get_available_base_images_pagina
         }
     }
 }
-
