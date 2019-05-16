@@ -277,3 +277,71 @@ class TestAddComponentMutations(object):
         r = client.execute(remove_query, variable_values=vars)
         assert 'errors' not in r
         assert r['data']['removeCustomDocker']['updatedEnvironment']['dockerSnippet'] == ""
+
+
+    def test_update_base(self, fixture_working_dir_env_repo_scoped, snapshot):
+        # TODO DC: Ensure existing labbook that lags base-images-testing version (probably jupyter-quickstart at rev 1)
+        # Run (not-yet written) mutation that updates to latest - revision 2
+        """Test listing labbooks"""
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook('default', 'default', 'catbook-package-tester',
+                               description="LB to test package mutation")
+
+        # Add a base image
+        pkg_query = """
+        mutation myPkgMutation {
+          addPackageComponents (input: {
+            owner: "default",
+            labbookName: "catbook-package-tester",
+            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]           
+            
+          }) {
+            clientMutationId
+            newPackageComponentEdges {
+                node{
+                  id
+                  manager
+                  package
+                  version
+                  fromBase
+                }
+                cursor 
+            }
+          }
+        }
+        """
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(pkg_query))
+
+    def test_change_base(self, fixture_working_dir_env_repo_scoped, snapshot):
+        # TODO DC: Take existing labbook with some base (probably jupyter-quickstart)
+        # Change to some other base - perhaps check the filesystem or some other direct method?
+        """Test listing labbooks"""
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook('default', 'default', 'catbook-package-tester',
+                               description="LB to test package mutation")
+
+        # Add a base image
+        pkg_query = """
+        mutation myPkgMutation {
+          addPackageComponents (input: {
+            owner: "default",
+            labbookName: "catbook-package-tester",
+            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]           
+            
+          }) {
+            clientMutationId
+            newPackageComponentEdges {
+                node{
+                  id
+                  manager
+                  package
+                  version
+                  fromBase
+                }
+                cursor 
+            }
+          }
+        }
+        """
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(pkg_query))
+
