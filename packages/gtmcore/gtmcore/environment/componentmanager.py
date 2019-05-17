@@ -17,6 +17,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from pathlib import Path
+
 import datetime
 import os
 import yaml
@@ -103,6 +105,8 @@ class ComponentManager(object):
         self._initialize_env_dir()
 
     @property
+    # This could be converted to return a Path, which would be a bit more ergonomic
+    # Probably not worth the effort unless we're doing a refactor
     def env_dir(self) -> str:
         """The environment directory in the given labbook"""
         return os.path.join(self.labbook.root_dir, '.gigantum', 'env')
@@ -356,7 +360,7 @@ class ComponentManager(object):
         Args:
             repository(str): The Environment Component repository the component is in
             base_id(str): The name of the component
-            revision(int): The revision to use (r_<revision_) in yaml filename.
+            revision(int): The revision to use (r<revision>) in yaml filename.
 
         Returns:
             None
@@ -369,7 +373,7 @@ class ComponentManager(object):
 
         # Get the base
         base_data = self.bases.get_base(repository, base_id, revision)
-        base_filename = "{}_{}.yaml".format(repository, base_id, revision)
+        base_filename = f"{repository}_{base_id}_r{revision}.yaml"
         base_final_path = os.path.join(self.env_dir, 'base', base_filename)
 
         short_message = "Added base: {}".format(base_id)
@@ -417,6 +421,27 @@ class ComponentManager(object):
         # Store
         ars = ActivityStore(self.labbook)
         ars.create_activity_record(ar)
+
+    def change_base(self, repository: str, base_id: str, revision: int) -> None:
+        """Delete existing base, create an activity record, call add_base"""
+        current_base_dir = Path(self.env_dir) / "base"
+
+        # There should only be one file, but this deals with corner cases
+        for base_fname in current_base_dir.iterdir():
+            # The repository includes an underscore where the slash is for e.g.,
+            # .gigantum/env/base/gigantum_environment-components_r-tidyverse.yaml
+            _, base_name = base_fname.stem.rsplit('_', 1)
+
+            short_message = "Removing base: {}".format(base_name)
+            base_filename = f"{repository}_{base_id}_r{revision}.yaml"
+            self.labbook.git.rm(current_base_dir / base_fname)
+            commit = self.labbook.git.commit(short_message)
+            logger.info(f"removed base from {repository}: {base_id} rev{revision}")
+            base_fname.unlink()
+
+        for manager in base_data['package_managers']:
+            # remove packages that were installed via the previous base
+            pass
 
     def get_component_list(self, component_class: str) -> List[Dict[str, Any]]:
         """Method to get the YAML contents for a given component class

@@ -289,7 +289,7 @@ class TestAddComponentMutations(object):
 
         # Add a base image
         pkg_query = """
-        mutation myPkgMutation {
+        mutation myBaseMutation {
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-tester",
