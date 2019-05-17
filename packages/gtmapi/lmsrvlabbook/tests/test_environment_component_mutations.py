@@ -23,6 +23,7 @@ import os
 import graphql
 from snapshottest import snapshot
 
+from gtmcore.environment import ComponentManager
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped
 
 from gtmcore.inventory.inventory import InventoryManager
@@ -316,14 +317,19 @@ class TestAddComponentMutations(object):
         # TODO DC: Take existing labbook with some base (probably jupyter-quickstart)
         # Change to some other base - perhaps check the filesystem or some other direct method?
         """Test listing labbooks"""
-        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        config_file, temp_dir, gql_client, schema = fixture_working_dir_env_repo_scoped
+        im = InventoryManager(config_file)
         lb = im.create_labbook('default', 'default', 'catbook-package-tester',
                                description="LB to test package mutation")
 
+        # I don't actually see this tested via the API, but THIS test is not what this is about either
+        cm = ComponentManager(lb)
+
         # Add a base image
+        cm.add_base('gigantum_base-images-testing', 'quickstart-jupyterlab', 1)
         pkg_query = """
         mutation myPkgMutation {
-          addPackageComponents (input: {
+          changeBase (input: {
             owner: "default",
             labbookName: "catbook-package-tester",
             packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]           
@@ -343,5 +349,7 @@ class TestAddComponentMutations(object):
           }
         }
         """
-        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(pkg_query))
+
+        result = gql_client.execute(pkg_query)
+        snapshot.assert_match(result)
 

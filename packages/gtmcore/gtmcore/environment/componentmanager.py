@@ -357,10 +357,13 @@ class ComponentManager(object):
     def add_base(self, repository: str, base_id: str, revision: int) -> None:
         """Method to add a base to a LabBook's environment
 
+        Note that if this is run after packages have been configured, it will leave user-specified packages alone (and
+        not override them with the base-installed package) even if the base provides a newer version of the  package.
+
         Args:
-            repository(str): The Environment Component repository the component is in
-            base_id(str): The name of the component
-            revision(int): The revision to use (r<revision>) in yaml filename.
+            repository: The Environment Component repository the component is in
+            base_id: The name of the component
+            revision: The revision to use, specified *inside* yaml file.
 
         Returns:
             None
@@ -373,15 +376,27 @@ class ComponentManager(object):
 
         # Get the base
         base_data = self.bases.get_base(repository, base_id, revision)
-        base_filename = f"{repository}_{base_id}_r{revision}.yaml"
+        base_filename = f"{repository}_{base_id}.yaml"
         base_final_path = os.path.join(self.env_dir, 'base', base_filename)
 
-        short_message = "Added base: {}".format(base_id)
-        if os.path.exists(base_final_path):
-            raise ValueError("The base {} already exists in this project")
+        short_message = f"Added base: {base_id} r{revision}"
+        # Count number of YAML files in our base dir - should be 0
+        existing_bases = sum(1 for base_path in Path(self.env_dir, 'base').iterdir()
+                             if base_path.suffix == '.yaml')
+        if existing_bases:
+            # This shouldn't ever happen - but we don't trust the front-end
+            raise ValueError(f"Found {existing_bases} base(s) already in this project")
 
         with open(base_final_path, 'wt') as cf:
             cf.write(yaml.safe_dump(base_data, default_flow_style=False))
+
+        # We construct a
+        installed_packages = {}
+        for package in self.get_component_list("package_manager"):
+            # Build dictionary of packages
+            if package['from_base']:
+                # We are removing the base - so the package isn't guaranteed
+                installed_packages.setdefault(package['manager'], []).append(package["package"])
 
         for manager in base_data['package_managers']:
             packages = list()
@@ -390,6 +405,10 @@ class ComponentManager(object):
                 if manager[p_manager]:
                     for pkg in manager[p_manager]:
                         pkg_name, pkg_version = strip_package_and_version(p_manager, pkg)
+                        if pkg_name in installed_packages.get(p_manager, []):
+                            # If package is already installed by this package manager, we expect it gets overwritten
+                            # If it's a different package manger, it won't! We may want to alert the user, but how?
+                            continue
                         packages.append({"package": pkg_name, "version": pkg_version, "manager": p_manager})
 
                     self.add_packages(package_manager=p_manager, packages=packages,
@@ -423,25 +442,50 @@ class ComponentManager(object):
         ars.create_activity_record(ar)
 
     def change_base(self, repository: str, base_id: str, revision: int) -> None:
-        """Delete existing base, create an activity record, call add_base"""
+        """Delete existing base, create an activity record, call add_base
+
+        Note that all packages that were installed by the current base will be removed from the environment (in
+        env/package_manager). Even if the new base installs a newer version of a user-installed package,
+        that package will remain in effect - this avoids actively breaking a working package selection and is easy
+        enough for a user to update.
+
+        Args:
+             repository: name of git repo for base images, e.g. 'gigantum_base-images'
+             base_id: name of base image, e.g. 'python3-minimal'
+             revision: The revision number specified INSIDE the YAML file for that base image
+        """
         current_base_dir = Path(self.env_dir) / "base"
+        # This currently raises an exception if there is more than one base image YAML file
+        base_data = self.base_fields
+        curr_revision = base_data['revision']
 
         # There should only be one file, but this deals with corner cases
         for base_fname in current_base_dir.iterdir():
+            if not base_fname.suffix == '.yaml':
+                continue
+
             # The repository includes an underscore where the slash is for e.g.,
-            # .gigantum/env/base/gigantum_environment-components_r-tidyverse.yaml
+            # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
             _, base_name = base_fname.stem.rsplit('_', 1)
 
-            short_message = "Removing base: {}".format(base_name)
-            base_filename = f"{repository}_{base_id}_r{revision}.yaml"
-            self.labbook.git.rm(current_base_dir / base_fname)
+            short_message = f"Removing base: {base_name} r{curr_revision}"
+            self.labbook.git.rm(str(base_fname))
+            assert not base_fname.exists()
             commit = self.labbook.git.commit(short_message)
-            logger.info(f"removed base from {repository}: {base_id} rev{revision}")
-            base_fname.unlink()
+            logger.info(f"Removed base from {repository}: {base_name} rev{curr_revision}")
 
-        for manager in base_data['package_managers']:
-            # remove packages that were installed via the previous base
-            pass
+        packages_to_rm = {}
+        for package in self.get_component_list("package_manager"):
+            # Build dictionary of packages
+            if package['from_base']:
+                # We are removing the base - so the package isn't guaranteed
+                packages_to_rm.setdefault(package['manager'], []).append(package["package"])
+
+        for p_manager, package_names in packages_to_rm.items():
+            self.remove_packages(p_manager, package_names)
+
+        # add_base currently returns None, but this will incorporate any future changes
+        return self.add_base(repository, base_id, revision)
 
     def get_component_list(self, component_class: str) -> List[Dict[str, Any]]:
         """Method to get the YAML contents for a given component class
