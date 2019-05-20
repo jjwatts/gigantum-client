@@ -285,7 +285,7 @@ class TestAddComponentMutations(object):
         config_file = fixture_working_dir_env_repo_scoped[0]
         gql_client = fixture_working_dir_env_repo_scoped[2]
         im = InventoryManager(config_file)
-        lb = im.create_labbook('default', 'default', 'catbook-package-tester',
+        lb = im.create_labbook('default', 'default', 'catbook-update-base-tester',
                                description="LB to test package mutation")
 
         # I don't actually see this tested via the API, but THIS test is not what this is about either
@@ -299,7 +299,7 @@ class TestAddComponentMutations(object):
         mutation myBaseMutation {
           changeLabbookBase (input: {
             owner: "default",
-            labbookName: "catbook-package-tester",
+            labbookName: "catbook-update-base-tester",
             repository: "gigantum_base-images-testing",
             baseId: "quickstart-jupyterlab",
             revision: 2
@@ -328,7 +328,7 @@ class TestAddComponentMutations(object):
         config_file = fixture_working_dir_env_repo_scoped[0]
         gql_client = fixture_working_dir_env_repo_scoped[2]
         im = InventoryManager(config_file)
-        lb = im.create_labbook('default', 'default', 'catbook-package-tester',
+        lb = im.create_labbook('default', 'default', 'catbook-change-base-tester',
                                description="LB to test package mutation")
 
         # I don't actually see this tested via the API, but THIS test is not what this is about either
@@ -342,7 +342,7 @@ class TestAddComponentMutations(object):
         mutation myBaseMutation {
           changeLabbookBase (input: {
             owner: "default",
-            labbookName: "catbook-package-tester",
+            labbookName: "catbook-change-base-tester",
             repository: "gigantum_base-images-testing",
             baseId: "ut-busybox",
             revision: 0

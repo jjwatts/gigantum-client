@@ -17,6 +17,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from pathlib import Path
+
 import pytest
 import os
 import yaml
@@ -317,14 +319,26 @@ class TestComponentManager(object):
             a = cm.base_fields
 
     def test_misconfigured_base_two_bases(self, mock_config_with_repo):
-        lb = create_tmp_labbook(mock_config_with_repo[0])
+        conf_file = mock_config_with_repo[0]
+        lb = create_tmp_labbook(conf_file)
         cm = ComponentManager(lb)
         # mock_config_with_repo is a ComponentManager Instance
         cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-1", 0)
-        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-2", 0)
+        # Updated logic to enable changing bases won't allow `add_base` again. Need to manually create a file
+        bad_base_config = Path(cm.env_dir, 'base', 'evil_repo_quantum-deathray.yaml')
+        bad_base_config.write_text("I'm gonna break you!")
 
         with pytest.raises(ValueError):
             a = cm.base_fields
+
+    def test_try_configuring_two_bases(self, mock_config_with_repo):
+        conf_file = mock_config_with_repo[0]
+        lb = create_tmp_labbook(conf_file)
+        cm = ComponentManager(lb)
+        # mock_config_with_repo is a ComponentManager Instance
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-1", 0)
+        with pytest.raises(ValueError):
+            cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-2", 0)
 
     def test_get_base(self, mock_config_with_repo):
         lb = create_tmp_labbook(mock_config_with_repo[0])
