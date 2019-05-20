@@ -1,22 +1,3 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 from pathlib import Path
 
 import datetime
@@ -244,13 +225,13 @@ class ComponentManager(object):
         for pkg in packages:
             version_str = f'"{pkg["version"]}"' if pkg["version"] else 'latest'
 
-            yaml_lines = ['# Generated on: {}'.format(str(datetime.datetime.now())),
-                          'manager: "{}"'.format(package_manager),
-                          'package: "{}"'.format(pkg["package"]),
-                          'version: {}'.format(version_str),
+            yaml_lines = [f'# Generated on: {datetime.datetime.now()}',
+                          f'manager: "{package_manager}"',
+                          f'package: "{pkg["package"]}"',
+                          f'version: {version_str}',
                           f'from_base: {str(from_base).lower()}',
                           f'schema: {CURRENT_SCHEMA}']
-            yaml_filename = '{}_{}.yaml'.format(package_manager, pkg["package"])
+            yaml_filename = f'{package_manager}_{pkg["package"]}.yaml'
             package_yaml_path = os.path.join(self.env_dir, 'package_manager', yaml_filename)
 
             # Check if package already exists
@@ -419,11 +400,11 @@ class ComponentManager(object):
         logger.info(f"Added base from {repository}: {base_id} rev{revision}")
 
         # Create a ActivityRecord
-        long_message = "\n".join(f"Added base {base_id}\n",
-                                 f"{base_data['description']}\n",
-                                 f"  - repository: {repository}",
-                                 f"  - component: {base_id}",
-                                 f"  - revision: {revision}")
+        long_message = "\n".join((f"Added base {base_id}\n",
+                                  f"{base_data['description']}\n",
+                                  f"  - repository: {repository}",
+                                  f"  - component: {base_id}",
+                                  f"  - revision: {revision}"))
 
         # Create detail record
         adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
@@ -461,17 +442,20 @@ class ComponentManager(object):
         detail_records = []
 
         current_base_dir = Path(self.env_dir) / "base"
-        matching_fnames = current_base_dir.glob('*.yaml')
+        matching_fnames = list(current_base_dir.glob('*.yaml'))
 
         if len(matching_fnames) != 1:
             # The project is misconfigured with more than one base. Let's fix that.
             logger.warning(f"Project misconfigured. Found {len(matching_fnames)} base configuration files.")
             short_message = f"Removing all bases from project with {len(matching_fnames)} base configuration files."
             for base_fname in matching_fnames:
-                self.labbook.git.rm(str(base_fname))
+                self.labbook.git.remove(str(base_fname))
                 # XXX DC delete before merge!
                 assert not base_fname.exists()
-                long_message = f"Removed base file {base_fname}"
+                # The repository includes an underscore where the slash is for e.g.,
+                # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
+                curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
+                long_message = f"Removing base from {curr_repo}: {curr_base_name} r{curr_revision}"
 
                 # Create detail record
                 adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
@@ -489,18 +473,18 @@ class ComponentManager(object):
             # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
             curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
 
-            short_message = f"Removing base from {curr_repo}: {curr_base_name} r{curr_revision}"
+            short_message = f"Removed base from {curr_repo}: {curr_base_name} r{curr_revision}"
 
-            self.labbook.git.rm(str(base_fname))
+            self.labbook.git.remove(str(base_fname))
             # XXX DC delete before merge
             assert not base_fname.exists()
-            logger.info(f"Removed base from {repository}: {base_name} rev{curr_revision}")
+            logger.info(short_message)
 
-            long_message = "\n".join(f"Removed base {base_id}\n",
-                                     f"{base_data['description']}\n",
-                                     f"  - repository: {repository}",
-                                     f"  - component: {base_id}",
-                                     f"  - revision: {revision}")
+            long_message = "\n".join((f"Removed base {base_id}\n",
+                                      f"{base_data['description']}\n",
+                                      f"  - repository: {repository}",
+                                      f"  - component: {base_id}",
+                                      f"  - revision: {revision}"))
 
             # Create detail record
             adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)

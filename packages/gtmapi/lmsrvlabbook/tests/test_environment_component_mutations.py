@@ -281,42 +281,50 @@ class TestAddComponentMutations(object):
 
 
     def test_update_base(self, fixture_working_dir_env_repo_scoped, snapshot):
-        # TODO DC: Ensure existing labbook that lags base-images-testing version (probably jupyter-quickstart at rev 1)
-        # Run (not-yet written) mutation that updates to latest - revision 2
-        """Test listing labbooks"""
-        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        """Test changing the revision of a base"""
+        config_file = fixture_working_dir_env_repo_scoped[0]
+        gql_client = fixture_working_dir_env_repo_scoped[2]
+        im = InventoryManager(config_file)
         lb = im.create_labbook('default', 'default', 'catbook-package-tester',
                                description="LB to test package mutation")
 
-        # Add a base image
+        # I don't actually see this tested via the API, but THIS test is not what this is about either
+        cm = ComponentManager(lb)
+
+        # Add an (old) base image
+        cm.add_base('gigantum_base-images-testing', 'quickstart-jupyterlab', 1)
+
+        # Change to the most recent version of the base image
         pkg_query = """
         mutation myBaseMutation {
-          addPackageComponents (input: {
+          changeLabbookBase (input: {
             owner: "default",
             labbookName: "catbook-package-tester",
-            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]           
-            
-          }) {
-            clientMutationId
-            newPackageComponentEdges {
-                node{
-                  id
-                  manager
-                  package
-                  version
-                  fromBase
-                }
-                cursor 
+            repository: "gigantum_base-images-testing",
+            baseId: "quickstart-jupyterlab",
+            revision: 2
+          }) 
+          {
+            labbook {
+              id
+              name
             }
           }
         }
         """
-        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(pkg_query))
+        # environment {
+        #     base {
+        #         repository
+        #         componentId
+        #         revision
+        #         name
+        #     }
+        # }
+        result = gql_client.execute(pkg_query)
+        snapshot.assert_match(result)
 
     def test_change_base(self, fixture_working_dir_env_repo_scoped, snapshot):
-        # TODO DC: Take existing labbook with some base (probably jupyter-quickstart)
-        # Change to some other base - perhaps check the filesystem or some other direct method?
-        """Test listing labbooks"""
+        """Test changing to a different base"""
         config_file, temp_dir, gql_client, schema = fixture_working_dir_env_repo_scoped
         im = InventoryManager(config_file)
         lb = im.create_labbook('default', 'default', 'catbook-package-tester',
