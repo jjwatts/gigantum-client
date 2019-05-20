@@ -407,7 +407,7 @@ class ComponentManager(object):
                                   f"{base_data['description']}\n",
                                   f"  - repository: {repository}",
                                   f"  - component: {base_id}",
-                                  f"  - revision: {revision}"))
+                                  f"  - revision: {revision}\n"))
 
         # Create detail record
         adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
@@ -483,7 +483,7 @@ class ComponentManager(object):
                                       f"{base_data['description']}\n",
                                       f"  - repository: {repository}",
                                       f"  - component: {base_id}",
-                                      f"  - revision: {revision}"))
+                                      f"  - revision: {revision}\n"))
 
             # Create detail record
             adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
