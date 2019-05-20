@@ -1,30 +1,35 @@
 import graphene
-from lmsrvlabbook.api.mutations import (CreateLabbook, BuildImage, StartContainer,
-                                        AddPackageComponents, CreateUserNote, StopContainer,
-                                        ImportLabbook, DeleteLabbook, ImportRemoteDataset,
-                                        ImportRemoteLabbook, AddLabbookRemote,
-                                        ExportLabbook, AddLabbookFile, MoveLabbookFile, DeleteLabbookFiles,
-                                        MakeLabbookDirectory, RemoveUserIdentity,
-                                        AddLabbookFavorite, RemoveLabbookFavorite, UpdateLabbookFavorite,
-                                        AddLabbookCollaborator,
-                                        DeleteLabbookCollaborator, SyncLabbook, PublishLabbook, PublishDataset,
-                                        RemovePackageComponents,
-                                        StartDevTool, SetLabbookDescription, CreateExperimentalBranch,
-                                        DeleteExperimentalBranch, MigrateLabbookSchema,
-                                        MergeFromBranch, WorkonBranch, WriteLabbookReadme, AddCustomDocker, 
-                                        RemoveCustomDocker, DeleteRemoteLabbook,
-                                        CompleteBatchUploadTransaction, SetVisibility, FetchLabbookEdge,
-                                        CreateDataset, DeleteDataset, AddDatasetFile, CompleteDatasetUploadTransaction,
-                                        DeleteDatasetFiles, MoveDatasetFile, MakeDatasetDirectory,
-                                        FetchDatasetEdge, SetDatasetVisibility, SyncDataset,
-                                        AddDatasetCollaborator, DeleteDatasetCollaborator, DownloadDatasetFiles,
-                                        ModifyDatasetLink, WriteDatasetReadme, SetDatasetDescription,
-                                        ResetBranchToRemote, CancelBuild)
 
-from lmsrvlabbook.api.mutations import (ImportDataset, ExportDataset)
-
-# TODO - Group related mutations into classes, that will each have a corresponding
-# test file.
+from lmsrvlabbook.api.mutations.labbook import (CreateLabbook, DeleteLabbook,
+                                                ChangeLabbookBase,
+                                                SetLabbookDescription,
+                                                MakeLabbookDirectory,
+                                                AddLabbookFile, MoveLabbookFile, DeleteLabbookFiles,
+                                                AddLabbookFavorite, RemoveLabbookFavorite, UpdateLabbookFavorite,
+                                                WriteLabbookReadme, CompleteBatchUploadTransaction, FetchLabbookEdge)
+from lmsrvlabbook.api.mutations.migrations import MigrateLabbookSchema
+from lmsrvlabbook.api.mutations.environment import (BuildImage, StartContainer, StopContainer, CancelBuild)
+from lmsrvlabbook.api.mutations.container import StartDevTool
+from lmsrvlabbook.api.mutations.note import CreateUserNote
+from lmsrvlabbook.api.mutations.branching import (CreateExperimentalBranch, DeleteExperimentalBranch,
+                                                  MergeFromBranch, WorkonBranch, ResetBranchToRemote)
+from lmsrvlabbook.api.mutations.environmentcomponent import (AddPackageComponents,
+                                                             RemovePackageComponents,
+                                                             AddCustomDocker, RemoveCustomDocker)
+from lmsrvlabbook.api.mutations.user import RemoveUserIdentity
+from lmsrvlabbook.api.mutations.labbooksharing import (SyncLabbook, PublishLabbook, SetVisibility,
+                                                       AddLabbookRemote, ImportRemoteLabbook, ImportLabbook,
+                                                       ExportLabbook, AddLabbookCollaborator, DeleteLabbookCollaborator,
+                                                       DeleteRemoteLabbook)
+# Dataset Mutations
+from lmsrvlabbook.api.mutations.dataset import (CreateDataset, DeleteDataset, FetchDatasetEdge, ModifyDatasetLink,
+                                                SetDatasetDescription, WriteDatasetReadme)
+from lmsrvlabbook.api.mutations.datasetfiles import (AddDatasetFile, CompleteDatasetUploadTransaction,
+                                                     DownloadDatasetFiles, DeleteDatasetFiles, MoveDatasetFile,
+                                                     MakeDatasetDirectory)
+from lmsrvlabbook.api.mutations.datasetsharing import (PublishDataset, SyncDataset, ImportRemoteDataset,
+                                                       SetDatasetVisibility, AddDatasetCollaborator,
+                                                       DeleteDatasetCollaborator, ImportDataset, ExportDataset)
 
 
 class BranchMutations(object):
@@ -73,6 +78,10 @@ class LabbookEnvironmentMutations(graphene.ObjectType):
 
     # Delete the arbitrary docker snippet.
     remove_custom_docker = RemoveCustomDocker.Field()
+
+    # Change the base image in a labbook
+    change_labbook_base = ChangeLabbookBase.Field()
+
 
 
 class LabbookSharingMutations(graphene.ObjectType):

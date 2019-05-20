@@ -419,11 +419,11 @@ class ComponentManager(object):
         logger.info(f"Added base from {repository}: {base_id} rev{revision}")
 
         # Create a ActivityRecord
-        long_message = "Added base {}\n".format(base_id)
-        long_message = "{}\n{}\n\n".format(long_message, base_data['description'])
-        long_message = "{}  - repository: {}\n".format(long_message, repository)
-        long_message = "{}  - component: {}\n".format(long_message, base_id)
-        long_message = "{}  - revision: {}\n".format(long_message, revision)
+        long_message = "\n".join(f"Added base {base_id}\n",
+                                 f"{base_data['description']}\n",
+                                 f"  - repository: {repository}",
+                                 f"  - component: {base_id}",
+                                 f"  - revision: {revision}")
 
         # Create detail record
         adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
@@ -449,30 +449,79 @@ class ComponentManager(object):
         that package will remain in effect - this avoids actively breaking a working package selection and is easy
         enough for a user to update.
 
+        In case it's useful, this method is robust to multiple base images (this might happen, for example, after a
+        merge). If multiple base image files are found, all will be removed prior to installing the specified base.
+
         Args:
              repository: name of git repo for base images, e.g. 'gigantum_base-images'
              base_id: name of base image, e.g. 'python3-minimal'
              revision: The revision number specified INSIDE the YAML file for that base image
         """
-        current_base_dir = Path(self.env_dir) / "base"
-        # This currently raises an exception if there is more than one base image YAML file
-        base_data = self.base_fields
-        curr_revision = base_data['revision']
+        # We'll populate detail records as we go
+        detail_records = []
 
-        # There should only be one file, but this deals with corner cases
-        for base_fname in current_base_dir.iterdir():
-            if not base_fname.suffix == '.yaml':
-                continue
+        current_base_dir = Path(self.env_dir) / "base"
+        matching_fnames = current_base_dir.glob('*.yaml')
+
+        if len(matching_fnames) != 1:
+            # The project is misconfigured with more than one base. Let's fix that.
+            logger.warning(f"Project misconfigured. Found {len(matching_fnames)} base configuration files.")
+            short_message = f"Removing all bases from project with {len(matching_fnames)} base configuration files."
+            for base_fname in matching_fnames:
+                self.labbook.git.rm(str(base_fname))
+                # XXX DC delete before merge!
+                assert not base_fname.exists()
+                long_message = f"Removed base file {base_fname}"
+
+                # Create detail record
+                adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
+                adr.add_value('text/plain', long_message)
+                detail_records.append(adr)
+
+        else:
+            base_fname = matching_fnames[0]
+
+            # We have a properly configured Labbook, and we report more detail
+            base_data = self.base_fields
+            curr_revision = base_data['revision']
 
             # The repository includes an underscore where the slash is for e.g.,
             # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
-            _, base_name = base_fname.stem.rsplit('_', 1)
+            curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
 
-            short_message = f"Removing base: {base_name} r{curr_revision}"
+            short_message = f"Removing base from {curr_repo}: {curr_base_name} r{curr_revision}"
+
             self.labbook.git.rm(str(base_fname))
+            # XXX DC delete before merge
             assert not base_fname.exists()
-            commit = self.labbook.git.commit(short_message)
             logger.info(f"Removed base from {repository}: {base_name} rev{curr_revision}")
+
+            long_message = "\n".join(f"Removed base {base_id}\n",
+                                     f"{base_data['description']}\n",
+                                     f"  - repository: {repository}",
+                                     f"  - component: {base_id}",
+                                     f"  - revision: {revision}")
+
+            # Create detail record
+            adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
+            adr.add_value('text/plain', long_message)
+            detail_records.append(adr)
+
+        commit = self.labbook.git.commit(short_message)
+
+        # Create activity record - we populated detail_records above
+        ar = ActivityRecord(ActivityType.ENVIRONMENT,
+                            message=short_message,
+                            linked_commit=commit.hexsha,
+                            tags=["environment", "base"],
+                            show=True)
+
+        for adr in detail_records:
+            ar.add_detail_object(adr)
+
+        # Store the activity record.
+        ars = ActivityStore(self.labbook)
+        ars.create_activity_record(ar)
 
         packages_to_rm = {}
         for package in self.get_component_list("package_manager"):
@@ -482,6 +531,7 @@ class ComponentManager(object):
                 packages_to_rm.setdefault(package['manager'], []).append(package["package"])
 
         for p_manager, package_names in packages_to_rm.items():
+            # Package removal will also create activity records
             self.remove_packages(p_manager, package_names)
 
         # add_base currently returns None, but this will incorporate any future changes

@@ -1,4 +1,5 @@
 from lmsrvlabbook.api.mutations.labbook import (CreateLabbook, DeleteLabbook,
+                                                ChangeLabbookBase,
                                                 SetLabbookDescription,
                                                 MakeLabbookDirectory,
                                                 AddLabbookFile, MoveLabbookFile, DeleteLabbookFiles,
