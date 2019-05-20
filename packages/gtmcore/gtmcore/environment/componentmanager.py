@@ -449,7 +449,7 @@ class ComponentManager(object):
             logger.warning(f"Project misconfigured. Found {len(matching_fnames)} base configuration files.")
             short_message = f"Removing all bases from project with {len(matching_fnames)} base configuration files."
             for base_fname in matching_fnames:
-                self.labbook.git.remove(str(base_fname))
+                self.labbook.git.remove(str(base_fname), keep_file=False)
                 # XXX DC delete before merge!
                 assert not base_fname.exists()
                 # The repository includes an underscore where the slash is for e.g.,
@@ -475,7 +475,7 @@ class ComponentManager(object):
 
             short_message = f"Removed base from {curr_repo}: {curr_base_name} r{curr_revision}"
 
-            self.labbook.git.remove(str(base_fname))
+            self.labbook.git.remove(str(base_fname), keep_file=False)
             # XXX DC delete before merge
             assert not base_fname.exists()
             logger.info(short_message)
