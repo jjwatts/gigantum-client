@@ -7,7 +7,7 @@ export default createFragmentContainer(
   SectionWrapper,
   graphql`
       fragment Code_labbook on Labbook{
-        code{
+        code @skip (if: $codeSkip){
           id
           hasFiles
           hasFavorites

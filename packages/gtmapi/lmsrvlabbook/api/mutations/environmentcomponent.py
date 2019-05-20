@@ -31,6 +31,7 @@ from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 from lmsrvlabbook.api.objects.packagecomponent import PackageComponent, PackageComponentInput
 from lmsrvlabbook.api.objects.environment import Environment
 from lmsrvlabbook.api.connections.environment import PackageComponentConnection
+from lmsrvlabbook.dataloader.package import PackageDataloader
 
 logger = LMLogger.get_logger()
 
@@ -65,8 +66,14 @@ class AddPackageComponents(graphene.relay.ClientIDMutation):
         cm.add_packages(package_manager=manager, packages=packages, from_base=False, force=True)
 
         new_edges = list()
+
+        # Create dataloader
+        keys = [f"{manager}&{pkg}" for pkg in packages]
+        vd = PackageDataloader(keys, lb, get_logged_in_username())
+
         for cnt, pkg in enumerate(packages):
-            new_edges.append(PackageComponentConnection.Edge(node=PackageComponent(manager=manager,
+            new_edges.append(PackageComponentConnection.Edge(node=PackageComponent(_dataloader=vd,
+                                                                                   manager=manager,
                                                                                    package=pkg["package"],
                                                                                    version=pkg["version"],
                                                                                    schema=CURRENT_SCHEMA),

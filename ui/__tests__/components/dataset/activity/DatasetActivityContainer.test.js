@@ -19,6 +19,7 @@ let fixtures = {
   activeBranch: 'master',
   setBuildingState: jest.fn(),
   sectionType: 'dataset',
+  refetch: jest.fn(),
   // {...this.props}
 };
 

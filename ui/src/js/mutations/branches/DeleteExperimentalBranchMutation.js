@@ -6,7 +6,7 @@ import uuidV4 from 'uuid/v4';
 import environment from 'JS/createRelayEnvironment';
 
 const mutation = graphql`
-  mutation DeleteExperimentalBranchMutation($input: DeleteExperimentalBranchInput!, $first: Int, $cursor: String, $hasNext: Boolean!){
+  mutation DeleteExperimentalBranchMutation($input: DeleteExperimentalBranchInput!, $first: Int, $cursor: String, $hasNext: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
     deleteExperimentalBranch(input: $input){
       labbook{
         ...Labbook_labbook
@@ -37,6 +37,12 @@ export default function DeleteExperimentalBranchMutation(
     first: 10,
     cursor: null,
     hasNext: false,
+    overviewSkip: false,
+    activitySkip: false,
+    environmentSkip: false,
+    codeSkip: false,
+    inputSkip: false,
+    outputSkip: false,
   };
   commitMutation(
     environment,

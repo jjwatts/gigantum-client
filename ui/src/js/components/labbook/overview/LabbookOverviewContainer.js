@@ -10,7 +10,7 @@ import Overview from 'Components/shared/overview/Overview';
 export default createFragmentContainer(
   Overview,
   graphql`fragment LabbookOverviewContainer_labbook on Labbook {
-      overview{
+      overview @skip (if: $overviewSkip) {
         id
         owner
         name
@@ -33,9 +33,8 @@ export default createFragmentContainer(
           username
           email
         }
-        remoteUrl
       }
-      environment{
+      environment @skip (if: $overviewSkip){
         id
         imageStatus
         containerStatus

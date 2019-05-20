@@ -18,14 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import abc
-from typing import (List, Dict, Optional)
-from collections import namedtuple
+from typing import (List, Dict, Optional, NamedTuple)
 
 from gtmcore.labbook import LabBook
 import gtmcore.environment
 
 # A namedtuple for the result of package validation
-PackageResult = namedtuple('PackageResult', ['package', 'version', 'error'])
+PackageResult = NamedTuple('PackageResult', [('package', str), ('version', str), ('error', bool)])
+
+# A namedtuple for supported package metadata
+PackageMetadata = NamedTuple('PackageMetadata', [('package_manager', str), ('package', str),
+                                                 ('latest_version', Optional[str]),
+                                                 ('description', Optional[str]), ('docs_url', Optional[str])])
 
 
 class PackageManager(metaclass=abc.ABCMeta):
@@ -71,34 +75,6 @@ class PackageManager(metaclass=abc.ABCMeta):
         raise NotImplemented
 
     @abc.abstractmethod
-    def latest_version(self, package_name: str, labbook: LabBook, username: str) -> str:
-        """Method to get the latest version string for a package
-
-        Args:
-            package_name: Name of the package to query
-            labbook: Subject LabBook
-            username: username of current user
-
-        Returns:
-            str: latest version string
-        """
-        raise NotImplemented
-
-    @abc.abstractmethod
-    def latest_versions(self, package_names: List[str], labbook: LabBook, username: str) -> List[str]:
-        """Method to get the latest version string for a list of packages
-
-        Args:
-            package_names(list): list of names of the packages to query
-            labbook: Subject LabBook
-            username: username of current user
-
-        Returns:
-            list: latest version strings
-        """
-        raise NotImplemented
-
-    @abc.abstractmethod
     def list_installed_packages(self, labbook: LabBook, username: str) -> List[Dict[str, str]]:
         """Method to get a list of all packages that are currently installed
 
@@ -106,21 +82,6 @@ class PackageManager(metaclass=abc.ABCMeta):
         a LabBook container, a docker exec command would be needed from the Gigantum application container.
 
         return format is a list of dicts with the format {name: <package name>, version: <version string>}
-
-        Returns:
-            list
-        """
-        raise NotImplemented
-
-    @abc.abstractmethod
-    def list_available_updates(self, labbook: LabBook, username: str) -> List[Dict[str, str]]:
-        """Method to get a list of all installed packages that could be updated and the new version string
-
-        Note, this will return results for the computer/container in which it is executed. To get the properties of
-        a LabBook container, a docker exec command would be needed from the Gigantum application container.
-
-        return format is a list of dicts with the format
-         {name: <package name>, version: <currently installed version string>, latest_version: <latest version string>}
 
         Returns:
             list
@@ -142,6 +103,20 @@ class PackageManager(metaclass=abc.ABCMeta):
 
         Returns:
             namedtuple: namedtuple indicating if the package and version are valid
+        """
+        raise NotImplemented
+
+    @abc.abstractmethod
+    def get_packages_metadata(self, package_list: List[str], labbook: LabBook, username: str) -> List[PackageMetadata]:
+        """Method to get package metadata. Currently this is the latest version, description and a url for docs
+
+        Args:
+            package_list: List of package names
+            labbook(str): The labbook instance
+            username(str): The username for the logged in user
+
+        Returns:
+            list
         """
         raise NotImplemented
 

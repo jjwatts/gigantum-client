@@ -2,6 +2,8 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import { boundMethod } from 'autobind-decorator';
+// components
+import Loader from 'Components/common/Loader';
 // assets
 import './SectionWrapper.scss';
 
@@ -24,19 +26,17 @@ const getComponetPaths = ((props) => {
 export default class SectionWrapper extends Component {
   state = {
     selectedFiles: [],
-    selectedFilter: 'recent',
+    selectedFilter: this.props.labbook
+      && this.props.labbook[this.props.section]
+      && this.props.labbook[this.props.section].hasFavorites ?
+      'favorites' : 'recent',
     favoriteRecentAdded: false,
   };
 
   componentDidMount() {
-    const { props, state } = this;
+    const { props } = this;
     const { section } = props;
-    const hasFavorites = props.labbook
-      && props.labbook[section]
-      && props.labbook[section].hasFavorites;
-    const selectedFilter = hasFavorites ? 'favorites' : state.selectedFilter;
-
-    this.setState({ selectedFilter });
+    props.refetch(section);
   }
 
   /**
@@ -106,7 +106,7 @@ export default class SectionWrapper extends Component {
 
     if (sectionObject) {
       const sectionId = props.labbookId || props.datasetId;
-      const { labbook, section } = props;
+      const { section } = props;
       const showFavoritesRecent = (section !== 'data')
         && (state.favoriteRecentAdded);
       const Browser = require(`./../../../${browserPath}`).default;
@@ -130,6 +130,9 @@ export default class SectionWrapper extends Component {
       const sectionProps = {
         [section]: innerSection,
       };
+      if (!((section === 'data') || (sectionObject[section]))) {
+        return <Loader />;
+      }
 
       return (
 

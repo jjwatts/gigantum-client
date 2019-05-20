@@ -47,7 +47,7 @@ class Activity extends Component {
       expandedClusterObject: new Map(),
       newActivityForcePaused: false,
       refetchForcePaused: false,
-      activityRecords: section.activityRecords ? [] : this._transformActivity(section.activityRecords),
+      activityRecords: section.activityRecords ? this._transformActivity(section.activityRecords) : [],
       stickyDate: false,
       compressedElements: new Set(),
     };
@@ -55,8 +55,8 @@ class Activity extends Component {
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
+    // TODO - Refactor this into getderivedstatefromprops
     const section = nextProps[nextProps.sectionType];
-
 
     const activityRecords = nextProps[nextProps.sectionType].activityRecords;
 
@@ -74,7 +74,7 @@ class Activity extends Component {
 
     if (activityRecords && (currentActivityRecords !== previousActivityRecords)) {
       const previousSection = props[props.sectionType];
-      const prevCommit = previousSection && previousSection.activityRecords.edges && section.activityRecords.edges[0].node && false;
+      const prevCommit = previousSection && previousSection.activityRecords && previousSection.activityRecords.edges && section.activityRecords.edges[0].node && false;
       const newcommit = section && section.activityRecords.edges && section.activityRecords.edges[0] && section.activityRecords.edges[0].node;
 
       if (prevCommit && (prevCommit !== newcommit)) {
@@ -84,7 +84,7 @@ class Activity extends Component {
       }
     }
 
-    if (activityRecords.pageInfo.hasNextPage) {
+    if (activityRecords && activityRecords.pageInfo && activityRecords.pageInfo.hasNextPage) {
       const stateActivityRecords = state.activityRecords;
 
       const keys = Object.keys(stateActivityRecords);
@@ -109,7 +109,7 @@ class Activity extends Component {
   componentDidMount() {
     this._isMounted = true;
     const { props } = this;
-
+    props.refetch('activity');
 
     const section = props[props.sectionType];
 
@@ -121,11 +121,11 @@ class Activity extends Component {
 
     this.setState({ activityRecords: this._transformActivity(activityRecords) });
 
-    if (activityRecords.pageInfo.hasNextPage && (this._countUnexpandedRecords() < 7)) {
+    if (activityRecords && activityRecords.pageInfo && activityRecords.pageInfo.hasNextPage && (this._countUnexpandedRecords() < 7)) {
       this._loadMore();
     }
 
-    if (activityRecords.edges) {
+    if (activityRecords && activityRecords.edges) {
       this.setState({ refetchEnabled: true });
       this._refetch();
     }
@@ -353,7 +353,11 @@ class Activity extends Component {
         if (error) {
           console.error(error);
         }
-        if ((activityRecords.pageInfo.hasNextPage) && (this._countUnexpandedRecords() < 7) && (this._countUnexpandedRecords() > 2)) {
+        if ((activityRecords
+        && activityRecords.pageInfo
+        && activityRecords.pageInfo.hasNextPage)
+        && (this._countUnexpandedRecords() < 7)
+        && (this._countUnexpandedRecords() > 2)) {
           self._loadMore();
         } else {
           this.setState({
@@ -364,7 +368,7 @@ class Activity extends Component {
         name: 'labbook',
       },
     );
-    if (activityRecords.pageInfo.hasNextPage) {
+    if (activityRecords && activityRecords.pageInfo && activityRecords.pageInfo.hasNextPage) {
       counter += 5;
     }
   }
@@ -502,75 +506,69 @@ class Activity extends Component {
 
 
     let clusterIndex = 0;
+    if (activityRecords) {
+      activityRecords.edges.forEach((edge, index) => {
+        if (edge && edge.node) {
+          const date = (edge.node && edge.node.timestamp) ? new Date(edge.node.timestamp) : new Date();
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const day = date.getDate();
+          const timeHash = `${year}_${month}_${day}`;
 
-    activityRecords.edges.forEach((edge, index) => {
-      if (edge && edge.node) {
-        const date = (edge.node && edge.node.timestamp) ? new Date(edge.node.timestamp) : new Date();
-
-
-        const year = date.getFullYear();
-
-
-        const month = date.getMonth();
-
-
-        const day = date.getDate();
-
-
-        const timeHash = `${year}_${month}_${day}`;
-
-        count = (edge.node.show || (previousTimeHash && (timeHash !== previousTimeHash))) ? 0 : count + 1;
-        if (count === 0) {
-          clusterIndex = 0;
-        }
-        previousTimeHash = timeHash;
-
-        const isExpandedHead = state && state.expandedClusterObject.has(index) && !state.expandedClusterObject.has(index - 1);
-        const isExpandedEnd = state && state.expandedClusterObject.has(index) && !state.expandedClusterObject.has(index + 1);
-        const isExpandedNode = state && state.expandedClusterObject.has(index);
-        const attachedCluster = state && state.expandedClusterObject.has(index) && state.expandedClusterObject.get(index);
-        const newActivityObject = {
-          edge,
-          date,
-          collapsed: ((count > 2) && ((this.state && !state.expandedClusterObject.has(index)) || (!state))),
-          flatIndex: index,
-          isExpandedHead,
-          isExpandedEnd,
-          isExpandedNode,
-          attachedCluster,
-        };
-
-        if (count > 2 && ((this.state && !state.expandedClusterObject.has(index)) || (!state))) {
-          if (count === 3) {
-            const activityOne = activityTime[timeHash][activityTime[timeHash].length - 1];
-            activityTime[timeHash][activityTime[timeHash].length - 1].collapsed = true;
-
-            const activityTwo = activityTime[timeHash][activityTime[timeHash].length - 2];
-            activityTime[timeHash][activityTime[timeHash].length - 2].collapsed = true;
-
-            const clusterObject = {
-              cluster: [activityTwo, activityOne, newActivityObject],
-              attachedCluster,
-              expanded: false,
-              id: activityOne.edge.node.id,
-            };
-
-            activityTime[timeHash].pop();
-            activityTime[timeHash].pop();
-            activityTime[timeHash] ? activityTime[timeHash].push(clusterObject) : activityTime[timeHash] = [clusterObject];
-
-            clusterIndex = activityTime[timeHash].length - 1;
-          } else {
-            activityTime[timeHash][clusterIndex].cluster.push(newActivityObject);
+          count = (edge.node.show || (previousTimeHash && (timeHash !== previousTimeHash))) ? 0 : count + 1;
+          if (count === 0) {
+            clusterIndex = 0;
           }
-        } else {
-          clusterIndex = 0;
-          activityTime[timeHash] ? activityTime[timeHash].push(newActivityObject) : activityTime[timeHash] = [newActivityObject];
-        }
-      }
-    });
+          previousTimeHash = timeHash;
 
-    return activityTime;
+          const isExpandedHead = state && state.expandedClusterObject.has(index) && !state.expandedClusterObject.has(index - 1);
+          const isExpandedEnd = state && state.expandedClusterObject.has(index) && !state.expandedClusterObject.has(index + 1);
+          const isExpandedNode = state && state.expandedClusterObject.has(index);
+          const attachedCluster = state && state.expandedClusterObject.has(index) && state.expandedClusterObject.get(index);
+          const newActivityObject = {
+            edge,
+            date,
+            collapsed: ((count > 2) && ((this.state && !state.expandedClusterObject.has(index)) || (!state))),
+            flatIndex: index,
+            isExpandedHead,
+            isExpandedEnd,
+            isExpandedNode,
+            attachedCluster,
+          };
+
+          if (count > 2 && ((this.state && !state.expandedClusterObject.has(index)) || (!state))) {
+            if (count === 3) {
+              const activityOne = activityTime[timeHash][activityTime[timeHash].length - 1];
+              activityTime[timeHash][activityTime[timeHash].length - 1].collapsed = true;
+
+              const activityTwo = activityTime[timeHash][activityTime[timeHash].length - 2];
+              activityTime[timeHash][activityTime[timeHash].length - 2].collapsed = true;
+
+              const clusterObject = {
+                cluster: [activityTwo, activityOne, newActivityObject],
+                attachedCluster,
+                expanded: false,
+                id: activityOne.edge.node.id,
+              };
+
+              activityTime[timeHash].pop();
+              activityTime[timeHash].pop();
+              activityTime[timeHash] ? activityTime[timeHash].push(clusterObject) : activityTime[timeHash] = [clusterObject];
+
+              clusterIndex = activityTime[timeHash].length - 1;
+            } else {
+              activityTime[timeHash][clusterIndex].cluster.push(newActivityObject);
+            }
+          } else {
+            clusterIndex = 0;
+            activityTime[timeHash] ? activityTime[timeHash].push(newActivityObject) : activityTime[timeHash] = [newActivityObject];
+          }
+        }
+      });
+
+      return activityTime;
+    }
+    return [];
   }
 
   /**
@@ -762,7 +760,7 @@ class Activity extends Component {
       'is-deprecated': props.isDeprecated,
       'is-demo-deprecated': ((window.location.hostname === config.demoHostName) || props.diskLow) && props.isDeprecated,
     });
-    if (section) {
+    if (section && section.activityRecords) {
       const recordDates = Object.keys(state.activityRecords);
 
       const stickyDateCSS = classNames({

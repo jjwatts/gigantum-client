@@ -2,7 +2,7 @@
 import React, { Component, Fragment } from 'react';
 import { Route, Switch } from 'react-router-dom';
 import {
-  createFragmentContainer,
+  createRefetchContainer,
   graphql,
 } from 'react-relay';
 import { DragDropContext } from 'react-dnd';
@@ -74,7 +74,7 @@ const Environment = Loadable({
 
 class Labbook extends Component {
   constructor(props) {
-  	super(props);
+    super(props);
 
     localStorage.setItem('owner', store.getState().routes.owner);
     // bind functions here
@@ -109,6 +109,12 @@ class Labbook extends Component {
     isFetchingPackages: false,
     queuePackageFetch: false,
     activeBranchName: this.props.labbook.activeBranchName,
+    overviewSkip: true,
+    activitySkip: true,
+    environmentSkip: true,
+    codeSkip: true,
+    inputSkip: true,
+    outputSkip: true,
   }
 
   static getDerivedStateFromProps(nextProps, state) {
@@ -155,8 +161,6 @@ class Labbook extends Component {
   */
   componentDidMount() {
     const { props, state } = this;
-
-
     const { name, owner } = props.labbook;
     this.mounted = true;
     document.title = `${owner}/${name}`;
@@ -203,6 +207,73 @@ class Labbook extends Component {
     window.removeEventListener('click', this._branchViewClickedOff);
   }
 
+  /**
+   @param {}
+   refetch labbook
+   */
+  @boundMethod
+  _refetchSection(section) {
+    const { props, state } = this;
+    const currentSection = `${section}Skip`;
+    const currentState = {
+      overviewSkip: state.overviewSkip,
+      activitySkip: state.activitySkip,
+      environmentSkip: state.environmentSkip,
+      inputSkip: state.inputSkip,
+      outputSkip: state.outputSkip,
+      codeSkip: state.codeSkip,
+    };
+    const sections = ['overview', 'activity', 'environment', 'input', 'output', 'code'];
+    const queryVariables = {
+      labbookID: props.labbook.id,
+      [currentSection]: false,
+    };
+    const renderVariables = {
+      labbookID: props.labbook.id,
+      ...currentState,
+      [currentSection]: false,
+    };
+    const remainingQueryVariables = {
+      labbookID: props.labbook.id,
+      labbookSkip: false,
+    };
+    const remainingRenderVariables = {
+      labbookID: props.labbook.id,
+      labbookSkip: false,
+    };
+    const newState = {
+      labbookSkip: true,
+    };
+    const options = {
+      force: true,
+    };
+
+    sections.forEach((fragmentSection) => {
+      const remainingSection = `${fragmentSection}Skip`;
+      if (fragmentSection !== section) {
+        remainingQueryVariables[remainingSection] = false;
+        newState[remainingSection] = false;
+      }
+      remainingRenderVariables[remainingSection] = false;
+    });
+
+    const refetchCallback = () => {
+      this.setState({ [currentSection]: false });
+      props.relay.refetch(
+        remainingQueryVariables,
+        remainingRenderVariables,
+        () => {
+          this.setState(newState);
+        },
+        options,
+      );
+    };
+
+
+    if (state[currentSection]) {
+      props.relay.refetch(queryVariables, renderVariables, refetchCallback, options);
+    }
+  }
 
   /**
     @param {}
@@ -694,9 +765,7 @@ class Labbook extends Component {
               sidePanelVisible={sidePanelVisible}
               showMigrationButton={showMigrationButton}
             />
-
             <div className="Labbook__routes flex flex-1-0-auto">
-
               <Switch>
                 <Route
                   exact
@@ -707,6 +776,7 @@ class Labbook extends Component {
                         key={`${props.labbookName}_overview`}
                         labbook={labbook}
                         labbookId={labbook.id}
+                        refetch={this._refetchSection}
                         isSyncing={props.isSyncing}
                         isPublishing={props.isPublishing}
                         scrollToTop={this._scrollToTop}
@@ -734,6 +804,7 @@ class Labbook extends Component {
                             labbook={labbook}
                             description={labbook.description}
                             labbookId={labbook.id}
+                            refetch={this._refetchSection}
                             isSyncing={props.isSyncing}
                             isPublishing={props.isPublishing}
                             scrollToTop={this._scrollToTop}
@@ -756,6 +827,7 @@ class Labbook extends Component {
                             key={`${props.labbookName}_activity`}
                             labbook={labbook}
                             diskLow={props.diskLow}
+                            refetch={this._refetchSection}
                             activityRecords={props.activityRecords}
                             labbookId={labbook.id}
                             branchName={branchName}
@@ -782,6 +854,7 @@ class Labbook extends Component {
                             key={`${props.labbookName}_environment`}
                             labbook={labbook}
                             labbookId={labbook.id}
+                            refetch={this._refetchSection}
                             containerStatus={this.refs.ContainerStatus}
                             overview={labbook.overview}
                             isLocked={isLocked}
@@ -802,6 +875,7 @@ class Labbook extends Component {
                           <Code
                             labbook={labbook}
                             labbookId={labbook.id}
+                            refetch={this._refetchSection}
                             setContainerState={this._setContainerState}
                             isLocked={isLocked}
                             containerStatus={containerStatus}
@@ -822,6 +896,7 @@ class Labbook extends Component {
                             labbook={labbook}
                             labbookId={labbook.id}
                             isLocked={isLocked}
+                            refetch={this._refetchSection}
                             containerStatus={containerStatus}
                             section="input"
                           />
@@ -839,6 +914,7 @@ class Labbook extends Component {
                             labbook={labbook}
                             labbookId={labbook.id}
                             isLocked={isLocked}
+                            refetch={this._refetchSection}
                             containerStatus={containerStatus}
                             section="output"
                           />
@@ -874,7 +950,7 @@ const mapDispatchToProps = () => ({ setBuildingState });
 const LabbookContainer = connect(mapStateToProps, mapDispatchToProps)(Labbook);
 
 
-const LabbookFragmentContainer = createFragmentContainer(
+const LabbookFragmentContainer = createRefetchContainer(
   LabbookContainer,
   {
     labbook: graphql`
@@ -884,8 +960,7 @@ const LabbookFragmentContainer = createFragmentContainer(
           defaultRemote
           owner
           name
-          creationDateUtc
-          visibility
+          visibility @skip(if: $labbookSkip)
           activeBranchName
 
           environment{
@@ -894,14 +969,6 @@ const LabbookFragmentContainer = createFragmentContainer(
             base{
               developmentTools
             }
-          }
-
-          overview{
-            remoteUrl
-            numAptPackages
-            numConda2Packages
-            numConda3Packages
-            numPipPackages
           }
 
          branches {
@@ -913,7 +980,6 @@ const LabbookFragmentContainer = createFragmentContainer(
            isLocal
            isRemote
          }
-
           ...Environment_labbook
           ...LabbookOverviewContainer_labbook
           ...LabbookActivityContainer_labbook
@@ -923,6 +989,21 @@ const LabbookFragmentContainer = createFragmentContainer(
 
       }`,
   },
+  graphql`
+  query LabbookRefetchQuery($first: Int!, $cursor: String, $hasNext: Boolean!, $labbookID: ID!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
+    labbook: node(id: $labbookID){
+      ... on Labbook {
+        visibility @skip(if: $labbookSkip)
+      }
+      ...Environment_labbook
+      ...LabbookOverviewContainer_labbook
+      ...LabbookActivityContainer_labbook
+      ...Code_labbook
+      ...Input_labbook
+      ...Output_labbook
+    }
+  }
+  `,
 );
 
 /** *

@@ -37,6 +37,11 @@ class Environment extends Component {
     this._setBase = this._setBase.bind(this);
   }
 
+  componentDidMount() {
+    const { props } = this;
+    props.refetch('environment');
+  }
+
   /**
   *  @param {}
   *  callback that triggers buildImage mutation
@@ -94,8 +99,8 @@ class Environment extends Component {
   }
 
   render() {
-    if (this.props.labbook) {
-      const { props, state } = this;
+    const { props } = this;
+    if (props.labbook && props.labbook.environment && props.labbook.environment.id) {
       const { environment } = props.labbook;
       const { base } = environment;
       return (
@@ -161,7 +166,7 @@ class Environment extends Component {
 export default createFragmentContainer(
   Environment,
   graphql`fragment Environment_labbook on Labbook {
-    environment{
+    environment @skip (if: $environmentSkip){
       id
       imageStatus
       containerStatus

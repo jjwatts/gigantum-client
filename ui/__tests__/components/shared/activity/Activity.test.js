@@ -24,6 +24,7 @@ let fixtures = {
   sectionType: 'labbook',
   labbookName: 'ui-test-project',
   owner: 'uitest',
+  refetch: jest.fn(),
   relay: {
     refetchConnection: jest.fn(),
   },

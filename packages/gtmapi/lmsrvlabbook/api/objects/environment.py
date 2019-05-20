@@ -38,7 +38,7 @@ from lmsrvcore.api.connections import ListBasedConnection
 from lmsrvlabbook.api.connections.environment import PackageComponentConnection
 from lmsrvlabbook.api.objects.basecomponent import BaseComponent
 from lmsrvlabbook.api.objects.packagecomponent import PackageComponent
-from lmsrvlabbook.dataloader.package import PackageLatestVersionLoader
+from lmsrvlabbook.dataloader.package import PackageDataloader
 
 logger = LMLogger.get_logger()
 
@@ -223,14 +223,14 @@ class Environment(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
             lbc = ListBasedConnection(edges, cursors, kwargs)
             lbc.apply()
 
-            # Create version dataloader
+            # Create dataloader
             keys = [f"{k['manager']}&{k['package']}" for k in lbc.edges]
-            vd = PackageLatestVersionLoader(keys, labbook, get_logged_in_username())
+            vd = PackageDataloader(keys, labbook, get_logged_in_username())
 
             # Get DevEnv instances
             edge_objs = []
             for edge, cursor in zip(lbc.edges, lbc.cursors):
-                edge_objs.append(PackageComponentConnection.Edge(node=PackageComponent(_version_dataloader=vd,
+                edge_objs.append(PackageComponentConnection.Edge(node=PackageComponent(_dataloader=vd,
                                                                                        manager=edge['manager'],
                                                                                        package=edge['package'],
                                                                                        version=edge['version'],

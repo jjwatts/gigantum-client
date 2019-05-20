@@ -34,63 +34,6 @@ snapshots['TestLabBookOverviewQueries.test_package_counts 1'] = {
     }
 }
 
-snapshots['TestLabBookOverviewQueries.test_get_recent_activity 1'] = {
-    'data': {
-        'labbook': {
-            'overview': {
-                'recentActivity': [
-                    {
-                        'importance': 255,
-                        'message': 'Added new Output Data file output/test_file.txt',
-                        'show': True,
-                        'tags': [
-                            '.txt'
-                        ],
-                        'type': 'OUTPUT_DATA'
-                    },
-                    {
-                        'importance': 255,
-                        'message': 'Added new Input Data file input/test2/test_file.txt',
-                        'show': True,
-                        'tags': [
-                            '.txt'
-                        ],
-                        'type': 'INPUT_DATA'
-                    },
-                    {
-                        'importance': 255,
-                        'message': 'Added new Input Data file input/test/test_file.txt',
-                        'show': True,
-                        'tags': [
-                            '.txt'
-                        ],
-                        'type': 'INPUT_DATA'
-                    },
-                    {
-                        'importance': 255,
-                        'message': 'Added new Input Data file input/test_file.txt',
-                        'show': True,
-                        'tags': [
-                            '.txt'
-                        ],
-                        'type': 'INPUT_DATA'
-                    }
-                ]
-            }
-        }
-    }
-}
-
-snapshots['TestLabBookOverviewQueries.test_no_remote_url 1'] = {
-    'data': {
-        'labbook': {
-            'overview': {
-                'remoteUrl': None
-            }
-        }
-    }
-}
-
 snapshots['TestLabBookOverviewQueries.test_readme 1'] = {
     'data': {
         'labbook': {
@@ -107,6 +50,24 @@ snapshots['TestLabBookOverviewQueries.test_readme 2'] = {
             'overview': {
                 'readme': '''##Summary
 This is my readme!!'''
+            }
+        }
+    }
+}
+
+snapshots['TestLabBookOverviewQueries.test_get_recent_activity 1'] = {
+    'data': {
+        'labbook': {
+            'overview': {
+                'recentActivity': {
+                    'importance': 255,
+                    'message': 'Added new Output Data file output/test_file.txt',
+                    'show': True,
+                    'tags': [
+                        '.txt'
+                    ],
+                    'type': 'OUTPUT_DATA'
+                }
             }
         }
     }

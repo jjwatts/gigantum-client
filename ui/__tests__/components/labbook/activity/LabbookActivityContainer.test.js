@@ -18,6 +18,7 @@ let fixtures = {
   labbookId: labbook.id,
   activeBranch: 'master',
   setBuildingState: jest.fn(),
+  refetch: jest.fn(),
   isMainWorkspace: true,
   sectionType: 'labbook',
 };

@@ -7,7 +7,7 @@ export default createFragmentContainer(
   SectionWrapper,
   graphql`
       fragment Input_labbook on Labbook {
-        input{
+        input @skip (if: $inputSkip){
           id
           hasFiles
           hasFavorites
@@ -16,7 +16,7 @@ export default createFragmentContainer(
           ...MostRecentInput_input
           isUntracked
         }
-        linkedDatasets {
+        linkedDatasets @skip (if: $inputSkip){
           name
           owner
           commitsBehind

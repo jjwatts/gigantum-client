@@ -17,7 +17,7 @@ export default createPaginationContainer(
   {
     labbook: graphql`
         fragment LabbookActivityContainer_labbook on Labbook{
-          activityRecords(first: $first, after: $cursor) @connection(key: "LabbookActivityContainer_activityRecords"){
+          activityRecords(first: $first, after: $cursor) @connection(key: "LabbookActivityContainer_activityRecords") @skip (if: $activitySkip){
             edges{
               node{
                 id
@@ -73,13 +73,14 @@ export default createPaginationContainer(
         cursor,
         name,
         owner,
+        activitySkip: false,
         // in most cases, for variables other than connection filters like
         // `first`, `after`, etc. you may want to use the previous values.
         // orderBy: fragmentVariables.orderBy,
       };
     },
     query: graphql`
-       query LabbookActivityContainerPaginationQuery($name: String!, $owner: String!, $first: Int!, $cursor: String){
+       query LabbookActivityContainerPaginationQuery($name: String!, $owner: String!, $first: Int!, $cursor: String, $activitySkip: Boolean!){
          labbook(name: $name, owner: $owner){
            id
            description

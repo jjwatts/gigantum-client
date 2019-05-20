@@ -13,7 +13,6 @@ from lmsrvcore.auth.user import get_logged_in_username
 from lmsrvcore.api.interfaces import GitRepository
 
 from lmsrvlabbook.api.objects.activity import ActivityRecordObject
-from lmsrvlabbook.api.objects.datasettype import DatasetType
 from gtmcore.dataset.manifest import Manifest
 
 logger = LMLogger.get_logger()
@@ -34,11 +33,8 @@ class LabbookOverview(graphene.ObjectType, interfaces=(graphene.relay.Node, GitR
     num_pip_packages = graphene.Int()
     num_custom_dependencies = graphene.Int()
 
-    # List last 4 activity items that have show=True
-    recent_activity = graphene.List(ActivityRecordObject)
-
-    # Share URL if the LabBook has been published
-    remote_url = graphene.String()
+    # last activity record that has show=True
+    recent_activity = graphene.Field(ActivityRecordObject)
 
     # An arbitrarily long markdown document
     readme = graphene.String()
@@ -127,15 +123,14 @@ class LabbookOverview(graphene.ObjectType, interfaces=(graphene.relay.Node, GitR
             lambda labbook: self.helper_resolve_num_custom_dependencies(labbook))
 
     def help_resolve_recent_activity(self, labbook):
-        """Method to create 4 activity records with show=True"""
+        """Method to create 1 activity records with show=True"""
         # Create instance of ActivityStore for this LabBook
         store = ActivityStore(labbook)
 
-        records = list()
-        # Get 4 records with show=True
+        record = None
         after = None
-        while len(records) < 4:
-            items = store.get_activity_records(first=4, after=after)
+        while not record:
+            items = store.get_activity_records(first=5, after=after)
 
             if not items:
                 # if no more items, continue
@@ -143,38 +138,24 @@ class LabbookOverview(graphene.ObjectType, interfaces=(graphene.relay.Node, GitR
 
             for item in items:
                 if item.show is True and item.num_detail_objects > 0:
-                    ar = ActivityRecordObject(id=f"labbook&{self.owner}&{self.name}&{item.commit}",
-                                              owner=self.owner,
-                                              name=self.name,
-                                              _repository_type='labbook',
-                                              commit=item.commit,
-                                              _activity_record=item)
-                    records.append(ar)
-                    if len(records) >= 4:
-                        break
+                    record = ActivityRecordObject(id=f"labbook&{self.owner}&{self.name}&{item.commit}",
+                                                  owner=self.owner,
+                                                  name=self.name,
+                                                  _repository_type='labbook',
+                                                  commit=item.commit,
+                                                  _activity_record=item)
+
+                    break
 
                 # Set after cursor to last commit
                 after = item.commit
 
-        return records
+        return record
 
     def resolve_recent_activity(self, info):
         """Resolver for getting recent important activity"""
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             lambda labbook: self.help_resolve_recent_activity(labbook))
-
-    @staticmethod
-    def helper_resolve_remote_url(labbook):
-        if len(labbook.git.repo.remotes) > 0:
-            remote = labbook.git.repo.remotes.origin.url
-            return remote.replace(".git", "")
-        else:
-            return None
-
-    def resolve_remote_url(self, info):
-        """Resolver for getting the remote_url in the labbook"""
-        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: self.helper_resolve_remote_url(labbook))
 
     def resolve_readme(self, info):
         """Resolve the readme document inside the labbook"""

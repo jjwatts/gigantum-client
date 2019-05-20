@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Tue Apr 09 2019 10:43:58 GMT-0400 (Eastern Daylight Time)
+# timestamp: Thu May 16 2019 14:55:02 GMT-0400 (Eastern Daylight Time)
 
 schema {
   query: LabbookQuery
@@ -210,6 +210,15 @@ You MUST include a version, since auto-addition of a package version is done dur
 type AddPackageComponentsPayload {
   newPackageComponentEdges: [PackageComponentEdge]
   clientMutationId: String
+}
+
+"""A type that represents a Base Image Environment Component"""
+type AppHealthMonitor implements Node {
+  """The ID of the object."""
+  id: ID!
+  diskAvailableGb: Float
+  diskTotalGb: Float
+  diskUseWarning: Boolean
 }
 
 """A type that represents a Base Image Environment Component"""
@@ -1018,7 +1027,7 @@ type LabbookOverview implements Node & GitRepository {
   numConda3Packages: Int
   numPipPackages: Int
   numCustomDependencies: Int
-  recentActivity: [ActivityRecordObject]
+  recentActivity: ActivityRecordObject
   remoteUrl: String
   readme: String
 }
@@ -1031,6 +1040,7 @@ type LabbookQuery {
   jobStatus(jobId: String): JobStatus
   backgroundJobs(before: String, after: String, first: Int, last: Int): JobStatusConnection
   userIdentity: UserIdentity
+  appHealth: AppHealthMonitor
 
   """The ID of the object"""
   node(id: ID!): Node

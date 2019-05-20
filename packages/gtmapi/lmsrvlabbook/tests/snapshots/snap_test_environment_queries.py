@@ -72,119 +72,10 @@ snapshots['TestEnvironmentServiceQueries.test_get_base 2'] = {
     }
 }
 
-snapshots['TestEnvironmentServiceQueries.test_get_package_manager 1'] = {
-    'data': {
-        'labbook': {
-            'environment': {
-                'packageDependencies': {
-                    'edges': [
-                    ],
-                    'pageInfo': {
-                        'hasNextPage': False
-                    }
-                }
-            }
-        }
-    }
-}
-
-snapshots['TestEnvironmentServiceQueries.test_get_package_manager 3'] = {
-    'data': {
-        'labbook': {
-            'environment': {
-                'packageDependencies': {
-                    'edges': [
-                        {
-                            'cursor': 'MQ==',
-                            'node': {
-                                'fromBase': False,
-                                'id': 'UGFja2FnZUNvbXBvbmVudDphcHQmbHhtbCYzLjQ=',
-                                'manager': 'apt',
-                                'package': 'lxml',
-                                'version': '3.4'
-                            }
-                        },
-                        {
-                            'cursor': 'Mg==',
-                            'node': {
-                                'fromBase': False,
-                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmbnVtcHkmMS4xMg==',
-                                'manager': 'pip',
-                                'package': 'numpy',
-                                'version': '1.12'
-                            }
-                        }
-                    ],
-                    'pageInfo': {
-                        'hasNextPage': True
-                    }
-                }
-            }
-        }
-    }
-}
-
-snapshots['TestEnvironmentServiceQueries.test_get_package_manager 2'] = {
-    'data': {
-        'labbook': {
-            'environment': {
-                'packageDependencies': {
-                    'edges': [
-                        {
-                            'cursor': 'MA==',
-                            'node': {
-                                'fromBase': False,
-                                'id': 'UGFja2FnZUNvbXBvbmVudDphcHQmZG9ja2VyJmxhdGVzdA==',
-                                'manager': 'apt',
-                                'package': 'docker',
-                                'version': 'latest'
-                            }
-                        },
-                        {
-                            'cursor': 'MQ==',
-                            'node': {
-                                'fromBase': False,
-                                'id': 'UGFja2FnZUNvbXBvbmVudDphcHQmbHhtbCYzLjQ=',
-                                'manager': 'apt',
-                                'package': 'lxml',
-                                'version': '3.4'
-                            }
-                        },
-                        {
-                            'cursor': 'Mg==',
-                            'node': {
-                                'fromBase': False,
-                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmbnVtcHkmMS4xMg==',
-                                'manager': 'pip',
-                                'package': 'numpy',
-                                'version': '1.12'
-                            }
-                        },
-                        {
-                            'cursor': 'Mw==',
-                            'node': {
-                                'fromBase': False,
-                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmcmVxdWVzdHMmMS4z',
-                                'manager': 'pip',
-                                'package': 'requests',
-                                'version': '1.3'
-                            }
-                        }
-                    ],
-                    'pageInfo': {
-                        'hasNextPage': False
-                    }
-                }
-            }
-        }
-    }
-}
-
 snapshots['TestEnvironmentServiceQueries.test_package_query_with_errors 1'] = {
     'data': {
         'labbook': {
-            'id': 'TGFiYm9vazpkZWZhdWx0JmxhYmJvb2s1',
-            'packages': [
+            'checkPackages': [
                 {
                     'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDEmMC4yLjQ=',
                     'isValid': True,
@@ -213,7 +104,8 @@ snapshots['TestEnvironmentServiceQueries.test_package_query_with_errors 1'] = {
                     'package': 'asdfasdfasdf',
                     'version': ''
                 }
-            ]
+            ],
+            'id': 'TGFiYm9vazpkZWZhdWx0JmxhYmJvb2s1'
         }
     }
 }
@@ -221,8 +113,7 @@ snapshots['TestEnvironmentServiceQueries.test_package_query_with_errors 1'] = {
 snapshots['TestEnvironmentServiceQueries.test_package_query 1'] = {
     'data': {
         'labbook': {
-            'id': 'TGFiYm9vazpkZWZhdWx0JmxhYmJvb2s2',
-            'packages': [
+            'checkPackages': [
                 {
                     'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDEmMC4yLjQ=',
                     'isValid': True,
@@ -237,7 +128,233 @@ snapshots['TestEnvironmentServiceQueries.test_package_query 1'] = {
                     'package': 'gtmunit2',
                     'version': '12.2'
                 }
-            ]
+            ],
+            'id': 'TGFiYm9vazpkZWZhdWx0JmxhYmJvb2s2'
+        }
+    }
+}
+
+snapshots['TestEnvironmentServiceQueries.test_get_package_manager 1'] = {
+    'data': {
+        'labbook': {
+            'environment': {
+                'packageDependencies': {
+                    'edges': [
+                    ],
+                    'pageInfo': {
+                        'hasNextPage': False
+                    }
+                }
+            }
+        }
+    }
+}
+
+snapshots['TestEnvironmentServiceQueries.test_get_package_manager 2'] = {
+    'data': {
+        'labbook': {
+            'environment': {
+                'packageDependencies': {
+                    'edges': [
+                        {
+                            'cursor': 'MA==',
+                            'node': {
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDphcHQmbHhtbCYzLjQ=',
+                                'manager': 'apt',
+                                'package': 'lxml',
+                                'version': '3.4'
+                            }
+                        },
+                        {
+                            'cursor': 'MQ==',
+                            'node': {
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpjb25kYTMmY2R1dGlsJjguMQ==',
+                                'manager': 'conda3',
+                                'package': 'cdutil',
+                                'version': '8.1'
+                            }
+                        },
+                        {
+                            'cursor': 'Mg==',
+                            'node': {
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpjb25kYTMmbmx0ayYzLjIuNQ==',
+                                'manager': 'conda3',
+                                'package': 'nltk',
+                                'version': '3.2.5'
+                            }
+                        },
+                        {
+                            'cursor': 'Mw==',
+                            'node': {
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDEmMC4yLjQ=',
+                                'manager': 'pip',
+                                'package': 'gtmunit1',
+                                'version': '0.2.4'
+                            }
+                        },
+                        {
+                            'cursor': 'NA==',
+                            'node': {
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmbnVtcHkmMS4xMg==',
+                                'manager': 'pip',
+                                'package': 'numpy',
+                                'version': '1.12'
+                            }
+                        },
+                        {
+                            'cursor': 'NQ==',
+                            'node': {
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmcmVxdWVzdHMmMS4z',
+                                'manager': 'pip',
+                                'package': 'requests',
+                                'version': '1.3'
+                            }
+                        }
+                    ],
+                    'pageInfo': {
+                        'hasNextPage': False
+                    }
+                }
+            }
+        }
+    }
+}
+
+snapshots['TestEnvironmentServiceQueries.test_get_package_manager 3'] = {
+    'data': {
+        'labbook': {
+            'environment': {
+                'packageDependencies': {
+                    'edges': [
+                        {
+                            'cursor': 'MQ==',
+                            'node': {
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpjb25kYTMmY2R1dGlsJjguMQ==',
+                                'manager': 'conda3',
+                                'package': 'cdutil',
+                                'version': '8.1'
+                            }
+                        },
+                        {
+                            'cursor': 'Mg==',
+                            'node': {
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpjb25kYTMmbmx0ayYzLjIuNQ==',
+                                'manager': 'conda3',
+                                'package': 'nltk',
+                                'version': '3.2.5'
+                            }
+                        }
+                    ],
+                    'pageInfo': {
+                        'hasNextPage': True
+                    }
+                }
+            }
+        }
+    }
+}
+
+snapshots['TestEnvironmentServiceQueries.test_get_package_manager_metadata 1'] = {
+    'data': {
+        'labbook': {
+            'environment': {
+                'packageDependencies': {
+                    'edges': [
+                    ],
+                    'pageInfo': {
+                        'hasNextPage': False
+                    }
+                }
+            }
+        }
+    }
+}
+
+snapshots['TestEnvironmentServiceQueries.test_get_package_manager_metadata 2'] = {
+    'data': {
+        'labbook': {
+            'environment': {
+                'packageDependencies': {
+                    'edges': [
+                        {
+                            'cursor': 'MA==',
+                            'node': {
+                                'description': 'A set of tools to manipulate climate data',
+                                'docsUrl': 'http://anaconda.org/conda-forge/cdutil',
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpjb25kYTMmY2R1dGlsJjguMQ==',
+                                'latestVersion': '8.1',
+                                'manager': 'conda3',
+                                'package': 'cdutil',
+                                'version': '8.1'
+                            }
+                        },
+                        {
+                            'cursor': 'MQ==',
+                            'node': {
+                                'description': 'Python interface to coveralls.io API\\n',
+                                'docsUrl': 'http://anaconda.org/conda-forge/python-coveralls',
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpjb25kYTMmcHl0aG9uLWNvdmVyYWxscyYyLjUuMA==',
+                                'latestVersion': '2.9.1',
+                                'manager': 'conda3',
+                                'package': 'python-coveralls',
+                                'version': '2.5.0'
+                            }
+                        },
+                        {
+                            'cursor': 'Mg==',
+                            'node': {
+                                'description': 'Package 1 for Gigantum Client unit testing.',
+                                'docsUrl': 'https://github.com/gigantum/gigantum-client',
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDEmMC4yLjE=',
+                                'latestVersion': '0.12.4',
+                                'manager': 'pip',
+                                'package': 'gtmunit1',
+                                'version': '0.2.1'
+                            }
+                        },
+                        {
+                            'cursor': 'Mw==',
+                            'node': {
+                                'description': 'Package 1 for Gigantum Client unit testing.',
+                                'docsUrl': 'https://github.com/gigantum/gigantum-client',
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDImMTIuMg==',
+                                'latestVersion': '12.2',
+                                'manager': 'pip',
+                                'package': 'gtmunit2',
+                                'version': '12.2'
+                            }
+                        },
+                        {
+                            'cursor': 'NA==',
+                            'node': {
+                                'description': 'Package 1 for Gigantum Client unit testing.',
+                                'docsUrl': 'https://github.com/gigantum/gigantum-client',
+                                'fromBase': False,
+                                'id': 'UGFja2FnZUNvbXBvbmVudDpwaXAmZ3RtdW5pdDMmNS4w',
+                                'latestVersion': '5.0',
+                                'manager': 'pip',
+                                'package': 'gtmunit3',
+                                'version': '5.0'
+                            }
+                        }
+                    ],
+                    'pageInfo': {
+                        'hasNextPage': False
+                    }
+                }
+            }
         }
     }
 }

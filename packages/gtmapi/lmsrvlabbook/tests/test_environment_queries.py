@@ -136,16 +136,44 @@ class TestEnvironmentServiceQueries(object):
         # Add a base image
         cm = ComponentManager(lb)
         pkgs = [{"manager": "pip", "package": "requests", "version": "1.3"},
-                {"manager": "pip", "package": "numpy", "version": "1.12"}]
+                {"manager": "pip", "package": "numpy", "version": "1.12"},
+                {"manager": "pip", "package": "gtmunit1", "version": "0.2.4"}]
         cm.add_packages('pip', pkgs)
 
+        pkgs = [{"manager": "conda3", "package": "cdutil", "version": "8.1"},
+                {"manager": "conda3", "package": "nltk", "version": '3.2.5'}]
+        cm.add_packages('conda3', pkgs)
+
         # Add one package without a version, which should cause an error in the API since version is required
-        pkgs = [{"manager": "apt", "package": "docker", "version": ""},
-                {"manager": "apt", "package": "lxml", "version": "3.4"}]
+        pkgs = [{"manager": "apt", "package": "lxml", "version": "3.4"}]
         cm.add_packages('apt', pkgs)
 
-        # Test again
-        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+        query = """
+                   {
+                     labbook(owner: "default", name: "labbook4") {
+                       environment {
+                        packageDependencies {
+                            edges {
+                              node {
+                                id
+                                manager
+                                package
+                                version
+                                fromBase
+                              }
+                              cursor
+                            }
+                            pageInfo {
+                              hasNextPage
+                            }
+                          }
+                       }
+                     }
+                   }
+                   """
+        r1 = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r1
+        snapshot.assert_match(r1)
 
         query = """
                    {
@@ -174,6 +202,56 @@ class TestEnvironmentServiceQueries(object):
         assert 'errors' not in r1
         snapshot.assert_match(r1)
 
+    def test_get_package_manager_metadata(self, fixture_working_dir_env_repo_scoped, snapshot):
+        """Test getting the a LabBook's package manager dependencies"""
+        # Create labbook
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook4meta", description="my first asdf")
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook4meta") {
+                        environment {
+                         packageDependencies {
+                            edges {
+                              node {
+                                id
+                                manager
+                                package
+                                version
+                                fromBase
+                                description
+                                docsUrl
+                                latestVersion
+                              }
+                              cursor
+                            }
+                            pageInfo {
+                              hasNextPage
+                            }
+                          }
+                        }
+                      }
+                    }
+                    """
+        # should be null
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+        # Add a base image
+        cm = ComponentManager(lb)
+        pkgs = [{"manager": "pip", "package": "gtmunit3", "version": "5.0"},
+                {"manager": "pip", "package": "gtmunit2", "version": "12.2"},
+                {"manager": "pip", "package": "gtmunit1", "version": '0.2.1'}]
+        cm.add_packages('pip', pkgs)
+
+        pkgs = [{"manager": "conda3", "package": "cdutil", "version": "8.1"},
+                {"manager": "conda3", "package": "python-coveralls", "version": "2.5.0"}]
+        cm.add_packages('conda3', pkgs)
+
+        r1 = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r1
+        snapshot.assert_match(r1)
+
     def test_package_query_with_errors(self, snapshot, fixture_working_dir_env_repo_scoped):
         """Test querying for package info"""
         # Create labbook
@@ -184,7 +262,7 @@ class TestEnvironmentServiceQueries(object):
                     {
                       labbook(owner: "default", name: "labbook5"){
                         id
-                        packages(packageInput: [
+                        checkPackages(packageInput: [
                           {manager: "pip", package: "gtmunit1", version:"0.2.4"},
                           {manager: "pip", package: "gtmunit2", version:"100.00"},
                           {manager: "pip", package: "gtmunit3", version:""},
@@ -210,7 +288,7 @@ class TestEnvironmentServiceQueries(object):
                     {
                       labbook(owner: "default", name: "labbook6"){
                         id
-                        packages(packageInput: [
+                        checkPackages(packageInput: [
                           {manager: "pip", package: "gtmunit1", version:"0.2.4"},
                           {manager: "pip", package: "gtmunit2", version:""}]){
                           id

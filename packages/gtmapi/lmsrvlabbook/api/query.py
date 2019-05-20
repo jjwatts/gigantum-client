@@ -17,7 +17,6 @@ from lmsrvlabbook.api.objects.labbook import Labbook
 from lmsrvlabbook.api.objects.labbooklist import LabbookList
 from lmsrvlabbook.api.objects.datasetlist import DatasetList
 from lmsrvlabbook.api.objects.basecomponent import BaseComponent
-from lmsrvlabbook.api.objects.packagecomponent import PackageComponent
 from lmsrvlabbook.api.objects.jobstatus import JobStatus
 from lmsrvlabbook.api.connections.environment import BaseComponentConnection
 from lmsrvlabbook.api.connections.jobstatus import JobStatusConnection
@@ -141,18 +140,6 @@ class LabbookQuery(AppQueries, graphene.ObjectType):
 
     # List available types of datasets
     available_dataset_types = graphene.List(DatasetType)
-
-    # Currently not fully supported, but will be added in the future.
-    # available_base_image_versions = graphene.relay.ConnectionField(BaseImageConnection, repository=graphene.String(),
-    #                                                                namespace=graphene.String(),
-    #                                                                component=graphene.String())
-
-    # Package Query for validating packages and getting latest versions
-    package = graphene.Field(PackageComponent,
-                             manager=graphene.String(),
-                             package=graphene.String(),
-                             version=graphene.String(default_value=""))
-
 
     def resolve_nodes(self, info, ids):
         return [graphene.relay.Node.get_node_from_global_id(info, x) for x in ids]

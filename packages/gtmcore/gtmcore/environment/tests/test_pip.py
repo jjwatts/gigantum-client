@@ -51,30 +51,6 @@ class TestPipPackageManager(object):
         assert result[3] == '0.2.0'
         assert result[4] == '0.1.0'
 
-    def test_latest_version(self, build_lb_image_for_env):
-        """Test latest_version command"""
-        mrg = PipPackageManager()
-        lb = build_lb_image_for_env[0]
-        username = build_lb_image_for_env[1]
-        result = mrg.latest_version("gtmunit1", lb, username)
-
-        assert result == "0.12.4"
-
-        result = mrg.latest_version("gtmunit2", lb, username)
-
-        assert result == "12.2"
-
-    def test_latest_versions(self, build_lb_image_for_env):
-        """Test latest_version command"""
-        mrg = PipPackageManager()
-        lb = build_lb_image_for_env[0]
-        username = build_lb_image_for_env[1]
-        gtm1, gtm2, gtm3 = mrg.latest_versions(["gtmunit1", "gtmunit2", "gtmunit3"], lb, username)
-
-        assert gtm1 == "0.12.4"
-        assert gtm2 == "12.2"
-        assert gtm3 == "5.0"
-
     def test_list_installed_packages(self, build_lb_image_for_env):
         """Test list_installed_packages command
 
@@ -91,24 +67,6 @@ class TestPipPackageManager(object):
         assert type(result[0]) == dict
         assert type(result[0]['name']) == str
         assert type(result[0]['version']) == str
-
-    def test_list_available_updates(self, build_lb_image_for_env):
-        """Test list_available_updates command
-
-        Note, if the contents of the container change, this test will break and need to be updated. Because of this,
-        only limited asserts are made to make sure things are coming back in a reasonable format
-        """
-        mrg = PipPackageManager()
-        lb = build_lb_image_for_env[0]
-        username = build_lb_image_for_env[1]
-        result = mrg.list_available_updates(lb, username)
-
-        assert type(result) == list
-        assert len(result) < len(mrg.list_installed_packages(lb, username))
-        assert type(result[0]) == dict
-        assert type(result[0]['name']) == str
-        assert type(result[0]['version']) == str
-        assert type(result[0]['latest_version']) == str
 
     def test_generate_docker_install_snippet_single(self):
         """Test generate_docker_install_snippet command
@@ -190,3 +148,32 @@ class TestPipPackageManager(object):
         assert result[1].package == "gtmunit2"
         assert result[1].version == "12.2"
         assert result[1].error is False
+
+    def test_get_metadata(self, build_lb_image_for_env):
+        """Test get_packages_metadata method"""
+        mrg = PipPackageManager()
+        lb = build_lb_image_for_env[0]
+        username = build_lb_image_for_env[1]
+        result = mrg.get_packages_metadata(['gtmunit1', 'gtmunit2', 'gtmunit3',
+                                            'gigantum', 'asdfsdfgsfdgdsfgsfdg'], lb, username)
+
+        assert len(result) == 5
+        assert result[0].description == 'Package 1 for Gigantum Client unit testing.'
+        assert result[0].docs_url == 'https://github.com/gigantum/gigantum-client'
+        assert result[0].latest_version == "0.12.4"
+
+        assert result[1].description == 'Package 1 for Gigantum Client unit testing.'
+        assert result[1].docs_url == 'https://github.com/gigantum/gigantum-client'
+        assert result[1].latest_version == "12.2"
+
+        assert result[2].description == 'Package 1 for Gigantum Client unit testing.'
+        assert result[2].docs_url == 'https://github.com/gigantum/gigantum-client'
+        assert result[2].latest_version == "5.0"
+
+        assert result[3].description == 'CLI for the Gigantum Platform'
+        assert result[3].docs_url == 'https://github.com/gigantum/gigantum-cli'
+        assert isinstance(result[3].latest_version, str)
+
+        assert result[4].description is None
+        assert result[4].docs_url is None
+        assert result[4].latest_version is None
