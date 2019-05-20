@@ -277,15 +277,13 @@ class ComponentManager(object):
         ars = ActivityStore(self.labbook)
         ars.create_activity_record(ar)
 
-    def remove_packages(self, package_manager: str, package_names: List[str]) -> None:
+    def remove_packages(self, package_manager: str, package_names: str, remove_from_base: bool = False) -> None:
         """Remove yaml files describing a package and its context to the labbook.
 
         Args:
             package_manager: The package manager (eg., "apt" or "pip3")
             package_names: A list of packages to uninstall
-
-        Returns:
-            None
+            remove_from_base: Usually we won't do this, specify `True` when you are changing out a base
         """
         # Create activity record
         ar = ActivityRecord(ActivityType.ENVIRONMENT,
@@ -309,8 +307,8 @@ class ComponentManager(object):
             if not package_data:
                 raise IOError("Failed to load package description")
 
-            if package_data['from_base'] is True:
-                raise ValueError("Cannot remove a package installed in the Base")
+            if package_data['from_base'] is True and not remove_from_base:
+                raise ValueError("Won't remove a package installed in the Base, without `remove_from_base=True`")
 
             # Delete the yaml file, which on next Dockerfile gen/rebuild will remove the dependency
             os.remove(package_yaml_path)
@@ -371,7 +369,7 @@ class ComponentManager(object):
         with open(base_final_path, 'wt') as cf:
             cf.write(yaml.safe_dump(base_data, default_flow_style=False))
 
-        # We construct a
+        # We construct records of packages installed by the base grouped by package manager
         installed_packages = {}
         for package in self.get_component_list("package_manager"):
             # Build dictionary of packages
@@ -450,15 +448,13 @@ class ComponentManager(object):
             short_message = f"Removing all bases from project with {len(matching_fnames)} base configuration files."
             for base_fname in matching_fnames:
                 self.labbook.git.remove(str(base_fname), keep_file=False)
-                # XXX DC delete before merge!
-                assert not base_fname.exists()
                 # The repository includes an underscore where the slash is for e.g.,
                 # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
                 curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
                 long_message = f"Removing base from {curr_repo}: {curr_base_name} r{curr_revision}"
 
                 # Create detail record
-                adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
+                adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
                 adr.add_value('text/plain', long_message)
                 detail_records.append(adr)
 
@@ -476,8 +472,6 @@ class ComponentManager(object):
             short_message = f"Removed base from {curr_repo}: {curr_base_name} r{curr_revision}"
 
             self.labbook.git.remove(str(base_fname), keep_file=False)
-            # XXX DC delete before merge
-            assert not base_fname.exists()
             logger.info(short_message)
 
             long_message = "\n".join((f"Removed base {base_id}\n",
@@ -487,7 +481,7 @@ class ComponentManager(object):
                                       f"  - revision: {revision}"))
 
             # Create detail record
-            adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
+            adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
             adr.add_value('text/plain', long_message)
             detail_records.append(adr)
 
@@ -516,7 +510,7 @@ class ComponentManager(object):
 
         for p_manager, package_names in packages_to_rm.items():
             # Package removal will also create activity records
-            self.remove_packages(p_manager, package_names)
+            self.remove_packages(p_manager, package_names, remove_from_base=True)
 
         # add_base currently returns None, but this will incorporate any future changes
         return self.add_base(repository, base_id, revision)

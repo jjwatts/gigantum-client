@@ -307,25 +307,26 @@ class TestAddComponentMutations(object):
           {
             labbook {
               id
-              name
+              environment {
+                base {
+                  repository
+                  componentId
+                  revision
+                  name
+                }
+              }
             }
           }
         }
         """
-        # environment {
-        #     base {
-        #         repository
-        #         componentId
-        #         revision
-        #         name
-        #     }
-        # }
         result = gql_client.execute(pkg_query)
+        # The critical thing here is that the revision is updated to 2
         snapshot.assert_match(result)
 
     def test_change_base(self, fixture_working_dir_env_repo_scoped, snapshot):
         """Test changing to a different base"""
-        config_file, temp_dir, gql_client, schema = fixture_working_dir_env_repo_scoped
+        config_file = fixture_working_dir_env_repo_scoped[0]
+        gql_client = fixture_working_dir_env_repo_scoped[2]
         im = InventoryManager(config_file)
         lb = im.create_labbook('default', 'default', 'catbook-package-tester',
                                description="LB to test package mutation")
@@ -333,31 +334,34 @@ class TestAddComponentMutations(object):
         # I don't actually see this tested via the API, but THIS test is not what this is about either
         cm = ComponentManager(lb)
 
-        # Add a base image
+        # Add an (old) base image
         cm.add_base('gigantum_base-images-testing', 'quickstart-jupyterlab', 1)
+
+        # Change to the most recent version of the base image
         pkg_query = """
-        mutation myPkgMutation {
-          changeBase (input: {
+        mutation myBaseMutation {
+          changeLabbookBase (input: {
             owner: "default",
             labbookName: "catbook-package-tester",
-            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]           
-            
-          }) {
-            clientMutationId
-            newPackageComponentEdges {
-                node{
-                  id
-                  manager
-                  package
-                  version
-                  fromBase
+            repository: "gigantum_base-images-testing",
+            baseId: "ut-busybox",
+            revision: 0
+          }) 
+          {
+            labbook {
+              id
+              environment {
+                base {
+                  repository
+                  componentId
+                  revision
+                  name
                 }
-                cursor 
+              }
             }
           }
         }
         """
-
         result = gql_client.execute(pkg_query)
+        # The critical thing here is that the revision is updated to 2
         snapshot.assert_match(result)
-

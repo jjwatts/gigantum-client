@@ -185,9 +185,6 @@ class ChangeLabbookBase(graphene.relay.ClientIDMutation):
         cm = ComponentManager(lb)
         cm.change_base(repository, base_id, revision)
 
-        adr = ActivityDetailRecord(ActivityDetailType.LABBOOK, show=False, importance=0)
-        adr.add_value('text/plain', f"Created new LabBook: {username}/{name}")
-
         return ChangeLabbookBase(labbook=Labbook(owner=username, name=lb.name))
 
 

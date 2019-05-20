@@ -85,3 +85,39 @@ snapshots['TestAddComponentMutations.test_remove_package 2'] = {
         }
     }
 }
+
+snapshots['TestAddComponentMutations.test_update_base 1'] = {
+    'data': {
+        'changeLabbookBase': {
+            'labbook': {
+                'environment': {
+                    'base': {
+                        'componentId': 'quickstart-jupyterlab',
+                        'name': 'Data Science Quickstart with JupyterLab',
+                        'repository': 'gigantum_base-images-testing',
+                        'revision': 2
+                    }
+                },
+                'id': 'TGFiYm9vazpkZWZhdWx0JmNhdGJvb2stcGFja2FnZS10ZXN0ZXI='
+            }
+        }
+    }
+}
+
+snapshots['TestAddComponentMutations.test_change_base 1'] = {
+    'data': {
+        'changeLabbookBase': {
+            'labbook': {
+                'environment': {
+                    'base': {
+                        'componentId': 'ut-busybox',
+                        'name': 'Unit Test Busybox',
+                        'repository': 'gigantum_base-images-testing',
+                        'revision': 0
+                    }
+                },
+                'id': 'TGFiYm9vazpkZWZhdWx0JmNhdGJvb2stcGFja2FnZS10ZXN0ZXI='
+            }
+        }
+    }
+}
