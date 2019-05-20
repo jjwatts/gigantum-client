@@ -277,7 +277,7 @@ class ComponentManager(object):
         ars = ActivityStore(self.labbook)
         ars.create_activity_record(ar)
 
-    def remove_packages(self, package_manager: str, package_names: str, remove_from_base: bool = False) -> None:
+    def remove_packages(self, package_manager: str, package_names: List[str], remove_from_base: bool = False) -> None:
         """Remove yaml files describing a package and its context to the labbook.
 
         Args:
@@ -369,13 +369,18 @@ class ComponentManager(object):
         with open(base_final_path, 'wt') as cf:
             cf.write(yaml.safe_dump(base_data, default_flow_style=False))
 
-        # We construct records of packages installed by the base grouped by package manager
-        installed_packages = {}
+        # We construct records of packages installed by the user grouped by package manager
+        # This can happen, for example, when we're changing bases
+        installed_packages: Dict[str, List[Dict]] = {}
         for package in self.get_component_list("package_manager"):
-            # Build dictionary of packages
             if package['from_base']:
-                # We are removing the base - so the package isn't guaranteed
-                installed_packages.setdefault(package['manager'], []).append(package["package"])
+                # This should never happen
+                logger.warning('Residual packages remain that are listed as installed by base - converting to user')
+                self.add_packages(package_manager=package['manager'], packages=[package],
+                                  force=True, from_base=False)
+
+            # Build dictionary of packages
+            installed_packages.setdefault(package['manager'], []).append(package["package"])
 
         for manager in base_data['package_managers']:
             packages = list()
@@ -451,7 +456,7 @@ class ComponentManager(object):
                 # The repository includes an underscore where the slash is for e.g.,
                 # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
                 curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
-                long_message = f"Removing base from {curr_repo}: {curr_base_name} r{curr_revision}"
+                long_message = f"Removing base from {curr_repo}: {curr_base_name}"
 
                 # Create detail record
                 adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
@@ -501,7 +506,7 @@ class ComponentManager(object):
         ars = ActivityStore(self.labbook)
         ars.create_activity_record(ar)
 
-        packages_to_rm = {}
+        packages_to_rm: Dict[str, List[str]] = {}
         for package in self.get_component_list("package_manager"):
             # Build dictionary of packages
             if package['from_base']:
