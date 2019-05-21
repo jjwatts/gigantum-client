@@ -306,7 +306,6 @@ class TestAddComponentMutations(object):
           }) 
           {
             labbook {
-              id
               environment {
                 base {
                   repository
@@ -349,7 +348,6 @@ class TestAddComponentMutations(object):
           }) 
           {
             labbook {
-              id
               environment {
                 base {
                   repository

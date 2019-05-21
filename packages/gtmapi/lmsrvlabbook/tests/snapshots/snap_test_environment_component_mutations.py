@@ -98,7 +98,6 @@ snapshots['TestAddComponentMutations.test_update_base 1'] = {
                         'revision': 2
                     }
                 },
-                'id': 'TGFiYm9vazpkZWZhdWx0JmNhdGJvb2stcGFja2FnZS10ZXN0ZXI='
             }
         }
     }
@@ -115,8 +114,7 @@ snapshots['TestAddComponentMutations.test_change_base 1'] = {
                         'repository': 'gigantum_base-images-testing',
                         'revision': 0
                     }
-                },
-                'id': 'TGFiYm9vazpkZWZhdWx0JmNhdGJvb2stcGFja2FnZS10ZXN0ZXI='
+                }
             }
         }
     }
