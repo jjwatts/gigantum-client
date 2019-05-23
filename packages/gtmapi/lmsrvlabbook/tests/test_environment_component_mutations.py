@@ -287,10 +287,8 @@ class TestAddComponentMutations(object):
         lb = im.create_labbook('default', 'default', 'catbook-update-base-tester',
                                description="LB to test package mutation")
 
-        # I don't actually see this tested via the API, but THIS test is not what this is about either
-        cm = ComponentManager(lb)
-
         # Add an (old) base image
+        cm = ComponentManager(lb)
         cm.add_base('gigantum_base-images-testing', 'quickstart-jupyterlab', 1)
 
         # Change to the most recent version of the base image
@@ -331,10 +329,8 @@ class TestAddComponentMutations(object):
         lb = im.create_labbook('default', 'default', 'catbook-change-base-tester',
                                description="LB to test package mutation")
 
-        # I don't actually see this tested via the API, but THIS test is not what this is about either
-        cm = ComponentManager(lb)
-
         # Add an (old) base image
+        cm = ComponentManager(lb)
         cm.add_base('gigantum_base-images-testing', 'quickstart-jupyterlab', 1)
 
         # Change to the most recent version of the base image
