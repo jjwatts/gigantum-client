@@ -279,7 +279,6 @@ class TestAddComponentMutations(object):
         assert 'errors' not in r
         assert r['data']['removeCustomDocker']['updatedEnvironment']['dockerSnippet'] == ""
 
-
     def test_update_base(self, fixture_working_dir_env_repo_scoped, snapshot):
         """Test changing the revision of a base"""
         config_file = fixture_working_dir_env_repo_scoped[0]
@@ -320,7 +319,9 @@ class TestAddComponentMutations(object):
         """
         result = gql_client.execute(pkg_query)
         # The critical thing here is that the revision is updated to 2
-        snapshot.assert_match(result)
+        base = result['data']['changeLabbookBase']['labbook']['environment']['base']
+        assert base['revision'] == 2
+        assert base['componentId'] == 'quickstart-jupyterlab'
 
     def test_change_base(self, fixture_working_dir_env_repo_scoped, snapshot):
         """Test changing to a different base"""
@@ -361,5 +362,7 @@ class TestAddComponentMutations(object):
         }
         """
         result = gql_client.execute(pkg_query)
-        # The critical thing here is that the revision is updated to 2
-        snapshot.assert_match(result)
+        # The critical thing here is that the base (component)Id is changed to ut-busybox
+        base = result['data']['changeLabbookBase']['labbook']['environment']['base']
+        assert base['componentId'] == 'ut-busybox'
+        assert base['revision'] == 0
