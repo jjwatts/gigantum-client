@@ -86,8 +86,6 @@ class ComponentManager(object):
         self._initialize_env_dir()
 
     @property
-    # This could be converted to return a Path, which would be a bit more ergonomic
-    # Probably not worth the effort unless we're doing a refactor
     def env_dir(self) -> str:
         """The environment directory in the given labbook"""
         return os.path.join(self.labbook.root_dir, '.gigantum', 'env')
@@ -374,7 +372,8 @@ class ComponentManager(object):
         installed_packages: Dict[str, List[Dict]] = {}
         for package in self.get_component_list("package_manager"):
             if package['from_base']:
-                # This should never happen
+                # Packages from the base to be added are NOT yet installed, but there are package
+                # files that are marked `from_base`. This should never happen!
                 logger.warning('Residual packages remain that are listed as installed by base - converting to user')
                 self.add_packages(package_manager=package['manager'], packages=[package],
                                   force=True, from_base=False)
@@ -391,7 +390,7 @@ class ComponentManager(object):
                         pkg_name, pkg_version = strip_package_and_version(p_manager, pkg)
                         if pkg_name in installed_packages.get(p_manager, []):
                             # If package is already installed by this package manager, we expect it gets overwritten
-                            # If it's a different package manger, it won't! We may want to alert the user, but how?
+                            # If it's a different package manger, it won't.
                             continue
                         packages.append({"package": pkg_name, "version": pkg_version, "manager": p_manager})
 
@@ -442,70 +441,41 @@ class ComponentManager(object):
              revision: The revision number specified INSIDE the YAML file for that base image
         """
         # We'll populate detail records as we go
-        detail_records = []
+        detail_records: List[ActivityDetailRecord] = []
 
         current_base_dir = Path(self.env_dir) / "base"
         matching_fnames = list(current_base_dir.glob('*.yaml'))
 
+        short_message = ''
         if len(matching_fnames) != 1:
-            # The project is misconfigured with more than one base. Let's fix that.
             logger.warning(f"Project misconfigured. Found {len(matching_fnames)} base configuration files.")
-            short_message = f"Removing all bases from project with {len(matching_fnames)} base configuration files."
-            for base_fname in matching_fnames:
-                self.labbook.git.remove(str(base_fname), keep_file=False)
-                # The repository includes an underscore where the slash is for e.g.,
-                # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
-                curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
-                long_message = f"Removing base from {curr_repo}: {curr_base_name}"
-
-                # Create detail record
-                adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
-                adr.add_value('text/plain', long_message)
-                detail_records.append(adr)
-
+            if len(matching_fnames) > 1:
+                # We provide brief details regarding these files
+                short_message = self.remove_all_bases(matching_fnames, detail_records)
         else:
-            base_fname = matching_fnames[0]
-
-            # We have a properly configured Labbook, and we report more detail
-            base_data = self.base_fields
-            curr_revision = base_data['revision']
-
-            # The repository includes an underscore where the slash is for e.g.,
-            # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
-            curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
-
-            short_message = f"Removed base from {curr_repo}: {curr_base_name} r{curr_revision}"
-
-            self.labbook.git.remove(str(base_fname), keep_file=False)
+            # We have a properly configured Labbook, we'll report more detail about the base
+            short_message = self.remove_base(matching_fnames[0], detail_records)
             logger.info(short_message)
 
-            long_message = "\n".join((f"Removed base {base_id}\n",
-                                      f"{base_data['description']}\n",
-                                      f"  - repository: {repository}",
-                                      f"  - component: {base_id}",
-                                      f"  - revision: {revision}\n"))
+        if short_message:
+            # We did something above - we commit and create an activity record
+            commit = self.labbook.git.commit(short_message)
 
-            # Create detail record
-            adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
-            adr.add_value('text/plain', long_message)
-            detail_records.append(adr)
+            # Create activity record - we populated detail_records above
+            ar = ActivityRecord(ActivityType.ENVIRONMENT,
+                                message=short_message,
+                                linked_commit=commit.hexsha,
+                                tags=["environment", "base"],
+                                show=True)
 
-        commit = self.labbook.git.commit(short_message)
+            for adr in detail_records:
+                ar.add_detail_object(adr)
 
-        # Create activity record - we populated detail_records above
-        ar = ActivityRecord(ActivityType.ENVIRONMENT,
-                            message=short_message,
-                            linked_commit=commit.hexsha,
-                            tags=["environment", "base"],
-                            show=True)
+            # Store the activity record.
+            ars = ActivityStore(self.labbook)
+            ars.create_activity_record(ar)
 
-        for adr in detail_records:
-            ar.add_detail_object(adr)
-
-        # Store the activity record.
-        ars = ActivityStore(self.labbook)
-        ars.create_activity_record(ar)
-
+        # We construct a list of packages with `from_base` == True for each package manager
         packages_to_rm: Dict[str, List[str]] = {}
         for package in self.get_component_list("package_manager"):
             # Build dictionary of packages
@@ -519,6 +489,65 @@ class ComponentManager(object):
 
         # add_base currently returns None, but this will incorporate any future changes
         return self.add_base(repository, base_id, revision)
+
+    def remove_base(self, base_fname: Path, detail_records: List[ActivityDetailRecord]) -> str:
+        """Remove the base from `base_fname` and append records to detail_records for later use
+
+        Removing files isn't hard. The main point of this method is to provide detail records that make
+        sense in the context of a properly configured project with a single base.
+
+        Args:
+            base_fname: Matched YAML file for base image
+            detail_records: we'll append details here that will be added to an ActivityRecord by the caller
+
+        Returns:
+            the short_message for the git commit, etc.
+        """
+        base_data = self.base_fields
+        revision = base_data['revision']
+        # The repository includes an underscore where the slash is for e.g.,
+        # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
+        repo, base_name = base_fname.stem.rsplit('_', 1)
+        self.labbook.git.remove(str(base_fname), keep_file=False)
+
+        # Create detail record
+        long_message = "\n".join((f"Removed base {base_name}\n",
+                                  f"{base_data['description']}\n",
+                                  f"  - repository: {repo}",
+                                  f"  - component: {base_name}",
+                                  f"  - revision: {revision}\n"))
+        adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
+        adr.add_value('text/plain', long_message)
+        detail_records.append(adr)
+
+        return f"Removed base from {repo}: {base_name} r{revision}"
+
+    def remove_all_bases(self, base_paths: List[Path], detail_records: List[ActivityDetailRecord]) -> str:
+        """Remove all files listed in `matching_fnames` and append records to detail_records for later use
+
+        Removing files isn't hard. The main point of this method is to provide detail records that make
+        sense in the context of a misconfigured project.
+
+        Args:
+            base_paths: List of matched YAML files for base images
+            detail_records: we'll append details here that will be added to an ActivityRecord by the caller
+
+        Returns:
+            the short_message for the git commit, etc.
+        """
+        for base_fname in base_paths:
+            self.labbook.git.remove(str(base_fname), keep_file=False)
+            # The repository includes an underscore where the slash is for e.g.,
+            # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
+            curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
+
+            # Create detail record
+            long_message = f"Removing base from {curr_repo}: {curr_base_name}"
+            adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
+            adr.add_value('text/plain', long_message)
+            detail_records.append(adr)
+
+        return f"Removing all bases from project with {len(base_paths)} base configuration files."
 
     def get_component_list(self, component_class: str) -> List[Dict[str, Any]]:
         """Method to get the YAML contents for a given component class
