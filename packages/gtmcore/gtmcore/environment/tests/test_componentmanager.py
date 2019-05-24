@@ -1,29 +1,11 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 from pathlib import Path
-
-import pytest
-import os
-import yaml
 import pprint
 import uuid
+import os
+
+import pytest
+import yaml
+
 from gtmcore.environment import ComponentManager, RepositoryManager
 from gtmcore.fixtures import mock_config_file, mock_labbook, mock_config_with_repo
 from gtmcore.labbook import LabBook
@@ -204,6 +186,51 @@ class TestComponentManager(object):
         with pytest.raises(ValueError):
             cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, gtmcore.fixtures.ENV_UNIT_TEST_BASE,
                         gtmcore.fixtures.ENV_UNIT_TEST_REV)
+
+    def test_change_base(self, mock_labbook):
+        """change_base is used both for updating versions and truly changing the base"""
+        conf_file, root_dir, lb = mock_labbook
+
+        # Initial configuration for the labbook - base config taken from `test_add_base` and package config from
+        # `test_add_package` - so we don't test assertions (again) on this part
+        cm = ComponentManager(lb)
+
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 1)
+
+        # After installing the base, we should have one version of matplotlib installed
+        packages = [p for p in cm.get_component_list('package_manager')
+                    if p['package'] == 'matplotlib']
+        assert(len(packages) == 1)
+        assert(packages[0]['version'] == '2.1.1')
+
+        pkgs = [{"manager": "pip3", "package": "requests", "version": "2.18.2"},
+                {"manager": "pip3", "package": "gigantum", "version": "0.5"},
+                # This will override an already installed package
+                {"manager": "pip3", "package": "matplotlib", "version": "2.2"}]
+        cm.add_packages('pip3', pkgs, force=True)
+
+        pkgs = [{"manager": "apt", "package": "ack", "version": "1.0"},
+                {"manager": "apt", "package": "docker", "version": "3.5"}]
+        cm.add_packages('apt', pkgs)
+
+        # Installing a customized version of matplotlib is a new package compared to other tests,
+        # and is a critical piece of testing cm.change_base
+        packages = [p for p in cm.get_component_list('package_manager')
+                    if p['package'] == 'matplotlib']
+        assert(len(packages) == 1)
+        assert(packages[0]['version'] == '2.2')
+
+        # We upgrade our base
+        cm.change_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 2)
+
+        # matplotlib still set up per "user" update?
+        packages = [p for p in cm.get_component_list('package_manager')
+                    if p['package'] == 'matplotlib']
+        assert(len(packages) == 1)
+        assert(packages[0]['version'] == '2.2')
+
+        # Base revision now 2?
+        cm.base_fields['revision'] == 2
 
     def test_get_component_list_base(self, mock_config_with_repo):
         """Test listing base images added a to labbook"""
