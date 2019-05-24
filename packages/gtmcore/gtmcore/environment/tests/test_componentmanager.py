@@ -195,13 +195,15 @@ class TestComponentManager(object):
         # `test_add_package` - so we don't test assertions (again) on this part
         cm = ComponentManager(lb)
 
-        # We "misconfigure" a package that is not part of the base
+        # We "misconfigure" a package that is not part of the base as if it was from a base
         # This shouldn't happen, but we address it just in case
-        pkgs = [{"manager": "pip3", "package": "gigantum", "version": "0.5"}]
+        pkgs = [{"manager": "pip3", "package": "gigantum", "version": "0.5"},
+                # pandas *is* part of the quickstart-juypter base, but we specify a different version here
+                {"package": "pandas", "version": "0.21"}]
         cm.add_packages('pip3', pkgs, force=True, from_base=True)
         packages = [p for p in cm.get_component_list('package_manager')]
-        assert(len(packages) == 1)
-        assert(packages[0]['from_base'] is True)
+        assert(len(packages) == 2)
+        assert(all(p['from_base'] for p in packages))
 
         cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 1)
 
@@ -211,10 +213,18 @@ class TestComponentManager(object):
         assert(len(packages) == 1)
         assert(packages[0]['version'] == '2.1.1')
 
-        # add_base() should have converted this to user-installed
+        # add_base() should have converted these to user-installed
         packages = [p for p in cm.get_component_list('package_manager')
-                    if p['package'] == 'gigantum']
-        assert(packages[0]['from_base'] is False)
+                    if p['package'] in ['gigantum', 'pandas']]
+        # If we had redundancy from fake base-installed pandas plus real base-installed pandas, this would be 3
+        assert(len(packages) == 2)
+        for p in packages:
+            # Fake base-installed is converted to user ("not from_base") installed
+            assert(not p['from_base'])
+            if p['package'] == 'pandas':
+                # we should still have the fake base-installed version
+                assert(p['version'] == '0.21')
+
 
         pkgs = [{"manager": "pip3", "package": "requests", "version": "2.18.2"},
                 # This will override an already installed package
@@ -242,7 +252,7 @@ class TestComponentManager(object):
         assert(packages[0]['version'] == '2.2')
 
         # Base revision now 2?
-        cm.base_fields['revision'] == 2
+        assert(cm.base_fields['revision'] == 2)
 
     def test_get_component_list_base(self, mock_config_with_repo):
         """Test listing base images added a to labbook"""
