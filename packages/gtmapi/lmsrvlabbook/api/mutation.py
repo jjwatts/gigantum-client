@@ -21,6 +21,9 @@ from lmsrvlabbook.api.mutations.labbooksharing import (SyncLabbook, PublishLabbo
                                                        AddLabbookRemote, ImportRemoteLabbook, ImportLabbook,
                                                        ExportLabbook, AddLabbookCollaborator, DeleteLabbookCollaborator,
                                                        DeleteRemoteLabbook)
+
+from lmsrvlabbook.api.mutations.bundledapp import SetBundledApp, RemoveBundledApp
+
 # Dataset Mutations
 from lmsrvlabbook.api.mutations.dataset import (CreateDataset, DeleteDataset, FetchDatasetEdge, ModifyDatasetLink,
                                                 SetDatasetDescription, WriteDatasetReadme)
@@ -30,6 +33,7 @@ from lmsrvlabbook.api.mutations.datasetfiles import (AddDatasetFile, CompleteDat
 from lmsrvlabbook.api.mutations.datasetsharing import (PublishDataset, SyncDataset, ImportRemoteDataset,
                                                        SetDatasetVisibility, AddDatasetCollaborator,
                                                        DeleteDatasetCollaborator, ImportDataset, ExportDataset)
+
 
 
 class BranchMutations(object):
@@ -82,6 +86,11 @@ class LabbookEnvironmentMutations(graphene.ObjectType):
     # Change the base image in a labbook
     change_labbook_base = ChangeLabbookBase.Field()
 
+    # Set a bundled app configuration for a Labbook
+    set_bundled_app = SetBundledApp.Field()
+
+    # Delete a bundled app configuration
+    remove_bundled_app = RemoveBundledApp.Field()
 
 
 class LabbookSharingMutations(graphene.ObjectType):

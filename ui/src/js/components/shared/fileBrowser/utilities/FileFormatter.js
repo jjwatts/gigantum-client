@@ -56,13 +56,14 @@ export const fileHandler = () => {
         }
 
         edges.forEach((edge, index) => {
-          let key = edge.node.key.toLowerCase();
-          let searchLowerCase = search.toLowerCase();
 
           if (edge.node) {
+            let key = edge.node.key.toLowerCase();
+            let searchLowerCase = search.toLowerCase();
             let currentObject = fileObject;
             const keyToSplit = datasetName ? `${datasetName}/${edge.node.key}` : edge.node.key;
             let splitKey = keyToSplit.split('/').filter(key => key.length);
+
             splitKey.forEach((key, index) => {
                 if (currentObject && (index === (splitKey.length - 1))) {
                     if (!currentObject[key]) {
@@ -86,8 +87,7 @@ export const fileHandler = () => {
                 } else if (currentObject && !currentObject[key]) {
 
                     currentObject[key] = {
-                      children: {
-                      },
+                      children: {},
                       edge: {
                         node: {
                           key: `${splitKey.slice(0, index + 1).join('/')}/`,
@@ -107,8 +107,8 @@ export const fileHandler = () => {
                 } else {
                   currentObject = currentObject[key].children;
                 }
-            });
-          }
+              });
+            }
           });
         }
         if (linkedDatasets) {

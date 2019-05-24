@@ -48,7 +48,7 @@ export const setSidepanelVisible = sidePanelVisible => dispatcher(
   { sidePanelVisible },
 );
 
-export const updateTransitionState = transitionState => dispatcher(
+export const updateTransitionState = (transitioningLabbook, newState) => dispatcher(
   types.UPDATE_TRANSITION_STATE,
-  { transitionState },
+  { transitionState: { [transitioningLabbook]: newState } },
 );

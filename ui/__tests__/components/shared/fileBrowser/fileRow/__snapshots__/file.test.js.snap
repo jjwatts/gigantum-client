@@ -3,7 +3,6 @@
 exports[`Project File component File Snapshot 1`] = `
 <div
   className="File"
-  data-selenium-id="File"
   onMouseEnter={[Function]}
   onMouseLeave={[Function]}
   onMouseOut={[Function]}
@@ -79,7 +78,6 @@ exports[`Project File component File Snapshot 1`] = `
     >
       <div
         className="ActionsMenu"
-        data-selenium-id="ActionsMenu"
       >
         <button
           className="ActionsMenu__item Btn Btn--fileBrowser Tooltip-data Tooltip-data--small Btn--round Btn--bordered Btn__addFolder visibility-hidden"

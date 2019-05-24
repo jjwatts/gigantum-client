@@ -15,7 +15,6 @@ export default class FileEmpty extends Component {
       sectionLink,
     } = props;
     const sectionTitle = sectionType.charAt(0).toUpperCase() + sectionType.slice(1);
-
     return (
         <div className="FilePreview__empty column-1-span-12">
           <button

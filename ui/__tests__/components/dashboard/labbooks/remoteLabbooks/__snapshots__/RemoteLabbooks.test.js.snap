@@ -3,14 +3,12 @@
 exports[`Test RemoteLabbooks rendering 1`] = `
 <div
   className="Labbooks__listing"
-  data-selenium-id="RemoteLabbooks"
 >
   <div
     className="grid"
   >
     <div
       className="Card Card--300 column-4-span-3 flex flex--column justify--space-between"
-      data-selenium-id="RemoteLabbookPanel"
     >
       <div
         className="RemoteLabbooks__row RemoteLabbooks__row--icon"
@@ -85,31 +83,26 @@ exports[`Test RemoteLabbooks rendering 1`] = `
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>

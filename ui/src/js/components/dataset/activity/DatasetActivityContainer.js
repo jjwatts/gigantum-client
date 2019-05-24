@@ -1,4 +1,4 @@
-import Activity, { getGlobals } from 'Components/shared/activity/Activity';
+import Activity from 'Components/shared/activity/Activity';
 import {
   createPaginationContainer,
   graphql,
@@ -13,7 +13,7 @@ export default createPaginationContainer(
   {
     dataset: graphql`
         fragment DatasetActivityContainer_dataset on Dataset{
-          activityRecords(first: $first, after: $cursor) @connection(key: "DatasetActivityContainer_activityRecords"){
+          activityRecords(first: $first, after: $cursor) @connection(key: "DatasetActivityContainer_activityRecords") @skip (if: $activitySkip){
             edges{
               node{
                 id
@@ -58,24 +58,21 @@ export default createPaginationContainer(
     },
     getVariables(props, { count, cursor }, fragmentVariables) {
       const { owner } = props.match.params;
-      const { counter, pagination } = getGlobals();
       const name = props.match.params.datasetName;
-      const first = counter;
-
-      cursor = pagination ? props.dataset.activityRecords.edges[props.dataset.activityRecords.edges.length - 1].cursor : null;
 
       return {
-        first,
+        first: count,
         cursor,
         name,
         owner,
+        activitySkip: false,
         // in most cases, for variables other than connection filters like
         // `first`, `after`, etc. you may want to use the previous values.
         // orderBy: fragmentVariables.orderBy,
       };
     },
     query: graphql`
-       query DatasetActivityContainerPaginationQuery($name: String!, $owner: String!, $first: Int!, $cursor: String){
+       query DatasetActivityContainerPaginationQuery($name: String!, $owner: String!, $first: Int!, $cursor: String, $activitySkip: Boolean!){
          dataset(name: $name, owner: $owner){
            id
            description

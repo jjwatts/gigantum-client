@@ -40,6 +40,7 @@ export default function MergeFromBranchMutation(
     codeSkip: false,
     inputSkip: false,
     outputSkip: false,
+    labbookSkip: false,
   };
   if (overrideMethod) {
     variables.input.overrideMethod = overrideMethod;

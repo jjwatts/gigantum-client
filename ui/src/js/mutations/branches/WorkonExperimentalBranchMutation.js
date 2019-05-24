@@ -42,6 +42,7 @@ export default function WorkonExperimentalBranchMutation(
     codeSkip: false,
     inputSkip: false,
     outputSkip: false,
+    labbookSkip: false,
   };
   commitMutation(
     environment,

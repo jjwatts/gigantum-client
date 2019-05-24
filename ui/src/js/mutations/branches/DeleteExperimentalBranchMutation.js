@@ -43,6 +43,7 @@ export default function DeleteExperimentalBranchMutation(
     codeSkip: false,
     inputSkip: false,
     outputSkip: false,
+    labbookSkip: false,
   };
   commitMutation(
     environment,

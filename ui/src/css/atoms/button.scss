@@ -27,6 +27,14 @@ button {
   }
 }
 
+.BtnContainer {
+
+  width: 100%;
+  align-items: center;
+  padding: 30px 0 10px;
+  @include flex(flex-end, row);
+}
+
 .Btn {
    background-color: $azure;
    border: 0px;
@@ -213,10 +221,10 @@ button {
    *
    *
    *********************************/
-  &__loadMore{
+  &__expandadble {
     margin: 0;
     border-radius: 0;
-    width: 315px;
+    width: 200px;
     height: 25px;
     background: transparent;
     box-shadow: none;
@@ -227,7 +235,7 @@ button {
         text-decoration: underline;
       }
     }
-    &--up {
+    &--collapse {
       background: url('~Images/icons/up-arrow-azure.svg') no-repeat  calc(50% + 50px) 5px;
       background-size: 20px;
 
@@ -237,7 +245,7 @@ button {
         content: "Collapse";
       }
     }
-    &--down {
+    &--expand {
       background: url('~Images/icons/down-arrow-azure.svg') no-repeat calc(50% + 50px) 5px;
       background-size: 20px;
 
@@ -247,8 +255,48 @@ button {
         content: "Expand";
       }
     }
+  }
 
 
+  /**********************************
+   * feature buttons
+   *
+   *
+   *********************************/
+  &__loadMore{
+    margin: 0;
+    border-radius: 0;
+    width: 250px;
+    background: $azure;
+    height: 30px;
+    box-shadow: none;
+
+    &:hover {
+      box-shadow: none;
+      &:before {
+        text-decoration: underline;
+      }
+    }
+    &--up {
+      background: $azure url('~Images/icons/up-arrow-white.svg') no-repeat  calc(50% + 50px) 5px;
+      background-size: 20px;
+
+      &:before {
+        color: $white;
+        line-height: 16px;
+        content: "Previous";
+      }
+    }
+    &--down {
+      background: $azure url('~Images/icons/down-arrow-white.svg') no-repeat calc(50% + 50px) 5px;
+      background-size: 20px;
+
+      &:before {
+        color: $white;
+        line-height: 16px;
+        content: "Next";
+      }
+    }
   }
 
   &__delete {

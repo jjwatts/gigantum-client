@@ -231,7 +231,6 @@ export default class DatasetActionsMenu extends Component {
   render() {
     const { props, state } = this;
     const { isLocal } = props;
-    console.log(isLocal)
     const fileIsNotLocal = ((!props.edge.node.isLocal || (props.folder)) && !isLocal);
     const fileIsLocal = (props.edge.node.isLocal && isLocal) || (props.isParent && isLocal);
     const blockDownload = props.folder ? false : props.edge.node.isLocal || isLocal;

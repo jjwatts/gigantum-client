@@ -3,7 +3,6 @@
 exports[`Test LinkModal 1`] = `
 <div
   className="Modal"
-  data-selenium-id="Modal"
 >
   <div
     className="Modal__cover"
@@ -46,7 +45,6 @@ exports[`Test LinkModal 1`] = `
           />
           <div
             className="Loader"
-            data-selenium-id="Loader"
           />
         </div>
       </div>

@@ -34,9 +34,10 @@ class ContainerStatus extends Component {
   }
 
   static getDerivedStateFromProps(nextProps, state) {
+    const displayTransitionState = nextProps.transitionState[nextProps.labbookName] && nextProps.transitionState[nextProps.labbookName].length;
     return ({
       ...state,
-      status: nextProps.transitionState.length ? nextProps.transitionState : state.status,
+      status: displayTransitionState ? nextProps.transitionState[nextProps.labbookName] : state.status,
     });
   }
 
@@ -249,11 +250,11 @@ class ContainerStatus extends Component {
 
     if (!store.getState().labbook.isBuilding && !props.isLookingUpPackages) {
       if (status === 'Stop') {
-        updateTransitionState('Stopping');
+        updateTransitionState(props.labbookName, 'Stopping');
         this.setState({ contanerMenuRunning: false });
         this._stopContainerMutation();
       } else if ((status === 'Start') && (cssStatus !== 'Rebuild')) {
-        updateTransitionState('Starting');
+        updateTransitionState(props.labbookName, 'Starting');
         this.setState({ contanerMenuRunning: false });
         props.setMergeMode(false, false);
         this._startContainerMutation();

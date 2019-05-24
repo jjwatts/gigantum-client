@@ -13,12 +13,12 @@ let simple;
 
 export default class UserNote extends Component {
   constructor(props) {
-  	super(props);
+    super(props);
+
     this.state = {
       tags: [],
       userSummaryText: '',
       addNoteDisabled: true,
-      editorFullscreen: false,
       unsubmittedTag: '',
     };
 
@@ -43,9 +43,15 @@ export default class UserNote extends Component {
           spellChecker: true,
         });
         const fullscreenButton = document.getElementsByClassName('fa-arrows-alt')[0];
-        fullscreenButton && fullscreenButton.addEventListener('click', () => props.changeFullScreenState());
         const sideBySideButton = document.getElementsByClassName('fa-columns')[0];
-        sideBySideButton && sideBySideButton.addEventListener('click', () => props.changeFullScreenState(true));
+
+        if (fullscreenButton) {
+          fullscreenButton.addEventListener('click', () => props.changeFullScreenState());
+        }
+
+        if (sideBySideButton) {
+          sideBySideButton.addEventListener('click', () => props.changeFullScreenState(true));
+        }
       }
     });
   }
@@ -57,13 +63,13 @@ export default class UserNote extends Component {
   _addNote = () => {
     const { props, state } = this;
     const self = this;
-    if (state.unsubmittedTag.length) {
-      this._handleAddition({ id: state.unsubmittedTag, text: state.unsubmittedTag });
-    }
-
     const tags = state.tags.map(tag => (tag.text));
     const { labbookName, owner } = store.getState().routes;
     const { labbookId } = props;
+
+    if (state.unsubmittedTag.length) {
+      this._handleAddition({ id: state.unsubmittedTag, text: state.unsubmittedTag });
+    }
 
 
     this.setState({ addNoteDisabled: true, unsubmittedTag: '' });
@@ -89,19 +95,6 @@ export default class UserNote extends Component {
         }
       },
     );
-  }
-
-  /**
-    @param {object} event
-    calls updates state for summary text
-    and enables addNote button if > 0
-  */
-  _setUserSummaryText(evt) {
-    const summaryText = evt.target.value;
-    this.setState({
-      userSummaryText: summaryText,
-      addNoteDisabled: (summaryText.length === 0),
-    });
   }
 
   /**
@@ -150,6 +143,19 @@ export default class UserNote extends Component {
      this.setState({ unsubmittedTag });
    }
 
+   /**
+     @param {object} event
+     calls updates state for summary text
+     and enables addNote button if > 0
+   */
+   _setUserSummaryText(evt) {
+     const summaryText = evt.target.value;
+     this.setState({
+       userSummaryText: summaryText,
+       addNoteDisabled: (summaryText.length === 0),
+     });
+   }
+
 
    render() {
      const { state } = this;
@@ -184,15 +190,23 @@ export default class UserNote extends Component {
            handleAddition={(tag) => { this._handleAddition(tag); }}
            handleDrag={(tag, currPos, newPos) => { this._handleDrag(tag, currPos, newPos); }}
          />
-
-         <button
-           type="submit"
-           className="UserNote__add-note"
-           disabled={state.addNoteDisabled}
-           onClick={() => { this._addNote(); }}
-         >
-           Add Note
-         </button>
+         <div className="BtnContainer">
+           <button
+             type="submit"
+             className="Btn Btn--flat"
+             onClick={() => this.props.toggleUserNote(false)}
+           >
+             Cancel
+           </button>
+           <button
+             type="submit"
+             className="Btn Btn--last"
+             disabled={state.addNoteDisabled}
+             onClick={() => { this._addNote(); }}
+           >
+             Add Note
+           </button>
+         </div>
        </div>
      );
    }

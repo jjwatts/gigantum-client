@@ -3,7 +3,6 @@
 exports[`DatasetActivityContainer Renders a snapshot 1`] = `
 <div
   className="Activity"
-  data-selenium-id="Activity"
 >
   <div
     className="Activity__inner-container flex flex--row flex--wrap justify--flex-start"
@@ -13,7 +12,6 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
     >
       <div
         className="hidden userNote"
-        data-selenium-id="Tooltip"
       >
         <div
           className="Tooltip__toggle userNote"
@@ -41,9 +39,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
  The note editor supports markdown.
         </div>
       </div>
-      <div
-        data-selenium-id="CreateBranch"
-      />
+      <div />
       <div
         className="Activity__date-section Activity__date-section--0"
       >
@@ -72,7 +68,6 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
         </div>
         <div
           className="UserNote__container"
-          data-selenium-id="UserNoteWrapper"
         >
           <button
             className="Btn Btn--feature Btn--feature--expanded--paddingLeft relative UserNote__button"
@@ -93,7 +88,6 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
           >
             <div
               className="ActivityCard__container column-1-span-9"
-              data-selenium-id="ActivityCard"
             >
               <div
                 className="ActivityCard ActivityCard--collapsed card"
@@ -116,7 +110,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
                       <p
                         className="ActivityCard__time"
                       >
-                        12:15pm
+                        5:15pm
                       </p>
                       <div
                         className="ActivityCard__user"
@@ -140,7 +134,6 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
           >
             <div
               className="ActivityCard__container column-1-span-9"
-              data-selenium-id="ActivityCard"
             >
               <div
                 className="ActivityCard ActivityCard--collapsed card"
@@ -163,7 +156,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
                       <p
                         className="ActivityCard__time"
                       >
-                        12:14pm
+                        5:14pm
                       </p>
                       <div
                         className="ActivityCard__user"
@@ -187,7 +180,6 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
           >
             <div
               className="ActivityCard__container column-1-span-9"
-              data-selenium-id="ActivityCard"
             >
               <div
                 className="ActivityCard ActivityCard--collapsed card"
@@ -210,7 +202,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
                       <p
                         className="ActivityCard__time"
                       >
-                        12:12pm
+                        5:12pm
                       </p>
                       <div
                         className="ActivityCard__user"
@@ -234,7 +226,6 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
           >
             <div
               className="ActivityCard__container column-1-span-9"
-              data-selenium-id="ActivityCard"
             >
               <div
                 className="ActivityCard ActivityCard--collapsed card"
@@ -257,7 +248,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
                       <p
                         className="ActivityCard__time"
                       >
-                        12:10pm
+                        5:10pm
                       </p>
                       <div
                         className="ActivityCard__user"
@@ -281,7 +272,6 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
           >
             <div
               className="ActivityCard__container column-1-span-9"
-              data-selenium-id="ActivityCard"
             >
               <div
                 className="ActivityCard ActivityCard--collapsed card"
@@ -304,7 +294,7 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
                       <p
                         className="ActivityCard__time"
                       >
-                        12:10pm
+                        5:10pm
                       </p>
                       <div
                         className="ActivityCard__user"
@@ -327,23 +317,18 @@ exports[`DatasetActivityContainer Renders a snapshot 1`] = `
       </div>
       <div
         className="ActivityCard ActivityCard__loader ActivityCard__loader--0 card column-1-span-9"
-        data-selenium-id="PaginationLoader"
       />
       <div
         className="ActivityCard ActivityCard__loader ActivityCard__loader--1 card column-1-span-9"
-        data-selenium-id="PaginationLoader"
       />
       <div
         className="ActivityCard ActivityCard__loader ActivityCard__loader--2 card column-1-span-9"
-        data-selenium-id="PaginationLoader"
       />
       <div
         className="ActivityCard ActivityCard__loader ActivityCard__loader--3 card column-1-span-9"
-        data-selenium-id="PaginationLoader"
       />
       <div
         className="ActivityCard ActivityCard__loader ActivityCard__loader--4 card column-1-span-9"
-        data-selenium-id="PaginationLoader"
       />
     </div>
   </div>

@@ -4,7 +4,8 @@ export default (
   state = {
     selectedComponent: '',
     containerState: '',
-    transitionState: '',
+    transitionState: {},
+    transitioningLabbook: '',
     imageStatus: '',
     isBuilding: false,
     isSyncing: false,
@@ -103,9 +104,13 @@ export default (
       sidePanelVisible: action.payload.sidePanelVisible,
     };
   } if (action.type === types.UPDATE_TRANSITION_STATE) {
+    const newTransitionState = {
+      ...state.transitionState,
+      ...action.payload.transitionState,
+    };
     return {
       ...state,
-      transitionState: action.payload.transitionState,
+      transitionState: newTransitionState,
     };
   }
 

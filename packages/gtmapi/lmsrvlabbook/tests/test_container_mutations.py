@@ -3,6 +3,7 @@ import getpass
 import time
 import pprint
 import subprocess
+import requests
 
 from lmsrvlabbook.tests.fixtures import fixture_working_dir, fixture_working_dir_env_repo_scoped, \
     build_image_for_jupyterlab, build_image_for_rserver
@@ -156,6 +157,62 @@ class TestContainerMutations(object):
             docker_client.containers.get(container_id=container_id).stop(timeout=10)
             docker_client.containers.get(container_id=container_id).remove()
 
+    @pytest.mark.skipif(getpass.getuser() == 'circleci', reason="Cannot run this networking test in CircleCI")
+    def test_start_bundled_app(self, build_image_for_jupyterlab):
+        """Test bundled app
+
+        Note: In the fixture `build_image_for_jupyterlab`, the environment has been augmented to add the bundled app
+        "share" with the command "cd /mnt; python3 -m http.server 9999" on port 9999. This test then verifies that
+        the command is executed and route opened through the CHP.
+
+        The reason the dev tool is called "share" is because this test simply uses http.server to run a simple web
+        server in the /mnt directory. There will be a folder there called "share". http.server doesn't support
+        route prefixes unless you write a bit of code, so simply calling the app "share" is a simple work around
+        to create a funtioning test. So if you go to the route provided you'll get a 200 back if everything started
+        and is wired up OK.
+        """
+        # Start the container
+        _, container_id = ContainerOperations.start_container(build_image_for_jupyterlab[0],
+                                                                          username='default')
+
+        lb = build_image_for_jupyterlab[0]
+
+        docker_client = build_image_for_jupyterlab[2]
+        gql_client = build_image_for_jupyterlab[4]
+        owner = build_image_for_jupyterlab[-1]
+
+        try:
+            q = f"""
+            mutation x {{
+                startDevTool(input: {{
+                    owner: "{owner}",
+                    labbookName: "{lb.name}",
+                    devTool: "share"
+                }}) {{
+                    path
+                }}
+
+            }}
+            """
+            r = gql_client.execute(q)
+            assert 'errors' not in r
+
+            time.sleep(5)
+            url = f"http://localhost{r['data']['startDevTool']['path']}"
+            response = requests.get(url)
+            assert response.status_code == 200
+
+            # Running again should work and just load route
+            r = gql_client.execute(q)
+            assert 'errors' not in r
+
+            url = f"http://localhost{r['data']['startDevTool']['path']}"
+            response = requests.get(url)
+            assert response.status_code == 200
+        finally:
+            # Remove the container you fired up
+            docker_client.containers.get(container_id=container_id).stop(timeout=10)
+            docker_client.containers.get(container_id=container_id).remove()
 
     @pytest.mark.skipif(getpass.getuser() == 'circleci', reason="Cannot run this networking test in CircleCI environment")
     def test_start_rserver(self, build_image_for_rserver):

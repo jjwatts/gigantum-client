@@ -34,6 +34,7 @@ from graphene.test import Client
 from gtmcore.environment import RepositoryManager
 from gtmcore.configuration import Configuration, get_docker_client
 from gtmcore.auth.identity import get_identity_manager
+from gtmcore.environment.bundledapp import BundledAppManager
 
 from gtmcore.inventory.inventory import InventoryManager
 from lmsrvcore.middleware import DataloaderMiddleware, error_middleware
@@ -414,6 +415,9 @@ def build_image_for_jupyterlab():
             cm = ComponentManager(lb)
             cm.add_base(ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV)
             cm.add_packages("pip3", [{"manager": "pip3", "package": "requests", "version": "2.18.4"}])
+
+            bam = BundledAppManager(lb)
+            bam.add_bundled_app(9999, 'share', 'A bundled app for testing', "cd /mnt; python3 -m http.server 9999")
 
             ib = ImageBuilder(lb)
             ib.assemble_dockerfile(write=True)

@@ -1,8 +1,9 @@
 // vendor
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import classNames from 'classnames';
 import { setContainerMenuWarningMessage } from 'JS/redux/actions/labbook/environment/environment';
 import { boundMethod } from 'autobind-decorator';
+import shallowCompare from 'react-addons-shallow-compare';
 // store
 import store from 'JS/redux/store';
 // config
@@ -11,7 +12,6 @@ import config from 'JS/config';
 import Loader from 'Components/common/Loader';
 import Tooltip from 'Components/common/Tooltip';
 import CreateBranch from 'Components/shared/modals/CreateBranch';
-import ErrorBoundary from 'Components/common/ErrorBoundary';
 import PaginationLoader from './loaders/PaginationLoader';
 import ClusterCardWrapper from './wrappers/ClusterCardWrapper';
 import CardWrapper from './wrappers/CardWrapper';
@@ -22,83 +22,195 @@ import NewActivity from './NewActivity';
 // assets
 import './Activity.scss';
 
-// local variables
-let pagination = false;
 
-let counter = 5;
+/**
+*   @param {array}
+*   loops through activityRecords array and sorts into days
+*   @return {Object}
+*/
+const transformActivity = (activityRecords, state) => {
+  const activityTime = {};
 
-export const getGlobals = () => ({ counter, pagination });
+  let count = 0;
+  let previousTimeHash = null;
+  let clusterIndex = 0;
+
+  if (activityRecords) {
+    activityRecords.edges.forEach((edge, index) => {
+      if (edge && edge.node) {
+        const date = (edge.node && edge.node.timestamp)
+          ? new Date(edge.node.timestamp)
+          : new Date();
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const day = date.getDate();
+        const timeHash = `${year}_${month}_${day}`;
+
+        count = (edge.node.show || (previousTimeHash && (timeHash !== previousTimeHash)))
+          ? 0
+          : count + 1;
+
+        if (count === 0) {
+          clusterIndex = 0;
+        }
+        previousTimeHash = timeHash;
+
+        const isExpandedHead = state && state.expandedClusterObject.has(index)
+          && !state.expandedClusterObject.has(index - 1);
+        const isExpandedEnd = state && state.expandedClusterObject.has(index)
+          && !state.expandedClusterObject.has(index + 1);
+        const isExpandedNode = state && state.expandedClusterObject.has(index);
+        const attachedCluster = state && state.expandedClusterObject.has(index)
+          && state.expandedClusterObject.get(index);
+        const newActivityObject = {
+          edge,
+          date,
+          collapsed: ((count > 2)
+            && ((state && !state.expandedClusterObject.has(index))
+            || (!state))),
+          flatIndex: index,
+          isExpandedHead,
+          isExpandedEnd,
+          isExpandedNode,
+          attachedCluster,
+        };
+
+        if (count > 2 && ((state && !state.expandedClusterObject.has(index)) || (!state))) {
+          if (count === 3) {
+            const activityOne = activityTime[timeHash][activityTime[timeHash].length - 1];
+            activityTime[timeHash][activityTime[timeHash].length - 1].collapsed = true;
+
+            const activityTwo = activityTime[timeHash][activityTime[timeHash].length - 2];
+            activityTime[timeHash][activityTime[timeHash].length - 2].collapsed = true;
+
+            const clusterObject = {
+              cluster: [activityTwo, activityOne, newActivityObject],
+              attachedCluster,
+              expanded: false,
+              id: activityOne.edge.node.id,
+            };
+
+            activityTime[timeHash].pop();
+            activityTime[timeHash].pop();
+
+            if (activityTime[timeHash]) {
+              activityTime[timeHash].push(clusterObject);
+            } else {
+              activityTime[timeHash] = [clusterObject];
+            }
+
+            clusterIndex = activityTime[timeHash].length - 1;
+          } else {
+            activityTime[timeHash][clusterIndex].cluster.push(newActivityObject);
+          }
+        } else {
+          clusterIndex = 0;
+          if (activityTime[timeHash]) {
+            activityTime[timeHash].push(newActivityObject);
+          } else {
+            activityTime[timeHash] = [newActivityObject];
+          }
+        }
+      }
+    });
+    return activityTime;
+  }
+  return [];
+};
+
+
+/**
+*   @param {event} evt
+*   assigns open-menu class to parent element and ActivityExtended to previous element
+*   @return {}
+*/
+const toggleSubmenu = (evt) => {
+  const submenu = evt.target.parentElement;
+  const wrapper = submenu && submenu.parentElement;
+
+  if (wrapper.previousSibling) {
+    if (wrapper.previousSibling.className.indexOf('ActivityExtended') !== -1) {
+      wrapper.previousSibling.classList.remove('ActivityExtended');
+    } else {
+      wrapper.previousSibling.classList.add('ActivityExtended');
+    }
+  } else if (wrapper.parentElement.previousSibling.className.indexOf('ActivityExtended') !== -1) {
+    wrapper.parentElement.previousSibling.classList.remove('ActivityExtended');
+  } else {
+    wrapper.parentElement.previousSibling.classList.add('ActivityExtended');
+  }
+
+  if (submenu.className.indexOf('open-menu') !== -1) {
+    submenu.classList.remove('open-menu');
+  } else {
+    submenu.classList.add('open-menu');
+  }
+};
 
 class Activity extends Component {
   constructor(props) {
     super(props);
     const section = props[props.sectionType];
-  	this.state = {
+
+    this.state = {
+      loadingMore: false,
       modalVisible: false,
-      isPaginating: false,
+      automaticRefetch: true,
       selectedNode: null,
       createBranchVisible: false,
-      refetchEnabled: true,
       activityCardCount: 0,
       newActivityAvailable: false,
-      newActivityPolling: false,
       editorFullscreen: false,
       hoveredRollback: null,
       expandedClusterObject: new Map(),
-      newActivityForcePaused: false,
-      refetchForcePaused: false,
-      activityRecords: section.activityRecords ? this._transformActivity(section.activityRecords) : [],
+      activityRecords: section.activityRecords
+        ? transformActivity(section.activityRecords)
+        : [],
       stickyDate: false,
       compressedElements: new Set(),
     };
     this.dates = [];
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    // TODO - Refactor this into getderivedstatefromprops
+  static getDerivedStateFromProps(nextProps, state) {
     const section = nextProps[nextProps.sectionType];
+    const propsActivityRecords = nextProps[nextProps.sectionType].activityRecords;
+    let expandableClusterObject = state.expandedClusterObject;
+    let activityCardCount = 0;
+    let { activityRecords } = state;
 
-    const activityRecords = nextProps[nextProps.sectionType].activityRecords;
+    const previousSection = nextProps[nextProps.sectionType];
+    const prevCommit = previousSection && previousSection.activityRecords
+      && previousSection.activityRecords.edges
+      && section.activityRecords.edges[0].node && false;
+    const newcommit = section && section.activityRecords
+      && section.activityRecords.edges
+      && section.activityRecords.edges[0]
+      && section.activityRecords.edges[0].node;
 
-
-    const {
-      state,
-      props,
-    } = this;
-
-
-    const currentActivityRecords = JSON.stringify(this._transformActivity(activityRecords));
-
-
-    const previousActivityRecords = JSON.stringify(state.activityRecords);
-
-    if (activityRecords && (currentActivityRecords !== previousActivityRecords)) {
-      const previousSection = props[props.sectionType];
-      const prevCommit = previousSection && previousSection.activityRecords && previousSection.activityRecords.edges && section.activityRecords.edges[0].node && false;
-      const newcommit = section && section.activityRecords.edges && section.activityRecords.edges[0] && section.activityRecords.edges[0].node;
-
-      if (prevCommit && (prevCommit !== newcommit)) {
-        this.setState({ expandedClusterObject: new Map() }, () => this.setState({ activityRecords: this._transformActivity(activityRecords) }));
-      } else {
-        this.setState({ activityRecords: this._transformActivity(activityRecords) });
-      }
+    if (prevCommit && (prevCommit !== newcommit)) {
+      expandableClusterObject = new Map();
     }
 
-    if (activityRecords && activityRecords.pageInfo && activityRecords.pageInfo.hasNextPage) {
+    activityRecords = transformActivity(propsActivityRecords, state);
+
+    if (propsActivityRecords
+        && propsActivityRecords.pageInfo
+        && propsActivityRecords.pageInfo.hasNextPage) {
       const stateActivityRecords = state.activityRecords;
 
       const keys = Object.keys(stateActivityRecords);
-      let activityCardCount = 0;
       keys.forEach((key) => {
         activityCardCount += stateActivityRecords[key].length;
       });
-
-      this.setState({ activityCardCount });
-
-      if (activityCardCount < 10) {
-        this._loadMore();
-      }
     }
+
+    return {
+      ...state,
+      activityRecords,
+      activityCardCount,
+      expandableClusterObject,
+    };
   }
 
   /**
@@ -107,40 +219,43 @@ class Activity extends Component {
   *   add interval to poll for new activityRecords
   */
   componentDidMount() {
-    this._isMounted = true;
     const { props } = this;
+
     props.refetch('activity');
-
-    const section = props[props.sectionType];
-
-
-    const activityRecords = section.activityRecords;
+    this._isMounted = true;
 
     window.addEventListener('scroll', this._handleScroll);
     window.addEventListener('visibilitychange', this._handleVisibilityChange);
 
-    this.setState({ activityRecords: this._transformActivity(activityRecords) });
-
-    if (activityRecords && activityRecords.pageInfo && activityRecords.pageInfo.hasNextPage && (this._countUnexpandedRecords() < 7)) {
-      this._loadMore();
+    if (props.sectionType === 'labbook') {
+      window.addEventListener('focus', this._pollForActivity);
+      this._pollForActivity();
     }
+  }
 
-    if (activityRecords && activityRecords.edges) {
-      this.setState({ refetchEnabled: true });
-      this._refetch();
+  shouldComponentUpdate(nextProps, nextState) {
+    return shallowCompare(this, nextProps, nextState);
+  }
+
+  componentDidUpdate(previousProps) {
+    const { activityRecords } = previousProps[previousProps.sectionType];
+    if (activityRecords && activityRecords.pageInfo
+      && activityRecords.pageInfo.hasNextPage
+      && (this._countExpandedRecords() < 10)) {
+      this._loadMore();
     }
   }
 
   componentWillUnmount() {
-    counter = 5;
-    pagination = false;
-    clearInterval(this.interval);
-    clearTimeout(this.refetchTimeout);
-    clearTimeout(this.newActivityTimeout);
+    const { props } = this;
     this._isMounted = false;
 
     window.removeEventListener('visibilitychange', this._handleVisibilityChange);
     window.removeEventListener('scroll', this._handleScroll);
+
+    if (props.sectionType === 'labbook') {
+      window.removeEventListener('focus', this._pollForActivity);
+    }
   }
 
   /**
@@ -156,23 +271,15 @@ class Activity extends Component {
   _scrollTo(evt) {
     if (document.documentElement.scrollTop === 0) {
       const { props } = this;
-
-
       const { relay } = props;
-
-
       const store = relay.environment.getStore();
-
-
       const section = props[props.sectionType];
 
       section.activityRecords.edges.forEach((edge) => {
         store._recordSource.delete(edge.node.id);
       });
 
-      counter = 5;
-
-      this._startRefetch();
+      this._refetch();
 
       window.removeEventListener('scroll', this._scrollTo);
     }
@@ -185,14 +292,8 @@ class Activity extends Component {
    */
   @boundMethod
   _handleVisibilityChange() {
-    const { state } = this;
-
-    if (state.newActivityForcePaused) {
-      this._stopRefetch();
-      this.setState({ newActivityForcePaused: false });
-    } else if (!state.refetchForcePaused) {
-      this._refetch();
-      this.setState({ refetchForcePaused: false });
+    if (document.hasFocus()) {
+      this._pollForActivity();
     }
   }
 
@@ -205,6 +306,8 @@ class Activity extends Component {
   @boundMethod
   _getNewActivities() {
     window.addEventListener('scroll', this._scrollTo);
+
+    this.setState({ newActivityAvailable: false });
 
     window.scrollTo({
       top: 0,
@@ -224,65 +327,42 @@ class Activity extends Component {
 
   /**
    * @param {}
-   * restarts refetch
-   * @return {}
-   */
-  @boundMethod
-  _startRefetch() {
-    const { state } = this;
-
-    if (state.newActivityPolling) {
-      this.setState({
-        refetchEnabled: true,
-        newActivityPolling: false,
-        newActivityAvailable: false,
-      });
-
-      this._refetch();
-    }
-  }
-
-  /**
-   * @param {}
    * stops refetch from firing
    * @return {}
    */
    @boundMethod
-  _stopRefetch() {
+  _pollForActivity() {
     const self = this;
+    const { props } = this;
 
+    this.setState({ newActivityAvailable: false });
 
-    const { state, props } = this;
-    if (!state.newActivityPolling) {
-      this.setState({
-        refetchEnabled: false,
-        newActivityPolling: true,
-        newActivityAvailable: false,
-      });
+    const { labbookName, owner } = store.getState().routes;
 
-      const { labbookName, owner } = store.getState().routes;
+    const getNewActivity = () => {
+      NewActivity.getNewActivity(labbookName, owner).then((response) => {
 
-      const getNewActivity = () => {
-        NewActivity.getNewActivity(labbookName, owner).then((response) => {
-          const firstRecordCommitId = props.labbook.activityRecords.edges[0].node.commit;
-          const newRecordCommitId = response.data.labbook.activityRecords.edges[0].node.commit;
+        const firstRecordCommitId = (props.labbook && props.labbook.activityRecords)
+          ? this.props.labbook.activityRecords.edges[0].node.commit
+          : null;
+        const newRecordCommitId = response.data.labbook.activityRecords.edges[0].node.commit;
 
-          if (firstRecordCommitId === newRecordCommitId) {
-            self.newActivityTimeout = setTimeout(() => {
-              if (self._isMounted && self.state.newActivityPolling) {
-                getNewActivity();
-              } else if (!self._isMounted && !self.state.refetchEnabled) {
-                self.setState({ newActivityForcePaused: true, newActivityPolling: false });
-              }
-            }, 3000);
+        if ((firstRecordCommitId !== newRecordCommitId) && (firstRecordCommitId !== null)) {
+          const { automaticRefetch } = self.state;
+          if (automaticRefetch) {
+            this._refetch();
           } else {
             this.setState({ newActivityAvailable: true });
           }
-        }).catch(error => console.log(error));
-      };
+        }
 
-      getNewActivity();
-    }
+        if (self._isMounted && document.hasFocus()) {
+          setTimeout(() => { getNewActivity(); }, 3000);
+        }
+      }).catch(error => console.log(error));
+    };
+
+    getNewActivity();
   }
 
   /**
@@ -292,34 +372,18 @@ class Activity extends Component {
   */
   @boundMethod
    _refetch() {
-     const self = this;
-
-
      const { props } = this;
-
-
      const { relay } = props;
 
-
-     const section = props[props.sectionType];
-
-
-     const activityRecords = section.activityRecords;
-
-     const cursor = activityRecords.edges.node ? activityRecords.edges[activityRecords.edges.length - 1].node.cursor : null;
      relay.refetchConnection(
-       counter,
+       5,
        (response, error) => {
-         self.refetchTimeout = setTimeout(() => {
-           if (self.state.refetchEnabled && self._isMounted && (document.visibilityState === 'visible')) {
-             self._refetch();
-           } else if (self.state.refetchEnabled && self.isMounted && (document.visibilityState !== 'visible')) {
-             self.setState({ refetchForcePaused: true });
-           }
-         }, 5000);
+         if (error) {
+           console.log(response, error);
+         }
        },
        {
-         cursor,
+         filters: [],
        },
      );
    }
@@ -330,22 +394,18 @@ class Activity extends Component {
   */
   @boundMethod
   _loadMore() {
-    const self = this;
-
-
-    const { props, state } = this;
-
-
+    const { props } = this;
     const section = props[props.sectionType];
+    const { activityRecords } = section;
+    const cursor = activityRecords && activityRecords.pageInfo
+      ? activityRecords.pageInfo.endCursor
+      : null;
 
+    if (props.relay.isLoading()) {
+      return;
+    }
 
-    const activityRecords = section.activityRecords;
-
-    pagination = true;
-
-    this.setState({
-      isPaginating: true,
-    });
+    this.setState({ loadingMore: true });
 
     props.relay.loadMore(
       5, // Fetch the next 5 feed items
@@ -353,24 +413,13 @@ class Activity extends Component {
         if (error) {
           console.error(error);
         }
-        if ((activityRecords
-        && activityRecords.pageInfo
-        && activityRecords.pageInfo.hasNextPage)
-        && (this._countUnexpandedRecords() < 7)
-        && (this._countUnexpandedRecords() > 2)) {
-          self._loadMore();
-        } else {
-          this.setState({
-            isPaginating: false,
-          });
-        }
+        this.setState({ loadingMore: false });
       }, {
-        name: 'labbook',
+        name: section,
+        cursor,
+        filters: [],
       },
     );
-    if (activityRecords && activityRecords.pageInfo && activityRecords.pageInfo.hasNextPage) {
-      counter += 5;
-    }
   }
 
   /**
@@ -378,26 +427,21 @@ class Activity extends Component {
   *  counts visible non clustered activity records
   */
   @boundMethod
-  _countUnexpandedRecords() {
+  _countExpandedRecords() {
     const { props } = this;
-
-
     const section = props[props.sectionType];
-    const records = section.activityRecords.edges;
-
+    const records = (section.activityRecords !== undefined) ? section.activityRecords.edges : [];
 
     let hiddenCount = 0;
-
-
     let recordCount = 0;
 
     const visibleRecords = records.filter((record) => {
       if (record) {
         if (!record.node.show) {
-          hiddenCount++;
+          hiddenCount += 1;
         } else if (hiddenCount > 2) {
           hiddenCount = 0;
-          recordCount++;
+          recordCount += 1;
         }
       }
 
@@ -405,7 +449,7 @@ class Activity extends Component {
     });
 
     if (hiddenCount > 0) {
-      recordCount++;
+      recordCount += 1;
     }
 
     return visibleRecords.length + recordCount;
@@ -418,15 +462,14 @@ class Activity extends Component {
   */
   @boundMethod
   _setStickyDate() {
-    const { props } = this;
-    let offsetAmount = ((window.location.hostname === config.demoHostName) || props.diskLow) ? 50 : 0;
+    const { props, state } = this;
+    let offsetAmount = ((window.location.hostname === config.demoHostName) || props.diskLow)
+      ? 50 : 0;
     offsetAmount = props.isDeprecated ? offsetAmount + 70 : offsetAmount;
     const upperBound = offsetAmount + 120;
 
     let stickyDate = null;
 
-
-    const { state } = this;
 
     this.offsetDistance = window.pageYOffset;
 
@@ -437,10 +480,14 @@ class Activity extends Component {
         if (bounds.top < upperBound) {
           stickyDate = date.time;
           date.e.classList.add('not-visible');
-          date.e.nextSibling && date.e.nextSibling.classList.add('next-element');
+          if (date.e.nextSibling) {
+            date.e.nextSibling.classList.add('next-element');
+          }
         } else {
           date.e.classList.remove('not-visible');
-          date.e.nextSibling && date.e.nextSibling.classList.remove('next-element');
+          if (date.e.nextSibling) {
+            date.e.nextSibling.classList.remove('next-element');
+          }
         }
       }
     });
@@ -457,118 +504,22 @@ class Activity extends Component {
   */
   @boundMethod
   _handleScroll(evt) {
-    this._setStickyDate();
     const { props, state } = this;
-
-
-    const { isPaginating } = state;
-
-
     const section = props[props.sectionType];
-
-
-    const activityRecords = section.activityRecords;
-
-
+    const { activityRecords } = section;
     const root = document.getElementById('root');
-
-
     const distanceY = window.innerHeight + document.documentElement.scrollTop + 1000;
-
-
     const expandOn = root.scrollHeight;
 
-    if ((distanceY > expandOn) && !isPaginating && activityRecords.pageInfo.hasNextPage) {
+    this._setStickyDate();
+
+    if ((distanceY > expandOn) && activityRecords.pageInfo.hasNextPage) {
       this._loadMore(evt);
     }
-    if ((distanceY > 3000)) {
-      this._stopRefetch();
-    } else {
-      this._startRefetch();
+    // has to be 3000 to accomodate for large monitors
+    if (state.automaticRefetch !== (distanceY < 3000)) {
+      this.setState({ automaticRefetch: (distanceY < 3000) });
     }
-  }
-
-  /**
-  *   @param {array}
-  *   loops through activityRecords array and sorts into days
-  *   @return {Object}
-  */
-  @boundMethod
-  _transformActivity(activityRecords) {
-    const { state } = this;
-    const activityTime = {};
-
-
-    let count = 0;
-
-
-    let previousTimeHash = null;
-
-
-    let clusterIndex = 0;
-    if (activityRecords) {
-      activityRecords.edges.forEach((edge, index) => {
-        if (edge && edge.node) {
-          const date = (edge.node && edge.node.timestamp) ? new Date(edge.node.timestamp) : new Date();
-          const year = date.getFullYear();
-          const month = date.getMonth();
-          const day = date.getDate();
-          const timeHash = `${year}_${month}_${day}`;
-
-          count = (edge.node.show || (previousTimeHash && (timeHash !== previousTimeHash))) ? 0 : count + 1;
-          if (count === 0) {
-            clusterIndex = 0;
-          }
-          previousTimeHash = timeHash;
-
-          const isExpandedHead = state && state.expandedClusterObject.has(index) && !state.expandedClusterObject.has(index - 1);
-          const isExpandedEnd = state && state.expandedClusterObject.has(index) && !state.expandedClusterObject.has(index + 1);
-          const isExpandedNode = state && state.expandedClusterObject.has(index);
-          const attachedCluster = state && state.expandedClusterObject.has(index) && state.expandedClusterObject.get(index);
-          const newActivityObject = {
-            edge,
-            date,
-            collapsed: ((count > 2) && ((this.state && !state.expandedClusterObject.has(index)) || (!state))),
-            flatIndex: index,
-            isExpandedHead,
-            isExpandedEnd,
-            isExpandedNode,
-            attachedCluster,
-          };
-
-          if (count > 2 && ((this.state && !state.expandedClusterObject.has(index)) || (!state))) {
-            if (count === 3) {
-              const activityOne = activityTime[timeHash][activityTime[timeHash].length - 1];
-              activityTime[timeHash][activityTime[timeHash].length - 1].collapsed = true;
-
-              const activityTwo = activityTime[timeHash][activityTime[timeHash].length - 2];
-              activityTime[timeHash][activityTime[timeHash].length - 2].collapsed = true;
-
-              const clusterObject = {
-                cluster: [activityTwo, activityOne, newActivityObject],
-                attachedCluster,
-                expanded: false,
-                id: activityOne.edge.node.id,
-              };
-
-              activityTime[timeHash].pop();
-              activityTime[timeHash].pop();
-              activityTime[timeHash] ? activityTime[timeHash].push(clusterObject) : activityTime[timeHash] = [clusterObject];
-
-              clusterIndex = activityTime[timeHash].length - 1;
-            } else {
-              activityTime[timeHash][clusterIndex].cluster.push(newActivityObject);
-            }
-          } else {
-            clusterIndex = 0;
-            activityTime[timeHash] ? activityTime[timeHash].push(newActivityObject) : activityTime[timeHash] = [newActivityObject];
-          }
-        }
-      });
-
-      return activityTime;
-    }
-    return [];
   }
 
   /**
@@ -647,7 +598,8 @@ class Activity extends Component {
 
   /**
   *   @param {boolean} isFullscreen
-  *   Changes editorFullscreen in state to true if isFullscreen is true, else it swaps existing state
+  *   Changes editorFullscreen in state to true if
+  *   isFullscreen is true, else it swaps existing state
   *   @return {}
   */
   @boundMethod
@@ -667,8 +619,8 @@ class Activity extends Component {
   */
   @boundMethod
   _expandCluster(indexItem) {
-    const { props, state } = this;
-    const activityRecords = state.activityRecords;
+    const { state } = this;
+    const { activityRecords } = state;
     activityRecords[indexItem.timestamp][indexItem.j].cluster = true;
 
     this.setState({ activityRecords });
@@ -682,11 +634,7 @@ class Activity extends Component {
   @boundMethod
   _addCluster(clusterElements) {
     const { props, state } = this;
-
-
     const section = props[props.sectionType];
-
-
     const newExpandedClusterObject = new Map(state.expandedClusterObject);
 
     if (newExpandedClusterObject !== {}) {
@@ -696,7 +644,7 @@ class Activity extends Component {
     }
 
     this.setState({ expandedClusterObject: newExpandedClusterObject }, () => {
-      this.setState({ activityRecords: this._transformActivity(section.activityRecords) });
+      this.setState({ activityRecords: transformActivity(section.activityRecords) });
       this._compressExpanded(clusterElements, true);
     });
   }
@@ -710,8 +658,6 @@ class Activity extends Component {
   @boundMethod
   _compressExpanded(clusterElements, remove) {
     const { compressedElements } = this.state;
-
-
     const newCompressedElements = new Set(compressedElements);
 
     if (remove) {
@@ -724,26 +670,6 @@ class Activity extends Component {
       });
     }
     this.setState({ compressedElements: newCompressedElements });
-  }
-
-  /**
-  *   @param {event} evt
-  *   assigns open-menu class to parent element and ActivityExtended to previous element
-  *   @return {}
-  */
-  @boundMethod
-  _toggleSubmenu(evt) {
-    const submenu = evt.target.parentElement;
-
-
-    const wrapper = submenu && submenu.parentElement;
-
-    if (wrapper.previousSibling) {
-      wrapper.previousSibling.className.indexOf('ActivityExtended') !== -1 ? wrapper.previousSibling.classList.remove('ActivityExtended') : wrapper.previousSibling.classList.add('ActivityExtended');
-    } else {
-      wrapper.parentElement.previousSibling.className.indexOf('ActivityExtended') !== -1 ? wrapper.parentElement.previousSibling.classList.remove('ActivityExtended') : wrapper.parentElement.previousSibling.classList.add('ActivityExtended');
-    }
-    submenu.className.indexOf('open-menu') !== -1 ? submenu.classList.remove('open-menu') : submenu.classList.add('open-menu');
   }
 
   render() {
@@ -760,9 +686,9 @@ class Activity extends Component {
       'is-deprecated': props.isDeprecated,
       'is-demo-deprecated': ((window.location.hostname === config.demoHostName) || props.diskLow) && props.isDeprecated,
     });
+
     if (section && section.activityRecords) {
       const recordDates = Object.keys(state.activityRecords);
-
       const stickyDateCSS = classNames({
         'Activity__date-tab': true,
         fixed: state.stickyDate,
@@ -777,15 +703,16 @@ class Activity extends Component {
           className={activityCSS}
         >
           {
-            (!state.refetchEnabled && state.newActivityAvailable)
+            state.newActivityAvailable
             && (
             <div className="Activity__new-record-wrapper column-1-span-9">
-              <div
+              <button
+                type="button"
                 onClick={() => this._getNewActivities()}
                 className={newActivityCSS}
               >
                 New Activity
-              </div>
+              </button>
             </div>
             )
           }
@@ -819,7 +746,6 @@ class Activity extends Component {
             >
               <Tooltip section="userNote" />
               <CreateBranch
-                ref="createBranch"
                 selected={state.selectedNode}
                 activeBranch={props.activeBranch}
                 modalVisible={state.createBranchVisible}
@@ -829,19 +755,27 @@ class Activity extends Component {
               {
                 recordDates.map((timestamp, i) => {
                   const clusterElements = [];
-                  const ActivityDateCSS = classNames({
+                  const activityDateCSS = classNames({
                     'Activity__date-tab': true,
                     note: (i === 0),
                   });
-                  const ActivityContainerCSS = classNames({
+                  const activityContainerCSS = classNames({
                     'Activity__card-container': true,
                     'Activity__card-container--last': recordDates.length === i + 1,
                   });
+
+                  const dataSectionCSS = classNames({
+                    [`Activity__date-section Activity__date-section--${i}`]: true,
+                  });
+
                   return (
-                    <div className={`Activity__date-section Activity__date-section--${i}`} key={timestamp}>
+                    <div
+                      key={timestamp}
+                      className={dataSectionCSS}
+                    >
                       <div
                         ref={evt => this.dates[i] = { e: evt, time: timestamp }}
-                        className={ActivityDateCSS}
+                        className={activityDateCSS}
                       >
 
                         <div className="Activity__date-day">
@@ -874,7 +808,7 @@ class Activity extends Component {
                       }
                       <div
                         key={`${timestamp}__card`}
-                        className={ActivityContainerCSS}
+                        className={activityContainerCSS}
                       >
                         {
                           state.activityRecords[timestamp].map((record, timestampIndex) => {
@@ -889,10 +823,12 @@ class Activity extends Component {
                                   record={record}
                                   hoveredRollback={state.hoveredRollback}
                                   indexItem={{ i, timestampIndex, timestamp }}
-                                  toggleSubmenu={this._toggleSubmenu}
+                                  toggleSubmenu={toggleSubmenu}
                                   toggleRollbackMenu={this._toggleRollbackMenu}
                                   isLocked={props.isLocked}
-                                />);
+                                  setHoveredRollback={this._setHoveredRollback}
+                                />
+                              );
                             }
 
                             return (
@@ -910,7 +846,7 @@ class Activity extends Component {
                                 indexItem={{ i, timestampIndex, timestamp }}
                                 addCluster={this._addCluster}
                                 key={`VisibileCardWrapper_${record.flatIndex}`}
-                                toggleSubmenu={this._toggleSubmenu}
+                                toggleSubmenu={toggleSubmenu}
                                 toggleRollbackMenu={this._toggleRollbackMenu}
                                 isLocked={props.isLocked}
                                 setHoveredRollback={this._setHoveredRollback}
@@ -919,7 +855,8 @@ class Activity extends Component {
                           })
                         }
                       </div>
-                    </div>);
+                    </div>
+                  );
                 })
               }
               {
@@ -927,7 +864,10 @@ class Activity extends Component {
                   <PaginationLoader
                     key={`Actvity_paginationLoader${index}`}
                     index={index}
-                    isLoadingMore={state.isPaginating || ((state.activityCardCount < 10) && section.activityRecords.pageInfo.hasNextPage)}
+                    isLoadingMore={state.loadingMore
+                      || ((state.activityCardCount < 10)
+                      && section.activityRecords.pageInfo.hasNextPage)
+                    }
                   />
                 ))
               }

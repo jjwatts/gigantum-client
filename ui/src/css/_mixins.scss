@@ -54,6 +54,11 @@
   background: url('~Images/icons/close.svg') no-repeat center center;
   background-size: 28px;
   cursor: pointer;
+
+  &:hover {
+    background: url('~Images/icons/close.svg') no-repeat center center;
+    background-size: 30px;
+  }
 }
 
 @mixin card($height, $width) {

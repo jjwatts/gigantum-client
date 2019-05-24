@@ -3,7 +3,6 @@
 exports[`Test LocalLabbooks rendering 1`] = `
 <a
   className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
-  data-selenium-id="LocalLabbookPanel"
   href="/projects/uitest/ui-test-remote"
   onClick={[Function]}
 >

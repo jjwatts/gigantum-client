@@ -7,8 +7,8 @@ export default createFragmentContainer(
   SectionWrapper,
   graphql`
       fragment Data_dataset on Dataset{
-        id
-        ...DataBrowser_data
+        id @skip (if: $dataSkip)
+        ...DataBrowser_data @skip (if: $dataSkip)
       }
     `,
 );

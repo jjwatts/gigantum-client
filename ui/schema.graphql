@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Thu May 16 2019 14:55:02 GMT-0400 (Eastern Daylight Time)
+# timestamp: Wed May 22 2019 13:54:34 GMT-0400 (Eastern Daylight Time)
 
 schema {
   query: LabbookQuery
@@ -1028,7 +1028,6 @@ type LabbookOverview implements Node & GitRepository {
   numPipPackages: Int
   numCustomDependencies: Int
   recentActivity: ActivityRecordObject
-  remoteUrl: String
   readme: String
 }
 

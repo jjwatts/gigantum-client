@@ -50,7 +50,6 @@ describe('Test Routes View Change', () => {
 
 
 describe('Test Router', () => {
-    console.log('Routes');
       const auth = new Auth();
       auth.isAuthenticated = function () { return true; };
       auth.login = function () { return true; };

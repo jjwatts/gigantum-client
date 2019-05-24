@@ -39,6 +39,7 @@ export default function MigrateProjectMutation(
     codeSkip: false,
     inputSkip: false,
     outputSkip: false,
+    labbookSkip: false,
   };
   commitMutation(
     environment,

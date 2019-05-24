@@ -134,6 +134,10 @@ export default class SectionWrapper extends Component {
         return <Loader />;
       }
 
+      if (!((section === 'data' && sectionObject.id) || (sectionObject[section]))) {
+        return <Loader />;
+      }
+
       return (
 
         <div className="SectionWrapper">

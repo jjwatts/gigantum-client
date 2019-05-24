@@ -1,24 +1,5 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
-import pprint
+
 import tempfile
 import git
 import shutil
@@ -27,9 +8,9 @@ from gtmcore.imagebuilder import ImageBuilder
 from gtmcore.environment import ComponentManager, RepositoryManager
 from gtmcore.fixtures import labbook_dir_tree, mock_config_file, setup_index, mock_config_with_repo, mock_labbook, \
     ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_REV
+from gtmcore.environment.bundledapp import BundledAppManager
+
 import gtmcore.fixtures
-from gtmcore.labbook import LabBook
-from gtmcore.configuration import get_docker_client
 
 
 def populate_with_pkgs(lb):
@@ -166,3 +147,29 @@ class TestImageBuilder(object):
         ib = ImageBuilder(lb)
         l = ib.assemble_dockerfile()
         assert all([any([i in l for i in custom]) for n in custom])
+
+    def test_bundled_app_lines(self, mock_labbook):
+        """Test if the Dockerfile builds with bundled app ports"""
+        lb = mock_labbook[2]
+        bam = BundledAppManager(lb)
+        bam.add_bundled_app(8050, 'dash 1', 'a demo dash app 1', 'python app1.py')
+        bam.add_bundled_app(9000, 'dash 2', 'a demo dash app 2', 'python app2.py')
+        bam.add_bundled_app(9001, 'dash 3', 'a demo dash app 3', 'python app3.py')
+
+        erm = RepositoryManager(mock_labbook[0])
+        erm.update_repositories()
+        erm.index_repositories()
+        cm = ComponentManager(lb)
+        cm.add_base(ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV)
+        cm.add_packages("pip", [{"manager": "pip", "package": "requests", "version": "2.18.4"}])
+
+        ib = ImageBuilder(lb)
+        dockerfile_text = ib.assemble_dockerfile(write=False)
+        test_lines = ['# Bundled Application Ports',
+                      'EXPOSE 8050',
+                      'EXPOSE 9000',
+                      'EXPOSE 9001']
+
+        docker_lines = dockerfile_text.split(os.linesep)
+        for line in test_lines:
+            assert line in docker_lines

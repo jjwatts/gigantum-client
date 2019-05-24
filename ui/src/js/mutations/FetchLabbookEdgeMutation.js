@@ -47,6 +47,7 @@ export default function FetchLabbookEdgeMutation(
     codeSkip: false,
     inputSkip: false,
     outputSkip: false,
+    labbookSkip: false,
   };
   commitMutation(environment, {
     mutation,

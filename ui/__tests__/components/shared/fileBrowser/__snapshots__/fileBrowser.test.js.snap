@@ -3,7 +3,6 @@
 exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
 <div
   className="FileBrowser FileBrowser--dropzone"
-  data-selenium-id="FileBrowser"
   style={
     Object {
       "zIndex": 0,
@@ -137,7 +136,6 @@ exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
   >
     <div
       className="AddSubfolder hidden"
-      data-selenium-id="AddSubfolder"
       onClick={[Function]}
     >
       <div

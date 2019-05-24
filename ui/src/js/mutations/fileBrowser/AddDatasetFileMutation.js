@@ -128,7 +128,7 @@ export default function AddDatasetFileMutation(
       onError: err => console.error(err),
       optimisticUpdater: (store) => {
         const node = store.create(optimisticId, 'DatasetFile');
-        const chunkSize = chunk.chunkSize === 48000000 ? chunk.fileSizeKb : chunk.chunkSize;
+        const chunkSize = chunk.chunkSize === 48000000 ? (chunk.fileSizeKb * 1000) : chunk.chunkSize;
         node.setValue(optimisticId, 'id');
         node.setValue(false, 'isDir');
         node.setValue(filePath, 'key');

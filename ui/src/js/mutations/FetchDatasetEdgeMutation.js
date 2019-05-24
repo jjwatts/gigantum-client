@@ -6,7 +6,7 @@ import environment from 'JS/createRelayEnvironment';
 
 
 const mutation = graphql`
-mutation FetchDatasetEdgeMutation($input: FetchDatasetEdgeInput!, $first: Int!, $cursor: String){
+mutation FetchDatasetEdgeMutation($input: FetchDatasetEdgeInput!, $first: Int!, $cursor: String, $overviewSkip: Boolean!, $activitySkip: Boolean!, $dataSkip: Boolean!, $datasetSkip: Boolean!){
     fetchDatasetEdge(input: $input){
         newDatasetEdge{
             node{
@@ -41,6 +41,10 @@ export default function FetchDatasetEdgeMutation(
     },
     first: 10,
     cursor: null,
+    datasetSkip: false,
+    dataSkip: false,
+    overviewSkip: false,
+    activitySkip: false,
   };
   commitMutation(environment, {
     mutation,

@@ -124,7 +124,7 @@ class Base extends Component {
 export default createFragmentContainer(
   Base,
   {
-    environment: graphql`fragment Base_environment on Environment @connection(key:"Base_environment"){
+    environment: graphql`fragment Base_environment on Environment {
     base{
       id
       schema

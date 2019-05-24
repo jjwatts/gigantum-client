@@ -140,7 +140,7 @@ const startFileUpload = (files, prefix, fileSizeData, mutationData, dropZoneProp
         let deleteId = dropZoneProps.childrenState ? dropZoneProps.childrenState[file.name] : null;
         if (deleteId === null && dropZoneProps.files) {
           dropZoneProps.files.edges.forEach((edge) => {
-            if (edge.node.key === file.name) {
+            if (edge.node && (edge.node.key === file.name)) {
               deleteId = edge.node.id;
             }
           });

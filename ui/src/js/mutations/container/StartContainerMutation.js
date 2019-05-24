@@ -3,6 +3,7 @@ import {
   graphql,
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
+import { updateTransitionState } from 'JS/redux/actions/labbook/labbook';
 
 const mutation = graphql`
   mutation StartContainerMutation($input: StartContainerInput!){
@@ -35,6 +36,7 @@ export default function StartContainerMutation(
         if (error) {
           console.log(error);
         }
+        updateTransitionState(labbookName, '');
         callback(response, error);
       },
       onError: err => console.error(err),

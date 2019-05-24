@@ -185,6 +185,10 @@ class Routes extends Component {
     setTimeout(self._checkSysinfo.bind(this), 60 * 1000);
     return fetch(url, {
       method: 'GET',
+      headers: {
+          'Content-Type': 'application/json',
+          accept: '*/*',
+      },
     }).then((response) => {
       if (response.status === 200 && (response.headers.get('content-type') === 'application/json')) {
         response.json().then((res) => {

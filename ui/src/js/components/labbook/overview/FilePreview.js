@@ -108,7 +108,7 @@ export default class FilePreview extends Component {
                   sectionData={{
                     section: queryProps.labbook.code,
                     sectionType: 'code',
-                    sectionLink: 'Code',
+                    sectionLink: 'code',
                     sectionTitle: 'Code',
                     sectionTooltip: 'codeOverview',
                   }}
@@ -121,7 +121,7 @@ export default class FilePreview extends Component {
                   sectionData={{
                     section: queryProps.labbook.input,
                     sectionType: 'input',
-                    sectionLink: 'InputData',
+                    sectionLink: 'inputData',
                     sectionTitle: 'Input Data',
                     sectionTooltip: 'inputDataOverview',
                   }}
@@ -134,7 +134,7 @@ export default class FilePreview extends Component {
                   sectionData={{
                     section: queryProps.labbook.output,
                     sectionType: 'output',
-                    sectionLink: 'OutputData',
+                    sectionLink: 'outputData',
                     sectionTitle: 'Output Data',
                     sectionTooltip: 'outputDataOverview',
                   }}

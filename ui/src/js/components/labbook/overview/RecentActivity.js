@@ -151,73 +151,74 @@ export default class RecentActivity extends Component {
   }
 
   render() {
-    if (this.props.recentActivity) {
-      const { owner, labbookName } = store.getState().routes;
-      const { props, state } = this;
+    const { props, state } = this;
+    if (props.recentActivity && props.recentActivity.type) {
       const edge = props.recentActivity;
       const isImage = edge && edge.detailObjects && edge.detailObjects[0].data[0] && edge.detailObjects[0].data[0][0] === 'image/png';
       const imageMetadata = isImage && edge.detailObjects[0].data[0][1];
-      return (<div className="RecentActivity">
-        <div className="RecentActivity__title-container">
+      return (
+        <div className="RecentActivity">
+          <div className="RecentActivity__title-container">
 
-          <h4>
-            Recent Activity
-            <Tooltip section="recentActivity" />
-          </h4>
-        </div>
+            <h4>
+              Recent Activity
+              <Tooltip section="recentActivity" />
+            </h4>
+          </div>
 
-        <div className="RecentActivity__list grid">
-          <div key={edge.id} className="RecentActivity__card Card Card--auto Card--no-hover column-1-span-12">
-            <button
-              className="Btn Btn--feature Btn__redirect Btn__redirect--featurePosition"
-              onClick={() => this._handleRedirect('activity')}
-            >
-              <span>View more in Activity Feed</span>
-            </button>
-            <div
-              className={`ActivityCard__badge ActivityCard__badge--${edge.type.toLowerCase()}`}
-              title={edge.type}
-            />
-            <div className="RecentActivityCard__content">
-              <div className="RecentActivityCard__text-content">
-                <p className="RecentActivity__time">
-                  {this._getDate(edge)}
-                </p>
-                <p className="RecentActivity__message">
-                  <b>
-                    {`${edge.username} - `}
-                  </b>
-                  {edge.message }
-                </p>
-              </div>
-              {
-                imageMetadata && state.imageExpanded
-                && (
-                <Lightbox
-                  imageMetadata={imageMetadata}
-                  onClose={() => this.setState({ imageExpanded: false })}
-                />
-                )
-              }
-              <div className="RecentActivity__img-container">
+          <div className="RecentActivity__list grid">
+            <div key={edge.id} className="RecentActivity__card Card Card--auto Card--no-hover column-1-span-12">
+              <button
+                type="button"
+                className="Btn Btn--feature Btn__redirect Btn__redirect--featurePosition"
+                onClick={() => this._handleRedirect('activity')}
+              >
+                <span>View more in Activity Feed</span>
+              </button>
+              <div
+                className={`ActivityCard__badge ActivityCard__badge--${edge.type.toLowerCase()}`}
+                title={edge.type}
+              />
+              <div className="RecentActivityCard__content">
+                <div className="RecentActivityCard__text-content">
+                  <p className="RecentActivity__time">
+                    {this._getDate(edge)}
+                  </p>
+                  <p className="RecentActivity__message">
+                    <b>
+                      {`${edge.username} - `}
+                    </b>
+                    {edge.message }
+                  </p>
+                </div>
                 {
-                  isImage
+                  imageMetadata && state.imageExpanded
                   && (
-                  <img
-                    onClick={() => this.setState({ imageExpanded: true })}
-                    src={imageMetadata}
-                    alt="detail"
+                  <Lightbox
+                    imageMetadata={imageMetadata}
+                    onClose={() => this.setState({ imageExpanded: false })}
                   />
                   )
                 }
-                <div className="RecentActivity__expand">
-                  Expand
+                <div className="RecentActivity__img-container">
+                  {
+                    isImage
+                    && (
+                    <img
+                      onClick={() => this.setState({ imageExpanded: true })}
+                      src={imageMetadata}
+                      alt="detail"
+                    />
+                    )
+                  }
+                  <div className="RecentActivity__expand">
+                    Expand
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-              </div>
       );
     }
 
@@ -229,6 +230,7 @@ export default class RecentActivity extends Component {
           <div className="RecentActivity__card--loading" />
           <div className="RecentActivity__card--loading" />
         </div>
-      </div>);
+      </div>
+    );
   }
 }

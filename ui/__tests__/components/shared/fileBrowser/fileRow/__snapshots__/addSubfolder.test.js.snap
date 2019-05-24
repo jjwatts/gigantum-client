@@ -3,7 +3,6 @@
 exports[`AddSubFolder Component Renders a Snapshot 1`] = `
 <div
   className="AddSubfolder"
-  data-selenium-id="AddSubfolder"
   onClick={[Function]}
   style={Object {}}
 >

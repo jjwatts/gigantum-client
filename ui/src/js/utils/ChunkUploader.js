@@ -8,7 +8,12 @@ import AddDatasetFileMutation from 'Mutations/fileBrowser/AddDatasetFileMutation
 import CompleteBatchUploadTransactionMutation from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
 import CompleteDatasetUploadTransactionMutation from 'Mutations/fileBrowser/CompleteDatasetUploadTransactionMutation';
 import store from 'JS/redux/store';
-import { setUploadMessageUpdate, setUploadMessageRemove, setWarningMessage } from 'JS/redux/actions/footer';
+import {
+  setUploadMessageUpdate,
+  setUploadMessageRemove,
+  setWarningMessage,
+  setErrorMessage,
+} from 'JS/redux/actions/footer';
 import { setFinishedUploading, setPauseChunkUpload } from 'JS/redux/actions/shared/fileBrowser/fileBrowserWrapper';
 import { setIsProcessing } from 'JS/redux/actions/dataset/dataset';
 import config from 'JS/config';
@@ -16,7 +21,6 @@ import config from 'JS/config';
 const uploadImportChunk = (file, chunk, accessToken, getChunkCallback, type) => {
   if (type === 'dataset') {
     ImportDatasetMutation(chunk.blob, chunk, accessToken, (result, error) => {
-      console.log(result, error);
       if (result && !error) {
         getChunkCallback(file, result);
       } else {
@@ -25,7 +29,6 @@ const uploadImportChunk = (file, chunk, accessToken, getChunkCallback, type) => 
     });
   } else {
     ImportLabbookMutation(chunk.blob, chunk, accessToken, (result, error) => {
-      console.log(result, error);
       if (result && !error) {
         getChunkCallback(file, result);
       } else {
@@ -140,7 +143,7 @@ const uploadFileBrowserChunk = (data, chunkData, file, chunk, accessToken, usern
         }
       } else {
         const errorBody = error.length && error[0].message ? error[0].message : error;
-        setWarningMessage(errorBody);
+        setErrorMessage(errorBody);
       }
     };
 
@@ -191,27 +194,15 @@ const ChunkUploader = {
 
 
     const componentCallback = (response) => { // callback to trigger postMessage from initializer
-      console.trace(response);
       postMessage(response, false);
     };
 
     const id = uuidv4();
-
-
     const chunkSize = 1000 * 1000 * 48;
-
-
     const fileSize = file.size;
-
-
     const fileSizeKb = Math.round(fileSize / 1000, 10);
-
     let fileLoadedSize = 0;
-
-
     let chunkIndex = passedChunkIndex || 0;
-
-
     const totalChunks = (file.size === 0) ? 1 : Math.ceil(file.size / chunkSize);
 
     /*

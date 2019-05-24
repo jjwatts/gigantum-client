@@ -3,7 +3,6 @@
 exports[`UserNote Renders a snapshot 1`] = `
 <div
   className="UserNote flex flex--column"
-  data-selenium-id="UserNote"
 >
   <div
     className="UserNote__close close"
@@ -43,13 +42,24 @@ exports[`UserNote Renders a snapshot 1`] = `
       </div>
     </div>
   </div>
-  <button
-    className="UserNote__add-note"
-    disabled={true}
-    onClick={[Function]}
-    type="submit"
+  <div
+    className="BtnContainer"
   >
-    Add Note
-  </button>
+    <button
+      className="Btn Btn--flat"
+      onClick={[Function]}
+      type="submit"
+    >
+      Cancel
+    </button>
+    <button
+      className="Btn Btn--last"
+      disabled={true}
+      onClick={[Function]}
+      type="submit"
+    >
+      Add Note
+    </button>
+  </div>
 </div>
 `;

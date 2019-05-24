@@ -25,7 +25,10 @@ class DatasetQueryContainer extends Component {
             name: parentProps.datasetName,
             owner: parentProps.owner,
             first: 2,
-            // hasNext: false,
+            datasetSkip: true,
+            dataSkip: true,
+            overviewSkip: true,
+            activitySkip: true,
           }
         }
         render={({ error, props }) => {
@@ -63,7 +66,7 @@ class DatasetQueryContainer extends Component {
 
 // dataset query with notes fragment
 export const DatasetQuery = graphql`
-  query DatasetQueryContainerQuery($name: String!, $owner: String!, $first: Int!, $cursor: String){
+  query DatasetQueryContainerQuery($name: String!, $owner: String!, $first: Int!, $cursor: String, $overviewSkip: Boolean!, $activitySkip: Boolean!, $dataSkip: Boolean!, $datasetSkip: Boolean!){
     dataset(name: $name, owner: $owner){
       id
       description

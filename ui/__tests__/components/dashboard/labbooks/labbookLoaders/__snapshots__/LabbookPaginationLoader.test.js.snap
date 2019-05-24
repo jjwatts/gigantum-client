@@ -3,7 +3,6 @@
 exports[`Snapshot LabbookPaginationLoader LabbookPaginationLoader isLoading false 1`] = `
 <div
   className="CardLoader--hidden"
-  data-selenium-id="CardLoader"
 >
   <div />
 </div>
@@ -12,7 +11,6 @@ exports[`Snapshot LabbookPaginationLoader LabbookPaginationLoader isLoading fals
 exports[`Snapshot LabbookPaginationLoader LabbookPaginationLoader isLoading true 1`] = `
 <div
   className="Card Card--300 column-4-span-3 flex flex--column justify--space-between CardLoader CardLoader--undefined"
-  data-selenium-id="CardLoader"
 >
   <div />
 </div>

@@ -1,30 +1,12 @@
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import pytest
 import os
-import pprint
+import time
 import getpass
 import docker
 import requests
 import shutil
 from gtmcore.container.jupyter import start_jupyter
+from gtmcore.container.bundledapp import start_bundled_app
 
 from gtmcore.configuration import get_docker_client
 
@@ -32,7 +14,8 @@ from gtmcore.container.container import ContainerOperations
 from gtmcore.container.utils import infer_docker_image_name
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.fixtures.container import build_lb_image_for_jupyterlab, mock_config_with_repo
-from gtmcore.container.exceptions import ContainerBuildException, ContainerException
+from gtmcore.container.exceptions import ContainerBuildException
+from gtmcore.environment.bundledapp import BundledAppManager
 
 
 def remove_image_cache_data():
@@ -120,3 +103,25 @@ class TestContainerOps(object):
         with pytest.raises(requests.exceptions.HTTPError):
             # Image not found so container cannot be started
             ContainerOperations.start_container(labbook=my_lb, username="unittester")
+
+    @pytest.mark.skipif(getpass.getuser() == 'circleci', reason="Cannot run this test in CircleCI, needs shared vol")
+    def test_start_bundled_app(self, build_lb_image_for_jupyterlab):
+        test_file_path = os.path.join('/mnt', 'share', 'test.txt')
+        try:
+            lb = build_lb_image_for_jupyterlab[0]
+
+            assert os.path.exists(test_file_path) is False
+
+            bam = BundledAppManager(lb)
+            bam.add_bundled_app(9002, 'my app', 'tester', f"echo 'teststr' >> {test_file_path}")
+            apps = bam.get_bundled_apps()
+
+            start_bundled_app(lb, 'unittester', apps['my app']['command'])
+
+            time.sleep(3)
+            assert os.path.exists(test_file_path) is True
+        except:
+            raise
+        finally:
+            if os.path.exists(test_file_path):
+                os.remove(test_file_path)

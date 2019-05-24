@@ -1,4 +1,4 @@
-import Activity, { getGlobals } from 'Components/shared/activity/Activity';
+import Activity from 'Components/shared/activity/Activity';
 import {
   createPaginationContainer,
   graphql,
@@ -8,8 +8,6 @@ import {
   activity pagination container
   contains activity fragment and for query consumption
 */
-const counter = 5;
-const pagination = false;
 
 
 export default createPaginationContainer(
@@ -17,7 +15,7 @@ export default createPaginationContainer(
   {
     labbook: graphql`
         fragment LabbookActivityContainer_labbook on Labbook{
-          activityRecords(first: $first, after: $cursor) @connection(key: "LabbookActivityContainer_activityRecords") @skip (if: $activitySkip){
+          activityRecords(first: $first, after: $cursor) @connection(key: "LabbookActivityContainer_activityRecords", filters: [$cursor]) @skip (if: $activitySkip){
             edges{
               node{
                 id
@@ -54,7 +52,7 @@ export default createPaginationContainer(
     getConnectionFromProps(props) {
       return props.labbook && props.labbook.activityRecords;
     },
-    getFragmentVariables(prevVars, first, cursor) {
+    getFragmentVariables(prevVars, first) {
       return {
         ...prevVars,
         first,
@@ -62,18 +60,15 @@ export default createPaginationContainer(
     },
     getVariables(props, { count, cursor }, fragmentVariables) {
       const { owner } = props.match.params;
-      const { counter, pagination } = getGlobals();
       const name = props.match.params.labbookName;
-      const first = counter;
-
-      cursor = pagination ? props.labbook.activityRecords.edges[props.labbook.activityRecords.edges.length - 1].cursor : null;
-
       return {
-        first,
+        ...fragmentVariables,
+        first: count,
         cursor,
         name,
         owner,
         activitySkip: false,
+        filter: [],
         // in most cases, for variables other than connection filters like
         // `first`, `after`, etc. you may want to use the previous values.
         // orderBy: fragmentVariables.orderBy,

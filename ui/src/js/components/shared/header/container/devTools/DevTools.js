@@ -80,7 +80,7 @@ class DevTools extends Component {
     } else if (status === 'Stopped') {
       setInfoMessage('Starting Project container. When done working, click Stop to shutdown the container.');
       setMergeMode(false, false);
-      updateTransitionState('Starting');
+      updateTransitionState(name, 'Starting');
 
       props.containerMutations.startContainer({ devTool: developmentTool }, (response, error) => {
         if (error) {

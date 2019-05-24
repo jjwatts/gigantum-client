@@ -15,6 +15,7 @@ from lmsrvlabbook.api.mutations.branching import (CreateExperimentalBranch, Dele
 from lmsrvlabbook.api.mutations.environmentcomponent import (AddPackageComponents,
                                                              RemovePackageComponents,
                                                              AddCustomDocker, RemoveCustomDocker)
+from lmsrvlabbook.api.mutations.bundledapp import SetBundledApp, RemoveBundledApp
 from lmsrvlabbook.api.mutations.user import RemoveUserIdentity
 from lmsrvlabbook.api.mutations.labbooksharing import (SyncLabbook, PublishLabbook, SetVisibility,
                                                        AddLabbookRemote, ImportRemoteLabbook, ImportLabbook,

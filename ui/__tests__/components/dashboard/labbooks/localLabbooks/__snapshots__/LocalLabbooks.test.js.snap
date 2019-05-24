@@ -3,14 +3,12 @@
 exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
 <div
   className="Labbooks__listing"
-  data-selenium-id="LocalLabbooks"
 >
   <div
     className="grid"
   >
     <div
       className="ImportModule Card Card--line-50 Card--text-center Card--add Card--import column-4-span-3"
-      data-selenium-id="ImportModule"
     >
       <div
         className="Import__main"
@@ -49,7 +47,6 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
       </div>
       <div
         className="hidden createLabbook"
-        data-selenium-id="Tooltip"
       >
         <div
           className="Tooltip__toggle createLabbook"
@@ -82,7 +79,6 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
     </div>
     <a
       className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
-      data-selenium-id="LocalLabbookPanel"
       href="/projects/uitest/ui-test-remote"
       onClick={[Function]}
     >
@@ -161,7 +157,6 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
     </a>
     <a
       className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
-      data-selenium-id="LocalLabbookPanel"
       href="/projects/uitest/ui-test-project"
       onClick={[Function]}
     >
@@ -245,7 +240,6 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
     </a>
     <a
       className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
-      data-selenium-id="LocalLabbookPanel"
       href="/projects/uitest/test-tt"
       onClick={[Function]}
     >
@@ -324,7 +318,6 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
     </a>
     <a
       className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
-      data-selenium-id="LocalLabbookPanel"
       href="/projects/uitest/new-project"
       onClick={[Function]}
     >
@@ -403,7 +396,6 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
     </a>
     <a
       className="Card Card--300 Card--text column-4-span-3 flex flex--column justify--space-between"
-      data-selenium-id="LocalLabbookPanel"
       href="/projects/uitest/awful-intersections-demo"
       onClick={[Function]}
     >
@@ -486,31 +478,26 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
     </a>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>
     <div
       className="CardLoader--hidden"
-      data-selenium-id="CardLoader"
     >
       <div />
     </div>

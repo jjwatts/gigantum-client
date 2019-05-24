@@ -12,17 +12,10 @@ import './CardWrapper.scss';
 export default class CardWrapper extends Component {
   render() {
     const { props, state } = this;
-
-
     const section = props.section;
-
-
     const record = props.record;
 
-
     const rollbackableDetails = record.edge.node.detailObjects.filter(detailObjs => detailObjs.type !== 'RESULT' && detailObjs.type !== 'CODE_EXECUTED');
-
-
     const hasRollback = ((props.indexItem.i !== 0) || (props.indexItem.timestampIndex !== 0))
             && (!!rollbackableDetails.length && (props.sectionType === 'labbook'));
 

@@ -1,12 +1,13 @@
 // vendor
 import React, { Component } from 'react';
 import { Route, Switch } from 'react-router-dom';
-import { createFragmentContainer, graphql } from 'react-relay';
+import { createRefetchContainer, graphql } from 'react-relay';
 import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Loadable from 'react-loadable';
+import { boundMethod } from 'autobind-decorator';
 // store
 import store from 'JS/redux/store';
 import { setStickyState } from 'JS/redux/actions/dataset/dataset';
@@ -49,7 +50,12 @@ class Dataset extends Component {
   	super(props);
 
     localStorage.setItem('owner', store.getState().routes.owner);
-    this.state = {};
+    this.state = {
+      overviewSkip: true,
+      activitySkip: true,
+      dataSkip: true,
+      datasetSkip: true,
+    };
     // bind functions here
     this._setBuildingState = this._setBuildingState.bind(this);
     setCallbackRoute(props.location.pathname);
@@ -123,6 +129,71 @@ class Dataset extends Component {
   }
 
   /**
+   @param {}
+   refetch dataset
+   */
+  @boundMethod
+  _refetchDataset(section) {
+    const { props, state } = this;
+    const currentSection = `${section}Skip`;
+    const currentState = {
+      overviewSkip: state.overviewSkip,
+      activitySkip: state.activitySkip,
+      dataSkip: state.dataSkip,
+    };
+    const sections = ['overview', 'activity', 'data'];
+    const queryVariables = {
+      datasetID: props.dataset.id,
+      [currentSection]: false,
+    };
+    const renderVariables = {
+      datasetID: props.dataset.id,
+      ...currentState,
+      [currentSection]: false,
+    };
+    const remainingQueryVariables = {
+      datasetID: props.dataset.id,
+      datasetSkip: false,
+    };
+    const remainingRenderVariables = {
+      datasetID: props.dataset.id,
+      datasetSkip: false,
+    };
+    const newState = {
+      datasetSkip: true,
+    };
+    const options = {
+      force: true,
+    };
+
+    sections.forEach((fragmentSection) => {
+      const remainingSection = `${fragmentSection}Skip`;
+      if (fragmentSection !== section) {
+        remainingQueryVariables[remainingSection] = false;
+        newState[remainingSection] = false;
+      }
+      remainingRenderVariables[remainingSection] = false;
+    });
+
+    const refetchCallback = () => {
+      this.setState({ [currentSection]: false });
+      props.relay.refetch(
+        remainingQueryVariables,
+        remainingRenderVariables,
+        () => {
+          this.setState(newState);
+        },
+        options,
+      );
+    };
+
+
+    if (state[currentSection]) {
+      props.relay.refetch(queryVariables, renderVariables, refetchCallback, options);
+    }
+  }
+
+  /**
     scrolls to top of window
   */
   _scrollToTop() {
@@ -169,6 +240,7 @@ class Dataset extends Component {
                         scrollToTop={this._scrollToTop}
                         sectionType="dataset"
                         datasetType={dataset.datasetType}
+                        refetch={this._refetchDataset}
                       />
                     </ErrorBoundary>
                   )}
@@ -194,6 +266,7 @@ class Dataset extends Component {
                             scrollToTop={this._scrollToTop}
                             sectionType="dataset"
                             datasetType={dataset.datasetType}
+                            refetch={this._refetchDataset}
                           />
 
                         </ErrorBoundary>
@@ -215,6 +288,7 @@ class Dataset extends Component {
                             datasetId={dataset.id}
                             activeBranch={dataset.activeBranch}
                             sectionType="dataset"
+                            refetch={this._refetchDataset}
                             {...props}
                           />
 
@@ -234,6 +308,7 @@ class Dataset extends Component {
                             datasetId={dataset.id}
                             type="dataset"
                             section="data"
+                            refetch={this._refetchDataset}
                           />
 
                         </ErrorBoundary>)}
@@ -270,7 +345,7 @@ const mapDispatchToProps = dispatch => ({
 const DatasetContainer = connect(mapStateToProps, mapDispatchToProps)(Dataset);
 
 
-const DatasetFragmentContainer = createFragmentContainer(
+const DatasetFragmentContainer = createRefetchContainer(
   DatasetContainer,
   {
     dataset: graphql`
@@ -279,10 +354,8 @@ const DatasetFragmentContainer = createFragmentContainer(
           description
           owner
           name
-          #createdOnUtc
-          modifiedOnUtc
           defaultRemote
-          visibility
+          visibility @skip(if: $datasetSkip)
           datasetType {
               name
               storageType
@@ -298,7 +371,18 @@ const DatasetFragmentContainer = createFragmentContainer(
           ...DatasetOverviewContainer_dataset
       }`,
   },
-
+  graphql`
+  query DatasetRefetchQuery($first: Int!, $cursor: String, $datasetID: ID!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $dataSkip: Boolean!, $datasetSkip: Boolean!){
+    dataset: node(id: $datasetID){
+      ... on Dataset {
+        visibility @skip(if: $datasetSkip)
+      }
+      ...Data_dataset
+      ...DatasetActivityContainer_dataset
+      ...DatasetOverviewContainer_dataset
+    }
+  }
+  `,
 );
 
 const backend = (manager: Object) => {

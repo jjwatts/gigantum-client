@@ -3,11 +3,8 @@
 exports[`DashboardRemote Renders a snapshot 1`] = `
 <div
   className="Labbooks"
-  data-selenium-id="Labbooks"
 >
-  <div
-    data-selenium-id="WizardModal"
-  />
+  <div />
   <div
     className="Labbooks__panel-bar"
   >
@@ -46,7 +43,6 @@ exports[`DashboardRemote Renders a snapshot 1`] = `
       </li>
       <div
         className="hidden cloudLocal"
-        data-selenium-id="Tooltip"
       >
         <div
           className="Tooltip__toggle cloudLocal"
@@ -96,7 +92,6 @@ exports[`DashboardRemote Renders a snapshot 1`] = `
     </div>
     <div
       className="DashboardDropdown column-4-span-3 padding--0"
-      data-selenium-id="FilterByDropdown"
     >
       <div>
         Filter by:
@@ -136,7 +131,6 @@ exports[`DashboardRemote Renders a snapshot 1`] = `
     </div>
     <div
       className="DashboardDropdown column-4-span-3 padding--0"
-      data-selenium-id="SortByDropdown"
     >
       <div>
         Sort by:
@@ -197,14 +191,12 @@ exports[`DashboardRemote Renders a snapshot 1`] = `
   </div>
   <div
     className="Labbooks__listing"
-    data-selenium-id="RemoteLabbooks"
   >
     <div
       className="grid"
     >
       <div
         className="Card Card--300 column-4-span-3 flex flex--column justify--space-between"
-        data-selenium-id="RemoteLabbookPanel"
       >
         <div
           className="RemoteLabbooks__row RemoteLabbooks__row--icon"
@@ -279,31 +271,26 @@ exports[`DashboardRemote Renders a snapshot 1`] = `
       </div>
       <div
         className="CardLoader--hidden"
-        data-selenium-id="CardLoader"
       >
         <div />
       </div>
       <div
         className="CardLoader--hidden"
-        data-selenium-id="CardLoader"
       >
         <div />
       </div>
       <div
         className="CardLoader--hidden"
-        data-selenium-id="CardLoader"
       >
         <div />
       </div>
       <div
         className="CardLoader--hidden"
-        data-selenium-id="CardLoader"
       >
         <div />
       </div>
       <div
         className="CardLoader--hidden"
-        data-selenium-id="CardLoader"
       >
         <div />
       </div>

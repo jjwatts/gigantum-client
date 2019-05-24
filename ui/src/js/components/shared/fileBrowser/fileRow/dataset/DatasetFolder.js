@@ -421,6 +421,7 @@ class Folder extends Component {
                               updateChildState={props.updateChildState}
                               isDownloading={state.isDownloading || props.isDownloading}
                               codeDirUpload={props.codeDirUpload}
+                              checkLocal={props.checkLocal}
                             />
                           );
                         } if ((children && children[file] && children[file].edge && !children[file].edge.node.isDir)) {

@@ -25,7 +25,7 @@ def service_telemetry():
         'disk': {
             'total': disk_total,
             'available': disk_avail,
-            'lowDiskWarning': disk_total < DISK_WARNING_THRESHOLD_GB
+            'lowDiskWarning': disk_avail < DISK_WARNING_THRESHOLD_GB
         },
         'rq': {
             # Total workers, and workers idle/available

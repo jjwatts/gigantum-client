@@ -30,6 +30,7 @@ from gtmcore.environment.componentmanager import ComponentManager
 from gtmcore.configuration import get_docker_client
 from gtmcore.logging import LMLogger
 from gtmcore.container.utils import infer_docker_image_name
+from gtmcore.environment.bundledapp import BundledAppManager
 
 from lmsrvcore.api.interfaces import GitRepository
 from lmsrvcore.auth.user import get_logged_in_username
@@ -38,6 +39,7 @@ from lmsrvcore.api.connections import ListBasedConnection
 from lmsrvlabbook.api.connections.environment import PackageComponentConnection
 from lmsrvlabbook.api.objects.basecomponent import BaseComponent
 from lmsrvlabbook.api.objects.packagecomponent import PackageComponent
+from lmsrvlabbook.api.objects.bundledapp import BundledApp
 from lmsrvlabbook.dataloader.package import PackageDataloader
 
 logger = LMLogger.get_logger()
@@ -94,6 +96,9 @@ class Environment(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
 
     # A custom docker snippet to be run after all other dependencies and bases have been added.
     docker_snippet = graphene.String()
+
+    # A list of bundled apps
+    bundled_apps = graphene.List(BundledApp)
 
     @classmethod
     def get_node(cls, info, id):
@@ -273,3 +278,14 @@ class Environment(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
         """Method to resolve  the docker snippet for this labbook. Right now only 1 snippet is supported"""
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             lambda labbook: self.helper_resolve_docker_snippet(labbook))
+
+    def helper_resolve_bundled_apps(self, labbook):
+        """Helper to get list of BundledApp objects"""
+        bam = BundledAppManager(labbook)
+        apps = bam.get_bundled_apps()
+        return [BundledApp(name=self.name, owner=self.owner, app_name=x) for x in apps]
+
+    def resolve_bundled_apps(self, info):
+        """Method to resolve  the bundled apps for this labbook"""
+        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda labbook: self.helper_resolve_bundled_apps(labbook))

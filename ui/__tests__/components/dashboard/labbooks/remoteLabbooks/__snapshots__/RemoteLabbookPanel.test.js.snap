@@ -3,7 +3,6 @@
 exports[`Test RemoteLabbooks rendering 1`] = `
 <div
   className="Card Card--300 column-4-span-3 flex flex--column justify--space-between"
-  data-selenium-id="RemoteLabbookPanel"
 >
   <div
     className="RemoteLabbooks__row RemoteLabbooks__row--icon"

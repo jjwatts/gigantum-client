@@ -1,23 +1,6 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import graphene
+import unicodedata
+from pathlib import PosixPath
 
 import os
 import tempfile
@@ -92,13 +75,38 @@ class ChunkUploadMutation(object):
 
     @staticmethod
     def py_secure_filename(filename: str) -> str:
-        # Take any non-alphanumeric (and some limited special chars) and replace with _
-        # Also note, max filename size is 4096 chars
-        s = lambda n: n if (n.isalnum() or n in '._-+=') else '_'
-        safe_fname = ''.join([s(c) for c in os.path.basename(filename)])[:255]
-        if safe_fname != filename:
-            logger.info(f"Renaming unsafe filename `{filename}` to `{safe_fname}`")
-        return safe_fname
+        """Method to clean up provided filenames to be safe, relative paths
+
+        This function removes leading slashes, control characters, '..' and '.' in directories, and replaces \/:*"<>|?
+        with underscores.
+
+
+        Args:
+            filename: Filename to sanitize
+
+        Returns:
+            str
+        """
+        # Completely remove control characters
+        safe_filename = "".join(c for c in filename if unicodedata.category(c)[0] != "C")
+
+        # Remove leading slash if attempting an absolute path
+        if safe_filename[0] == "/":
+            safe_filename = safe_filename[1:]
+
+        # Remove ../ or ./ paths (should only be relative names from the repo root)
+        filename_parts = PosixPath(safe_filename).parts
+        relative_filename_parts = [p for p in filename_parts if p not in ['..', '.']]
+
+        # Replace invalid characters with underscores
+        invalid_char_map = {ord(ch): '_' for ch in '\\/:*"<>|?'}
+        safe_parts = [part.translate(invalid_char_map).strip() for part in relative_filename_parts]
+
+        safe_filename = "/".join(safe_parts)
+        if safe_filename != filename:
+            logger.info(f"Renaming unsafe filename `{filename}` to `{safe_filename}`")
+
+        return safe_filename
 
     @staticmethod
     def get_temp_filename(upload_id, filename):

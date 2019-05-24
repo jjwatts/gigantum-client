@@ -2,6 +2,7 @@ import React from 'react';
 
 
 const NoCollaborators = (props) => {
+
   return (
     props.collaborators.length
       ? (

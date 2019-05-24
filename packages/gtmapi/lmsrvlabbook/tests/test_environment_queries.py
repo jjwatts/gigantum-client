@@ -1,30 +1,10 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import pytest
-
-import graphene
-import pprint
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.fixtures import ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
 from gtmcore.environment import ComponentManager
+from gtmcore.environment.bundledapp import BundledAppManager
+
 
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped, fixture_working_dir
 
@@ -303,3 +283,32 @@ class TestEnvironmentServiceQueries(object):
 
         snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
 
+    def test_bundle_app_query(self, snapshot, fixture_working_dir_env_repo_scoped):
+        """Test querying for bundled app info"""
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook-bundle", description="my first df")
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook-bundle"){
+                        id
+                        environment {
+                          bundledApps{
+                            id
+                            appName
+                            description
+                            port
+                            command
+                          }
+                        }
+                      }
+                    }
+                """
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+        bam = BundledAppManager(lb)
+        bam.add_bundled_app(8050, 'dash 1', 'a demo dash app 1', 'python app1.py')
+        bam.add_bundled_app(9000, 'dash 2', 'a demo dash app 2', 'python app2.py')
+        bam.add_bundled_app(9001, 'dash 3', 'a demo dash app 3', 'python app3.py')
+
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))

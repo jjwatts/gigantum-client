@@ -37,6 +37,7 @@ export default function ResetBranchToRemoteMutation(
     codeSkip: false,
     inputSkip: false,
     outputSkip: false,
+    labbookSkip: false,
   };
   commitMutation(
     environment,

@@ -111,6 +111,7 @@ export default class ClusterCardWrapper extends Component {
               {...props}
               record={record}
               isLocked={props.isLocked}
+              setHoveredRollback={props.setHoveredRollback}
             />
           ))
         }
