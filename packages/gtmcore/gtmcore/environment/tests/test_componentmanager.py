@@ -195,6 +195,14 @@ class TestComponentManager(object):
         # `test_add_package` - so we don't test assertions (again) on this part
         cm = ComponentManager(lb)
 
+        # We "misconfigure" a package that is not part of the base
+        # This shouldn't happen, but we address it just in case
+        pkgs = [{"manager": "pip3", "package": "gigantum", "version": "0.5"}]
+        cm.add_packages('pip3', pkgs, force=True, from_base=True)
+        packages = [p for p in cm.get_component_list('package_manager')]
+        assert(len(packages) == 1)
+        assert(packages[0]['from_base'] is True)
+
         cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 1)
 
         # After installing the base, we should have one version of matplotlib installed
@@ -203,8 +211,12 @@ class TestComponentManager(object):
         assert(len(packages) == 1)
         assert(packages[0]['version'] == '2.1.1')
 
+        # add_base() should have converted this to user-installed
+        packages = [p for p in cm.get_component_list('package_manager')
+                    if p['package'] == 'gigantum']
+        assert(packages[0]['from_base'] is False)
+
         pkgs = [{"manager": "pip3", "package": "requests", "version": "2.18.2"},
-                {"manager": "pip3", "package": "gigantum", "version": "0.5"},
                 # This will override an already installed package
                 {"manager": "pip3", "package": "matplotlib", "version": "2.2"}]
         cm.add_packages('pip3', pkgs, force=True)
