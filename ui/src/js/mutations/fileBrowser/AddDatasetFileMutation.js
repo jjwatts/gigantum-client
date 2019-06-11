@@ -77,10 +77,11 @@ export default function AddDatasetFileMutation(
   filePath,
   chunk,
   accessToken,
+  idToken,
   transactionId,
   callback,
 ) {
-  const uploadables = [chunk.blob, accessToken];
+  const uploadables = [chunk.blob, accessToken, idToken];
   const date = new Date();
   const modifiedAt = (date.getTime() / 1000);
   const id = uuidv4();

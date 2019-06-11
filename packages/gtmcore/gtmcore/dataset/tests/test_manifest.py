@@ -19,6 +19,10 @@ class TestManifest(object):
         assert isinstance(manifest.manifest, OrderedDict)
         assert manifest.dataset_revision == ds.git.repo.head.commit.hexsha
 
+    def test_get_num_hashing_cpus(self, mock_dataset_with_manifest):
+        ds, manifest, working_dir = mock_dataset_with_manifest
+        assert manifest.get_num_hashing_cpus() > 1
+
     def test_status_created_files(self, mock_dataset_with_manifest):
         ds, manifest, working_dir = mock_dataset_with_manifest
 

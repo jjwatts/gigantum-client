@@ -3,7 +3,7 @@ version: 2.1
 executors:
   gig_client:
     docker:
-      - image: gigantum/circleci-client:0df6fba6a5-2019-02-25
+      - image: gigantum/circleci-client:9417b4e659-2019-05-31
   test_harness_exec:
     machine: true
 
@@ -56,7 +56,8 @@ jobs:
       - run:
           name: Run Core unit and coverage tests
           command: |
-            export SKIP_CONDA_TESTS=1
+            export SKIP_ENV_TESTS=1
+            export SKIP_BG_TESTS=1
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
             #pytest --cov=gtmcore packages/gtmcore
@@ -75,7 +76,8 @@ jobs:
           name: Run API unit, integration and coverage tests
           command: |
             export PYTHONPATH=$PYTHONPATH:/home/circleci/repo/packages/gtmcore
-            export SKIP_CONDA_TESTS=1
+            export SKIP_ENV_TESTS=1
+            export SKIP_BG_TESTS=1
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
@@ -85,7 +87,7 @@ jobs:
             #pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvlabbook/tests/int_labbook_mutations.py
             #codecov -F api
 
-  test-long-running-env:
+  test-gtmcore-environment:
     executor: gig_client
     working_directory: ~/repo
     steps:
@@ -95,7 +97,7 @@ jobs:
           name: Set authentication credentials
           command: bash /home/circleci/repo/.circleci/write_auth.sh
       - run:
-          name: Run long running conda environment tests
+          name: Run gtmcore environment tests
           command: |
             export PYTHONPATH=$PYTHONPATH:/home/circleci/repo/packages/gtmcore
             cd /home/circleci/repo
@@ -104,6 +106,26 @@ jobs:
             #python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
             #pytest --cov=gtmcore packages/gtmcore/gtmcore/environment/tests/test_conda.py
             #codecov -F core
+
+  test-background-jobs:
+    executor: gig_client
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Set authentication credentials
+          command: bash /home/circleci/repo/.circleci/write_auth.sh
+      - run:
+          name: Run background job tests
+          command: |
+            export PYTHONPATH=$PYTHONPATH:/home/circleci/repo/packages/gtmcore
+            cd /home/circleci/repo
+            redis-server > /dev/null 2> /dev/null &
+            rqscheduler --interval=2 2> /dev/null &
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
+            pytest --cov=gtmcore packages/gtmcore/gtmcore/dataset/tests/test_background_jobs.py
+            codecov -F core
 
   test-ui-components:
     executor: gig_client
@@ -177,7 +199,7 @@ workflows:
     jobs:
       - mypy-gtmcore
       - mypy-gtmapi
-      - test-long-running-env
+      - test-gtmcore-environment
       - test-confhttpproxy:
           requires:
             - mypy-gtmcore
@@ -195,6 +217,10 @@ workflows:
             - mypy-gtmcore
             - mypy-gtmapi
       - test-harness:
+          requires:
+            - mypy-gtmcore
+            - mypy-gtmapi
+      - test-background-jobs:
           requires:
             - mypy-gtmcore
             - mypy-gtmapi

@@ -1,0 +1,30 @@
+.Popup {
+  &:before {
+    content: '';
+    @include triangle('up', 9px, $white);
+    position: absolute;
+    top: -9px;
+    right: 33px;
+  }
+  background: $white;
+  padding: 10px;
+  font-size: 14px !important;
+  width: 300px;
+  position: absolute;
+  top: 50px;
+  left: -20px;
+  text-align: center;
+  z-index: index($elements, popup);
+  @include boxShadow();
+  &--fixed {
+    position: fixed;
+  }
+  &__small-text {
+    font-size: 14px;
+  }
+  &__header {
+    font-size: 18px;
+    margin: 5px;
+    font-weight: bold;
+  }
+}

@@ -27,6 +27,7 @@ from lmsrvlabbook.api.connections.activity import ActivityConnection
 from lmsrvlabbook.api.objects.activity import ActivityDetailObject, ActivityRecordObject
 from lmsrvlabbook.api.objects.packagecomponent import PackageComponent, PackageComponentInput
 from lmsrvlabbook.api.objects.dataset import Dataset
+from lmsrvlabbook.dataloader.package import PackageDataloader
 
 logger = LMLogger.get_logger()
 
@@ -104,10 +105,11 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
     background_jobs = graphene.List(JobStatus)
 
     # Package Query for validating packages and getting PackageComponents by attributes
-    packages = graphene.List(PackageComponent, package_input=graphene.List(PackageComponentInput))
+    check_packages = graphene.List(PackageComponent, package_input=graphene.List(PackageComponentInput))
 
     visibility = graphene.String()
 
+    # List of Datasets that are linked to this Labbook
     linked_datasets = graphene.List(Dataset)
 
     @classmethod
@@ -509,8 +511,8 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             lambda labbook: self.helper_resolve_background_jobs(labbook))
 
     @staticmethod
-    def helper_resolve_packages(labbook, package_input):
-        """Helper to return a PackageComponent object"""
+    def helper_resolve_check_packages(labbook, package_input):
+        """Helper to return a list of PackageComponent objects that have been validated"""
         manager = list(set([x['manager'] for x in package_input]))
 
         if len(manager) > 1:
@@ -522,13 +524,18 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         # Validate packages
         pkg_result = mgr.validate_packages(package_input, labbook, get_logged_in_username())
 
+        # Create dataloader
+        keys = [f"{manager[0]}&{pkg.package}" for pkg in pkg_result]
+        vd = PackageDataloader(keys, labbook, get_logged_in_username())
+
         # Return object
-        return [PackageComponent(manager=manager[0],
+        return [PackageComponent(_dataloader=vd,
+                                 manager=manager[0],
                                  package=pkg.package,
                                  version=pkg.version,
                                  is_valid=not pkg.error) for pkg in pkg_result]
 
-    def resolve_packages(self, info, package_input):
+    def resolve_check_packages(self, info, package_input):
         """Method to retrieve package component. Errors can be used to validate if a package name and version
         are correct
 
@@ -536,7 +543,7 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             list(PackageComponent)
         """
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: self.helper_resolve_packages(labbook, package_input))
+            lambda labbook: self.helper_resolve_check_packages(labbook, package_input))
 
     @staticmethod
     def helper_resolve_visibility(labbook, info):

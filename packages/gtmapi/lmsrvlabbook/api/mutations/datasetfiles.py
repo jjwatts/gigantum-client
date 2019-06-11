@@ -99,31 +99,39 @@ class CompleteDatasetUploadTransaction(graphene.relay.ClientIDMutation):
         cancel = graphene.Boolean()
         rollback = graphene.Boolean()
 
-    success = graphene.Boolean()
+    background_job_key = graphene.String()
 
     @classmethod
-    def mutate_and_get_payload(cls, root, info, owner, dataset_name,
-                               transaction_id, cancel=False, rollback=False,
-                               client_mutation_id=None):
-        username = get_logged_in_username()
-        ds = InventoryManager().load_dataset(username, owner, dataset_name,
-                                             author=get_logged_in_author())
-        with ds.lock():
-            if cancel and rollback:
-                logger.warning(f"Cancelled tx {transaction_id}, doing git reset")
-                # TODO: Add ability to reset
-            else:
-                logger.info(f"Done batch upload {transaction_id}, cancelled={cancel}")
-                if cancel:
-                    logger.warning("Sweeping aborted batch upload.")
+    def mutate_and_get_payload(cls, root, info, owner, dataset_name, transaction_id,
+                               cancel=False, rollback=False, client_mutation_id=None):
+        logged_in_username = get_logged_in_username()
+        logged_in_author = get_logged_in_author()
+        ds = InventoryManager().load_dataset(logged_in_username, owner, dataset_name,
+                                             author=logged_in_author)
+        if cancel and rollback:
+            # TODO: Add ability to reset
+            raise ValueError("Currently cannot rollback a cancled upload.")
+            # logger.warning(f"Cancelled tx {transaction_id}, doing git reset")
+        else:
+            logger.info(f"Done batch upload {transaction_id}, cancelled={cancel}")
+            if cancel:
+                logger.warning("Sweeping aborted batch upload.")
 
-                m = "Cancelled upload `{transaction_id}`. " if cancel else ''
+            d = Dispatcher()
+            job_kwargs = {
+                'logged_in_username': logged_in_username,
+                'logged_in_email': logged_in_author.email,
+                'dataset_owner': owner,
+                'dataset_name': dataset_name
+            }
 
-                # Sweep up and process all files added during upload
-                manifest = Manifest(ds, username)
-                manifest.sweep_all_changes(upload=True, extra_msg=m)
+            # Gen unique keys for tracking jobs
+            metadata = {'dataset': f"{logged_in_username}|{owner}|{dataset_name}",
+                        'method': 'complete_dataset_upload_transaction'}
 
-        return CompleteDatasetUploadTransaction(success=True)
+            res = d.dispatch_task(jobs.complete_dataset_upload_transaction, kwargs=job_kwargs, metadata=metadata)
+
+        return CompleteDatasetUploadTransaction(background_job_key=res.key_str)
 
 
 class DownloadDatasetFiles(graphene.relay.ClientIDMutation):

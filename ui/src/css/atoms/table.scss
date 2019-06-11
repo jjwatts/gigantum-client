@@ -9,3 +9,36 @@ tbody {
     border-bottom: 1px solid $backgroundGrey;
   }
 }
+.Table {
+
+  &__Header {
+    border-bottom: 2px solid $romanSilver;
+    &--sort {
+      position: relative;
+    }
+    &--asc {
+      &:before {
+        content: '';
+        @include triangle('up', 7px, $jet);
+        position: absolute;
+        bottom: 11px;
+        left: 100px;
+      }
+    }
+    &--desc {
+      &:before {
+        content: '';
+        @include triangle('down', 7px, $jet);
+        position: absolute;
+        bottom: 11px;
+        left: 100px;
+      }
+    }
+  }
+
+  &__Row {
+    border-bottom: 1px solid $romanSilver;
+    height: 100px;
+    padding-top: 20px;
+  }
+}

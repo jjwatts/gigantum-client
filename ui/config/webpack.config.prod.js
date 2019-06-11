@@ -15,6 +15,8 @@ const getClientEnvironment = require('./env');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
+const WorkerPlugin = require('worker-plugin');
+
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // It requires a trailing slash, or the file assets will get an incorrect path.
@@ -191,6 +193,16 @@ module.exports = {
       },
 
       {
+        test: /\.worker\.js$/,
+        use: {
+          loader: 'worker-loader',
+          options: {
+            name: '[name].[hash].worker.js',
+          },
+        },
+      },
+
+      {
         exclude: [
           /\.css$/,
           /\.scss$/,
@@ -350,6 +362,8 @@ module.exports = {
     new ExtractTextPlugin({
       filename: cssFilename,
     }),
+
+    new WorkerPlugin({globalObject: 'this'}),
     // Generate a manifest file which contains a mapping of all asset filenames
     // to their corresponding output file so that tools can pick it up without
     // having to parse `index.html`.

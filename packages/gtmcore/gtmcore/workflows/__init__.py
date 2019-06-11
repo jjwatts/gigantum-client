@@ -23,3 +23,4 @@ from gtmcore.workflows.gitworkflows import (GitWorkflow, LabbookWorkflow, Datase
                                             GitWorkflowException, MergeOverride)
 from gtmcore.workflows.gitworkflows_utils import (WorkflowsException, MergeError,
                                                   GitLabRemoteError)
+from gtmcore.workflows.container import ContainerWorkflows

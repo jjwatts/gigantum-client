@@ -15,6 +15,8 @@
 @import '_animations';
 //atoms
 @import 'atoms/button.scss';
+@import 'atoms/dropbox.scss';
+@import 'atoms/popup.scss';
 @import 'atoms/loader.scss';
 @import 'atoms/download.scss';
 @import 'atoms/tooltip.scss';
@@ -114,33 +116,4 @@ code {
   transform: translate(-50%, -50%);
 }
 
-.InfoTooltip {
-  &:before {
-    content: '';
-    @include triangle('up', 8px, $slateBlue);
-    position: absolute;
-    right: 100px;
-    top: -8px;
-  }
-  box-shadow: 0 0px 12px 0 rgba(0,0,0,.30);
-  user-select: none;
-  animation: slide-down-fade-in 0.25s;
-  position: absolute;
-  font-size: 14px;
-  background: $slateBlue;
-  color: white;
-  padding: 15px;
-  width: 250px;
-  top: 25px;
-  right: -100px;
-  word-break: break-word;
-  a {
-    text-decoration: underline;
-  }
-  &.summary {
-    &:before {
-      right: 9px;
-    }
-    right: -10px;
-  }
-}
+

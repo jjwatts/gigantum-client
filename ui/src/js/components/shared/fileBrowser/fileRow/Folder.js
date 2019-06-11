@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import Moment from 'moment';
 import { DragSource, DropTarget } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
+import { boundMethod } from 'autobind-decorator';
 // components
 import ActionsMenu from './ActionsMenu';
 import File from './File';
@@ -80,6 +81,17 @@ class Folder extends Component {
     */
   _setState(key, value) {
     this.setState({ [key]: value });
+  }
+
+  /**
+    *  @param {} -
+    *  calls parent refetch method
+    *  @return {boolean}
+    */
+  @boundMethod
+  _refetch() {
+    const { props } = this;
+    props.refetch();
   }
 
   /**
@@ -660,9 +672,10 @@ class Folder extends Component {
                     parentDownloading={state.downloadingAll}
                     section={props.section}
                     isDownloading={state.isDownloading || props.isDownloading}
-                    codeDirUpload={props.codeDirUpload}
+                    fileSizePrompt={props.fileSizePrompt}
                     checkLocal={props.checkLocal}
                     containerStatus={props.containerStatus}
+                    refetch={props.refetch}
                   />
                 );
               } if ((children && children[file] && children[file].edge && !children[file].edge.node.isDir)) {

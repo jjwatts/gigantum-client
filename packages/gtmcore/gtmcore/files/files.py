@@ -170,7 +170,7 @@ class FileOperations(object):
     def insert_file(cls, labbook: LabBook, section: str, src_file: str,
                     dst_path: str = '') -> Dict[str, Any]:
         """ Move the file at `src_file` into the `dst_dir`, overwriting
-        if a file already exists there. This calls `put_file()` under-
+        if a file already exists there. This calls `copy_into_container()` under-
         the-hood, but will create an activity record.
 
         Args:

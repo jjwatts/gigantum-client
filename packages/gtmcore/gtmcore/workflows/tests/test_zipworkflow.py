@@ -138,7 +138,6 @@ class TestLabbookImportZipping(object):
         with pytest.raises(ZipWorkflowException):
             y = z.import_labbook(dup_import, 'test', 'test', mock_config_file[0])
 
-
     def test_success_export_then_import_different_users(self, mock_config_file):
         inv_manager = InventoryManager(mock_config_file[0])
         lb = inv_manager.create_labbook('unittester', 'unittester', 'unittest-zip')

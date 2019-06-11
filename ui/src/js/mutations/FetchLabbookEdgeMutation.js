@@ -3,10 +3,10 @@ import {
   graphql,
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
-
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 const mutation = graphql`
-mutation FetchLabbookEdgeMutation($input: FetchLabbookEdgeInput!, $first: Int!, $cursor: String, $hasNext: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
+mutation FetchLabbookEdgeMutation($input: FetchLabbookEdgeInput!, $first: Int!, $cursor: String, $skipPackages: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
   fetchLabbookEdge(input: $input){
     newLabbookEdge{
       node {
@@ -48,12 +48,14 @@ export default function FetchLabbookEdgeMutation(
     inputSkip: false,
     outputSkip: false,
     labbookSkip: false,
+    skipPackages: true,
   };
   commitMutation(environment, {
     mutation,
     variables,
     onCompleted: (response, error) => {
       if (error) {
+        setErrorMessage(error);
         console.log(error);
       }
       callback(error);

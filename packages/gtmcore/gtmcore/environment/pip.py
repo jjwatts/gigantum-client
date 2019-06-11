@@ -1,39 +1,20 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-from typing import (Any, List, Dict, Optional)
+from typing import List, Dict, Optional
 import requests
 import json
 from gtmcore.container.container import ContainerOperations
 from gtmcore.labbook import LabBook
+from gtmcore.http import ConcurrentRequestManager, ConcurrentRequest
 
-from natsort import natsorted
+from packaging import version
 
-from distutils.version import StrictVersion
-from distutils.version import LooseVersion
-
-from gtmcore.environment.packagemanager import PackageManager, PackageResult
+from gtmcore.environment.packagemanager import PackageManager, PackageResult, PackageMetadata
 
 
 class PipPackageManager(PackageManager):
     """Class to implement the pip package manager
     """
+    def __init__(self):
+        self.request_mgr = ConcurrentRequestManager()
 
     def search(self, search_str: str, labbook: LabBook, username: str) -> List[str]:
         """Method to search a package manager for packages based on a string. The string can be a partial string.
@@ -54,6 +35,17 @@ class PipPackageManager(PackageManager):
         packages = [x.split(' ')[0] for x in lines]
         return sorted(packages)
 
+    def _extract_versions(self, response: dict) -> List[str]:
+        version_list = list(response["releases"].keys())
+
+        # Don't include release candidates that have been pushed to pip
+        version_list = [version.parse(v) for v in version_list if not version.parse(v).is_prerelease]
+
+        # Sort and return
+        version_list.sort(reverse=True)
+        version_list = [str(v) for v in version_list]
+        return version_list
+
     def list_versions(self, package_name: str, labbook: LabBook, username: str) -> List[str]:
         """Method to list all available versions of a package based on the package name
 
@@ -73,57 +65,7 @@ class PipPackageManager(PackageManager):
         if result.status_code != 200:
             raise IOError("Failed to query package index for package versions. Check internet connection.")
 
-        versions = list(result.json()["releases"].keys())
-
-        # Don't include release candidates that have been pushed to pip
-        versions = [x for x in versions if 'rc' not in x]
-
-        try:
-            # First attempt to sort by StrictVersion which enforces a standard version convention
-            versions.sort(key=StrictVersion)
-        except ValueError as e:
-            if 'invalid version number' in str(e):
-                try:
-                    # If this failed, try LooseVersion, which is much more flexible, but can fail sometimes
-                    versions.sort(key=LooseVersion)
-                except Exception:
-                    # Finally, try natural sorting the version strings if you still have a problem
-                    versions = natsorted(versions, key=lambda x: x.replace('.', '~') + 'z')
-            else:
-                raise e
-
-        versions.reverse()
-        return versions
-
-    def latest_version(self, package_name: str, labbook: LabBook, username: str) -> str:
-        """Method to get the latest version string for a package
-
-        Args:
-            package_name: Name of the package to query
-            labbook: Subject LabBook
-            username: username of current user
-
-        Returns:
-            str: latest version string
-        """
-        versions = self.list_versions(package_name, labbook, username)
-        if versions:
-            return versions[0]
-        else:
-            raise ValueError("Could not retrieve version list for provided package name")
-
-    def latest_versions(self, package_names: List[str], labbook: LabBook, username: str) -> List[str]:
-        """Method to get the latest version string for a list of packages
-
-        Args:
-            package_names: list of names of the packages to query
-            labbook: Subject LabBook
-            username: username of current user
-
-        Returns:
-            list: latest version strings
-        """
-        return [self.latest_version(pkg, labbook, username) for pkg in package_names]
+        return self._extract_versions(result.json())
 
     def list_installed_packages(self, labbook: LabBook, username: str) -> List[Dict[str, str]]:
         """Method to get a list of all packages that are currently installed
@@ -137,22 +79,6 @@ class PipPackageManager(PackageManager):
             list
         """
         packages = ContainerOperations.run_command('pip list --format=json', labbook, username,
-                                                   fallback_image=self.fallback_image(labbook))
-        return json.loads(packages.decode())
-
-    def list_available_updates(self, labbook: LabBook, username: str) -> List[Dict[str, str]]:
-        """Method to get a list of all installed packages that could be updated and the new version string
-
-        Note, this will return results for the computer/container in which it is executed. To get the properties of
-        a LabBook container, a docker exec command would be needed from the Gigantum application container.
-
-        return format is a list of dicts with the format
-         {name: <package name>, version: <currently installed version string>, latest_version: <latest version string>}
-
-        Returns:
-            list
-        """
-        packages = ContainerOperations.run_command('pip list --format=json -o', labbook, username,
                                                    fallback_image=self.fallback_image(labbook))
         return json.loads(packages.decode())
 
@@ -172,41 +98,80 @@ class PipPackageManager(PackageManager):
             namedtuple: namedtuple indicating if the package and version are valid
         """
         result = list()
-        for package in package_list:
-            pkg_result = PackageResult(package=package['package'], version=package['version'], error=True)
 
-            try:
-                version_list = self.list_versions(package['package'], labbook, username)
-            except ValueError:
-                result.append(pkg_result)
+        # Run async version lookups
+        request_list = list()
+        for pkg in package_list:
+            request_list.append(ConcurrentRequest(f"https://pypi.python.org/pypi/{pkg['package']}/json",
+                                                  headers={'Accept': 'application/json'}))
+        responses = self.request_mgr.resolve_many(request_list)
+
+        for package, response in zip(package_list, responses):
+            if response.status_code != 200:
+                result.append(PackageResult(package=package['package'], version=package.get('version'), error=True))
                 continue
 
-            if not version_list:
-                # If here, no versions found for the package...so invalid
-                result.append(pkg_result)
-            else:
-                if package['version']:
-                    if package['version'] in version_list:
-                        # Both package name and version are valid
-                        pkg_result = pkg_result._replace(error=False)
-                        result.append(pkg_result)
-
-                    else:
-                        # The package version is not in the list, so invalid
-                        result.append(pkg_result)
+            if package.get('version'):
+                # Package has been set, so validate it
+                if package.get('version') in self._extract_versions(response.json):
+                    # Both package name and version are valid
+                    result.append(PackageResult(package=package['package'], version=package.get('version'),
+                                                error=False))
 
                 else:
-                    # You need to look up the version and then add
-                    try:
-                        pkg_result = pkg_result._replace(version=self.latest_version(package['package'],
-                                                                                     labbook,
-                                                                                     username))
-                        pkg_result = pkg_result._replace(error=False)
-                    except ValueError:
-                        # Can't set the version so just continue
-                        pass
-                    finally:
-                        result.append(pkg_result)
+                    # The package version is not in the list, so invalid
+                    result.append(PackageResult(package=package['package'], version=package.get('version'), error=True))
+
+            else:
+                # You need to look up the latest version since not included
+                result.append(PackageResult(package=package['package'], version=response.json['info']['version'],
+                                            error=False))
+
+        return result
+
+    def get_packages_metadata(self, package_list: List[str], labbook: LabBook, username: str) -> List[PackageMetadata]:
+        """Method to get package metadata
+
+        Args:
+            package_list: List of package names
+            labbook(str): The labbook instance
+            username(str): The username for the logged in user
+
+        Returns:
+            list
+        """
+        def _extract_metadata(data):
+            """Extraction method to pull out the docs URL and description"""
+            latest_val = None
+            description_val = None
+            docs_val = None
+
+            info = data.get('info')
+            if info:
+                latest_val = info.get('version')
+                description_val = info.get('summary').strip()
+                docs_val = info.get('docs_url')
+
+                if not docs_val:
+                    docs_val = info.get('home_page')
+
+            return latest_val, description_val, docs_val
+
+        result = list()
+        request_list = list()
+        for pkg in package_list:
+            request_list.append(ConcurrentRequest(f"https://pypi.python.org/pypi/{pkg}/json",
+                                                  headers={'Accept': 'application/json'},
+                                                  extraction_function=_extract_metadata))
+        responses = self.request_mgr.resolve_many(request_list)
+        for package, response in zip(package_list, responses):
+            if response.status_code != 200:
+                result.append(PackageMetadata(package_manager="pip", package=package, latest_version=None,
+                                              description=None, docs_url=None))
+            else:
+                latest_version, description, docs_url = response.extracted_json
+                result.append(PackageMetadata(package_manager="pip", package=package, latest_version=latest_version,
+                                              description=description, docs_url=docs_url))
 
         return result
 

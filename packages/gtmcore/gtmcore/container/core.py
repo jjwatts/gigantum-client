@@ -99,8 +99,8 @@ def _remove_docker_image(image_name: str) -> None:
         logger.warning(f"Attempted to delete Docker image {image_name}, but not found")
 
 
-def build_docker_image(root_dir: str, username: str, nocache: bool = False,
-                       override_image_tag: Optional[str] = None,
+def build_docker_image(root_dir: str, username: str, override_image_tag: Optional[str],
+                       nocache: bool = False,
                        feedback_callback: Optional[Callable] = None) -> str:
     """
     Build a new docker image from the Dockerfile at the given directory, give this image
@@ -114,8 +114,8 @@ def build_docker_image(root_dir: str, username: str, nocache: bool = False,
 
     Args:
         root_dir: LabBook root directory (obtained by LabBook.root_dir)
-        override_image_tag: Tag of docker image; in general this should not be explicitly set.
         username: Username of active user.
+        override_image_tag: Tag of docker image; in general this should not be explicitly set.
         nocache: If True do not use docker cache.
         feedback_callback: Optional method taking one argument (a string) to process each line of output
 
@@ -177,15 +177,15 @@ def build_docker_image(root_dir: str, username: str, nocache: bool = False,
     return image_id
 
 
-def start_labbook_container(labbook_root: str, config_path: str, username: str,
+def start_labbook_container(labbook_root: str, username: str, config_path: str,
                             override_image_id: Optional[str] = None) -> str:
     """ Start a Docker container from a given image_name.
 
     Args:
         labbook_root: Root dir of labbook
+        username: Username of active user. Do not use with override_image_id.
         config_path: Path to LabBook configuration file.
         override_image_id: Optional explicit docker image id (do not infer).
-        username: Username of active user. Do not use with override_image_id.
 
     Returns:
         Tuple containing docker container id, dict mapping of exposed ports.

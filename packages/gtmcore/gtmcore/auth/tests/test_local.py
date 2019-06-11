@@ -40,7 +40,7 @@ def mock_import(archive_path: str, username: str, owner: str,
     if not username:
         username = "johndoe"
     if not base_filename:
-        base_filename = "awful-intersections-demo"
+        base_filename = "my-first-project"
 
     lb_dir = os.path.join('/mnt', 'gigantum', username, owner, "labbooks", base_filename)
     os.makedirs(lb_dir, exist_ok=True)
@@ -402,7 +402,7 @@ class TestIdentityLocal(object):
         # Should not import labbook - note we aren't mocking all the way to the workers
         time.sleep(5)
         assert os.path.exists(os.path.join('/mnt', 'gigantum', "johndoe", "johndoe", "labbooks",
-                                           "awful-intersections-demo")) is False
+                                           "my-first-project")) is False
 
     @mock.patch('gtmcore.workflows.ZipExporter.import_labbook', side_effect=mock_import)
     @responses.activate
@@ -423,7 +423,7 @@ class TestIdentityLocal(object):
         # Should import labbook - note we aren't mocking all the way to the workers
         time.sleep(5)
         assert os.path.exists(os.path.join('/mnt', 'gigantum', "johndoe", "johndoe", "labbooks",
-                                           "awful-intersections-demo"))
+                                           "my-first-project"))
 
     @mock.patch('gtmcore.workflows.ZipExporter.import_labbook', side_effect=mock_import)
     @responses.activate
@@ -447,4 +447,4 @@ class TestIdentityLocal(object):
         # Should import labbook - note we aren't mocking all the way to the workers
         time.sleep(5)
         assert os.path.exists(os.path.join('/mnt', 'gigantum', "johndoe", "johndoe", "labbooks",
-                                           "awful-intersections-demo")) is True
+                                           "my-first-project")) is True

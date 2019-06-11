@@ -4,7 +4,7 @@ import { graphql } from 'react-relay';
 import { fetchQuery } from 'JS/createRelayEnvironment';
 
 const fetchLabbookQuery = graphql`
-  query fetchLabbookQuery($name: String!, $owner: String!, $first: Int!, $hasNext: Boolean!, $cursor: String, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
+  query fetchLabbookQuery($name: String!, $owner: String!, $first: Int!, $skipPackages: Boolean!, $cursor: String, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
   labbook(name: $name, owner: $owner){
     id
     description
@@ -27,6 +27,7 @@ const FetchLabbook = {
       codeSkip: false,
       inputSkip: false,
       outputSkip: false,
+      skipPackages: true,
     };
 
     return new Promise((resolve, reject) => {

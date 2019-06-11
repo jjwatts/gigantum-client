@@ -1,0 +1,59 @@
+@import '~Styles/_imports.scss';
+
+.InstallProgress {
+  height: 100%;
+}
+
+.InstallProgress__body {
+  height: 351px;
+  border-top: 2px solid $grey-border;
+  border-bottom: 2px solid $grey-border;
+  text-align: center;
+}
+
+.InstallProgress__header{
+  text-align: center;
+}
+
+.InstallProgress__close-text{
+  font-size: 24px;
+}
+
+.InstallProgress__apply-text{
+  font-size: 18px;
+}
+
+.InstallProgress__buttons {
+  height: 75px;
+}
+
+.InstallProgress__progress {
+  width: 130px;
+  height: 130px;
+  line-height: 130px;
+  font-size: 32px;
+  background: url('~Images/loaders/status-spinner.svg') no-repeat center center;
+  background-size: 130px;
+  margin: 25px 0;
+}
+
+.InstallProgress__output{
+  background: $jet;
+  color: $white;
+  text-align: left;
+  white-space: pre-line;
+  height: 351px;
+  overflow: auto;
+  padding: 20px;
+  font-family: monospace;
+
+  &::-webkit-scrollbar {
+      width: 16px;
+      background-color: $mineShaft;
+  }
+
+  &::-webkit-scrollbar-thumb {
+      background-color: $mineShaft;
+      background-color: rgba(255,255,255,0.32);
+  }
+}

@@ -386,28 +386,35 @@ class BranchMenu extends Component {
   */
   @boundMethod
   _handleSyncButton(pullOnly, allowSync, allowSyncPull, passedSuccessCall) {
+    const { props } = this;
     this.setState({ syncMenuVisible: false });
     if (allowSync || (pullOnly && allowSyncPull)) {
-      if (!this.props.defaultRemote) {
+      if (!props.defaultRemote) {
         this._togglePublishModal(!this.state.isDataset, false);
       } else {
         const self = this;
         const data = {
           successCall: () => {
-            this.props.setSyncingState(false);
-            if (this.props.sectionType === 'labbook') {
+            props.setSyncingState(false);
+            if (props.sectionType === 'labbook') {
               this.state.branchMutations.buildImage((response, error) => {
                 if (error) {
                   console.error(error);
-
-                  setMultiInfoMessage(id, `ERROR: Failed to build ${this.props.section.name}`, null, true, error);
+                  const messageData = {
+                    id,
+                    message: `ERROR: Failed to build ${props.section.name}`,
+                    isLast: null,
+                    error: true,
+                    messageBody: error,
+                  };
+                  setMultiInfoMessage(messageData);
                 }
               });
-              this.props.setBranchUptodate();
+              props.setBranchUptodate();
             }
           },
           failureCall: (errorMessage) => {
-            this.props.setSyncingState(false);
+            props.setSyncingState(false);
             if (errorMessage.indexOf('Merge conflict') > -1) {
               self._toggleSyncModal();
               this.setState({ pullOnly });
@@ -420,22 +427,22 @@ class BranchMenu extends Component {
           if (!navigator.onLine) {
             self.setState({ showLoginPrompt: true });
           } else if (!(response.data && response.data.userIdentity && response.data.userIdentity.isSessionValid)) {
-            this.props.auth.renewToken(true, () => {
+            props.auth.renewToken(true, () => {
               self.setState({ showLoginPrompt: true });
             }, () => {
               self.handleSyncButton(pullOnly, allowSync, allowSyncPull);
             });
-          } else if (this.props.sectionType !== 'labbook') {
+          } else if (props.sectionType !== 'labbook') {
             this.state.branchMutations.syncDataset(data, (response, error) => {
               if (error) {
                 data.failureCall(error);
               }
             });
           } else {
-            LinkedLocalDatasetsQuery.getLocalDatasets({ owner: this.props.section.owner, name: this.props.section.name }).then((res) => {
+            LinkedLocalDatasetsQuery.getLocalDatasets({ owner: props.section.owner, name: props.section.name }).then((res) => {
               const localDatasets = res.data && res.data.labbook.linkedDatasets.filter(linkedDataset => linkedDataset.defaultRemote && linkedDataset.defaultRemote.slice(0, 4) !== 'http');
               if ((localDatasets.length === 0) || pullOnly) {
-                this.props.setSyncingState(true);
+                props.setSyncingState(true);
 
                 this.state.branchMutations.syncLabbook(data, (response, error) => {
                   if (error) {

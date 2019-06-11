@@ -46,11 +46,34 @@ button {
    &:hover {
     @include boxShadowDark();
   }
+  &--allStyling {
+    width: 162px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    margin: 0 12.5px;
+    outline: none;
+
+    color: $white;
+    border: 0;
+
+    font-weight: 400;
+    line-height: 1rem;
+  }
   &--noStyle{
     width: auto;
     background: transparent;
     color: $jet;
     box-shadow: none !important;
+  }
+  &--inverted {
+    background: transparent;
+    color: $azure;
+    border: 1px solid $azure;
+    &:disabled {
+      background: transparent !important;
+      color: $romanSilver;
+      border: 1px solid $romanSilver;
+    }
   }
   // flat button
   &--flat {
@@ -128,8 +151,8 @@ button {
     box-shadow: none !important;
   }
 
-  &--noMargin {
-    margin: 0;
+  &--smallMargin {
+    margin: 0 2px;
   }
 
   &--action{
@@ -172,6 +195,19 @@ button {
     text-decoration: none;
   }
 
+  &--fake {
+    cursor: auto;
+    background-color: $azure;
+    border-radius: 4px;
+    color: $white;
+    display: inline-block;
+    width: 85.7px;
+    line-height: 22.4px;
+    height: 22.4px;
+    pointer-events: none;
+    font-size: 15px;
+    padding-right: 15px;
+  }
 
   &--columns {
     @include flex(space-around, column);
@@ -321,6 +357,16 @@ button {
      }
   }
 
+  &__delete-grey {
+    background: $background-color url(~Images/icons/trash-azure.svg) no-repeat center center;
+    background-size: 22px;
+
+    &:disabled {
+      background: $background-color url(~Images/icons/trash.svg) no-repeat center center !important;
+      background-size: 22px !important;
+    }
+ }
+
   &__rename {
     background: url(~Images/icons/rename-azure.svg) no-repeat center center;
     background-size: 21px !important;
@@ -367,19 +413,18 @@ button {
 
  &__check {
    background: url(~Images/icons/check-selected.svg) no-repeat center center;
-   background-size: 30px;
-   box-shadow: none !important;
+   background-size: 30px !important;
 
    &:focus {
      background: url(~Images/icons/check-selected.svg) no-repeat center center;
      border: 0px;
-     background-size: 30px;
+     background-size: 30px !important;
    }
 
    &:hover {
      background: url(~Images/icons/check-selected.svg) no-repeat center center;
      border: 0px;
-      background-size: 34px;
+     background-size: 30px !important
     }
  }
 
@@ -425,6 +470,17 @@ button {
   &:disabled {
     background: transparent url(~Images/icons/update-version.svg) no-repeat center center !important;
     background-size: 18px;
+
+  }
+ }
+
+ &__upArrow-grey {
+  background: $background-color url(~Images/icons/update-azure.svg) no-repeat center center;
+  background-size: 24px;
+
+  &:disabled {
+    background: $background-color url(~Images/icons/update-version.svg) no-repeat center center !important;
+    background-size: 24px !important;
 
   }
  }
@@ -572,6 +628,25 @@ button {
     }
   }
 
+  &__subtract {
+    background: url(~Images/icons/form/checkbox/checkbox-minus.svg) no-repeat center center;
+    background-size: 20px !important;
+    &:focus {
+      background: url(~Images/icons/form/checkbox/checkbox-minus.svg) no-repeat center center;
+      background-size: 20px !important;
+      border: 0px;
+    }
+
+    &:hover {
+      background: url(~Images/icons/form/checkbox/checkbox-minus.svg) no-repeat center center;
+      background-size: 20px !important;
+      border: 0px;
+    }
+  }
+  &__warning {
+    background: $goldenLemon url(~Images/icons/notifications/info-exclamation.svg) no-repeat center center;
+    background-size: 20px !important;
+  }
 
   &__expandable-close {
    transition: all 0.25s ease, background-position 1ms;
@@ -618,6 +693,12 @@ button {
       background-position: center center;
       background-size: 20px !important;
     }
+    &--featurePosition {
+      background: $azure url('~Images/icons/add-white.svg') no-repeat left 15px center;
+      background-size: 13px !important;
+      top: -20px;
+      right: 15px;
+     }
   }
 
   &__dropdown {

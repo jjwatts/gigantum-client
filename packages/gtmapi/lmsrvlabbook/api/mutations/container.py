@@ -1,6 +1,7 @@
 import uuid
-
+from urllib.parse import quote_plus
 import graphene
+
 from confhttpproxy import ProxyRouter
 
 from gtmcore.inventory.inventory import InventoryManager
@@ -10,8 +11,10 @@ from gtmcore.container.container import ContainerOperations
 from gtmcore.mitmproxy.mitmproxy import MITMProxyOperations
 from gtmcore.container.jupyter import check_jupyter_reachable, start_jupyter
 from gtmcore.container.rserver import start_rserver
+from gtmcore.container.bundledapp import start_bundled_app
 from gtmcore.logging import LMLogger
 from gtmcore.activity.services import start_labbook_monitor
+from gtmcore.environment.bundledapp import BundledAppManager
 
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 
@@ -39,12 +42,19 @@ class StartDevTool(graphene.relay.ClientIDMutation):
     @classmethod
     def _start_dev_tool(cls, labbook: LabBook, username: str, dev_tool: str, container_override_id: str = None):
         router = ProxyRouter.get_proxy(labbook.client_config.config['proxy'])
+        bam = BundledAppManager(labbook)
+        bundled_apps = bam.get_bundled_apps()
+        bundled_app_names = [x for x in bundled_apps]
 
         if dev_tool == "rstudio":
             suffix = cls._start_rstudio(labbook, router, username)
         elif dev_tool in ["jupyterlab", "notebook"]:
             # Note that starting the dev tool is identical whether we're targeting jupyterlab or notebook
             suffix = cls._start_jupyter_tool(labbook, router, username, container_override_id)
+        elif dev_tool in bundled_app_names:
+            app_data = bundled_apps[dev_tool]
+            app_data['name'] = dev_tool
+            suffix = cls._start_bundled_app(labbook, router, username, app_data, container_override_id)
         else:
             raise GigantumException(f"'{dev_tool}' not currently supported as a Dev Tool")
 
@@ -116,11 +126,44 @@ class StartDevTool(graphene.relay.ClientIDMutation):
         return pr_suffix
 
     @classmethod
+    def _start_bundled_app(cls, labbook: LabBook, router: ProxyRouter, username: str, bundled_app: dict,
+                           container_override_id: str = None):
+        tool_port = bundled_app['port']
+        labbook_ip = ContainerOperations.get_labbook_ip(labbook, username)
+        endpoint = f'http://{labbook_ip}:{tool_port}'
+
+        route_prefix = quote_plus(bundled_app['name'])
+
+        matched_routes = router.get_matching_routes(endpoint, route_prefix)
+
+        run_command = True
+        suffix = None
+        if len(matched_routes) == 1:
+            logger.info(f"Found existing {bundled_app['name']} in route table for {str(labbook)}.")
+            suffix = matched_routes[0]
+            run_command = False
+
+        elif len(matched_routes) > 1:
+            raise ValueError(f"Multiple {bundled_app['name']} instances found in route table "
+                             f"for {str(labbook)}! Restart container.")
+
+        if run_command:
+            logger.info(f"Adding {bundled_app['name']} to route table for {str(labbook)}.")
+            suffix, _ = router.add(endpoint, route_prefix)
+            suffix = "/" + suffix
+
+            # Start app
+            logger.info(f"Starting {bundled_app['name']} in {str(labbook)}.")
+            start_bundled_app(labbook, username, bundled_app['command'], tag=container_override_id)
+
+        return suffix
+
+    @classmethod
     def mutate_and_get_payload(cls, root: str, info: str, owner: str, labbook_name: str, dev_tool: str,
                                container_override_id: str = None, client_mutation_id: str = None):
         username = get_logged_in_username()
         labbook = InventoryManager().load_labbook(username, owner, labbook_name,
-                                             author=get_logged_in_author())
+                                                  author=get_logged_in_author())
 
         with labbook.lock(failfast=True):
             path = cls._start_dev_tool(labbook, username, dev_tool.lower(), container_override_id)

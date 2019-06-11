@@ -5,12 +5,12 @@
     left: 140px;
     bottom: 0;
     right: 0;
-    width: 100%;
+    width: calc(100% - 140px);
     height: 40px;
 
     text-align: center;
 
-    background: $grey;
+    background: $slateBlue;
   }
 
   &--error {

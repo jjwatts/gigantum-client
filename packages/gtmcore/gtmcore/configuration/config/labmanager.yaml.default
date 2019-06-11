@@ -98,6 +98,7 @@ proxy:
 # Datasets configuration
 datasets:
   cache_manager: "host"
+  hash_cpu_limit: "auto"
   backends:
     gigantum_object_v1:
       upload_chunk_size: 4096

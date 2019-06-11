@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Wed May 22 2019 13:54:34 GMT-0400 (Eastern Daylight Time)
+# timestamp: Tue Jun 04 2019 11:02:53 GMT-0400 (Eastern Daylight Time)
 
 schema {
   query: LabbookQuery
@@ -292,6 +292,26 @@ type BuildImagePayload {
   clientMutationId: String
 }
 
+"""Represents a bundled application """
+type BundledApp implements Node & GitRepository {
+  """The ID of the object."""
+  id: ID!
+  owner: String!
+  name: String!
+
+  """Name of the bundled app"""
+  appName: String!
+
+  """Description of the bundled app"""
+  description: String
+
+  """Port on which the bundled app is exposed internally"""
+  port: Int
+
+  """Command to run to start the bundled app"""
+  command: String
+}
+
 input CancelBuildInput {
   owner: String!
   labbookName: String!
@@ -301,6 +321,20 @@ input CancelBuildInput {
 type CancelBuildPayload {
   buildStopped: Boolean
   message: String
+  clientMutationId: String
+}
+
+input ChangeLabbookBaseInput {
+  owner: String!
+  labbookName: String!
+  repository: String!
+  baseId: String!
+  revision: Int!
+  clientMutationId: String
+}
+
+type ChangeLabbookBasePayload {
+  labbook: Labbook
   clientMutationId: String
 }
 
@@ -351,7 +385,7 @@ input CompleteDatasetUploadTransactionInput {
 }
 
 type CompleteDatasetUploadTransactionPayload {
-  success: Boolean
+  backgroundJobKey: String
   clientMutationId: String
 }
 
@@ -515,7 +549,7 @@ type DatasetList implements Node {
 
 """
 A type representing the overview of a Dataset
-    
+
 """
 type DatasetOverview implements Node & GitRepository {
   """The ID of the object."""
@@ -655,6 +689,26 @@ type DeleteRemoteLabbookPayload {
   clientMutationId: String
 }
 
+input DeleteSecretsFileInput {
+  owner: String!
+  labbookName: String!
+
+  """
+  Filename of secrets file to delete from the host - does NOT delete from the registry
+  """
+  filename: String!
+  clientMutationId: String
+}
+
+"""
+Delete the secrets file on the host, but without removing the
+corresponding entry in the registry.
+"""
+type DeleteSecretsFilePayload {
+  environment: Environment
+  clientMutationId: String
+}
+
 input DownloadDatasetFilesInput {
   datasetOwner: String!
   datasetName: String!
@@ -681,6 +735,8 @@ type Environment implements Node & GitRepository {
   base: BaseComponent
   packageDependencies(before: String, after: String, first: Int, last: Int): PackageComponentConnection
   dockerSnippet: String
+  secretsFileMapping(before: String, after: String, first: Int, last: Int): SecretFileMappingConnection
+  bundledApps: [BundledApp]
 }
 
 input ExportDatasetInput {
@@ -789,6 +845,28 @@ type ImportRemoteLabbookPayload {
   clientMutationId: String
 }
 
+input InsertSecretsEntryInput {
+  owner: String!
+  labbookName: String!
+
+  """Filename (not a full path) of the secrets file."""
+  filename: String!
+
+  """Path to directory INSIDE the container"""
+  mountPath: String!
+  clientMutationId: String
+}
+
+"""
+Creates an entry in the Project's Secret Store. Note, you will
+need to use the Upload mutation to actually put the file content in
+the secret store.
+"""
+type InsertSecretsEntryPayload {
+  environment: Environment
+  clientMutationId: String
+}
+
 """
 A query to get the status of a background task launched with the Dispatcher
 """
@@ -805,7 +883,7 @@ type JobStatus implements Node {
 }
 
 """
-A Connection for paging through all background jobs the system is aware of. 
+A Connection for paging through all background jobs the system is aware of.
 """
 type JobStatusConnection {
   pageInfo: PageInfo!
@@ -853,7 +931,7 @@ type Labbook implements Node & GitRepository {
   detailRecord(key: String): ActivityDetailObject
   detailRecords(keys: [String]): [ActivityDetailObject]
   backgroundJobs: [JobStatus]
-  packages(packageInput: [PackageComponentInput]): [PackageComponent]
+  checkPackages(packageInput: [PackageComponentInput]): [PackageComponent]
   visibility: String
   linkedDatasets: [Dataset]
 }
@@ -950,6 +1028,10 @@ type LabbookList implements Node {
 
 """Entry point for all graphql mutations"""
 type LabbookMutations {
+  insertSecretsEntry(input: InsertSecretsEntryInput!): InsertSecretsEntryPayload
+  removeSecretsEntry(input: RemoveSecretsEntryInput!): RemoveSecretsEntryPayload
+  uploadSecretsFile(input: UploadSecretsFileInput!): UploadSecretsFilePayload
+  deleteSecretsFile(input: DeleteSecretsFileInput!): DeleteSecretsFilePayload
   buildImage(input: BuildImageInput!): BuildImagePayload
   cancelBuild(input: CancelBuildInput!): CancelBuildPayload
   startContainer(input: StartContainerInput!): StartContainerPayload
@@ -959,6 +1041,9 @@ type LabbookMutations {
   removePackageComponents(input: RemovePackageComponentsInput!): RemovePackageComponentsPayload
   addCustomDocker(input: AddCustomDockerInput!): AddCustomDockerPayload
   removeCustomDocker(input: RemoveCustomDockerInput!): RemoveCustomDockerPayload
+  changeLabbookBase(input: ChangeLabbookBaseInput!): ChangeLabbookBasePayload
+  setBundledApp(input: SetBundledAppInput!): SetBundledAppPayload
+  removeBundledApp(input: RemoveBundledAppInput!): RemoveBundledAppPayload
   importLabbook(input: ImportLabbookInput!): ImportLabbookPayload
   exportLabbook(input: ExportLabbookInput!): ExportLabbookPayload
   importRemoteLabbook(input: ImportRemoteLabbookInput!): ImportRemoteLabbookPayload
@@ -1050,12 +1135,11 @@ type LabbookQuery {
   datasetList: DatasetList
   availableBases(before: String, after: String, first: Int, last: Int): BaseComponentConnection
   availableDatasetTypes: [DatasetType]
-  package(manager: String, package: String, version: String = ""): PackageComponent
 }
 
 """
 A type representing a section within a LabBook (i.e., code, input, output)
-    
+
 """
 type LabbookSection implements Node & GitRepository {
   """The ID of the object."""
@@ -1105,7 +1189,7 @@ input MergeFromBranchInput {
 }
 
 """
-Merge from another branch into the current active branch. Force if necessary. 
+Merge from another branch into the current active branch. Force if necessary.
 """
 type MergeFromBranchPayload {
   labbook: Labbook
@@ -1196,6 +1280,8 @@ type PackageComponent implements Node {
   package: String!
   version: String!
   latestVersion: String
+  description: String
+  docsUrl: String
   fromBase: Boolean
   isValid: Boolean
 }
@@ -1347,6 +1433,24 @@ type RemoteLabbookEdge {
   cursor: String!
 }
 
+input RemoveBundledAppInput {
+  """Owner of the labbook"""
+  owner: String!
+
+  """Name of the labbook"""
+  labbookName: String!
+
+  """Name of the bundled app"""
+  appName: String!
+  clientMutationId: String
+}
+
+"""Mutation to remove a bundled app from a container"""
+type RemoveBundledAppPayload {
+  environment: Environment
+  clientMutationId: String
+}
+
 input RemoveCustomDockerInput {
   owner: String!
   labbookName: String!
@@ -1386,6 +1490,24 @@ type RemovePackageComponentsPayload {
   clientMutationId: String
 }
 
+input RemoveSecretsEntryInput {
+  owner: String!
+  labbookName: String!
+
+  """Filename of secret to remove from the registry"""
+  filename: String!
+  clientMutationId: String
+}
+
+"""
+Removes the entry from the Project's SecretStore. Will also remove
+any associated files. This undoes the InsertSecretsEntry mutation.
+"""
+type RemoveSecretsEntryPayload {
+  environment: Environment
+  clientMutationId: String
+}
+
 input RemoveUserIdentityInput {
   clientMutationId: String
 }
@@ -1407,10 +1529,67 @@ input ResetBranchToRemoteInput {
 """
 Undo all local history and then set current branch tip to match remote.
 
-Very useful when changes are made to master that cannot be pushed. 
+Very useful when changes are made to master that cannot be pushed.
 """
 type ResetBranchToRemotePayload {
   labbook: Labbook
+  clientMutationId: String
+}
+
+"""
+Represents a secret vault - i.e., a directory that contains secret key files.
+"""
+type SecretFileMapping implements Node & GitRepository {
+  """The ID of the object."""
+  id: ID!
+  owner: String!
+  name: String!
+  filename: String
+  mountPath: String
+  isPresent: Boolean
+}
+
+"""Paging through a Project's Secrets Mapping"""
+type SecretFileMappingConnection {
+  pageInfo: PageInfo!
+  edges: [SecretFileMappingEdge]!
+}
+
+type SecretFileMappingEdge {
+  """The item at the end of the edge"""
+  node: SecretFileMapping
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+input SetBundledAppInput {
+  """Owner of the labbook"""
+  owner: String!
+
+  """Name of the labbook"""
+  labbookName: String!
+
+  """Name of the bundled app"""
+  appName: String!
+
+  """Description of the bundled app"""
+  description: String!
+
+  """Port internally exposed"""
+  port: Int!
+
+  """Optional command run to start the bundled app if needed"""
+  command: String
+  clientMutationId: String
+}
+
+"""
+Mutation to add or update a bundled app configuration to a project
+
+"""
+type SetBundledAppPayload {
+  environment: Environment
   clientMutationId: String
 }
 
@@ -1537,6 +1716,23 @@ input UpdateLabbookFavoriteInput {
 
 type UpdateLabbookFavoritePayload {
   updatedFavoriteEdge: LabbookFavoriteEdge
+  clientMutationId: String
+}
+
+input UploadSecretsFileInput {
+  owner: String!
+  labbookName: String!
+  chunkUploadParams: ChunkUploadInput!
+  transactionId: String!
+  clientMutationId: String
+}
+
+"""
+Uploades the actual secrets file pertaining to the given filename in the
+SecretStore registry. The InsertSecretsEntry must be called first.
+"""
+type UploadSecretsFilePayload {
+  environment: Environment
   clientMutationId: String
 }
 

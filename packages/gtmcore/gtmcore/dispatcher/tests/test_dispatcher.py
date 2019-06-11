@@ -83,22 +83,6 @@ def temporary_worker():
 
 class TestDispatcher(object):
 
-    def test_unallowed_task_not_run(self, temporary_worker):
-        w, d = temporary_worker
-
-        def oh_no(cats, dogs, bees):
-            raise RuntimeError("This should never happen!")
-
-        try:
-            # Only allowed tasks may be dispatched.
-            d.dispatch_task(oh_no, args=('x', 1, None))
-        except ValueError as e:
-            assert 'not in available' in str(e), "Attempt should result in ValueError"
-        else:
-            assert False, "Method not in registry should not have been allowed to run"
-
-        w.terminate()
-
     def test_simple_task(self, temporary_worker):
         w, d = temporary_worker
         job_ref = d.dispatch_task(bg_jobs.test_exit_success)

@@ -81,7 +81,7 @@ class TestLabbookFileOperations(object):
 
         git_hash_2 = lb.git.commit_hash
         with pytest.raises(Exception):
-            r = lb.insert_file('input', src_file=sample_f.name, dst_dir='')
+            r = lb.insert_file('input', src_file=sample_f.name)
 
         # Make sure no commits were made
         assert git_hash_1 == git_hash_2

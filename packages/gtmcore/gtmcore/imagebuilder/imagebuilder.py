@@ -10,6 +10,7 @@ from gtmcore.labbook import LabBook
 from gtmcore.logging import LMLogger
 from gtmcore.environment.utils import get_package_manager
 from gtmcore.mitmproxy.mitmproxy import CURRENT_MITMPROXY_TAG
+from gtmcore.environment.bundledapp import BundledAppManager
 
 
 logger = LMLogger.get_logger()
@@ -60,7 +61,6 @@ class ImageBuilder(object):
                 docker_lines.append("FROM gigantum/mitmproxy_proxy:" + CURRENT_MITMPROXY_TAG)
 
         return docker_lines
-
 
     def _import_baseimage_fields(self) -> Dict[str, Any]:
         """Load fields from base_image yaml file into a convenient dict. """
@@ -138,6 +138,17 @@ class ImageBuilder(object):
             docker_lines.extend(docker_data['content'])
         return docker_lines
 
+    def _load_bundled_apps(self) -> List[str]:
+        """Method to get the bundled apps docker snippets
+
+        Returns:
+            List
+        """
+        docker_lines = ['# Bundled Application Ports']
+        bam = BundledAppManager(self.labbook)
+        docker_lines.extend(bam.get_docker_lines())
+        return docker_lines
+
     def _post_image_hook(self) -> List[str]:
         """Contents that must be after baseimages but before development environments. """
         docker_lines = ["# Post-image creation hooks",
@@ -179,6 +190,7 @@ class ImageBuilder(object):
                              self._load_baseimage,
                              self._load_packages,
                              self._load_docker_snippets,
+                             self._load_bundled_apps,
                              self._post_image_hook,
                              self._entrypoint_hooks]
 

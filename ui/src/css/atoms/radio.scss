@@ -4,7 +4,7 @@
  span {
    padding: 0 1rem 0 2em;
  }
- input + span {
+ input[type="radio"] + span {
    background: url('~Images/icons/form/radio/radio.svg') no-repeat 2px center;
    background-size: 16px;
  }
@@ -14,7 +14,7 @@
     background-size: 16px;
   }
 
-  input {
+  input[type="radio"] {
     display: none;
   }
   &:hover {
@@ -31,5 +31,17 @@
     span {
       color: $azure;
     }
+  }
+  &--disabled {
+    cursor: auto;
+
+    input[type="radio"] + span {
+      background: url('~Images/icons/form/radio/radio-disabled.svg') no-repeat 2px center;
+      background-size: 16px;
+    }
+    span {
+      color: $mineShaft !important;
+    }
+
   }
 }

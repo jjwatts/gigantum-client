@@ -1,0 +1,15 @@
+@import '~Styles/_imports.scss';
+
+.PackageStatus{
+  height: 20px;
+  width: 20px;
+  border-radius: 4px;
+  margin: 0 12.5px;
+
+  &--verified {
+    background: url('~Images/icons/status-verified.svg') no-repeat center center;
+  }
+  &--verifying {
+    background: url('~Images/loaders/status-spinner.svg') no-repeat center center;
+  }
+}

@@ -20,7 +20,7 @@ export default (
       labbookName: action.payload.labbookName,
     };
   } if (action.type === types.UPDATE_CALLBACK_ROUTE) {
-    sessionStorage.setItem('CALLBACK_ROUTE', action.payload.callbackRoute);
+    window.sessionStorage.setItem('CALLBACK_ROUTE', action.payload.callbackRoute);
     return {
       ...state,
       callbackRoute: action.payload.callbackRoute,

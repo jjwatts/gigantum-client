@@ -5,6 +5,7 @@ export default (
   state = {
     isSticky: false,
     isProcessing: false,
+    isUploading: false,
   },
   action,
 ) => {
@@ -13,6 +14,11 @@ export default (
     return {
       ...state,
       isSticky: action.payload.isSticky,
+    };
+  } if (action.type === types.IS_UPLOADING) {
+    return {
+      ...state,
+      isUploading: action.payload.isUploading,
     };
   } if (action.type === types.SET_IS_PROCESSING) {
     return {

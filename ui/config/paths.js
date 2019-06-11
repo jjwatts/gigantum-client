@@ -62,4 +62,5 @@ module.exports = {
   appNodeModules: resolveApp('node_modules'),
   publicUrl: getPublicUrl(resolveApp('package.json')),
   servedPath: getServedPath(resolveApp('package.json')),
+  uploadWorker: resolveApp('src/js/utils/upload.worker.js'),
 };

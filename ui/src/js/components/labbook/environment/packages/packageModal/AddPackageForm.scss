@@ -1,0 +1,28 @@
+@import '~Styles/_imports.scss';
+
+.AddPackageForm {
+  height: 325px;
+  &__container {
+    width: 431px;
+    height: 225px;
+  }
+}
+
+.AddPackageForm__name {
+  span {
+    white-space: nowrap;
+    margin-right: 20px;
+    margin-left: 19px;
+  }
+}
+
+.AddPackageForm__version {
+  &-title {
+    margin-right: 20px;
+    margin-left: 69px;
+  }
+}
+
+.AddPackageForm__entry-buttons{
+  margin-top: 50px;
+}

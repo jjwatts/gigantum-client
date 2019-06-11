@@ -7,7 +7,7 @@ import environment from 'JS/createRelayEnvironment';
 import { setErrorMessage } from 'JS/redux/actions/footer';
 
 const mutation = graphql`
-  mutation MigrateProjectMutation($input: MigrateLabbookSchemaInput!, $first: Int, $cursor: String, $hasNext: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
+  mutation MigrateProjectMutation($input: MigrateLabbookSchemaInput!, $first: Int, $cursor: String, $skipPackages: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
     migrateLabbookSchema(input: $input){
       labbook{
         ...Labbook_labbook
@@ -40,6 +40,7 @@ export default function MigrateProjectMutation(
     inputSkip: false,
     outputSkip: false,
     labbookSkip: false,
+    skipPackages: true,
   };
   commitMutation(
     environment,

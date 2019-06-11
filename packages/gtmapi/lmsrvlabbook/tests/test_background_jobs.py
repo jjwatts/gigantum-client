@@ -81,7 +81,7 @@ class TestBackgroundJobs(object):
 
         t1 = d.dispatch_task(jobs.test_exit_fail).key_str
         t2 = d.dispatch_task(jobs.test_exit_success).key_str
-        t3 = d.dispatch_task(jobs.test_sleep, args=(1,)).key_str
+        t3 = d.dispatch_task(jobs.test_sleep, args=(5,)).key_str
 
         query = """
                 {

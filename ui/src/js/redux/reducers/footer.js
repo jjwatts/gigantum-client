@@ -2,7 +2,7 @@ import uuidv4 from 'uuid/v4';
 import * as types from 'JS/redux/constants/constants';
 
 let tempId = 0;
-const messageStackHistory = sessionStorage.getItem('messageStackHistory') ? JSON.parse(sessionStorage.getItem('messageStackHistory')) : [];
+const messageStackHistory = window.sessionStorage.getItem('messageStackHistory') ? JSON.parse(window.sessionStorage.getItem('messageStackHistory')) : [];
 
 export default (state = {
   open: false,
@@ -57,7 +57,7 @@ export default (state = {
 
     messageStackHistory = checkHistoryStackLength(messageStackHistory);
 
-    sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
+    window.sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
 
     return {
       ...state,
@@ -94,7 +94,7 @@ export default (state = {
 
     messageStackHistory = checkHistoryStackLength(messageStackHistory);
 
-    sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
+    window.sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
 
     return {
       ...state,
@@ -130,7 +130,7 @@ export default (state = {
     messageStackHistory.unshift(message);
     messageStackHistory = checkHistoryStackLength(messageStackHistory);
 
-    sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
+    window.sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
 
     return {
       ...state,
@@ -337,9 +337,8 @@ export default (state = {
         messageListOpen = false;
       }
     } else {
-      messageListOpen = true;
+      messageListOpen = action.payload.messageListOpen === undefined || action.payload.messageListOpen;
     }
-
 
     const message = {
       message: action.payload.message,
@@ -372,7 +371,7 @@ export default (state = {
     }
 
     messageStackHistory = checkHistoryStackLength(messageStackHistory);
-    sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
+    window.sessionStorage.setItem('messageStackHistory', JSON.stringify(messageStackHistory));
 
     return {
       ...state,

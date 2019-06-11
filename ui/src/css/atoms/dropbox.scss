@@ -1,0 +1,17 @@
+.Dropbox {
+  background: $white;
+  text-align: center;
+  padding: 50px;
+  margin-top: 50px;
+  border: 2px dashed $romanSilver;
+  background: url('~Images/icons/cloud-upload.svg') no-repeat center 25px;
+  background-size: 40px;
+
+}
+
+.Dropbox--menu {
+  line-height: 30px;
+  font-size: 20px;
+  margin: 20px 0;
+}
+

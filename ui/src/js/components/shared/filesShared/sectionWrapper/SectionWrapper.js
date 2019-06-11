@@ -215,6 +215,7 @@ export default class SectionWrapper extends Component {
                 {...sectionProps}
                 linkedDatasets={sectionObject.linkedDatasets || null}
                 containerStatus={props.containerStatus}
+                lockFileBrowser={props.lockFileBrowser}
 
               />
             </div>

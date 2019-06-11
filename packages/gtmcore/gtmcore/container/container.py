@@ -1,5 +1,7 @@
 import os
 import time
+import tempfile
+import tarfile
 from typing import Optional, Tuple
 
 import docker
@@ -9,14 +11,11 @@ from gtmcore.configuration import get_docker_client
 from gtmcore.logging import LMLogger
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.labbook import LabBook
-from gtmcore.exceptions import GigantumException
 
 from gtmcore.container.utils import infer_docker_image_name
 from gtmcore.container.exceptions import ContainerException
 from gtmcore.container.core import (build_docker_image, stop_labbook_container,
                                      start_labbook_container, get_container_ip)
-from gtmcore.container.jupyter import start_jupyter
-from gtmcore.container.rserver import start_rserver
 
 logger = LMLogger.get_logger()
 
@@ -24,6 +23,7 @@ logger = LMLogger.get_logger()
 class ContainerOperations:
 
     @classmethod
+
     def build_image(cls, labbook: LabBook, username: str, override_image_tag: Optional[str] = None,
                     nocache: bool = False) -> Tuple[LabBook, str]:
         """ Build docker image according to the Dockerfile just assembled. Does NOT
@@ -80,6 +80,7 @@ class ContainerOperations:
     def run_command(
             cls, cmd_text: str, labbook: LabBook, username: str,
             override_image_tag: Optional[str] = None, fallback_image: str = None) -> bytes:
+
         """Run a command executed in the context of the LabBook's docker image.
 
         Args:
@@ -205,3 +206,40 @@ class ContainerOperations:
         """
         docker_key = cls.labbook_image_name(labbook, username)
         return get_container_ip(docker_key)
+
+    @classmethod
+    def copy_into_container(cls, labbook: LabBook, username: str, src_path: str, dst_dir: str):
+        """Copy the given file in src_path into the project's container.
+
+        Args:
+            labbook: Project under consideration.
+            username: Active username
+            src_path: Source path ON THE HOST of the file - callers responsibility to sanitize
+            dst_dir: Destination directory INSIDE THE CONTAINER.
+        """
+        if not labbook.owner:
+            raise ContainerException(f"{str(labbook)} has no owner")
+
+        if not os.path.isfile(src_path):
+            raise ContainerException(f"Source file {src_path} is not a file")
+
+        docker_key = infer_docker_image_name(labbook_name=labbook.name,
+                                             owner=labbook.owner,
+                                             username=username)
+        lb_container = docker.from_env().containers.get(docker_key)
+        r = lb_container.exec_run(f'sh -c "mkdir -p {dst_dir}"')
+
+        # Tar up the src file to copy into container
+        tarred_secret_file = tempfile.NamedTemporaryFile()
+        t = tarfile.open(mode='w', fileobj=tarred_secret_file)
+        abs_path = os.path.abspath(src_path)
+        t.add(abs_path, arcname=os.path.basename(src_path), recursive=True)
+        t.close()
+        tarred_secret_file.seek(0)
+
+        try:
+            logger.info(f"Copying file {src_path} into {dst_dir} in {str(labbook)}")
+            docker.from_env().api.put_archive(docker_key, dst_dir, tarred_secret_file)
+        finally:
+            # Make sure the temporary Tar archive gets deleted.
+            tarred_secret_file.close()

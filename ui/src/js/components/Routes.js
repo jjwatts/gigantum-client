@@ -171,7 +171,7 @@ class Routes extends Component {
   */
   @boundMethod
   _hideDiskWarning() {
-    sessionStorage.setItem('hideDiskWarning', true);
+    window.sessionStorage.setItem('hideDiskWarning', true);
     this.forceUpdate();
   }
 
@@ -201,7 +201,7 @@ class Routes extends Component {
 
   render() {
     const { props, state } = this;
-    const showDiskLow = state.diskLow && !sessionStorage.getItem('hideDiskWarning');
+    const showDiskLow = state.diskLow && !window.sessionStorage.getItem('hideDiskWarning');
     if (!state.hasError) {
       // declare variables
       const demoText = "You're using the Gigantum web demo. Data is wiped hourly. To continue using Gigantum ";

@@ -6,12 +6,13 @@ import { fetchQuery } from 'JS/createRelayEnvironment';
 const PackageLookupQuery = graphql`
   query PackageLookupQuery($owner: String!, $name: String!, $input: [PackageComponentInput]!){
     labbook(owner: $owner, name: $name){
-      packages(packageInput: $input){
+      checkPackages(packageInput: $input){
         id,
         schema
         manager
         package
         version
+        description
         latestVersion
         fromBase
         isValid

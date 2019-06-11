@@ -1,35 +1,19 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
 import re
 import yaml
 import datetime
 import glob
+import json
 
-from typing import (Dict, Optional)
+from typing import (Dict, Optional, Any)
+from collections import OrderedDict
 
 from gtmcore.exceptions import GigantumException
 from gtmcore.gitlib import GitAuthor
 from gtmcore.logging import LMLogger
 from gtmcore.labbook.schemas import validate_labbook_schema, translate_schema, CURRENT_SCHEMA
-from gtmcore.activity import ActivityType, ActivityDetailType
+from gtmcore.activity import ActivityStore, ActivityType, ActivityRecord, ActivityDetailType, ActivityDetailRecord, \
+    ActivityAction
 
 from gtmcore.inventory.repository import Repository
 
@@ -68,6 +52,14 @@ class LabBook(Repository):
     @name.setter
     def name(self, value: str) -> None:
         raise ValueError("Cannot set name")
+
+    @property
+    def owner(self) -> Optional[str]:
+        try:
+            _, owner, _, project_name = self.root_dir.rsplit('/', 3)
+            return owner
+        except Exception as e:
+            return None
 
     @property
     def creation_date(self) -> Optional[datetime.datetime]:
@@ -117,6 +109,10 @@ class LabBook(Repository):
             base_data = yaml.safe_load(bf)
 
         return base_data.get('cuda_version')
+
+    @property
+    def metadata_path(self) -> str:
+        return os.path.join(self.root_dir, '.gigantum')
 
     @property
     def config_path(self) -> str:

@@ -187,6 +187,18 @@
   align-items: center;
 }
 
+.align-items--end {
+  align-items: flex-end;
+}
+
+.align-self--center {
+  align-self: center;
+}
+
+.align-self--end {
+  align-self: flex-end;
+}
+
 /****************
   text-align: center, left, right
 *****************/
@@ -255,6 +267,10 @@
 
 .margin--auto {
   margin: 0 auto !important;
+}
+
+.margin-right--auto {
+  margin-right: auto !important;
 }
 
 .blur {

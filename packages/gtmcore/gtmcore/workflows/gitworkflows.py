@@ -25,7 +25,7 @@ from gtmcore.configuration.utils import call_subprocess
 from gtmcore.logging import LMLogger
 from gtmcore.labbook import LabBook
 from gtmcore.labbook.schemas import CURRENT_SCHEMA as CURRENT_LABBOOK_SCHEMA
-from gtmcore.workflows import gitworkflows_utils, loaders
+from gtmcore.workflows import gitworkflows_utils
 from gtmcore.exceptions import GigantumException
 from gtmcore.inventory import Repository
 from gtmcore.inventory.inventory import InventoryManager
@@ -39,7 +39,6 @@ logger = LMLogger.get_logger()
 
 class GitWorkflowException(GigantumException):
     pass
-
 
 
 class MergeOverride(Enum):
@@ -155,7 +154,7 @@ class LabbookWorkflow(GitWorkflow):
         try:
             inv_manager = InventoryManager(config_file=config_file)
             _, namespace, repo_name = remote_url.rsplit('/', 2)
-            repo = loaders.clone_repo(remote_url=remote_url, username=username, owner=namespace,
+            repo = gitworkflows_utils.clone_repo(remote_url=remote_url, username=username, owner=namespace,
                                       load_repository=inv_manager.load_labbook_from_directory,
                                       put_repository=inv_manager.put_labbook)
             logger.info(f"Imported remote Project {str(repo)} on branch {repo.active_branch}")
@@ -226,7 +225,7 @@ class DatasetWorkflow(GitWorkflow):
         """Take a URL of a remote Dataset and manifest it locally on this system. """
         inv_manager = InventoryManager(config_file=config_file)
         _, namespace, repo_name = remote_url.rsplit('/', 2)
-        repo = loaders.clone_repo(remote_url=remote_url, username=username, owner=namespace,
+        repo = gitworkflows_utils.clone_repo(remote_url=remote_url, username=username, owner=namespace,
                                   load_repository=inv_manager.load_dataset_from_directory,
                                   put_repository=inv_manager.put_dataset)
         return cls(repo)

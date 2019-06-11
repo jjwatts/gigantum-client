@@ -27,7 +27,6 @@ import redis
 import rq
 import rq_scheduler
 
-import gtmcore.dispatcher.jobs
 from gtmcore.logging import LMLogger
 from gtmcore.exceptions import GigantumException
 
@@ -112,12 +111,6 @@ class Dispatcher(object):
 
     def __str__(self) -> str:
         return "<Dispatcher: queue={}>".format(self._job_queue)
-
-    @staticmethod
-    def _is_job_in_registry(method_reference: Callable) -> bool:
-        """Return True if `method_reference` in the set of acceptable background jobs. """
-        job_list = [getattr(gtmcore.dispatcher.jobs, n) for n in dir(gtmcore.dispatcher.jobs)]
-        return any([method_reference == n for n in job_list])
 
     @property
     def all_jobs(self) -> List[JobStatus]:
@@ -223,11 +216,6 @@ class Dispatcher(object):
         Returns:
             str: unique key of dispatched task
         """
-        # Only allowed and certified methods may be dispatched to the background.
-        # These methods are in the jobs.py package.
-        if not Dispatcher._is_job_in_registry(method_reference):
-            raise ValueError("Method `{}` not in available registry".format(method_reference.__name__))
-
         job_args = args or tuple()
         job_kwargs = kwargs or {}
         rq_job_ref = self._scheduler.schedule(scheduled_time=scheduled_time or datetime.utcnow(),
@@ -263,11 +251,6 @@ class Dispatcher(object):
 
         if not callable(method_reference):
             raise ValueError("method_reference must be callable")
-
-        # Only allowed and certified methods may be dispatched to the background.
-        # These methods are in the jobs.py package.
-        if not Dispatcher._is_job_in_registry(method_reference):
-            raise ValueError("Method {} not in available registry".format(method_reference.__name__))
 
         if not args:
             args = ()

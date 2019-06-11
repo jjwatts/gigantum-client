@@ -163,6 +163,31 @@ class DeleteLabbook(graphene.ClientIDMutation):
             return DeleteLabbook(success=False)
 
 
+class ChangeLabbookBase(graphene.relay.ClientIDMutation):
+    class Input:
+        owner = graphene.String(required=True)
+        labbook_name = graphene.String(required=True)
+        repository = graphene.String(required=True)
+        base_id = graphene.String(required=True)
+        revision = graphene.Int(required=True)
+
+    # Return the LabBook instance
+    labbook = graphene.Field(lambda: Labbook)
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, owner, labbook_name, repository, base_id, revision,
+                               client_mutation_id=None):
+        username = get_logged_in_username()
+
+        lb = InventoryManager().load_labbook(username, owner, labbook_name,
+                                             author=get_logged_in_author())
+
+        cm = ComponentManager(lb)
+        cm.change_base(repository, base_id, revision)
+
+        return ChangeLabbookBase(labbook=Labbook(owner=username, name=lb.name))
+
+
 class SetLabbookDescription(graphene.relay.ClientIDMutation):
     class Input:
         owner = graphene.String(required=True)

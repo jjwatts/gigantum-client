@@ -1,22 +1,5 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+from pathlib import Path
+
 import datetime
 import os
 import yaml
@@ -240,13 +223,13 @@ class ComponentManager(object):
         for pkg in packages:
             version_str = f'"{pkg["version"]}"' if pkg["version"] else 'latest'
 
-            yaml_lines = ['# Generated on: {}'.format(str(datetime.datetime.now())),
-                          'manager: "{}"'.format(package_manager),
-                          'package: "{}"'.format(pkg["package"]),
-                          'version: {}'.format(version_str),
+            yaml_lines = [f'# Generated on: {datetime.datetime.now()}',
+                          f'manager: "{package_manager}"',
+                          f'package: "{pkg["package"]}"',
+                          f'version: {version_str}',
                           f'from_base: {str(from_base).lower()}',
                           f'schema: {CURRENT_SCHEMA}']
-            yaml_filename = '{}_{}.yaml'.format(package_manager, pkg["package"])
+            yaml_filename = f'{package_manager}_{pkg["package"]}.yaml'
             package_yaml_path = os.path.join(self.env_dir, 'package_manager', yaml_filename)
 
             # Check if package already exists
@@ -292,15 +275,13 @@ class ComponentManager(object):
         ars = ActivityStore(self.labbook)
         ars.create_activity_record(ar)
 
-    def remove_packages(self, package_manager: str, package_names: List[str]) -> None:
+    def remove_packages(self, package_manager: str, package_names: List[str], remove_from_base: bool = False) -> None:
         """Remove yaml files describing a package and its context to the labbook.
 
         Args:
             package_manager: The package manager (eg., "apt" or "pip3")
             package_names: A list of packages to uninstall
-
-        Returns:
-            None
+            remove_from_base: Usually we won't do this, specify `True` when you are changing out a base
         """
         # Create activity record
         ar = ActivityRecord(ActivityType.ENVIRONMENT,
@@ -324,8 +305,8 @@ class ComponentManager(object):
             if not package_data:
                 raise IOError("Failed to load package description")
 
-            if package_data['from_base'] is True:
-                raise ValueError("Cannot remove a package installed in the Base")
+            if package_data['from_base'] is True and not remove_from_base:
+                raise ValueError("Won't remove a package installed in the Base, without `remove_from_base=True`")
 
             # Delete the yaml file, which on next Dockerfile gen/rebuild will remove the dependency
             os.remove(package_yaml_path)
@@ -353,10 +334,13 @@ class ComponentManager(object):
     def add_base(self, repository: str, base_id: str, revision: int) -> None:
         """Method to add a base to a LabBook's environment
 
+        Note that if this is run after packages have been configured, it will leave user-specified packages alone (and
+        not override them with the base-installed package) even if the base provides a newer version of the  package.
+
         Args:
-            repository(str): The Environment Component repository the component is in
-            base_id(str): The name of the component
-            revision(int): The revision to use (r_<revision_) in yaml filename.
+            repository: The Environment Component repository the component is in
+            base_id: The name of the component
+            revision: The revision to use, specified *inside* yaml file.
 
         Returns:
             None
@@ -369,15 +353,33 @@ class ComponentManager(object):
 
         # Get the base
         base_data = self.bases.get_base(repository, base_id, revision)
-        base_filename = "{}_{}.yaml".format(repository, base_id, revision)
+        base_filename = f"{repository}_{base_id}.yaml"
         base_final_path = os.path.join(self.env_dir, 'base', base_filename)
 
-        short_message = "Added base: {}".format(base_id)
-        if os.path.exists(base_final_path):
-            raise ValueError("The base {} already exists in this project")
+        short_message = f"Added base: {base_id} r{revision}"
+        # Count number of YAML files in our base dir - should be 0
+        existing_bases = sum(1 for base_path in Path(self.env_dir, 'base').iterdir()
+                             if base_path.suffix == '.yaml')
+        if existing_bases:
+            # This shouldn't ever happen - but we don't trust the front-end
+            raise ValueError(f"Found {existing_bases} base(s) already in this project")
 
         with open(base_final_path, 'wt') as cf:
             cf.write(yaml.safe_dump(base_data, default_flow_style=False))
+
+        # We construct records of packages installed by the user grouped by package manager
+        # This can happen, for example, when we're changing bases
+        installed_packages: Dict[str, List[Dict]] = {}
+        for package in self.get_component_list("package_manager"):
+            if package['from_base']:
+                # Packages from the base to be added are NOT yet installed, but there are package
+                # files that are marked `from_base`. This should never happen!
+                logger.warning('Residual packages remain that are listed as installed by base - converting to user')
+                self.add_packages(package_manager=package['manager'], packages=[package],
+                                  force=True, from_base=False)
+
+            # Build dictionary of packages
+            installed_packages.setdefault(package['manager'], []).append(package["package"])
 
         for manager in base_data['package_managers']:
             packages = list()
@@ -386,6 +388,10 @@ class ComponentManager(object):
                 if manager[p_manager]:
                     for pkg in manager[p_manager]:
                         pkg_name, pkg_version = strip_package_and_version(p_manager, pkg)
+                        if pkg_name in installed_packages.get(p_manager, []):
+                            # If package is already installed by this package manager, we expect it gets overwritten
+                            # If it's a different package manger, it won't.
+                            continue
                         packages.append({"package": pkg_name, "version": pkg_version, "manager": p_manager})
 
                     self.add_packages(package_manager=p_manager, packages=packages,
@@ -396,11 +402,11 @@ class ComponentManager(object):
         logger.info(f"Added base from {repository}: {base_id} rev{revision}")
 
         # Create a ActivityRecord
-        long_message = "Added base {}\n".format(base_id)
-        long_message = "{}\n{}\n\n".format(long_message, base_data['description'])
-        long_message = "{}  - repository: {}\n".format(long_message, repository)
-        long_message = "{}  - component: {}\n".format(long_message, base_id)
-        long_message = "{}  - revision: {}\n".format(long_message, revision)
+        long_message = "\n".join((f"Added base {base_id}\n",
+                                  f"{base_data['description']}\n",
+                                  f"  - repository: {repository}",
+                                  f"  - component: {base_id}",
+                                  f"  - revision: {revision}\n"))
 
         # Create detail record
         adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.CREATE)
@@ -417,6 +423,131 @@ class ComponentManager(object):
         # Store
         ars = ActivityStore(self.labbook)
         ars.create_activity_record(ar)
+
+    def change_base(self, repository: str, base_id: str, revision: int) -> None:
+        """Delete existing base, create an activity record, call add_base
+
+        Note that all packages that were installed by the current base will be removed from the environment (in
+        env/package_manager). Even if the new base installs a newer version of a user-installed package,
+        that package will remain in effect - this avoids actively breaking a working package selection and is easy
+        enough for a user to update.
+
+        In case it's useful, this method is robust to multiple base images (this might happen, for example, after a
+        merge). If multiple base image files are found, all will be removed prior to installing the specified base.
+
+        Args:
+             repository: name of git repo for base images, e.g. 'gigantum_base-images'
+             base_id: name of base image, e.g. 'python3-minimal'
+             revision: The revision number specified INSIDE the YAML file for that base image
+        """
+        # We'll populate detail records as we go
+        detail_records: List[ActivityDetailRecord] = []
+
+        current_base_dir = Path(self.env_dir) / "base"
+        matching_fnames = list(current_base_dir.glob('*.yaml'))
+
+        short_message = ''
+        if len(matching_fnames) != 1:
+            logger.warning(f"Project misconfigured. Found {len(matching_fnames)} base configuration files.")
+            if len(matching_fnames) > 1:
+                # We provide brief details regarding these files
+                short_message = self.remove_all_bases(matching_fnames, detail_records)
+        else:
+            # We have a properly configured Labbook, we'll report more detail about the base
+            short_message = self.remove_base(matching_fnames[0], detail_records)
+            logger.info(short_message)
+
+        if short_message:
+            # We did something above - we commit and create an activity record
+            commit = self.labbook.git.commit(short_message)
+
+            # Create activity record - we populated detail_records above
+            ar = ActivityRecord(ActivityType.ENVIRONMENT,
+                                message=short_message,
+                                linked_commit=commit.hexsha,
+                                tags=["environment", "base"],
+                                show=True)
+
+            for adr in detail_records:
+                ar.add_detail_object(adr)
+
+            # Store the activity record.
+            ars = ActivityStore(self.labbook)
+            ars.create_activity_record(ar)
+
+        # We construct a list of packages with `from_base` == True for each package manager
+        packages_to_rm: Dict[str, List[str]] = {}
+        for package in self.get_component_list("package_manager"):
+            # Build dictionary of packages
+            if package['from_base']:
+                # We are removing the base - so the package isn't guaranteed
+                packages_to_rm.setdefault(package['manager'], []).append(package["package"])
+
+        for p_manager, package_names in packages_to_rm.items():
+            # Package removal will also create activity records
+            self.remove_packages(p_manager, package_names, remove_from_base=True)
+
+        # add_base currently returns None, but this will incorporate any future changes
+        return self.add_base(repository, base_id, revision)
+
+    def remove_base(self, base_fname: Path, detail_records: List[ActivityDetailRecord]) -> str:
+        """Remove the base from `base_fname` and append records to detail_records for later use
+
+        Removing files isn't hard. The main point of this method is to provide detail records that make
+        sense in the context of a properly configured project with a single base.
+
+        Args:
+            base_fname: Matched YAML file for base image
+            detail_records: we'll append details here that will be added to an ActivityRecord by the caller
+
+        Returns:
+            the short_message for the git commit, etc.
+        """
+        base_data = self.base_fields
+        revision = base_data['revision']
+        # The repository includes an underscore where the slash is for e.g.,
+        # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
+        repo, base_name = base_fname.stem.rsplit('_', 1)
+        self.labbook.git.remove(str(base_fname), keep_file=False)
+
+        # Create detail record
+        long_message = "\n".join((f"Removed base {base_name}\n",
+                                  f"{base_data['description']}\n",
+                                  f"  - repository: {repo}",
+                                  f"  - component: {base_name}",
+                                  f"  - revision: {revision}\n"))
+        adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
+        adr.add_value('text/plain', long_message)
+        detail_records.append(adr)
+
+        return f"Removed base from {repo}: {base_name} r{revision}"
+
+    def remove_all_bases(self, base_paths: List[Path], detail_records: List[ActivityDetailRecord]) -> str:
+        """Remove all files listed in `matching_fnames` and append records to detail_records for later use
+
+        Removing files isn't hard. The main point of this method is to provide detail records that make
+        sense in the context of a misconfigured project.
+
+        Args:
+            base_paths: List of matched YAML files for base images
+            detail_records: we'll append details here that will be added to an ActivityRecord by the caller
+
+        Returns:
+            the short_message for the git commit, etc.
+        """
+        for base_fname in base_paths:
+            self.labbook.git.remove(str(base_fname), keep_file=False)
+            # The repository includes an underscore where the slash is for e.g.,
+            # .gigantum/env/base/gigantum_base-images_r-tidyverse.yaml
+            curr_repo, curr_base_name = base_fname.stem.rsplit('_', 1)
+
+            # Create detail record
+            long_message = f"Removing base from {curr_repo}: {curr_base_name}"
+            adr = ActivityDetailRecord(ActivityDetailType.ENVIRONMENT, show=False, action=ActivityAction.DELETE)
+            adr.add_value('text/plain', long_message)
+            detail_records.append(adr)
+
+        return f"Removing all bases from project with {len(base_paths)} base configuration files."
 
     def get_component_list(self, component_class: str) -> List[Dict[str, Any]]:
         """Method to get the YAML contents for a given component class

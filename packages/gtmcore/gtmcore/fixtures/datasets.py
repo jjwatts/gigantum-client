@@ -63,6 +63,16 @@ def helper_append_file(cache_dir, revision, rel_path, content):
         fh.write(content)
 
 
+def helper_write_big_file(cache_dir, revision, rel_path, content):
+    if not os.path.exists(os.path.join(cache_dir, revision)):
+        os.makedirs(os.path.join(cache_dir, revision))
+    with open(os.path.join(cache_dir, revision, rel_path), 'wt') as fh:
+        fh.write(content * 250000000)
+        fh.write(content * 250000000)
+        fh.write(content * 250000000)
+        fh.write(content * 250000000)
+
+
 def helper_compress_file(source, destination):
     with open(source, "rb") as src_file:
         with open(destination, mode="wb") as compressed_file:

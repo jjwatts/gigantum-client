@@ -7,6 +7,12 @@
 
     width: 798px;  // TODO remove width
     margin-bottom: 200px;
+    &--packages {
+        position: relative;
+        width: 600px;
+        margin-bottom: 0;
+        padding: 10px 0;
+    }
 }
 
 .AdvancedSearch__filters{
@@ -17,6 +23,11 @@
     box-shadow: 0 3px 2px -2px rgba(0, 0, 0, 0.2);
 
     @include flex(flex-start, row);
+    &--dropdown {
+        @include animation('slide-down-fade-in forwards .25s');
+        position: absolute;
+        width: 100%;
+    }
 }
 
 .AdvancedSearch__filter-section{
@@ -47,7 +58,7 @@
     padding: 3px !important;
 
     cursor: pointer;
-    animation: slide-down-fade-in forwards .25s;
+    @include animation('slide-down-fade-in forwards .25s');
     text-align: left;
 
     border: 1px solid $grey;
@@ -185,7 +196,8 @@ div.ReactTags__selected span.ReactTags__tag {
     }
 
   .ReactTags__tag.Languages,
-  .ReactTags__tag.Dataset.Type {
+  .ReactTags__tag.Dataset.Type,
+  .ReactTags__tag.Package.Managers {
       color: $white !important;
       background: $azure !important;
       a {

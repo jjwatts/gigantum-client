@@ -1,0 +1,28 @@
+// vendor
+import React, { Component } from 'react';
+// components
+import PackageRow from './PackageRow';
+// assets
+import './PackageBody.scss';
+
+export default (props) => {
+  return (
+    <div className="PackageBody">
+      {
+        props.packages.map(node => (<PackageRow
+          key={node.id}
+          {...node}
+          packageNode={node}
+          selectedPackages={props.selectedPackages}
+          selectSinglePackage={props.selectSinglePackage}
+          packageMutations={props.packageMutations}
+          isLocked={props.isLocked}
+          buildCallback={props.buildCallback}
+          selectPackages={props.selectPackages}
+          setBuildingState={props.setBuildingState}
+        />
+        ))
+      }
+    </div>
+  );
+}

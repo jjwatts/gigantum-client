@@ -3,10 +3,12 @@ import {
   graphql,
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
+import uuidv4 from 'uuid/v4';
 // redux store
 import { setErrorMessage } from 'JS/redux/actions/footer';
 // utils
 import FooterUtils from 'Components/common/footer/FooterUtils';
+import footerCallback from 'Components/common/footer/utils/BuildImage';
 
 
 const mutation = graphql`
@@ -34,6 +36,7 @@ export default function BuildImageMutation(
       clientMutationId: tempID++,
     },
   };
+  const id = uuidv4();
   commitMutation(
     environment,
     {
@@ -44,9 +47,15 @@ export default function BuildImageMutation(
           console.log(error);
           setErrorMessage('ERROR: Project failed to build:', error);
         }
-
-        FooterUtils.getJobStatus(response, 'buildImage', 'backgroundJobKey');
-        callback(response, error);
+        const footerData = {
+          id,
+          result: response,
+          type: 'buildImage',
+          key: 'backgroundJobKey',
+          footerCallback,
+        };
+        FooterUtils.getJobStatus(footerData);
+        callback(response, error, id);
       },
       onError: err => console.error(err),
 

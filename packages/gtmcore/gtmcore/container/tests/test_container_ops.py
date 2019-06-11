@@ -1,38 +1,26 @@
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import pytest
 import os
-import pprint
+import time
 import getpass
 import docker
+import time
 import requests
 import shutil
+import tempfile
 from gtmcore.container.jupyter import start_jupyter
+from gtmcore.container.bundledapp import start_bundled_app
 
 from gtmcore.configuration import get_docker_client
 
 from gtmcore.container.container import ContainerOperations
 from gtmcore.container.utils import infer_docker_image_name
 from gtmcore.inventory.inventory import InventoryManager
-from gtmcore.fixtures.container import build_lb_image_for_jupyterlab, mock_config_with_repo
+
+from gtmcore.fixtures.container import build_lb_image_for_jupyterlab, mock_config_with_repo, ContainerFixture
 from gtmcore.container.exceptions import ContainerBuildException, ContainerException
+from gtmcore.container.exceptions import ContainerBuildException
+from gtmcore.environment.bundledapp import BundledAppManager
+
 
 
 def remove_image_cache_data():
@@ -120,3 +108,51 @@ class TestContainerOps(object):
         with pytest.raises(requests.exceptions.HTTPError):
             # Image not found so container cannot be started
             ContainerOperations.start_container(labbook=my_lb, username="unittester")
+
+
+class TestPutFile(object):
+    def test_put_single_file(self, build_lb_image_for_jupyterlab):
+        # Note - we are combining multiple tests in one to speed things up
+        # We do not want to build, start, execute, stop, and delete at container for each
+        # of the following test points.
+        fixture = ContainerFixture(build_lb_image_for_jupyterlab)
+        container = docker.from_env().containers.get(fixture.docker_container_id)
+
+        # Test insert of a single file.
+        dst_dir_1 = "/home/giguser/sample-creds"
+        with tempfile.TemporaryDirectory() as tempdir:
+            with open(os.path.join(tempdir, 'secretfile'), 'w') as sample_secret:
+                sample_secret.write("<<Secret File Content>>")
+            t0 = time.time()
+            ContainerOperations.copy_into_container(fixture.labbook, fixture.username,
+                                                    src_path=sample_secret.name,
+                                                    dst_dir=dst_dir_1)
+            tf = time.time()
+            container.exec_run(f'sh -c "cat {dst_dir_1}/secretfile"')
+
+            # The copy_into_container should NOT remove the original file on disk.
+            assert os.path.exists(sample_secret.name)
+            assert tf - t0 < 1.0, \
+                f"Time to insert small file must be less than 1 sec - took {tf-t0:.2f}s"
+
+    @pytest.mark.skipif(getpass.getuser() == 'circleci', reason="Cannot run this test in CircleCI, needs shared vol")
+    def test_start_bundled_app(self, build_lb_image_for_jupyterlab):
+        test_file_path = os.path.join('/mnt', 'share', 'test.txt')
+        try:
+            lb = build_lb_image_for_jupyterlab[0]
+
+            assert os.path.exists(test_file_path) is False
+
+            bam = BundledAppManager(lb)
+            bam.add_bundled_app(9002, 'my app', 'tester', f"echo 'teststr' >> {test_file_path}")
+            apps = bam.get_bundled_apps()
+
+            start_bundled_app(lb, 'unittester', apps['my app']['command'])
+
+            time.sleep(3)
+            assert os.path.exists(test_file_path) is True
+        except:
+            raise
+        finally:
+            if os.path.exists(test_file_path):
+                os.remove(test_file_path)

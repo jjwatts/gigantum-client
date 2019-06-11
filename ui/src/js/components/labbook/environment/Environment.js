@@ -13,7 +13,7 @@ import ErrorBoundary from 'Components/common/ErrorBoundary';
 import Tooltip from 'Components/common/Tooltip';
 import Loader from 'Components/common/Loader';
 import Base from './Base';
-import PackageDependencies from './PackageDependencies';
+import Packages from './packages/Packages';
 import CustomDockerfile from './CustomDockerfile';
 // assets
 import './Environment.scss';
@@ -43,10 +43,10 @@ class Environment extends Component {
   }
 
   /**
-  *  @param {}
+  *  @param {Function} callback
   *  callback that triggers buildImage mutation
   */
-  _buildCallback = () => {
+  _buildCallback = (callback) => {
     const { labbookName, owner } = this.state;
 
     setBuildingState(true);
@@ -63,11 +63,13 @@ class Environment extends Component {
               owner,
               labbookName,
               false,
-              (response, error) => {
+              (response, error, id) => {
                 if (error) {
                   setErrorMessage(`${labbookName} failed to build`, error);
                 }
-
+                if (callback) {
+                  callback(response, error, id);
+                }
 
                 return 'finished';
               },
@@ -80,9 +82,12 @@ class Environment extends Component {
         owner,
         labbookName,
         false,
-        (response, error) => {
+        (response, error, id) => {
           if (error) {
             setErrorMessage(`${labbookName} failed to build`, error);
+          }
+          if (callback) {
+            callback(response, error, id);
           }
           return 'finished';
         },
@@ -126,15 +131,11 @@ class Environment extends Component {
               isLocked={props.isLocked}
             />
           </ErrorBoundary>
-          <div className="Environment__headerContainer">
-            <h4>
-              Packages
-              <Tooltip section="packagesEnvironment" />
-            </h4>
-          </div>
           <ErrorBoundary type="packageDependenciesError" key="packageDependencies">
-            <PackageDependencies
+            <Packages
               componentRef={ref => this.packageDependencies = ref}
+              owner={props.owner}
+              name={props.name}
               environment={props.labbook.environment}
               environmentId={props.labbook.environment.id}
               labbookId={props.labbook.id}
@@ -146,7 +147,7 @@ class Environment extends Component {
               base={base}
               isLocked={props.isLocked}
               packageLatestVersions={props.packageLatestVersions}
-              fetchPackageVersion={props.fetchPackageVersion}
+              packageLatestRefetch={props.packageLatestRefetch}
             />
           </ErrorBoundary>
           <CustomDockerfile
@@ -177,7 +178,7 @@ export default createFragmentContainer(
       dockerSnippet
 
       ...Base_environment
-      ...PackageDependencies_environment
+      ...Packages_environment
     }
   }`,
 );

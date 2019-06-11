@@ -62,8 +62,9 @@
     "sw-precache-webpack-plugin": "^0.11.5",
     "terser-webpack-plugin": "^1.1.0",
     "url-loader": "^1.0.1",
-    "webpack": "^4.19.1",
-    "webpack-dev-server": "^3.1.8",
+    "webpack": "4.32.2",
+    "webpack-cli": "^3.3.2",
+    "webpack-dev-server": "^3.4.1",
     "webpack-manifest-plugin": "^2.0.4"
   },
   "dependencies": {
@@ -106,6 +107,7 @@
     "react-dnd-html5-backend": "^7.0.2",
     "react-dnd-scrollzone": "^4.0.0",
     "react-dom": "16.8.1",
+    "react-fast-compare": "^2.0.4",
     "react-highlight-words": "^0.16.0",
     "react-loadable": "^5.5.0",
     "react-markdown": "^4.0.6",
@@ -126,8 +128,10 @@
     "simplemde": "^1.11.2",
     "uglifyjs-webpack-plugin": "^2.0.1",
     "uuid": "^3.1.0",
-    "webpack-bundle-analyzer": "^3.0.3",
+    "webpack-bundle-analyzer": "^3.3.2",
     "whatwg-encoding": "1.0.5",
+    "worker-loader": "^2.0.0",
+    "worker-plugin": "^3.1.0",
     "xmlhttprequest": "^1.8.0"
   },
   "scripts": {

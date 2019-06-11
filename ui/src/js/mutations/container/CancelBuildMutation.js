@@ -41,7 +41,6 @@ export default function CancelBuildMutation(
           setErrorMessage('ERROR: Failed to cancel build:', error);
         }
 
-        console.log(response, error)
         callback(response, error);
       },
       onError: err => console.error(err),

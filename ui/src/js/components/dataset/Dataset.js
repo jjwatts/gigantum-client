@@ -309,6 +309,7 @@ class Dataset extends Component {
                             type="dataset"
                             section="data"
                             refetch={this._refetchDataset}
+                            lockFileBrowser={props.isUploading}
                           />
 
                         </ErrorBoundary>)}

@@ -38,12 +38,10 @@ function sharedUpdater(store, parentID, deletedIdArr, connectionKey) {
 export default function RemovePackageComponentsMutation(
   labbookName,
   owner,
+  environmentId,
   manager,
   packages,
   packageIDArr,
-  clientMutationId,
-  environmentId,
-  connection,
   callback,
 ) {
   const config = packageIDArr.map(id => ({
@@ -75,10 +73,10 @@ export default function RemovePackageComponentsMutation(
       },
       onError: err => console.error(err),
       updater: (store, response) => {
-        sharedUpdater(store, environmentId, packageIDArr, 'PackageDependencies_packageDependencies');
+        sharedUpdater(store, environmentId, packageIDArr, 'Packages_packageDependencies');
       },
       optimisticUpdater: (store) => {
-        sharedUpdater(store, environmentId, packageIDArr, 'PackageDependencies_packageDependencies');
+        sharedUpdater(store, environmentId, packageIDArr, 'Packages_packageDependencies');
       },
     },
   );

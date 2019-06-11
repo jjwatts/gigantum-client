@@ -6,17 +6,19 @@ from gtmcore.configuration import get_docker_client
 from gtmcore.imagebuilder import ImageBuilder
 from gtmcore.dispatcher import Dispatcher, jobs
 
+from gtmcore.labbook import SecretStore, LabBook
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.container.container import ContainerOperations
 from gtmcore.mitmproxy.mitmproxy import MITMProxyOperations
 from gtmcore.container.utils import infer_docker_image_name
-from gtmcore.workflows import LabbookWorkflow
+from gtmcore.workflows import LabbookWorkflow, ContainerWorkflows
 from gtmcore.logging import LMLogger
+from gtmcore.activity import ActivityAction, ActivityDetailRecord, ActivityDetailType, ActivityRecord, ActivityStore, ActivityType
 from gtmcore.activity.services import stop_labbook_monitor
 
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 from lmsrvlabbook.api.objects.environment import Environment
-
+from lmsrvcore.api.mutations import ChunkUploadMutation, ChunkUploadInput
 
 logger = LMLogger.get_logger()
 
@@ -132,8 +134,7 @@ class StartContainer(graphene.relay.ClientIDMutation):
                                              author=get_logged_in_author())
 
         with lb.lock():
-            lb, container_id = ContainerOperations.start_container(
-                labbook=lb, username=username)
+            container_id = ContainerWorkflows.start_labbook(lb, username)
         logger.info(f'Started new {lb} container ({container_id})')
 
         return StartContainer(environment=Environment(owner=owner, name=labbook_name))

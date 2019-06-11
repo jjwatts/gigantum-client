@@ -223,6 +223,14 @@ if config.config["lock"]["reset_on_start"]:
     reset_all_locks(config.config['lock'])
 
 
+# make sure temporary upload directory exists and is empty
+tempdir = Configuration().upload_dir
+if os.path.exists(tempdir):
+    shutil.rmtree(tempdir)
+    logger.info(f'removed {tempdir}')
+os.makedirs(tempdir)
+
+
 def main(debug=False) -> None:
     try:
         # Run app on 0.0.0.0, assuming not an issue since it should be in a container

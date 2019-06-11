@@ -6,6 +6,7 @@ import environment from 'JS/createRelayEnvironment';
 import uuidv4 from 'uuid/v4';
 import { setMultiInfoMessage } from 'JS/redux/actions/footer';
 import FooterUtils from 'Components/common/footer/FooterUtils';
+import footerCallback from 'Components/common/footer/utils/SyncLabbook';
 
 const mutation = graphql`
   mutation SyncLabbookMutation($input: SyncLabbookInput!){
@@ -43,7 +44,16 @@ export default function SyncLabbookMutation(
   }
   const id = uuidv4();
   const startMessage = `Preparing to ${pullOnly ? 'pull' : 'sync'} Project...`;
-  setMultiInfoMessage(id, startMessage, false, false, [{ message: startMessage }]);
+  const messageData = {
+    id,
+    message: startMessage,
+    isLast: false,
+    error: false,
+    messageBody: [{ message: startMessage }],
+    messageListOpen: false,
+  };
+  setMultiInfoMessage(messageData);
+
   commitMutation(
     environment,
     {
@@ -59,7 +69,18 @@ export default function SyncLabbookMutation(
       onError: (err) => { console.error(err); },
       updater: (store, response) => {
         if (response) {
-          FooterUtils.getJobStatus(response, 'syncLabbook', 'jobKey', successCall, failureCall, id);
+          const footerData = {
+            result: response,
+            type: 'syncLabbook',
+            key: 'jobKey',
+            footerCallback,
+            successCall,
+            failureCall,
+            id,
+            hideFooter: true,
+          };
+
+          FooterUtils.getJobStatus(footerData);
         }
       },
     },

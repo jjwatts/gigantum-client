@@ -23,6 +23,13 @@
       background: url('~Images/icons/down-arrow-silver.svg') no-repeat calc(100% - 10px);
       background-size: 15px;
     }
+    &--addPackages {
+      width: 185px;
+      min-width: 185px;
+      ul {
+        width: 185px;
+      }
+    }
 }
 
 .Dropdown__menu {
@@ -42,3 +49,26 @@
   border: 1px solid $grey;
   background: $white;
 }
+
+.Dropdown__item{
+
+  height: 40px;
+  padding: 10px 5px !important;
+  padding-top: 2px;
+
+  user-select: none;
+
+  border-bottom: 1px solid $mineShaft;
+
+  &:last-child{
+    border-bottom: none;
+  }
+
+  &:hover {
+    transition: background-color 0.25s ease-in-out;
+
+    background: $azure;
+    color: $white;
+  }
+}
+

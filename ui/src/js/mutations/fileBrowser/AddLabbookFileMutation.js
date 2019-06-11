@@ -28,11 +28,13 @@ const mutation = graphql`
 
 function sharedUpdater(store, sectionId, connectionKey, node) {
   const sectionProxy = store.get(sectionId);
+
   if (sectionProxy) {
     const conn = RelayRuntime.ConnectionHandler.getConnection(
       sectionProxy,
       connectionKey,
     );
+
     if (conn) {
       const newEdge = RelayRuntime.ConnectionHandler.createEdge(
         store,
@@ -75,6 +77,7 @@ export default function AddLabbookFileMutation(
   filePath,
   chunk,
   accessToken,
+  idToken,
   section,
   transactionId,
   deleteId,
@@ -85,8 +88,10 @@ export default function AddLabbookFileMutation(
   const modifiedAt = (date.getTime() / 1000);
   const tempString = transactionId + filePath;
   const tempId = tempString.replace(/\W/g, '');
-  const optimisticId = window.btoa((tempId));
-  const id = uuidv4();
+  /* eslint-disable */
+  const optimisticId = self ? self.btoa((tempId)) : self.btoa((tempId));
+  /* eslint-enable */
+  const clientMutationId = uuidv4();
   const optimisticResponse = {
     addLabbookFile: {
       newLabbookFileEdge: {
@@ -99,10 +104,10 @@ export default function AddLabbookFileMutation(
         },
         cursor: '',
       },
-      clientMutationId: id,
+      clientMutationId,
     },
   };
-  const uploadables = [chunk.blob, accessToken];
+  const uploadables = [chunk.blob, accessToken, idToken];
 
   const variables = {
     input: {
@@ -119,7 +124,7 @@ export default function AddLabbookFileMutation(
       },
       section,
       transactionId,
-      clientMutationId: id,
+      clientMutationId,
     },
   };
   // TODO remove this, connections should be passed down from section

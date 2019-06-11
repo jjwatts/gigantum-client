@@ -1,6 +1,7 @@
 import dispatcher from 'JS/redux/dispatcher';
 import * as types from 'JS/redux/constants/constants';
 
+
 /**
  * actions
  */
@@ -51,4 +52,10 @@ export const setSidepanelVisible = sidePanelVisible => dispatcher(
 export const updateTransitionState = (transitioningLabbook, newState) => dispatcher(
   types.UPDATE_TRANSITION_STATE,
   { transitionState: { [transitioningLabbook]: newState } },
+);
+
+
+export const setFileBrowserLock = isUploading => dispatcher(
+  types.IS_UPLOADING,
+  { isUploading },
 );

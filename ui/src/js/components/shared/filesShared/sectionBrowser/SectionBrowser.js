@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { boundMethod } from 'autobind-decorator';
+import isEqual from 'react-fast-compare';
 // mutations
 import FileBrowser from 'Components/shared/fileBrowser/FileBrowser';
 
@@ -13,7 +14,6 @@ class SectionBrowser extends Component {
       isProcessing: false,
     },
   }
-
 
   /*
     handle state and addd listeners when component mounts
@@ -45,6 +45,10 @@ class SectionBrowser extends Component {
       ...state,
       hasFiles,
     };
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return !isEqual(this.props, nextProps);
   }
 
   /*
@@ -120,6 +124,8 @@ class SectionBrowser extends Component {
           favorites={props.favorites}
           isLocked={props.isLocked}
           containerStatus={props.containerStatus}
+          loadMore={this._loadMore}
+          lockFileBrowser={props.lockFileBrowser}
           {...props}
         />
       );

@@ -151,7 +151,7 @@ class SmartHash(object):
 
         return fast_hash_result
 
-    async def compute_file_hash(self, path: str, blocksize: int = 4096) -> str:
+    async def compute_file_hash(self, path: str, blocksize: int = 4096) -> Optional[str]:
         """Method to compute the black2b hash for the provided file
 
         Args:
@@ -170,13 +170,15 @@ class SmartHash(object):
                 while chunk:
                     h.update(chunk)
                     chunk = await fh.read(blocksize)
-        else:
+        elif os.path.isdir(abs_path):
             # If a directory, just hash the path as an alternative
             h.update(abs_path.encode('utf-8'))
+        else:
+            return None
 
         return h.hexdigest()
 
-    async def hash(self, path_list: List[str]) -> List[str]:
+    async def hash(self, path_list: List[str]) -> List[Optional[str]]:
         """Method to compute the blake2b hash of a file's contents.
 
         Args:
@@ -185,7 +187,7 @@ class SmartHash(object):
         Returns:
             list
         """
-        hash_result_list: List[str] = [await self.compute_file_hash(path,
-                                                                    self.hashing_block_size) for path in path_list]
+        hash_result_list: List[Optional[str]] = [await self.compute_file_hash(path,
+                                                 self.hashing_block_size) for path in path_list]
 
         return hash_result_list

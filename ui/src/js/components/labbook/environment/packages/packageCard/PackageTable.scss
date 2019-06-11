@@ -1,0 +1,77 @@
+@import '~Styles/_imports.scss';
+
+.PackageHeader {
+  border-bottom: 2px solid $romanSilver;
+}
+
+.PackageHeader__manager,
+.PackageRow__manager {
+  width: 100px;
+}
+.PackageHeader__name,
+.PackageRow__name {
+  min-width: 235px;
+  text-align: left;
+}
+
+.PackageHeader__version,
+.PackageRow__version-container,
+.PackageHeader__actions,
+.PackageRow__actions {
+  width: 100px;
+  padding: 7px;
+  margin: 0 12.5px;
+}
+
+.PackageHeader__name.Table__Header--sort {
+  &:before {
+    left: 140px !important;
+  }
+}
+
+.PackageHeader__toolbar{
+  color: $white;
+  background: $azure;
+  height: 50px;
+  position: relative;
+  &-text {
+    margin-left: 80px;
+    white-space: nowrap;
+  }
+  &:before {
+    content: '';
+    @include triangle('down', 12px, $azure);
+    position: absolute;
+    bottom: -12px;
+    left: 11px;
+  }
+}
+
+.PackageRow__manager {
+  padding: 7px;
+  margin: 0 12.5px;
+  text-align: center;
+}
+.PackageRow__name {
+  padding: 7px;
+  margin: 0 12.5px;
+  flex: 1;
+}
+
+.PackageRow__description{
+  margin: 10px 0;
+  font-size: 13px;
+  // TODO remove webkit references, we have a polyfill in webpack for targetting specific browsers
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+}
+
+
+.PackageRow__version {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,8 +1,10 @@
 import pytest
 import graphene
+import os
 
 from lmsrvcore.tests.fixtures import fixture_working_dir_with_cached_user
 from lmsrvcore.api.mutations import ChunkUploadMutation
+from gtmcore.configuration import Configuration
 
 
 class MyMutation(graphene.relay.ClientIDMutation, ChunkUploadMutation):
@@ -18,7 +20,7 @@ class TestChunkUpload(object):
     def test_get_temp_filename(self):
         """Test getting the filename"""
         mut = MyMutation()
-        assert mut.get_temp_filename("asdf", "1234.txt") == "/tmp/asdf-1234.txt"
+        assert mut.get_temp_filename("asdf", "1234.txt") == os.path.join(Configuration().upload_dir, "asdf-1234.txt")
 
     def test_get_safe_filename(self):
         """Test getting safe filenames"""

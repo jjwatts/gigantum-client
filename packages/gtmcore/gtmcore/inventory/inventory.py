@@ -18,6 +18,7 @@ from gtmcore.gitlib import GitAuthor
 from gtmcore.logging import LMLogger
 from gtmcore.configuration import Configuration
 from gtmcore.configuration.utils import call_subprocess
+from gtmcore.labbook import SecretStore
 from gtmcore.labbook.labbook import LabBook
 from gtmcore.dataset.dataset import Dataset
 from gtmcore.inventory import Repository
@@ -460,6 +461,9 @@ class InventoryManager(object):
                 # Skip errors
                 logger.warning(f"Error occurred and ignored while processing submodules during Project delete: {err}")
                 continue
+
+        # Delete all secrets pertaining to this project.
+        SecretStore(lb, username).clear_files()
 
         # Remove labbook contents
         shutil.rmtree(lb.root_dir, ignore_errors=True)

@@ -6,7 +6,7 @@ import uuidV4 from 'uuid/v4';
 import environment from 'JS/createRelayEnvironment';
 
 const mutation = graphql`
-  mutation ResetBranchToRemoteMutation($input: ResetBranchToRemoteInput!, $first: Int, $cursor: String, $hasNext: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
+  mutation ResetBranchToRemoteMutation($input: ResetBranchToRemoteInput!, $first: Int, $cursor: String, $skipPackages: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
     resetBranchToRemote(input: $input){
       labbook{
         ...Labbook_labbook
@@ -38,6 +38,7 @@ export default function ResetBranchToRemoteMutation(
     inputSkip: false,
     outputSkip: false,
     labbookSkip: false,
+    skipPackages: true,
   };
   commitMutation(
     environment,
