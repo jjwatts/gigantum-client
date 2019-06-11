@@ -126,6 +126,8 @@ jobs:
             jest shared/fileBrowser activity dashboard -u
 
   test-harness:
+    executor: test_harness_exec
+    working_directory: ~/repo
     steps:
       - checkout
       - run:
