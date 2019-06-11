@@ -41,8 +41,8 @@ jobs:
             echo "import docker; c = docker.from_env()" > runtests.py
             echo "c.images.build(path='.', tag='httpconf')" >> runtests.py
             echo "print(c.containers.run('httpconf', 'pytest /app').decode())" >> runtests.py
-            python3 runtests.py
-            cd ~/repo
+            #python3 runtests.py
+            #cd ~/repo
 
   test-gtmcore:
     executor: gig_client
@@ -59,8 +59,8 @@ jobs:
             export SKIP_CONDA_TESTS=1
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            pytest --cov=gtmcore packages/gtmcore
-            codecov -F core
+            #pytest --cov=gtmcore packages/gtmcore
+            #codecov -F core
 
   test-gtmapi:
     executor: gig_client
@@ -79,11 +79,11 @@ jobs:
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
-            pytest --cov=lmsrvlabbook --cov=lmsrvcore packages/gtmapi/lmsrvlabbook
-            pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvcore
-            pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvlabbook/tests/int_labbook_mutations.py
-            codecov -F api
+            #python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
+            #pytest --cov=lmsrvlabbook --cov=lmsrvcore packages/gtmapi/lmsrvlabbook
+            #pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvcore
+            #pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvlabbook/tests/int_labbook_mutations.py
+            #codecov -F api
 
   test-long-running-env:
     executor: gig_client
@@ -101,9 +101,9 @@ jobs:
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
-            pytest --cov=gtmcore packages/gtmcore/gtmcore/environment/tests/test_conda.py
-            codecov -F core
+            #python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
+            #pytest --cov=gtmcore packages/gtmcore/gtmcore/environment/tests/test_conda.py
+            #codecov -F core
 
   test-ui-components:
     executor: gig_client
@@ -123,7 +123,7 @@ jobs:
           name: Run jest tests
           command: |
             cd /home/circleci/repo/ui
-            jest shared/fileBrowser activity dashboard -u
+            #jest shared/fileBrowser activity dashboard -u
 
   test-harness:
     executor: test_harness_exec
