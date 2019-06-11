@@ -109,6 +109,7 @@ build/
 cached_id_jwt
 
 testing/testenv
+testing/test-env
 testing/credentials.txt
 testing/geckodriver.log
 testing/testutils/.DS_Store

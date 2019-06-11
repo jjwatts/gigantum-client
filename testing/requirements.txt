@@ -1,0 +1,5 @@
+selenium==3.14.1
+docker
+pillow==6.0.0
+boto3==1.9.130
+sgqlc
