@@ -59,8 +59,6 @@ def git_garbage_collect(repository: Repository) -> None:
 
     Note!! This method assumes the subject repository has already been locked!
 
-    TODO(billvb): Refactor into BranchManager
-
     Args:
         repository: Subject Repository
 

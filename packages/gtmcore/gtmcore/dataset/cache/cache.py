@@ -1,8 +1,9 @@
 import abc
 import os
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from gtmcore.dataset import Dataset
+if TYPE_CHECKING:
+    from gtmcore.dataset import Dataset
 
 
 class CacheManager(metaclass=abc.ABCMeta):
@@ -13,7 +14,7 @@ class CacheManager(metaclass=abc.ABCMeta):
 
     """
 
-    def __init__(self, dataset: Dataset, username: Optional[str]) -> None:
+    def __init__(self, dataset: 'Dataset', username: Optional[str]) -> None:
         """
 
         Args:

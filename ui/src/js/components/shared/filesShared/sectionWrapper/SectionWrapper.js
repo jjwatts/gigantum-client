@@ -141,16 +141,6 @@ export default class SectionWrapper extends Component {
       return (
 
         <div className="SectionWrapper">
-          {
-            (section !== 'data') && sectionObject[section].isUntracked
-            && (
-            <div className="SectionWrapper__tracked-container">
-              <div className="SectionWrapper__tracked">
-                Version Tracking Disabled
-              </div>
-            </div>
-            )
-          }
           { showFavoritesRecent
             && (
             <div>
@@ -212,6 +202,7 @@ export default class SectionWrapper extends Component {
                 loadStatus={this._loadStatus}
                 isLocked={props.isLocked}
                 toggleFavoriteRecent={this._toggleFavoriteRecent}
+                isManaged={props.isManaged}
                 {...sectionProps}
                 linkedDatasets={sectionObject.linkedDatasets || null}
                 containerStatus={props.containerStatus}

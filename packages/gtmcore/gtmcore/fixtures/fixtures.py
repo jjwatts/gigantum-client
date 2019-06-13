@@ -352,7 +352,8 @@ def mock_config_with_detaildb():
 
 @pytest.fixture()
 def mock_labbook():
-    """A pytest fixture that creates a temporary directory and a config file to match. Deletes directory after test"""
+    """A pytest fixture that creates a temporary directory and a config file to match.
+    Deletes directory after test"""
 
     conf_file, working_dir = _create_temp_work_dir()
     erm = RepositoryManager(conf_file)

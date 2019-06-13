@@ -25,14 +25,14 @@ let tempID = 0;
 export default function BuildImageMutation(
   owner,
   labbookName,
-  noCache,
+  buildData,
   callback,
 ) {
   const variables = {
     input: {
       labbookName,
       owner,
-      noCache,
+      noCache: buildData && buildData.noCache,
       clientMutationId: tempID++,
     },
   };
@@ -48,7 +48,7 @@ export default function BuildImageMutation(
           setErrorMessage('ERROR: Project failed to build:', error);
         }
         const footerData = {
-          id,
+          id: (buildData && buildData.overrideId) || id,
           result: response,
           type: 'buildImage',
           key: 'backgroundJobKey',

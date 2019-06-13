@@ -26,7 +26,6 @@ from gtmcore.logging import LMLogger
 from gtmcore.activity import (ActivityDetailRecord, ActivityRecord,
                                ActivityStore, ActivityAction)
 from gtmcore.configuration.utils import call_subprocess
-from gtmcore.files.utils import in_untracked
 
 logger = LMLogger.get_logger()
 
@@ -60,63 +59,6 @@ class FileOperations(object):
                 fp = os.path.join(dirpath, f)
                 total_bytes += os.path.getsize(fp)
         return total_bytes
-
-    @classmethod
-    def is_set_untracked(cls, labbook: LabBook, section: str) -> bool:
-        """ Return True if the given labbook section is set to be untracked
-        (to work around git performance issues when files are large).
-
-        Args:
-            labbook: Subject labbook
-            section: Section one of code, input, or output.
-
-        Returns:
-            bool indicating whether the labbook's section is set as untracked
-        """
-        return in_untracked(labbook.root_dir, section)
-
-    @classmethod
-    def set_untracked(cls, labbook: LabBook, section: str) -> LabBook:
-        """ Configure a labbook subdirectory to be untracked so large files
-        don't cause Git performance degradation. Under the hood this just
-        makes the directory untracked by Git, such that there are no large git
-        indexes for the files. Note that this must be set before uploading
-        files to the given `section`.
-
-        Must be called at project creation!
-
-        Args:
-            labbook: Subject labbook
-            section: Section to set untracked - one of code, input, or output.
-
-        Returns:
-            None
-
-        Raises:
-            FileOperationsException if ...
-              (1) section already contains files, or
-              (2) other problem.
-        """
-        section_path = os.path.join(labbook.root_dir, section.replace('/', ''))
-        if not os.path.exists(section_path):
-            raise FileOperationsException(f'Section {section} not found '
-                                          f'in {str(labbook)}')
-
-        append_lines = [f'# Ignore files for section {section} - '
-                        f'fix to improve Git performance with large files',
-                        f'{section}/*', f'!{section}/.gitkeep']
-
-        if cls.is_set_untracked(labbook, section):
-            return labbook
-
-        with open(os.path.join(labbook.root_dir, '.gitignore'), 'a') as gi_file:
-            gi_file.write('\n'.join([''] + append_lines + ['']))
-
-        labbook.git.add(os.path.join(labbook.root_dir, '.gitignore'))
-        labbook.git.commit(f"Set section {section} as untracked as fix "
-                           f"for Git performance")
-
-        return labbook
 
     @classmethod
     def put_file(cls, labbook: LabBook, section: str, src_file: str,
@@ -188,11 +130,6 @@ class FileOperations(object):
                                         src_file=src_file, dst_path=dst_path)
 
         rel_path = os.path.join(section, finfo['key'])
-        if in_untracked(labbook.root_dir, section):
-            logger.warning(f"Inserted file {rel_path} ({finfo['size']} bytes)"
-                           f" to untracked section {section}. This will not"
-                           f" be tracked by commits or activity records.")
-            return finfo
 
         # If we are setting this section to be untracked
         activity_type, activity_detail_type, section_str = \
@@ -268,7 +205,6 @@ class FileOperations(object):
             None
         """
         labbook.validate_section(section)
-        is_untracked = in_untracked(labbook.root_dir, section=section)
 
         if not isinstance(relative_paths, list):
             raise ValueError("Must provide list of paths to remove")
@@ -279,19 +215,10 @@ class FileOperations(object):
             if not os.path.exists(target_path):
                 raise ValueError(f"Attempted to delete non-existent path at `{target_path}`")
             else:
-                if is_untracked:
-                    if os.path.isdir(target_path):
-                        shutil.rmtree(target_path)
-                    else:
-                        os.remove(target_path)
-                else:
-                    labbook.git.remove(target_path, force=True, keep_file=False)
-
+                labbook.git.remove(target_path, force=True, keep_file=False)
                 if os.path.exists(target_path):
                     raise IOError(f"Failed to delete path: {target_path}")
-
-        if not is_untracked:
-            labbook.sweep_uncommitted_changes(show=True)
+        labbook.sweep_uncommitted_changes(show=True)
 
     @classmethod
     def _make_move_activity_record(cls, labbook: LabBook, section: str, dst_abs_path: str,
@@ -338,7 +265,6 @@ class FileOperations(object):
         if dst_rel_path is None:
             raise ValueError("dst_rel_path cannot be None or empty")
 
-        is_untracked = in_untracked(labbook.root_dir, section)
         src_rel_path = LabBook.make_path_relative(src_rel_path)
         dst_rel_path = LabBook.make_path_relative(dst_rel_path)
 
@@ -351,15 +277,10 @@ class FileOperations(object):
         try:
             src_type = 'directory' if os.path.isdir(src_abs_path) else 'file'
             logger.info(f"Moving {src_type} `{src_abs_path}` to `{dst_abs_path}`")
-
-            if not is_untracked:
-                labbook.git.remove(src_abs_path, keep_file=True)
-
+            labbook.git.remove(src_abs_path, keep_file=True)
             final_dest = shutil.move(src_abs_path, dst_abs_path)
-
-            if not is_untracked:
-                commit_msg = f"Moved {src_type} `{src_rel_path}` to `{dst_rel_path}`"
-                cls._make_move_activity_record(labbook, section, dst_abs_path, commit_msg)
+            commit_msg = f"Moved {src_type} `{src_rel_path}` to `{dst_rel_path}`"
+            cls._make_move_activity_record(labbook, section, dst_abs_path, commit_msg)
 
             if os.path.isfile(final_dest):
                 t = final_dest.replace(os.path.join(labbook.root_dir, section), '')
@@ -403,21 +324,15 @@ class FileOperations(object):
 
         relative_path = LabBook.make_path_relative(relative_path)
         new_directory_path = os.path.join(labbook.root_dir, relative_path)
-        section = relative_path.split(os.sep)[0]
-        git_untracked = in_untracked(labbook.root_dir, section)
         if os.path.exists(new_directory_path):
             return
         else:
             logger.info(f"Making new directory in `{new_directory_path}`")
             os.makedirs(new_directory_path, exist_ok=make_parents)
-            if git_untracked:
-                logger.warning(f'New {str(labbook)} untracked directory `{new_directory_path}`')
-                return
             new_dir = ''
             for d in relative_path.split(os.sep):
                 new_dir = os.path.join(new_dir, d)
                 full_new_dir = os.path.join(labbook.root_dir, new_dir)
-
                 gitkeep_path = os.path.join(full_new_dir, '.gitkeep')
                 if not os.path.exists(gitkeep_path):
                     with open(gitkeep_path, 'w') as gitkeep:

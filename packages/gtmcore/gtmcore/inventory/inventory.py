@@ -22,7 +22,7 @@ from gtmcore.labbook import SecretStore
 from gtmcore.labbook.labbook import LabBook
 from gtmcore.dataset.dataset import Dataset
 from gtmcore.inventory import Repository
-from gtmcore.dataset.storage import SUPPORTED_STORAGE_BACKENDS
+from gtmcore.dataset import storage
 from gtmcore.activity import ActivityStore, ActivityDetailRecord, ActivityDetailType, ActivityRecord, ActivityType, \
     ActivityAction
 from gtmcore.dataset import Manifest
@@ -488,7 +488,7 @@ class InventoryManager(object):
         """
         dataset = Dataset(config_file=self.config_file, author=author, namespace=owner)
 
-        if storage_type not in SUPPORTED_STORAGE_BACKENDS:
+        if storage_type not in storage.SUPPORTED_STORAGE_BACKENDS:
             raise ValueError(f"Unsupported Dataset storage type: {storage_type}")
 
         try:
@@ -843,3 +843,43 @@ class InventoryManager(object):
         ar.add_detail_object(adr)
         ars = ActivityStore(labbook)
         ars.create_activity_record(ar)
+
+    def update_linked_dataset_reference(self, dataset_namespace: str, dataset_name: str, labbook: LabBook) -> None:
+        """Method to update a linked dataset reference to the latest revision
+
+        Args:
+            dataset_namespace: owner (namespace) of the dateset
+            dataset_name: name of the dataset
+            labbook: labbook instance to which the dataset is linked
+
+        Returns:
+            none1
+        """
+        # Load dataset from inside Project directory
+        submodule_dir = os.path.join(labbook.root_dir, '.gigantum', 'datasets', dataset_namespace, dataset_name)
+        ds = self.load_dataset_from_directory(submodule_dir, author=labbook.author)
+        ds.namespace = dataset_namespace
+
+        # Update the submodule reference with the latest changes
+        original_revision = ds.git.repo.head.object.hexsha
+        ds.git.pull()
+        revision = ds.git.repo.head.object.hexsha
+
+        # If the submodule has changed, commit the changes.
+        if original_revision != revision:
+            labbook.git.add_all()
+            commit = labbook.git.commit("Updating submodule ref")
+
+            # Add Activity Record
+            adr = ActivityDetailRecord(ActivityDetailType.DATASET, show=False, action=ActivityAction.DELETE)
+            adr.add_value('text/markdown',
+                          f"Updated Dataset `{dataset_namespace}/{dataset_name}` link to {revision}")
+            msg = f"Updated Dataset `{dataset_namespace}/{dataset_name}` link to version {revision[0:8]}"
+            ar = ActivityRecord(ActivityType.DATASET,
+                                message=msg,
+                                linked_commit=commit.hexsha,
+                                tags=["dataset"],
+                                show=True)
+            ar.add_detail_object(adr)
+            ars = ActivityStore(labbook)
+            ars.create_activity_record(ar)

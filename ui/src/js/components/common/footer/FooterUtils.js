@@ -11,6 +11,7 @@ import {
 // mutations
 import FetchLabbookEdgeMutation from 'Mutations/FetchLabbookEdgeMutation';
 import FetchDatasetEdgeMutation from 'Mutations/FetchDatasetEdgeMutation';
+import FetchCompleteDatasetEdgeMutation from 'Mutations/FetchCompleteDatasetEdgeMutation';
 import FetchDatasetFilesMutation from 'Mutations/FetchDatasetFilesMutation';
 import FetchLabbookDatasetFilesMutation from 'Mutations/FetchLabbookDatasetFilesMutation';
 
@@ -121,6 +122,7 @@ const FooterUtils = {
               }
               refetch();
             // executes when job status has completed
+            // TODO handle configure dataset callback
             } else if (response.data.jobStatus.status === 'finished') {
               const messageData = {
                 id: responseId,

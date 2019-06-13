@@ -11,7 +11,6 @@ from gtmcore.dataset.storage import get_storage_backend
 from gtmcore.dataset.storage.gigantum import GigantumObjectStore, PresignedS3Download, PresignedS3Upload
 from gtmcore.fixtures.datasets import mock_dataset_with_cache_dir, helper_compress_file
 from gtmcore.dataset.io import PushResult, PushObject, PullResult, PullObject
-from gtmcore.dataset.manifest.eventloop import get_event_loop
 
 
 def helper_write_object(directory, object_id, contents):
@@ -59,6 +58,36 @@ class TestStorageBackendGigantum(object):
         assert headers['Identity'] == "1234"
         assert headers['Accept'] == 'application/json'
         assert headers['Content-Type'] == 'application/json'
+
+    def test_client_should_dedup_on_push(self, mock_dataset_with_cache_dir):
+        sb = get_storage_backend("gigantum_object_v1")
+        ds = mock_dataset_with_cache_dir[0]
+
+        assert sb.client_should_dedup_on_push is True
+
+    def test_backend_config(self, mock_dataset_with_cache_dir):
+        sb = get_storage_backend("gigantum_object_v1")
+        ds = mock_dataset_with_cache_dir[0]
+
+        assert sb.is_configured is False
+
+        missing = sb.missing_configuration
+        assert len(missing) == 3
+        assert missing[0]['parameter'] == "username"
+
+        # Configure 1 param
+        sb.configuration['username'] = "test"
+
+        assert sb.is_configured is False
+        missing = sb.missing_configuration
+        assert len(missing) == 2
+        assert missing[0]['parameter'] == "gigantum_bearer_token"
+
+        # Configure all
+        sb.set_default_configuration('test', 'asdf', '1234')
+        assert sb.is_configured is True
+
+        assert sb.confirm_configuration(ds, lambda x: print(x)) is None
 
     @pytest.mark.asyncio
     async def test_presigneds3upload_get_presigned_s3_url(self, event_loop, mock_dataset_with_cache_dir):

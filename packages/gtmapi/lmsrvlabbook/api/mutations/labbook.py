@@ -66,28 +66,11 @@ class CreateLabbook(graphene.relay.ClientIDMutation):
                                is_untracked=False, client_mutation_id=None):
         username = get_logged_in_username()
         inv_manager = InventoryManager()
-        if is_untracked:
-            lb = inv_manager.create_labbook_disabled_lfs(username=username,
-                                                         owner=username,
-                                                         labbook_name=name,
-                                                         description=description,
-                                                         author=get_logged_in_author())
-        else:
-            lb = inv_manager.create_labbook(username=username,
-                                            owner=username,
-                                            labbook_name=name,
-                                            description=description,
-                                            author=get_logged_in_author())
-
-        if is_untracked:
-            FileOperations.set_untracked(lb, 'input')
-            FileOperations.set_untracked(lb, 'output')
-            input_set = FileOperations.is_set_untracked(lb, 'input')
-            output_set = FileOperations.is_set_untracked(lb, 'output')
-            if not (input_set and output_set):
-                raise ValueError(f'{str(lb)} untracking for input/output in malformed state')
-            if not lb.is_repo_clean:
-                raise ValueError(f'{str(lb)} should have clean Git state after setting for untracked')
+        lb = inv_manager.create_labbook(username=username,
+                                        owner=username,
+                                        labbook_name=name,
+                                        description=description,
+                                        author=get_logged_in_author())
 
         adr = ActivityDetailRecord(ActivityDetailType.LABBOOK, show=False, importance=0)
         adr.add_value('text/plain', f"Created new LabBook: {username}/{name}")

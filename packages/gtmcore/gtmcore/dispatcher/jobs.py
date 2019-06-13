@@ -2,11 +2,9 @@ import importlib
 import json
 import os
 import time
-from typing import Callable, Optional, List, NamedTuple
+from typing import Optional, List
 import sys
 import shutil
-import copy
-from humanfriendly import format_size
 
 from rq import get_current_job
 
@@ -19,15 +17,11 @@ from gtmcore.inventory import Repository
 
 from gtmcore.logging import LMLogger
 from gtmcore.workflows import ZipExporter, LabbookWorkflow, DatasetWorkflow, MergeOverride
-from gtmcore.container.core import (build_docker_image as build_image,
-                                     start_labbook_container as start_container,
-                                     stop_labbook_container as stop_container)
+from gtmcore.container.core import (build_docker_image as build_image)
 
 from gtmcore.dataset.manifest import Manifest
-from gtmcore.dataset.manifest.job import generate_bg_hash_job_list
 from gtmcore.dataset.io.manager import IOManager
-from gtmcore.gitlib.git import GitAuthor
-from gtmcore.dispatcher.dispatcher import Dispatcher
+from gtmcore.dataset.storage.backend import UnmanagedStorageBackend
 
 
 # PLEASE NOTE -- No global variables!
@@ -53,6 +47,7 @@ def publish_repository(repository: Repository, username: str, access_token: str,
         job.save_meta()
 
     try:
+        update_meta("Publish task in queue")
         with repository.lock():
             if isinstance(repository, LabBook):
                 wf = LabbookWorkflow(repository)
@@ -86,6 +81,7 @@ def sync_repository(repository: Repository, username: str, override: MergeOverri
         job.save_meta()
 
     try:
+        update_meta("Sync task in queue")
         with repository.lock():
             if isinstance(repository, LabBook):
                 wf = LabbookWorkflow(repository)
@@ -278,6 +274,7 @@ def build_labbook_image(path: str, username: str,
             except Exception as e:
                 logger.error(e)
 
+        save_metadata_callback("Build task in queue")
         image_id = build_image(path, override_image_tag=tag, nocache=nocache, username=username,
                                feedback_callback=save_metadata_callback)
 
@@ -344,64 +341,6 @@ def start_and_run_activity_monitor(module_name, class_name, user, owner, labbook
     except Exception as e:
         logger.error("Error on start_and_run_activity_monitor in pid {}: {}".format(os.getpid(), e))
         raise e
-
-
-def index_labbook_filesystem():
-    """To be implemented later. """
-    raise NotImplemented
-
-
-def test_exit_success():
-    """Used only for testing -- vacuous method to always succeed and return 0. """
-    return 0
-
-
-def test_exit_fail():
-    """Used only for testing -- always throws an exception"""
-    raise Exception("Intentional Exception from job `test_exit_fail`")
-
-
-def test_sleep(n):
-    """Used only for testing -- example method with argument. """
-    logger = LMLogger.get_logger()
-    logger.info("Starting test_sleep({}) in pid {}".format(n, os.getpid()))
-
-    try:
-        job = get_current_job()
-        job.meta['sample'] = 'test_sleep metadata'
-        job.meta['pid'] = int(os.getpid())
-        job.save_meta()
-
-        time.sleep(n)
-        logger.info("Completed test_sleep in pid {}".format(os.getpid()))
-        return 0
-    except Exception as e:
-        logger.error("Error on test_sleep in pid {}: {}".format(os.getpid(), e))
-        raise
-
-
-def test_incr(path):
-    logger = LMLogger.get_logger()
-    logger.info("Starting test_incr({}) in pid {}".format(path, os.getpid()))
-
-    try:
-        amt = 1
-        if not os.path.exists(path):
-            logger.info("Creating {}".format(path))
-            with open(path, 'w') as fp:
-                json.dump({'amt': amt}, fp)
-        else:
-            logger.info("Loading {}".format(path))
-            with open(path, 'r') as fp:
-                amt_dict = json.load(fp)
-            logger.info("Amt = {}")
-            with open(path, 'w') as fp:
-                amt_dict['amt'] = amt_dict['amt'] + 1
-                json.dump(amt_dict, fp)
-            logger.info("Set amt = {} in {}".format(amt_dict['amt'], path))
-    except Exception as e:
-        logger.error("Error on test_incr in pid {}: {}".format(os.getpid(), e))
-        raise
 
 
 def download_dataset_files(logged_in_username: str, access_token: str, id_token: str,
@@ -481,6 +420,160 @@ def download_dataset_files(logged_in_username: str, access_token: str, id_token:
         raise
 
 
+def update_unmanaged_dataset_from_remote(logged_in_username: str, access_token: str, id_token: str,
+                                         dataset_owner: str, dataset_name: str) -> None:
+    """Method to update/populate an unmanaged dataset from its remote automatically
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+
+    Returns:
+
+    """
+    def update_meta(msg):
+        job = get_current_job()
+        if not job:
+            return
+        if 'feedback' not in job.meta:
+            job.meta['feedback'] = msg
+        else:
+            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
+        job.save_meta()
+
+    logger = LMLogger.get_logger()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting update_unmanaged_dataset_from_remote(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        im = InventoryManager()
+        ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+
+        if not isinstance(ds.backend, UnmanagedStorageBackend):
+            raise ValueError("Can only auto-update unmanaged dataset types")
+
+        if not ds.backend.can_update_from_remote:
+            raise ValueError("Storage backend cannot update automatically from remote.")
+
+        ds.backend.update_from_remote(ds, update_meta)
+
+    except Exception as err:
+        logger.exception(err)
+        raise
+
+
+def verify_dataset_contents(logged_in_username: str, access_token: str, id_token: str,
+                            dataset_owner: str, dataset_name: str,
+                            labbook_owner: Optional[str] = None, labbook_name: Optional[str] = None) -> None:
+    """Method to update/populate an unmanaged dataset from it local state
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+        labbook_owner: Owner of the labbook if this dataset is linked
+        labbook_name: Name of the labbook if this dataset is linked
+
+    Returns:
+        None
+    """
+    job = get_current_job()
+
+    def update_meta(msg):
+        if not job:
+            return
+        if 'feedback' not in job.meta:
+            job.meta['feedback'] = msg
+        else:
+            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
+        job.save_meta()
+
+    logger = LMLogger.get_logger()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting verify_dataset_contents(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name},"
+                    f"labbook_owner={labbook_owner}, labbook_name={labbook_name}")
+
+        im = InventoryManager()
+        if labbook_owner is not None and labbook_name is not None:
+            # This is a linked dataset, load repo from the Project
+            lb = im.load_labbook(logged_in_username, labbook_owner, labbook_name)
+            dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
+            ds = im.load_dataset_from_directory(dataset_dir)
+        else:
+            # this is a normal dataset. Load repo from working dir
+            ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+
+        result = ds.backend.verify_contents(ds, update_meta)
+        job.meta['modified_keys'] = result
+
+    except Exception as err:
+        logger.exception(err)
+        raise
+
+
+def update_unmanaged_dataset_from_local(logged_in_username: str, access_token: str, id_token: str,
+                                        dataset_owner: str, dataset_name: str) -> None:
+    """Method to update/populate an unmanaged dataset from it local state
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+
+    Returns:
+
+    """
+    def update_meta(msg):
+        job = get_current_job()
+        if not job:
+            return
+        if 'feedback' not in job.meta:
+            job.meta['feedback'] = msg
+        else:
+            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
+        job.save_meta()
+
+    logger = LMLogger.get_logger()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting update_unmanaged_dataset_from_local(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        im = InventoryManager()
+        ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+
+        if not isinstance(ds.backend, UnmanagedStorageBackend):
+            raise ValueError("Can only auto-update unmanaged dataset types")
+
+        ds.backend.update_from_local(ds, update_meta, verify_contents=True)
+
+    except Exception as err:
+        logger.exception(err)
+        raise
+
+
 def clean_dataset_file_cache(logged_in_username: str, dataset_owner: str, dataset_name: str,
                              cache_location: str, config_file: str = None) -> None:
     """Method to import a dataset from a zip file
@@ -532,6 +625,11 @@ def clean_dataset_file_cache(logged_in_username: str, dataset_owner: str, datase
         raise
 
 
+def index_labbook_filesystem():
+    """To be implemented later. """
+    raise NotImplemented
+
+
 def hash_dataset_files(logged_in_username: str, dataset_owner: str, dataset_name: str,
                        file_list: List, config_file: str = None) -> None:
     """
@@ -570,158 +668,54 @@ def hash_dataset_files(logged_in_username: str, dataset_owner: str, dataset_name
         raise
 
 
-def complete_dataset_upload_transaction(logged_in_username: str, logged_in_email: str,
-                                        dataset_owner: str, dataset_name: str, config_file: str = None) -> None:
-    """Method to import a dataset from a zip file
+def test_exit_success():
+    """Used only for testing -- vacuous method to always succeed and return 0. """
+    return 0
 
-    Args:
-        logged_in_username: username for the currently logged in user
-        logged_in_email: email for the currently logged in user
-        dataset_owner: Owner of the labbook if this dataset is linked
-        dataset_name: Name of the labbook if this dataset is linked
-        config_file: config file (used for test mocking)
 
-    Returns:
-        None
-    """
+def test_exit_fail():
+    """Used only for testing -- always throws an exception"""
+    raise Exception("Intentional Exception from job `test_exit_fail`")
+
+
+def test_sleep(n):
+    """Used only for testing -- example method with argument. """
     logger = LMLogger.get_logger()
+    logger.info("Starting test_sleep({}) in pid {}".format(n, os.getpid()))
 
-    def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
-                        percent_complete: Optional[float] = None):
-        """Method to update the job's metadata and provide feedback to the UI"""
-        current_job = get_current_job()
-        if not current_job:
-            return
-        if has_failures:
-            current_job.meta['has_failures'] = has_failures
-        if failure_detail:
-            current_job.meta['failure_detail'] = failure_detail
-        if percent_complete:
-            current_job.meta['percent_complete'] = percent_complete
-
-        current_job.meta['feedback'] = msg
-        current_job.save_meta()
-
-    def schedule_bg_hash_job():
-        """Method to check if a bg job should get scheduled and do so"""
-        num_cores = manifest.get_num_hashing_cpus()
-        if sum([x.is_running for x in job_list]) < num_cores:
-            for j in job_list:
-                if j.is_failed is True and j.failure_count < 3:
-                    # Re-schedule failed job
-                    job_kwargs['file_list'] = j.file_list
-                    job_key = dispatcher_obj.dispatch_task(hash_dataset_files,
-                                                           kwargs=job_kwargs,
-                                                           metadata=job_metadata)
-                    j.job_key = job_key
-                    update_feedback(f"Restarted failed file hashing job. Re-processing"
-                                    f" {format_size(j.total_bytes)}...")
-                    logger.info(f"(Job {p}) Restarted file hash job for"
-                                f" {logged_in_username}/{dataset_owner}/{dataset_name}")
-                    break
-
-                if j.is_complete is False and j.is_running is False:
-                    # Schedule new job
-                    job_kwargs['file_list'] = j.file_list
-                    job_key = dispatcher_obj.dispatch_task(hash_dataset_files,
-                                                           kwargs=job_kwargs,
-                                                           metadata=job_metadata)
-                    j.job_key = job_key
-                    logger.info(f"(Job {p}) Scheduled file hash job for"
-                                f" {logged_in_username}/{dataset_owner}/{dataset_name}")
-                    break
-
-    p = os.getpid()
     try:
-        logger.info(f"(Job {p}) Starting complete_dataset_upload_transaction(logged_in_username={logged_in_username},"
-                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+        job = get_current_job()
+        job.meta['sample'] = 'test_sleep metadata'
+        job.meta['pid'] = int(os.getpid())
+        job.save_meta()
 
-        author = GitAuthor(name=logged_in_username, email=logged_in_email)
-        dispatcher_obj = Dispatcher()
-        ds = InventoryManager(config_file=config_file).load_dataset(logged_in_username, dataset_owner, dataset_name,
-                                                                    author=author)
-        manifest = Manifest(ds, logged_in_username)
+        time.sleep(n)
+        logger.info("Completed test_sleep in pid {}".format(os.getpid()))
+        return 0
+    except Exception as e:
+        logger.error("Error on test_sleep in pid {}: {}".format(os.getpid(), e))
+        raise
 
-        with ds.lock():
-            # Detect changes
-            status = manifest.status()
 
-            # Collect filenames that need to be hashed
-            filenames = copy.deepcopy(status.modified)
-            filenames.extend(status.created)
+def test_incr(path):
+    logger = LMLogger.get_logger()
+    logger.info("Starting test_incr({}) in pid {}".format(path, os.getpid()))
 
-            # If there are new/updated files, spread work across cores while providing reasonable feedback
-            if filenames:
-                job_list = generate_bg_hash_job_list(filenames, manifest, dispatcher_obj)
-                total_bytes = sum([x.total_bytes for x in job_list])
-
-                job_kwargs = {
-                    'logged_in_username': logged_in_username,
-                    'dataset_owner': dataset_owner,
-                    'dataset_name': dataset_name,
-                    'file_list': list(),
-                    'config_file': config_file,
-                }
-                job_metadata = {'dataset': f"{logged_in_username}|{dataset_owner}|{dataset_name}",
-                                'method': 'hash_dataset_files'}
-
-                update_feedback(f"Please wait while file contents are analyzed. "
-                                f"Processing {format_size(total_bytes)}...", has_failures=False)
-                logger.info(f"(Job {p}) Starting file hash processing for"
-                            f" {logged_in_username}/{dataset_owner}/{dataset_name} with {len(job_list)} jobs")
-
-                while True:
-                    # Check if you need to schedule jobs and schedule up to 1 job per iteration
-                    schedule_bg_hash_job()
-
-                    # Refresh all job statuses and update status feedback
-                    completed_job_status = [x.refresh_status() for x in job_list]
-                    completed_bytes = sum([s.total_bytes for s, c in zip(job_list, completed_job_status) if c is True])
-                    update_feedback(f"Please wait while file contents are analyzed. "
-                                    f"{format_size(completed_bytes)} of {format_size(total_bytes)} complete...",
-                                    percent_complete=(float(completed_bytes)/float(total_bytes)) * 100)
-
-                    # Check if you are done
-                    completed_or_failed = sum([(x.is_complete or (x.failure_count >= 3)) for x in job_list])
-                    if completed_or_failed == len(job_list):
-                        break
-
-                    # Update once per second
-                    time.sleep(1)
-
-                # Manually complete update process for updated/created files
-                failed_files = list()
-                for job in job_list:
-                    if job.is_complete:
-                        for f, h, fh in zip(job.file_list, job.get_hash_result(), job.get_fast_hash_result()):
-                            if not fh or not h:
-                                failed_files.append(f)
-                                continue
-
-                            _, file_bytes, mtime = fh.split("||")
-                            manifest._manifest_io.add_or_update(f, h, mtime, file_bytes)
-                    else:
-                        failed_files.extend(job.file_list)
-
-                # Message for hard failures
-                if failed_files:
-                    detail_msg = f"The following files failed to hash. Try re-uploading the files again:\n"
-                    detail_file_list = " \n".join(failed_files)
-                    detail_msg = f"{detail_msg}{detail_file_list}"
-                    update_feedback(f"An error occurred while processing some files. Check details and re-upload.",
-                                    has_failures=True, failure_detail=detail_msg)
-
-            if status.deleted:
-                manifest.hasher.delete_fast_hashes(status.deleted)
-                for relative_path in status.deleted:
-                    manifest._manifest_io.remove(relative_path)
-
-            manifest._manifest_io.persist()
-
-            # Complete sweep operation
-            manifest.sweep_all_changes(status=status, upload=True)
-
-    except Exception as err:
-        logger.error(f"(Job {p}) Error in clean_dataset_file_cache job")
-        logger.exception(err)
+    try:
+        amt = 1
+        if not os.path.exists(path):
+            logger.info("Creating {}".format(path))
+            with open(path, 'w') as fp:
+                json.dump({'amt': amt}, fp)
+        else:
+            logger.info("Loading {}".format(path))
+            with open(path, 'r') as fp:
+                amt_dict = json.load(fp)
+            logger.info("Amt = {}")
+            with open(path, 'w') as fp:
+                amt_dict['amt'] = amt_dict['amt'] + 1
+                json.dump(amt_dict, fp)
+            logger.info("Set amt = {} in {}".format(amt_dict['amt'], path))
+    except Exception as e:
+        logger.error("Error on test_incr in pid {}: {}".format(os.getpid(), e))
         raise

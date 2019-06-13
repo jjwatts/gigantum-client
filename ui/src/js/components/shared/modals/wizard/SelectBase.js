@@ -219,29 +219,6 @@ export default class SelectBase extends Component {
                                 selectBase={self._selectBase}
                                 selectedBaseId={state.selectedBaseId}
                               />
-                              {
-                                <div className="BaseSlide__coming-soon">
-                                  <p>
-                                    More Dataset Types coming soon.&nbsp;
-                                    <a
-                                      href="https://docs.gigantum.com/docs/datasets-overview"
-                                      rel="noopener noreferrer"
-                                      target="_blank"
-                                    >
-                                      Learn More.
-                                    </a>
-                                    <br />
-                                    Have an idea for a useful Dataset Type? Suggest it&nbsp;
-                                    <a
-                                      href="https://feedback.gigantum.com"
-                                      rel="noopener noreferrer"
-                                      target="_blank"
-                                    >
-                                      here.
-                                    </a>
-                                  </p>
-                                </div>
-                              }
                             </div>
                           ))
                         }

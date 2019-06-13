@@ -92,7 +92,7 @@ def ping():
     """Unauthorized endpoint for validating the API is up"""
     app_name, built_on, revision = config.config['build_info'].split(' :: ')
     return jsonify({
-        "application": app_name ,
+        "application": app_name,
         "built_on": built_on,
         "revision": revision
     })
@@ -221,6 +221,11 @@ with open(os.path.join(share_dir, 'jupyterhooks', '__init__.py'), 'w') as initpy
 if config.config["lock"]["reset_on_start"]:
     logger.info("Resetting ALL distributed locks")
     reset_all_locks(config.config['lock'])
+
+# Create local data (for local dataset types) dir if it doesn't exist
+local_data_dir = os.path.join(app.config["LABMGR_CONFIG"].config['git']['working_directory'], 'local_data')
+if os.path.isdir(local_data_dir) is False:
+    os.makedirs(local_data_dir, exist_ok=True)
 
 
 # make sure temporary upload directory exists and is empty

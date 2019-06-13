@@ -16,6 +16,9 @@ class DatasetType(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
     # Boolean indicating if type is fully managed
     is_managed = graphene.Boolean()
 
+    # Boolean indicating if type can automatically update the manifest from the remote storage backend
+    can_update_unmanaged_from_remote = graphene.Boolean()
+
     # Short description of the Dataset Type
     description = graphene.String()
 
@@ -37,6 +40,11 @@ class DatasetType(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
             sb = get_storage_backend(self.storage_type)
 
             self._dataset_type_data = sb.metadata
+            self._dataset_type_data['is_managed'] = sb.is_managed
+            if sb.is_managed is False:
+                self._dataset_type_data['can_update_unmanaged_from_remote'] = sb.can_update_from_remote
+            else:
+                self._dataset_type_data['can_update_unmanaged_from_remote'] = False
 
         self.name = self._dataset_type_data['name']
         self.description = self._dataset_type_data['description']
@@ -45,6 +53,7 @@ class DatasetType(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         self.icon = self._dataset_type_data['icon']
         self.url = self._dataset_type_data['url']
         self.is_managed = self._dataset_type_data['is_managed']
+        self.can_update_unmanaged_from_remote = self._dataset_type_data['can_update_unmanaged_from_remote']
 
     @classmethod
     def get_node(cls, info, id):
@@ -99,3 +108,9 @@ class DatasetType(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         if self.url is None:
             self._load_info()
         return self.url
+
+    def resolve_can_update_unmanaged_from_remote(self, info):
+        """Resolve the tags field"""
+        if self.can_update_unmanaged_from_remote is None:
+            self._load_info()
+        return self.can_update_unmanaged_from_remote
