@@ -38,7 +38,7 @@ class TestResult(object):
 
     def render(self) -> str:
         duration = f'({self.duration:.1f}sec)'
-        line = f'{self.result:6s} {duration:10s} :: {self.name[:30]:31s} - {self.fail_message or "Passed"}'
+        line = f'{self.result:6s} {duration:10s} :: {self.name[:30]:31s} - {self.fail_message or self.result}'
         return line
 
 

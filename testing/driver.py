@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import logging
+import signal
 import sys
 import os
 
@@ -8,8 +9,15 @@ import testutils
 from testutils import driverutil
 
 
+def signal_handler(sig, frame):
+        print('Terminating Gigantum Test Harness - Cleanup may be required!')
+        sys.exit(1)
+
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal_handler)
     logging.basicConfig(level=logging.INFO)
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument('--headless', default=False, action='store_true',
                            help='Optional name of specific playbook')

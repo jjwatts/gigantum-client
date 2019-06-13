@@ -7,7 +7,7 @@ import selenium
 from selenium.webdriver.common.by import By
 
 import testutils
-from testutils import graphql
+from testutils import graphql_helpers
 
 
 def test_publish_sync_delete_project(driver: selenium.webdriver, *args, **kwargs):
