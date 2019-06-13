@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
 from .testutils import *
-from .graphql import list_remote_datasets, list_remote_projects
+from .graphql_helpers import list_remote_datasets, list_remote_projects
 
 
 class CssElement(object):

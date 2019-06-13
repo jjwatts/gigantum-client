@@ -10,7 +10,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 from testutils import elements
 from testutils import testutils
-from .graphql import list_remote_projects, delete_remote_project
+from .graphql_helpers import list_remote_projects, delete_remote_project
 
 
 class ProjectPrepResponse(object):

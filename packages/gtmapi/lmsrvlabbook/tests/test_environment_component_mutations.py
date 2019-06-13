@@ -20,7 +20,7 @@
 import pytest
 import yaml
 import os
-import graphql
+import graphql_helpers
 from snapshottest import snapshot
 
 from gtmcore.environment import ComponentManager

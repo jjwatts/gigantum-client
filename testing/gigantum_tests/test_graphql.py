@@ -3,7 +3,7 @@ import os
 
 import testutils
 from testutils import TestTags
-from testutils.graphql import create_py3_minimal_project
+from testutils.graphql_helpers import create_py3_minimal_project
 
 
 @TestTags('graphql')

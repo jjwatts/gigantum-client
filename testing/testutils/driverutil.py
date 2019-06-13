@@ -14,7 +14,7 @@ from PIL import ImageDraw
 
 from .cleanup import delete_datasets, delete_projects_on_disk, delete_project_images, stop_project_containers
 from .actions import list_remote_projects
-from .graphql import delete_remote_project, list_remote_datasets
+from .graphql_helpers import delete_remote_project, list_remote_datasets
 
 
 class TestResult(object):

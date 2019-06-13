@@ -1,7 +1,7 @@
 import pytest
 import yaml
 import os
-import graphql
+import graphql_helpers
 from snapshottest import snapshot
 
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped
