@@ -51,9 +51,6 @@ class LabbookSection(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRe
     # List of favorites for a given subdir (code, input, output)
     favorites = graphene.relay.ConnectionField(LabbookFavoriteConnection)
 
-    # True if this directory is gitignored (to temporarily handle multigig files)
-    is_untracked = graphene.Boolean()
-
     has_files = graphene.Boolean()
     has_favorites = graphene.Boolean()
 
@@ -195,7 +192,3 @@ class LabbookSection(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRe
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             _hf
         )
-
-    def resolve_is_untracked(self, info):
-        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: FileOperations.is_set_untracked(labbook=labbook, section=str(self.section)))

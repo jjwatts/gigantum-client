@@ -23,7 +23,6 @@ logger = LMLogger.get_logger()
 class ContainerOperations:
 
     @classmethod
-
     def build_image(cls, labbook: LabBook, username: str, override_image_tag: Optional[str] = None,
                     nocache: bool = False) -> Tuple[LabBook, str]:
         """ Build docker image according to the Dockerfile just assembled. Does NOT

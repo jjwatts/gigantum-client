@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, NamedTuple
+from typing import List, Dict, Optional, NamedTuple, TYPE_CHECKING
 import pickle
 import os
 from enum import Enum
@@ -7,9 +7,11 @@ import json
 import redis
 import glob
 import copy
-
-from gtmcore.dataset.dataset import Dataset
 from gtmcore.logging import LMLogger
+
+if TYPE_CHECKING:
+    from gtmcore.dataset.dataset import Dataset
+
 
 logger = LMLogger.get_logger()
 
@@ -43,7 +45,7 @@ class ManifestFileCache(object):
     you need to reload the Dataset instance and reload the Manifest instance.
 
     """
-    def __init__(self, dataset: Dataset, logged_in_username: Optional[str] = None) -> None:
+    def __init__(self, dataset: 'Dataset', logged_in_username: Optional[str] = None) -> None:
         self.dataset = dataset
         self.logged_in_username = logged_in_username
 

@@ -148,7 +148,6 @@ class TestJobs(object):
 
             lbk_archive_path = tmp_archive_path.replace(".zip", ".lbk")
             lbk_archive_path = shutil.copy(tmp_archive_path, lbk_archive_path)
-            print(lbk_archive_path)
 
             # Delete the labbook
             shutil.rmtree(lb.root_dir)

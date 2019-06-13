@@ -7,6 +7,7 @@ from operator import attrgetter
 
 from gtmcore.dataset.dataset import Dataset
 from gtmcore.dataset.manifest import Manifest
+from gtmcore.dataset.storage.backend import UnmanagedStorageBackend, ManagedStorageBackend
 from gtmcore.dataset.io import PushObject, PushResult, PullResult, PullObject
 
 from gtmcore.logging import LMLogger
@@ -122,16 +123,19 @@ class IOManager(object):
         Returns:
             IOResult
         """
+        if isinstance(self, UnmanagedStorageBackend):
+            raise TypeError("Cannot push objects using an Unmanaged dataset storage type")
+
         if not status_update_fn:
             status_update_fn = self._log_updater
 
-        objs: List[PushObject] = self.objects_to_push(remove_duplicates=self.dataset.backend.client_should_dedup_on_push)
+        should_dedup = self.dataset.backend.client_should_dedup_on_push # type: ignore
+        objs: List[PushObject] = self.objects_to_push(remove_duplicates=should_dedup)
 
         try:
-            self.dataset.backend.prepare_push(self.dataset, objs, status_update_fn)
-            result = self.dataset.backend.push_objects(self.dataset, objs, status_update_fn)
-            logger.warning(result)
-            self.dataset.backend.finalize_push(self.dataset, status_update_fn)
+            self.dataset.backend.prepare_push(self.dataset, objs, status_update_fn)  # type: ignore
+            result = self.dataset.backend.push_objects(self.dataset, objs, status_update_fn)  # type: ignore
+            self.dataset.backend.finalize_push(self.dataset, status_update_fn)  # type: ignore
         except Exception as err:
             logger.exception(err)
             raise

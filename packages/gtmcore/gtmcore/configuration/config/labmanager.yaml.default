@@ -105,3 +105,9 @@ datasets:
       download_chunk_size: 4194304
       num_workers: 10
 
+# Dispatcher and permitted number of workers -
+# NOTE! Only the default queue is burstable
+dispatcher:
+  gigantum_default_queue: 7
+  gigantum_build_queue: 1
+  gigantum_publish_queue: 4

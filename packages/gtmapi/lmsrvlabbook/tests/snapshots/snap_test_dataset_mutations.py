@@ -122,10 +122,90 @@ snapshots['TestDatasetMutations.test_modify_dataset_link_errors 1'] = {
                     'line': 4
                 }
             ],
-            'message': 'Unsupported action. Use `link` or `unlink`',
+            'message': 'Unsupported action. Use `link`, `unlink`, or `update`',
             'path': [
                 'modifyDatasetLink'
             ]
         }
     ]
+}
+
+snapshots['TestDatasetMutations.test_configure_local 1'] = {
+    'data': {
+        'dataset': {
+            'backendConfiguration': [
+                {
+                    'description': 'A directory in <gigantum_working_dir>/local_data/ to use as the dataset source',
+                    'parameter': 'Data Directory',
+                    'parameterType': 'str',
+                    'value': None
+                }
+            ],
+            'backendIsConfigured': False
+        }
+    }
+}
+
+snapshots['TestDatasetMutations.test_configure_local 2'] = {
+    'data': {
+        'configureDataset': {
+            'backgroundJobKey': None,
+            'confirmMessage': None,
+            'errorMessage': 'Data Directory does not exist.',
+            'hasBackgroundJob': True,
+            'isConfigured': False,
+            'shouldConfirm': False
+        }
+    }
+}
+
+snapshots['TestDatasetMutations.test_configure_local 3'] = {
+    'data': {
+        'configureDataset': {
+            'backgroundJobKey': None,
+            'confirmMessage': None,
+            'errorMessage': None,
+            'hasBackgroundJob': True,
+            'isConfigured': True,
+            'shouldConfirm': False
+        }
+    }
+}
+
+snapshots['TestDatasetMutations.test_update_dataset_link 1'] = {
+    'data': {
+        'modifyDatasetLink': {
+            'newLabbookEdge': {
+                'node': {
+                    'description': 'testing dataset links',
+                    'id': 'TGFiYm9vazpkZWZhdWx0JnRlc3QtbGI=',
+                    'linkedDatasets': [
+                        {
+                            'name': 'dataset100'
+                        }
+                    ],
+                    'name': 'test-lb'
+                }
+            }
+        }
+    }
+}
+
+snapshots['TestDatasetMutations.test_update_dataset_link 2'] = {
+    'data': {
+        'modifyDatasetLink': {
+            'newLabbookEdge': {
+                'node': {
+                    'description': 'testing dataset links',
+                    'id': 'TGFiYm9vazpkZWZhdWx0JnRlc3QtbGI=',
+                    'linkedDatasets': [
+                        {
+                            'name': 'dataset100'
+                        }
+                    ],
+                    'name': 'test-lb'
+                }
+            }
+        }
+    }
 }

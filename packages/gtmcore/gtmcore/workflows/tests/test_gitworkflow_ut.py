@@ -287,7 +287,7 @@ class TestGitWorkflowsMethods(object):
         wf.publish(username=username)
 
     @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
-    def test_reset__reset_local_change_same_owner(self, mock_labbook_lfs_disabled, mock_config_file):
+    def test_reset__reset_local_change_same_owner(self, mock_labbook_lfs_disabled):
         """ test reset performs no operation when there's nothing to do """
         username = 'test'
         lb = mock_labbook_lfs_disabled[2]

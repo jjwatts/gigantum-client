@@ -9,6 +9,7 @@ import json
 from graphene.test import Client
 from werkzeug.datastructures import FileStorage
 
+import gtmcore.dispatcher.dataset_jobs
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.dataset.cache.filesystem import HostFilesystemCache
 from gtmcore.dataset.manifest import Manifest
@@ -52,7 +53,8 @@ class TestDatasetUploadFilesMutations(object):
 
             # Call same method as in mutation
             d = Dispatcher()
-            res = d.dispatch_task(jobs.complete_dataset_upload_transaction, kwargs=kwargs, metadata=metadata)
+            kwargs['dispatcher'] = Dispatcher
+            res = d.dispatch_task(gtmcore.dispatcher.dataset_jobs.complete_dataset_upload_transaction, kwargs=kwargs, metadata=metadata)
 
             return res
 

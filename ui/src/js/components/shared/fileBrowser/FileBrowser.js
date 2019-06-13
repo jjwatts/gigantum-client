@@ -662,6 +662,7 @@ class FileBrowser extends Component {
     let fileKeys = files && Object.keys(files).filter(child => files[child].edge && !files[child].edge.node.isDir) || [];
     fileKeys = this._childSort(fileKeys, state.sort, state.reverse, files, 'files');
     const childrenKeys = folderKeys.concat(fileKeys);
+    const readOnly = props.section === 'data' && !props.isManaged;
 
     // declare css here
     const fileBrowserCSS = classNames({
@@ -709,6 +710,10 @@ class FileBrowser extends Component {
       'FileBrowser__button--download-all': !state.downloadingAll && !allFilesLocal,
       'FileBrowser__button--downloaded': !state.downloadingAll && allFilesLocal,
       'FileBrowser__button--downloading': state.downloadingAll,
+    });
+    const updateCSS = classNames({
+      'FileBrowser__update-modal': true,
+      hidden: !state.confirmUpdateVisible,
     });
 
     return (
@@ -772,33 +777,88 @@ class FileBrowser extends Component {
         <div className="FileBrowser__menu">
           <h5>Files</h5>
           <div className="FileBrowser__menu-buttons">
-            <label
-              htmlFor="browser_upload"
-              className="FileBrowser__upload-label"
-            >
-              <div className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow inline-block Btn" />
-              <span>Upload Files</span>
-              <input
-                id="browser_upload"
-                className="hidden"
-                type="file"
-                multiple
-                onChange={evt => this._uploadFiles(Array.prototype.slice.call(evt.target.files))}
-              />
-            </label>
-            <button
-              className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
-              data-click-id="addFolder"
-              onClick={() => this.setState({ addFolderVisible: !state.addFolderVisible })}
-              type="button"
-            >
-              <div
-                className="Btn--fileBrowser Btn--round Btn--bordered Btn__addFolder Btn"
-                data-click-id="addFolder"
-              />
-              New Folder
-            </button>
-            { props.section === 'input'
+            {
+              !readOnly
+              && (
+                <div>
+                  <label
+                    htmlFor="browser_upload"
+                    className="FileBrowser__upload-label"
+                  >
+                    <div className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow inline-block Btn" />
+                    <span>Upload Files</span>
+                    <input
+                      id="browser_upload"
+                      className="hidden"
+                      type="file"
+                      multiple
+                      onChange={evt => this._uploadFiles(Array.prototype.slice.call(evt.target.files))}
+                    />
+                  </label>
+                  <button
+                    className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
+                    data-click-id="addFolder"
+                    onClick={() => this.setState({ addFolderVisible: !state.addFolderVisible })}
+                    type="button"
+                  >
+                    <div
+                      className="Btn--fileBrowser Btn--round Btn--bordered Btn__addFolder Btn"
+                      data-click-id="addFolder"
+                    />
+                    New Folder
+                  </button>
+                </div>
+              )
+            }
+            {
+              readOnly
+              && (
+              <div className="flex">
+                <button
+                  className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
+                  onClick={() => { this.state.mutations.verifyDataset({}, () => {}) }}
+                  type="button"
+                >
+                  <div
+                    className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow Btn"
+                  />
+                  Verify Dataset
+                </button>
+                <div>
+                  <button
+                    className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
+                    onClick={() => this.setState({ confirmUpdateVisible: !state.confirmUpdateVisible })}
+                    type="button"
+                  >
+                    <div
+                      className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow Btn"
+                    />
+                    Update from Remote
+                  </button>
+                  <div className={updateCSS}>
+                    <p>This will update the Dataset with the external source. Do you wish to continue?</p>
+                    <div className="flex">
+                      <button
+                        type="button"
+                        className="Btn--flat"
+                        onClick={() => this.setState({ confirmUpdateVisible: false })}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { this.state.mutations.updateUnmanagedDataset({ fromRemote: true, fromLocal: false }, () => { this.setState({ confirmUpdateVisible: false }) }) }}
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              )
+            }
+            {
+              (props.section === 'input')
               && (
                 <button
                   className="Btn Btn__menuButton Btn--noShadow FileBrowser__addDataset"
@@ -827,35 +887,40 @@ class FileBrowser extends Component {
           </div>
         </div>
         <div className="FileBrowser__header">
-          <div className={multiSelectCSS}>
-            <button
-              className={multiSelectButtonCSS}
-              onClick={() => { this._selectFiles(); }}
-              type="button"
-            />
-            <button
-              className={deleteButtonCSS}
-              onClick={() => { this._togglePopup(true); }}
-              type="button"
-            />
+          {
+            !readOnly
+            && (
+              <div className={multiSelectCSS}>
+                <button
+                  className={multiSelectButtonCSS}
+                  onClick={() => { this._selectFiles(); }}
+                  type="button"
+                />
+                <button
+                  className={deleteButtonCSS}
+                  onClick={() => { this._togglePopup(true); }}
+                  type="button"
+                />
 
-            <div className={popupCSS}>
-              <div className="Tooltip__pointer" />
-              <p>Are you sure?</p>
-              <div className="flex justify--space-around">
-                <button
-                  className="File__btn--round File__btn--cancel File__btn--delete"
-                  onClick={() => { this._togglePopup(false); }}
-                  type="button"
-                />
-                <button
-                  className="File__btn--round File__btn--add File__btn--delete-files"
-                  onClick={() => { this._deleteSelectedFiles(); }}
-                  type="button"
-                />
+                <div className={popupCSS}>
+                  <div className="Tooltip__pointer" />
+                  <p>Are you sure?</p>
+                  <div className="flex justify--space-around">
+                    <button
+                      className="File__btn--round File__btn--cancel File__btn--delete"
+                      onClick={() => { this._togglePopup(false); }}
+                      type="button"
+                    />
+                    <button
+                      className="File__btn--round File__btn--add File__btn--delete-files"
+                      onClick={() => { this._deleteSelectedFiles(); }}
+                      type="button"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            )
+          }
           <button
             className={nameHeaderCSS}
             onClick={() => this._handleSort('az')}
@@ -943,6 +1008,7 @@ class FileBrowser extends Component {
                 <Folder
                   ref={file}
                   filename={file}
+                  readOnly={readOnly}
                   key={files[file].edge.node.key}
                   multiSelect={state.multiSelect}
                   mutationData={mutationData}
@@ -969,6 +1035,7 @@ class FileBrowser extends Component {
                 <File
                   ref={file}
                   filename={file}
+                  readOnly={readOnly}
                   key={files[file].edge.node.key}
                   multiSelect={state.multiSelect}
                   mutationData={mutationData}

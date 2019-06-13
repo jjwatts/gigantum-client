@@ -128,7 +128,7 @@ class ContainerStatus extends Component {
 
     let status = (containerStatus === 'RUNNING') ? 'Running' : containerStatus;
     status = (containerStatus === 'NOT_RUNNING') ? 'Stopped' : status;
-    status = (imageStatus === 'BUILD_IN_PROGRESS') ? 'Building' : status;
+    status = (imageStatus === 'BUILD_IN_PROGRESS' || imageStatus === 'BUILD_QUEUED') ? 'Building' : status;
     status = (imageStatus === 'BUILD_FAILED') ? 'Rebuild' : status;
     status = (imageStatus === 'DOES_NOT_EXIST') ? 'Rebuild' : status;
     status = ((imageStatus === 'DOES_NOT_EXIST') || props.isBuilding || (imageStatus === 'BUILD_IN_PROGRESS')) && (timeDifferenceMS < 15000) ? 'Building' : status;
@@ -362,8 +362,8 @@ class ContainerStatus extends Component {
       'ContainerStatus__container-state': !props.containerMenuOpen,
       [cssClass]: !props.isBuilding && !props.isSyncing && !props.isPublishing,
       'Tooltip-data': (cssClass === 'Rebuild'),
-      Building: (props.isBuilding || props.imageStatus === 'BUILD_IN_PROGRESS') && state.status !== 'Canceling',
-      Canceling: state.status === 'Canceling' && ((props.isBuilding || props.imageStatus === 'BUILD_IN_PROGRESS')),
+      Building: (props.isBuilding || props.imageStatus === 'BUILD_IN_PROGRESS' || props.imageStatus === 'BUILD_QUEUED') && state.status !== 'Canceling',
+      Canceling: state.status === 'Canceling' && ((props.isBuilding || props.imageStatus === 'BUILD_IN_PROGRESS' || props.imageStatus === 'BUILD_QUEUED')),
       Syncing: props.isSyncing,
       Publishing: props.isPublishing,
       LookingUp: props.isLookingUpPackages,

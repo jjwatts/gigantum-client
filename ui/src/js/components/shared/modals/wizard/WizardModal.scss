@@ -5,7 +5,7 @@
 }
 
 .WizardModal__actions {
-  @include flex(space-between, row);
+  @include flex(flex-end, row);
   align-items: center;
   flex-wrap: nowrap;
 }

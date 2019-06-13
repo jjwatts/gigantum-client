@@ -369,7 +369,7 @@ class ComponentManager(object):
 
         # We construct records of packages installed by the user grouped by package manager
         # This can happen, for example, when we're changing bases
-        installed_packages: Dict[str, List[Dict]] = {}
+        installed_packages: Dict[str, List[str]] = {}
         for package in self.get_component_list("package_manager"):
             if package['from_base']:
                 # Packages from the base to be added are NOT yet installed, but there are package

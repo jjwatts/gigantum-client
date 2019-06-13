@@ -348,6 +348,27 @@
   }
 }
 
+.FileBrowser__update-modal {
+  &:before {
+    content: '';
+    @include triangle('up', 9px, $white);
+    position: absolute;
+    top: -9px;
+    left: 29px;
+  }
+  color: $mineShaft;
+  background: $white;
+  padding: 10px;
+  font-size: 14px !important;
+  width: 200px;
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  text-align: center;
+  box-shadow: 0 0px 12px 0 rgba(0, 0, 0, 0.1);
+  z-index: index($elements, popup);
+}
+
 .FileBrowser__lock {
   position: absolute;
   top: -10px;

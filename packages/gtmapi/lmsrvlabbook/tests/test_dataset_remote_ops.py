@@ -1,30 +1,8 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import responses
 
-from gtmcore.inventory.inventory import InventoryManager
-
 from snapshottest import snapshot
-from lmsrvlabbook.tests.fixtures import fixture_working_dir
-
-import pytest
+from lmsrvlabbook.tests.fixtures import fixture_working_dir, mock_enable_unmanaged_for_testing,\
+    fixture_working_dir_dataset_tests
 
 
 DUMMY_DATA = [
@@ -93,7 +71,7 @@ DUMMY_DATA = [
 
 class TestDatasetRemoteOperations(object):
 
-    def test_list_remote_datasets_invalid_args(self, fixture_working_dir, snapshot):
+    def test_list_remote_datasets_invalid_args(self, fixture_working_dir_dataset_tests, snapshot):
         """test list datasets"""
         list_query = """
                     {
@@ -117,7 +95,7 @@ class TestDatasetRemoteOperations(object):
                       }
                     }
                     }"""
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' in r
         assert r['data']['datasetList']['remoteDatasets'] is None
         assert 'Unsupported order_by' in r['errors'][0]['message']
@@ -144,13 +122,13 @@ class TestDatasetRemoteOperations(object):
                       }
                     }
                     }"""
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' in r
         assert r['data']['datasetList']['remoteDatasets'] is None
         assert 'Unsupported sort' in r['errors'][0]['message']
 
     @responses.activate
-    def test_list_remote_datasets_az(self, fixture_working_dir, snapshot):
+    def test_list_remote_datasets_az(self, fixture_working_dir_dataset_tests, snapshot):
         """test list datasets"""
         responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&order_by=name&sort=desc',
                       json=DUMMY_DATA, status=200)
@@ -182,7 +160,7 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
@@ -208,7 +186,7 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         print(r)
         snapshot.assert_match(r)
@@ -235,18 +213,17 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         assert len(r['data']['datasetList']['remoteDatasets']['edges']) == 0
         assert r['data']['datasetList']['remoteDatasets']['pageInfo']['hasNextPage'] is False
 
     @responses.activate
-    def test_list_remote_datasets_modified(self, fixture_working_dir, snapshot):
+    def test_list_remote_datasets_modified(self, fixture_working_dir_dataset_tests, snapshot):
         """test list datasets"""
-        """test list datasets"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&page=1&order_by=modified_on&sort=desc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&order_by=modified_on&sort=desc',
                       json=list(reversed(DUMMY_DATA)), status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=10&page=1&order_by=modified_on&sort=asc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=10&order_by=modified_on&sort=asc',
                       json=DUMMY_DATA, status=200)
 
         list_query = """
@@ -272,7 +249,7 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
@@ -298,16 +275,16 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
     @responses.activate
-    def test_list_remote_datasets_created(self, fixture_working_dir, snapshot):
+    def test_list_remote_datasets_created(self, fixture_working_dir_dataset_tests, snapshot):
         """test list datasets"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&page=1&order_by=created_on&sort=desc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&order_by=created_on&sort=desc',
                       json=DUMMY_DATA, status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=2&page=1&order_by=created_on&sort=asc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=10&order_by=created_on&sort=asc',
                       json=list(reversed(DUMMY_DATA)), status=200)
 
         list_query = """
@@ -333,7 +310,7 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
@@ -359,12 +336,12 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
     @responses.activate
-    def test_list_remote_datasets_page(self, fixture_working_dir, snapshot):
+    def test_list_remote_datasets_page(self, fixture_working_dir_dataset_tests, snapshot):
         """test list datasets"""
         responses.add(responses.GET, 'https://api.gigantum.com/read/datasets?first=1&order_by=name&sort=desc',
                       json=[DUMMY_DATA[0]], status=200)
@@ -398,7 +375,7 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
@@ -424,7 +401,7 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         snapshot.assert_match(r)
 
@@ -450,7 +427,7 @@ class TestDatasetRemoteOperations(object):
                     }
                     }"""
 
-        r = fixture_working_dir[2].execute(list_query)
+        r = fixture_working_dir_dataset_tests[2].execute(list_query)
         assert 'errors' not in r
         assert len(r['data']['datasetList']['remoteDatasets']['edges']) == 0
         assert r['data']['datasetList']['remoteDatasets']['pageInfo']['hasNextPage'] is False

@@ -3,7 +3,7 @@ version: 2.1
 executors:
   gig_client:
     docker:
-      - image: gigantum/circleci-client:9417b4e659-2019-05-31
+      - image: gigantum/circleci-client:e9d1f69a99-2019-06-11
 
 jobs:
   mypy-gtmcore:
@@ -54,11 +54,13 @@ jobs:
       - run:
           name: Run Core unit and coverage tests
           command: |
+            export PYTHONPATH=$PYTHONPATH:/home/circleci/repo/packages/gtmcore
             export SKIP_ENV_TESTS=1
             export SKIP_BG_TESTS=1
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            pytest --cov=gtmcore packages/gtmcore
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
+            pytest --cov=gtmcore packages/gtmcore/gtmcore/
             codecov -F core
 
   test-gtmapi:
@@ -79,7 +81,7 @@ jobs:
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
             pytest --cov=lmsrvlabbook --cov=lmsrvcore packages/gtmapi/lmsrvlabbook
             pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvcore
             pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvlabbook/tests/int_labbook_mutations.py
@@ -101,7 +103,7 @@ jobs:
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
             pytest --cov=gtmcore packages/gtmcore/gtmcore/environment/tests
             codecov -F core
 
@@ -121,7 +123,7 @@ jobs:
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py 7 &
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
             pytest --cov=gtmcore packages/gtmcore/gtmcore/dataset/tests/test_background_jobs.py
             codecov -F core
 

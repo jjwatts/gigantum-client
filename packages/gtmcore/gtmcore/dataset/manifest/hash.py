@@ -4,7 +4,9 @@ import aiofiles
 from typing import List, Optional
 import pickle
 import os
+from gtmcore.logging import LMLogger
 
+logger = LMLogger.get_logger()
 
 class SmartHash(object):
     """Class to handle file hashing that is operationally optimized for Gigantum"""
@@ -20,7 +22,10 @@ class SmartHash(object):
 
     @property
     def fast_hash_file(self):
-        return os.path.join(self.file_cache_root, self.current_revision, ".smarthash")
+        hash_file_dir = os.path.join(self.file_cache_root, self.current_revision)
+        if os.path.isdir(hash_file_dir) is False:
+            os.makedirs(hash_file_dir)
+        return os.path.join(hash_file_dir, ".smarthash")
 
     def _load_fast_hash_file(self) -> dict:
         """Method to load the cached fast hash file
@@ -162,18 +167,21 @@ class SmartHash(object):
             str
         """
         h = blake2b()
-
-        abs_path = self.get_abs_path(path)
-        if os.path.isfile(abs_path):
-            async with aiofiles.open(abs_path, 'rb') as fh:
-                chunk = await fh.read(blocksize)
-                while chunk:
-                    h.update(chunk)
+        try:
+            abs_path = self.get_abs_path(path)
+            if os.path.isfile(abs_path):
+                async with aiofiles.open(abs_path, 'rb') as fh:
                     chunk = await fh.read(blocksize)
-        elif os.path.isdir(abs_path):
-            # If a directory, just hash the path as an alternative
-            h.update(abs_path.encode('utf-8'))
-        else:
+                    while chunk:
+                        h.update(chunk)
+                        chunk = await fh.read(blocksize)
+            elif os.path.isdir(abs_path):
+                # If a directory, just hash the path as an alternative
+                h.update(abs_path.encode('utf-8'))
+            else:
+                return None
+        except Exception as err:
+            logger.exception(err)
             return None
 
         return h.hexdigest()

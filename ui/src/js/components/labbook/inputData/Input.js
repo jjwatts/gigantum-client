@@ -14,7 +14,6 @@ export default createFragmentContainer(
           ...InputBrowser_input
           ...InputFavorites_input
           ...MostRecentInput_input
-          isUntracked
         }
         linkedDatasets @skip (if: $inputSkip){
           name

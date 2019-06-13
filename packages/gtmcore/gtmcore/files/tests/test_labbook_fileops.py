@@ -29,6 +29,14 @@ from gtmcore.fixtures import mock_config_file, mock_labbook, remote_labbook_repo
 
 
 class TestLabbookFileOperations(object):
+    def test_labbook_content_size_simply(self, mock_labbook):
+        x, y, lb = mock_labbook
+
+        lb_size = FO.content_size(lb)
+        # Make sure the new LB is about 10-30kB. This is about reasonable for a new, emtpy LB.
+        assert lb_size > 10000
+        assert lb_size < 30000
+
     def test_insert_file_success_1(self, mock_labbook, sample_src_file):
         lb = mock_labbook[2]
         new_file_data = FO.insert_file(lb, "code", sample_src_file)

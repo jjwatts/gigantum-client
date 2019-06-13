@@ -237,7 +237,7 @@ class Folder extends Component {
   connectDND(render) {
     let renderType;
     const { props, state } = this;
-    if ((state.isDragging || props.parentIsDragged)) {
+    if ((state.isDragging || props.parentIsDragged) && !props.readOnly) {
       renderType = props.connectDragSource(render);
     } else {
       renderType = props.connectDropTarget(render);
@@ -545,11 +545,16 @@ class Folder extends Component {
           style={rowStyle}
           onClick={evt => this._expandSection(evt)}
         >
-          <button
-            type="button"
-            className={buttonCSS}
-            onClick={evt => this._setSelected(evt, !state.isSelected)}
-          />
+          {
+            !props.readOnly
+            && (
+            <button
+              type="button"
+              className={buttonCSS}
+              onClick={evt => this._setSelected(evt, !state.isSelected)}
+            />
+            )
+          }
           <div className={folderNameCSS}>
             <div className="Folder__icon" />
             <div className="Folder__name">
@@ -597,17 +602,22 @@ class Folder extends Component {
             {Moment((node.modifiedAt * 1000), 'x').fromNow()}
           </div>
           <div className="Folder__cell Folder__cell--menu">
-            <ActionsMenu
-              edge={props.fileData.edge}
-              mutationData={props.mutationData}
-              mutations={props.mutations}
-              addFolderVisible={this._addFolderVisible}
-              fileData={props.fileData}
-              section={props.section}
-              isLocal={isLocal}
-              folder
-              renameEditMode={this._renameEditMode}
-            />
+            {
+              !props.readOnly
+              && (
+                <ActionsMenu
+                  edge={props.fileData.edge}
+                  mutationData={props.mutationData}
+                  mutations={props.mutations}
+                  addFolderVisible={this._addFolderVisible}
+                  fileData={props.fileData}
+                  section={props.section}
+                  isLocal={isLocal}
+                  folder
+                  renameEditMode={this._renameEditMode}
+                />
+              )
+            }
             { (props.section === 'data')
               && (
               <DatasetActionsMenu
@@ -650,6 +660,7 @@ class Folder extends Component {
                   <FolderDND
                     filename={file}
                     index={index}
+                    readOnly={props.readOnly}
                     key={children[file].edge.node.key}
                     ref={children[file].edge.node.key}
                     mutations={props.mutations}
@@ -682,6 +693,7 @@ class Folder extends Component {
                 return (
                   <File
                     filename={file}
+                    readOnly={props.readOnly}
                     isLocal={props.checkLocal(children[file])}
                     mutations={props.mutations}
                     mutationData={props.mutationData}

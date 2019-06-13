@@ -14,7 +14,6 @@ export default createFragmentContainer(
           ...OutputBrowser_output
           ...OutputFavorites_output
           ...MostRecentOutput_output
-          isUntracked
         }
       }
     `,

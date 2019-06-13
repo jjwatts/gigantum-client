@@ -1,12 +1,12 @@
 import importlib
-from typing import List
+from typing import List, Union
 from gtmcore.exceptions import GigantumException
-from gtmcore.dataset.storage.backend import StorageBackend
+from gtmcore.dataset.storage.backend import ManagedStorageBackend, UnmanagedStorageBackend
 
 SUPPORTED_STORAGE_BACKENDS = {"gigantum_object_v1": ("gtmcore.dataset.storage.gigantum", "GigantumObjectStore")}
 
 
-def get_storage_backend(storage_type: str) -> StorageBackend:
+def get_storage_backend(storage_type: str) -> Union[ManagedStorageBackend, UnmanagedStorageBackend]:
     """
 
     Args:

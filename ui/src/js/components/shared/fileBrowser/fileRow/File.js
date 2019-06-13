@@ -327,12 +327,16 @@ class File extends Component {
           className={fileRowCSS}
           style={rowStyle}
         >
-          <button
-            type="button"
-            className={buttonCSS}
-            onClick={(evt) => { this._setSelected(evt, !this.state.isSelected); }}
-          />
-
+          {
+            !props.readOnly
+            && (
+            <button
+              type="button"
+              className={buttonCSS}
+              onClick={(evt) => { this._setSelected(evt, !this.state.isSelected); }}
+            />
+            )
+          }
           <div className={textIconsCSS}>
 
             <div className={`File__icon ${fileIconsJs.getClass(fileName)}`} />
@@ -394,38 +398,47 @@ class File extends Component {
           </div>
 
           <div className="File__cell File__cell--menu">
-            <ActionsMenu
-              edge={props.fileData.edge}
-              mutationData={props.mutationData}
-              mutations={props.mutations}
-              renameEditMode={this._renameEditMode}
-              section={props.section}
-            />
-            { (props.section === 'data')
+            {
+              !props.readOnly
               && (
-              <DatasetActionsMenu
+              <ActionsMenu
                 edge={props.fileData.edge}
-                section={props.section}
                 mutationData={props.mutationData}
                 mutations={props.mutations}
                 renameEditMode={this._renameEditMode}
-                isDownloading={props.isDownloading}
-                parentDownloading={props.parentDownloading}
-                setFolderIsDownloading={props.setFolderIsDownloading}
-                isLocal={props.fileData.edge.node.isLocal}
-                isDragging={props.isDragging}
+                section={props.section}
               />
               )
             }
+            {
+                    (props.section === 'data')
+                    && (
+                    <DatasetActionsMenu
+                      edge={props.fileData.edge}
+                      section={props.section}
+                      mutationData={props.mutationData}
+                      mutations={props.mutations}
+                      renameEditMode={this._renameEditMode}
+                      isDownloading={props.isDownloading}
+                      parentDownloading={props.parentDownloading}
+                      setFolderIsDownloading={props.setFolderIsDownloading}
+                      isLocal={props.fileData.edge.node.isLocal}
+                      isDragging={props.isDragging}
+                    />
+                    )
+                  }
           </div>
 
         </div>
       </div>
     );
 
-    return (
-      props.connectDragSource(file)
-    );
+    if (!props.readOnly) {
+      return (
+        props.connectDragSource(file)
+      );
+    }
+    return file;
   }
 }
 

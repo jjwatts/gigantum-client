@@ -575,6 +575,26 @@ button {
      }
   }
 
+  &__info {
+    background: url(~Images/icons/info-exclamation-azure.svg) no-repeat center top 2px;
+    background-size: 24px;
+
+    &:focus {
+      background: $azure url(~Images/icons/info-exclamation.svg) no-repeat center top 2px;
+      background-size: 24px;
+    }
+
+    &:hover {
+      background: $azure url(~Images/icons/info-exclamation.svg) no-repeat center top 2px;
+      background-size: 24px;
+    }
+
+    &:disabled {
+      background: url(~Images/icons/info-exclamation.svg) no-repeat center top 2px;
+      background-size: 24px;
+    }
+ }
+
   &__toggle {
       flex: 0 1 30px;
 

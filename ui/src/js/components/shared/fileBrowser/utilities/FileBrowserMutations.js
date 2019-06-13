@@ -9,6 +9,8 @@ import AddFavoriteMutation from 'Mutations/fileBrowser/AddFavoriteMutation';
 import RemoveFavoriteMutation from 'Mutations/fileBrowser/RemoveFavoriteMutation';
 import DownloadDatasetFilesMutation from 'Mutations/DownloadDatasetFilesMutation';
 import CompleteBatchUploadTransactionMutation from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
+import UpdateUnmanagedDatasetMutation from 'Mutations/UpdateUnmanagedDatasetMutation';
+import VerifyDatasetMutation from 'Mutations/VerifyDatasetMutation';
 // store
 import store from 'JS/redux/store';
 import { setErrorMessage } from 'JS/redux/actions/footer';
@@ -374,6 +376,57 @@ class FileBrowserMutations {
       true,
       false,
       transactionId,
+      (response, error) => {
+
+      },
+    );
+  }
+
+
+  /**
+  *  @param {undefined} data
+  *  @param {function} callback
+  *  updates unmanaged dataset
+  */
+  updateUnmanagedDataset(data, callback) {
+    const {
+      owner,
+      labbookName,
+    } = this.state;
+
+    const {
+      fromLocal,
+      fromRemote,
+    } = data;
+
+    UpdateUnmanagedDatasetMutation(
+      owner,
+      labbookName,
+      fromLocal,
+      fromRemote,
+      callback,
+    );
+  }
+
+  /**
+  *  @param {undefined} data
+  *  @param {function} callback
+  *  verifies unmanaged dataset
+  */
+  verifyDataset(data, callback) {
+    const {
+      owner,
+      labbookName,
+    } = this.state;
+
+    const {
+      fromLocal,
+      fromRemote,
+    } = data;
+
+    VerifyDatasetMutation(
+      owner,
+      labbookName,
       (response, error) => {
 
       },

@@ -13,7 +13,6 @@ import ButtonLoader from 'Components/common/ButtonLoader';
 import Modal from 'Components/common/Modal';
 import CreateLabbook from './CreateLabbook';
 import SelectBase from './SelectBase';
-import TrackingToggle from './TrackingToggle';
 // assets
 import './WizardModal.scss';
 
@@ -33,7 +32,6 @@ export default class WizardModal extends React.Component {
       continueDisabled: true,
       modalBlur: false,
       menuVisibility: true,
-      isTrackingOn: true,
       createLabbookButtonState: '',
     };
 
@@ -49,7 +47,6 @@ export default class WizardModal extends React.Component {
     this._getSelectedComponentId = this._getSelectedComponentId.bind(this);
     this._toggleDisabledContinue = this._toggleDisabledContinue.bind(this);
     this._toggleMenuVisibility = this._toggleMenuVisibility.bind(this);
-    this._setTracking = this._setTracking.bind(this);
   }
 
   /**
@@ -70,15 +67,6 @@ export default class WizardModal extends React.Component {
     this.setState({ menuVisibility });
   }
 
-  /**
-    @param {boolean} trackingState
-    updates trackingState
-  */
-  _setTracking(trackingState) {
-    this.setState({
-      isTrackingOn: trackingState,
-    });
-  }
 
   /**
     @param {}
@@ -147,9 +135,16 @@ export default class WizardModal extends React.Component {
     gets selected id and triggers continueSave function using refs
   */
   _continueSave = ({ isSkip, text }) => {
-    this.refs[this._getSelectedComponentId()].continueSave(isSkip);
-    this.setState({ continueDisabled: true });
-    if (text === 'Create Labbook') this.setState({ modalBlur: true });
+    const { props } = this;
+    if (props.datasets) {
+      this.refs[this._getSelectedComponentId()].continueSave(isSkip);
+    } else {
+      this.refs[this._getSelectedComponentId()].continueSave(isSkip);
+      this.setState({ continueDisabled: true });
+      if (text === 'Create Labbook') {
+        this.setState({ modalBlur: true });
+      }
+    }
   }
 
   /**
@@ -157,12 +152,20 @@ export default class WizardModal extends React.Component {
     sets name and description to state for create labbook mutation
   */
   _createLabbookCallback(name, description) {
+
+    const { props } = this;
     this.setState({
       name,
       description,
+    }, () => {
+      if (props.datasets) {
+        this._toggleDisabledContinue(true);
+        this._createDatasetMutation();
+      }
     });
-
-    this._setComponent('selectBase');
+    if (!props.datasets) {
+      this._setComponent('selectBase');
+    }
   }
 
   /**
@@ -213,7 +216,6 @@ export default class WizardModal extends React.Component {
       repository,
       componentId,
       revision,
-      !self.state.isTrackingOn,
       (response, error) => {
         if (error) {
           setErrorMessage(`An error occured while trying to create Project '${name}'.`, error);
@@ -269,7 +271,7 @@ export default class WizardModal extends React.Component {
     CreateDatasetMutation(
       name,
       description,
-      componentId,
+      'gigantum_object_v1',
       (response, error) => {
         if (error) {
           setErrorMessage(`An error occured while trying to create Dataset '${name}'.`, error);
@@ -434,12 +436,6 @@ function ModalNav({
     hidden: (state.selectedComponentId === 'createLabbook'),
   });
 
-
-  const trackingButton = classNames({
-    hidden: (state.selectedComponentId !== 'createLabbook') || isDataset,
-  });
-
-
   const wizardModalNav = classNames({
     WizardModal__actions: true,
     hidden: !state.menuVisibility,
@@ -447,16 +443,10 @@ function ModalNav({
 
 
   const buttonText = isDataset ? 'Create Dataset' : 'Create Project';
+  const continueText = isDataset ? 'Create Dataset' : 'Continue';
 
   return (
     <div className={wizardModalNav}>
-      <div>
-        <div className={trackingButton}>
-          <TrackingToggle
-            setTracking={self._setTracking}
-          />
-        </div>
-      </div>
       <div className="WizardModal__buttons">
         <button
           onClick={() => { setComponent('createLabbook'); }}
@@ -480,7 +470,7 @@ function ModalNav({
               onClick={() => { continueSave({ isSkip: false, text: 'Continue' }); }}
               disabled={(state.continueDisabled)}
             >
-              Continue
+              {continueText}
             </button>
             )
           }

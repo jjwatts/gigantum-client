@@ -7,7 +7,7 @@ import flask
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.logging import LMLogger
-from gtmcore.dispatcher import Dispatcher, jobs
+from gtmcore.dispatcher import Dispatcher, jobs, dataset_jobs
 
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 from lmsrvcore.api.mutations import ChunkUploadMutation, ChunkUploadInput
@@ -129,7 +129,7 @@ class CompleteDatasetUploadTransaction(graphene.relay.ClientIDMutation):
             metadata = {'dataset': f"{logged_in_username}|{owner}|{dataset_name}",
                         'method': 'complete_dataset_upload_transaction'}
 
-            res = d.dispatch_task(jobs.complete_dataset_upload_transaction, kwargs=job_kwargs, metadata=metadata)
+            res = d.dispatch_task(dataset_jobs.complete_dataset_upload_transaction, kwargs=job_kwargs, metadata=metadata)
 
         return CompleteDatasetUploadTransaction(background_job_key=res.key_str)
 

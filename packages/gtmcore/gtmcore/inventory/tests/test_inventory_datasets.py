@@ -8,6 +8,7 @@ import tempfile
 import time
 
 from gtmcore.dataset.dataset import Dataset
+from gtmcore.configuration.utils import call_subprocess
 from gtmcore.dataset.manifest import Manifest
 from gtmcore.inventory.inventory import InventoryManager, InventoryException
 from gtmcore.gitlib.git import GitAuthor
@@ -470,3 +471,44 @@ class TestInventoryDatasets(object):
             data = mf.read()
 
         assert len(data) > 0
+
+    def test_update_dataset_link(self, mock_labbook):
+        inv_manager = InventoryManager(mock_labbook[0])
+        lb = mock_labbook[2]
+        ds = inv_manager.create_dataset("test", "test", "dataset100", "gigantum_object_v1", description="my dataset")
+
+        # Fake publish to a local bare repo
+        _MOCK_create_remote_repo2(ds, 'test', None, None)
+
+        assert os.path.exists(os.path.join(lb.root_dir, '.gitmodules')) is False
+
+        inv_manager.link_dataset_to_labbook(ds.remote, 'test', 'dataset100', lb)
+
+        assert os.path.exists(os.path.join(lb.root_dir, '.gitmodules')) is True
+        dataset_submodule_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', 'test', 'dataset100')
+        assert os.path.exists(dataset_submodule_dir) is True
+        assert os.path.exists(os.path.join(dataset_submodule_dir, '.gigantum')) is True
+        assert os.path.exists(os.path.join(dataset_submodule_dir, 'test_file.dat')) is False
+
+        # Make change to remote
+        git_dir = os.path.join(tempfile.gettempdir(), 'test_update_dataset_link')
+        try:
+            os.makedirs(git_dir)
+            call_subprocess(['git', 'clone', ds.remote], cwd=git_dir, check=True)
+            with open(os.path.join(git_dir, ds.name, 'test_file.dat'), 'wt') as tf:
+                tf.write("Test File Contents")
+            call_subprocess(['git', 'add', 'test_file.dat'], cwd=os.path.join(git_dir, ds.name), check=True)
+            call_subprocess(['git', 'commit', '-m', 'editing repo'], cwd=os.path.join(git_dir, ds.name), check=True)
+            call_subprocess(['git', 'push'], cwd=os.path.join(git_dir, ds.name), check=True)
+
+            # Update dataset ref
+            inv_manager.update_linked_dataset_reference(ds.namespace, ds.name, lb)
+
+            # verify change is reflected
+            assert os.path.exists(os.path.join(dataset_submodule_dir, 'test_file.dat')) is True
+
+            # Verify activity record
+            assert "Updated Dataset `test/dataset100` link to version" in lb.git.log()[0]['message']
+        finally:
+            if os.path.exists(git_dir):
+                shutil.rmtree(git_dir)
