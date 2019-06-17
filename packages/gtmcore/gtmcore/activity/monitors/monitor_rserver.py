@@ -1,5 +1,5 @@
 import time
-import zlib
+import gzip
 
 import base64
 import json
@@ -179,6 +179,43 @@ class RServerMonitor(DevEnvMonitor):
                                 MITMProxyOperations.get_mitmlogfile_path(labbook_container_name))
 
 
+class RStudioExchange:
+    """Data-oriented class to simplify dealing with RStudio messages decoded from the MITM log
+
+    Attributes are stored in a way that is ready for activity records. bytes get decoded, and images get
+    base64-encoded.
+
+    Parsing may throw a json.JSONDecodeError.
+    """
+
+    def __init__(self, mitm_message: mitmio.flow.Flow):
+        raw_message = mitm_message.get_state()
+
+        self.path = raw_message['request']['path'].decode()
+        self.request_headers = {k.decode(): v.decode() for k, v in raw_message['request']['headers']}
+
+        # strict=False allows control codes, as used in tidyverse output
+        # Not sure if necessary for requests
+        self.request = json.loads(raw_message['request']['content'].decode(), strict=False)
+
+        self.response_headers = {k.decode(): v.decode() for k, v in raw_message['response']['headers']}
+        self.response_type = self.response_headers.get('Content-Type')
+
+        # This could get fairly resource intensive if our records get large,
+        # but for now we keep things simple - all parsing happens in this class, and we can optimize later
+        response = raw_message['response']['content']
+        if self.response_headers.get('Content-Encoding') == 'gzip':
+            response = gzip.decompress(response)
+        if self.response_type == 'application/json':
+            # strict=False allows control codes, as used in tidyverse output
+            response = json.loads(response.decode(), strict=False)
+        elif self.response_type == 'img/png':
+            # if we actually wanted to work with the image, could do so like this:
+            # img = Image.open(io.BytesIO(response))
+            response = base64.b64encode(response)
+        self.response = response
+
+
 class RStudioServerMonitor(ActivityMonitor):
     """Class to monitor an rstudio server for activity to be processed."""
 
@@ -213,6 +250,8 @@ class RStudioServerMonitor(ActivityMonitor):
         self.is_notebook = False
         self.chunk_id = None
         self.nbname = None
+        # This will attempt to mirror what the RStudio backend knows for each doc_id
+        self.doc_properties: Dict[str, Dict] = {}
 
     def register_processors(self) -> None:
         """Method to register processors
@@ -243,9 +282,6 @@ class RStudioServerMonitor(ActivityMonitor):
 
         logfile_path = redis_conn.hget(self.monitor_key, "logfile_path")
 
-        # TODO RB will need to open in write mode later to sparsify parts of the file that have already been read
-        # https://github.com/gigantum/gigantum-client/issues/434, also part of #453
-        # open the log file
         mitmlog = open(logfile_path, "rb")
         if not mitmlog:
             logger.info(f"Failed to open RStudio log {logfile_path}")
@@ -416,27 +452,34 @@ class RStudioServerMonitor(ActivityMonitor):
         else:
             return False
 
-    def _parse_image(self, st: Dict):
-        # These are from notebooks
-        m = re.match(r"/chunk_output/(([\w]+)/)+([\w]+.png)", st['request']['path'].decode())
-        if m:
-            img_data = zlib.decompress(st['response']['content'], 16 + zlib.MAX_WBITS)
-            # if we actually wanted to work with the image, could do so like this:
-            # img = Image.open(io.BytesIO(img_data))
-            eimg_data = base64.b64encode(img_data)
-            self.current_cell.result.append({'data': {'image/png': eimg_data}})
+    def _handle_image(self, exchange: RStudioExchange):
+        # The first are from documents (XXX DC and probably not notebooks), the second are from scripts.
+        if re.match(r"/chunk_output/(([\w]+)/)+([\w]+.png)", exchange.path) or \
+           re.match(r"/graphics/(?:[^[\\/:\"*?<>|]+])*([\w-]+).png", exchange.path):
+            self.current_cell.result.append({'data': {'image/png': exchange.response}})
 
-        # These are from scripts.
-        m = re.match(r"/graphics/(?:[^[\\/:\"*?<>|]+])*([\w-]+).png",
-                     st['request']['path'].decode())
-        if m:
-            img_data = zlib.decompress(st['response']['content'], 16 + zlib.MAX_WBITS)
-            eimg_data = base64.b64encode(img_data)
-            self.current_cell.result.append({'data': {'image/png': eimg_data}})
+    def _parse_json(self, exchange: RStudioExchange) -> None:
+        """Parse the JSON response information from RStudio - keeping track of code, output, and metadata
 
-    def _parse_json(self, st: Dict, is_gzip: bool):
-        # get the filename
-        m = re.match(r"/rpc/refresh_chunk_output.*", st['request']['path'].decode())
+        Note that there are two different document types! "Notebooks" and an older "Document" type"""
+        # For ANY file, the first time we get a user-facing id is when the front end gives a tempName
+        if exchange.path == '/rpc/modify_document_properties':
+            doc_id, properties = exchange.response['params']
+            if 'tempName' in properties:
+                self.doc_properties.setdefault(doc_id, {})['name'] = properties['tempName']
+
+        # Later, a filename may be assigned by the front end
+        # Haven't yet traced through what happens on save-as or loading a file instead of new -> save
+        if exchange.path == '/rpc/save_document_diff':
+            params = exchange.response['params']
+            fname = params[1]
+            if fname:
+                doc_id = params[0]
+                self.doc_properties.setdefault(doc_id, {})['name'] = fname
+
+        # If it's an Rmd *document*, we'll get these events - chunk output is configurable
+        # TODO DC Why did randal use regex below, not just string match?
+        m = re.match(r"/rpc/refresh_chunk_output.*", exchange.path)
         if m:
             # A new chunk, so potentially a new notebook.
             if self.current_cell.code:
@@ -445,9 +488,7 @@ class RStudioServerMonitor(ActivityMonitor):
                 # with new logic, running cells in two notebooks within a second seems unlikely
                 # self.store_record()
 
-            # strict=False allows control codes, as used in tidyverse output
-            jdata = json.loads(st['request']['content'], strict=False)
-            fullname = jdata['params'][0]
+            fullname = exchange.request['params'][0]
 
             # pull out the name relative to the "code" directory
             m1 = re.match(r".*/code/(.*)$", fullname)
@@ -461,21 +502,9 @@ class RStudioServerMonitor(ActivityMonitor):
                     self.nbname = fullname
 
         # code or output event
-        m = re.match(r"/events/get_events", st['request']['path'].decode())
-        if m:
-            if is_gzip:
-                jdata = zlib.decompress(st['response']['content'], 16 + zlib.MAX_WBITS)
-            else:
-                jdata = st['response']['content']
+        if exchange.path == "/events/get_events":
             # get text/code fields out of dictionary
-            try:
-                # strict=False allows control codes, as used in tidyverse output
-                self._parse_json_record(json.loads(jdata, strict=False))
-            except json.JSONDecodeError as je:
-                logger.info(f"Ignoring JSON Decoder Error in process_activity {je}.")
-                return False
-
-        return True
+            self._parse_json_record(exchange.response)
 
     def process_activity(self, mitmlog):
         """Collect tail of the activity log and turn into an activity record.
@@ -487,7 +516,7 @@ class RStudioServerMonitor(ActivityMonitor):
             ar(): activity record
         """
         # get an fstream generator object
-        fstream = mitmio.FlowReader(mitmlog).stream()
+        fstream = iter(mitmio.FlowReader(mitmlog).stream())
 
         # no context yet.  not a notebook or console
         self.is_console = False
@@ -495,48 +524,30 @@ class RStudioServerMonitor(ActivityMonitor):
 
         while True:
             try:
-                f = next(fstream)
+                mitm_message = next(fstream)
             except StopIteration:
                 break
             except FlowReadException as e:
                 logger.info("MITM Flow file corrupted: {}. Exiting.".format(e))
                 break
 
-            st: Dict = f.get_state()
-
-            is_png = False
-            is_gzip = False
-            is_json = False
-
-            # Check response types for images and json
-            for header in st['response']['headers']:
-
-                # png images
-                if header[0] == b'Content-Type':
-                    if header[1] == b'image/png':
-                        is_png = True
-
-                # json
-                if header[0] == b'Content-Type':
-                    if header[1] == b'application/json':
-                        is_json = True
-
-                if header[0] == b'Content-Encoding':
-                    if header[1] == b'gzip':
-                        is_gzip = True
-                    else:
-                        # Not currently used, but useful for debugging and potentially in future
-                        encoding = header[1]
+            try:
+                rstudio_exchange = RStudioExchange(mitm_message)
+            except json.JSONDecodeError as je:
+                logger.info(f"Ignoring JSON Decoder Error for Rstudio message {je}.")
+                continue
 
             # process images
-            if is_png:
-                if is_gzip:
-                    self._parse_image(st)
+            if rstudio_exchange.response_type == 'image/png':
+                # For some reason, Randal only wanted to parse gzip'd images
+                # I guess non-zipped images should not occur
+                if self.response_headers.get('Content-Encoding') == 'gzip':
+                    self._handle_image(rstudio_exchange)
                 else:
                     logger.error(f"RSERVER Found image/png that was not gzip encoded.")
 
-            if is_json:
-                self._parse_json(st, is_gzip)
+            if rstudio_exchange.response_type == 'application/json':
+                self._parse_json(rstudio_exchange)
 
         # Flush cell data IFF anything happened
         if self.current_cell.code:
