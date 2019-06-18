@@ -51,10 +51,10 @@ class TestConda3PackageManager(object):
         lb = build_lb_image_for_env_conda[0]
         username = build_lb_image_for_env_conda[1]
         result = mrg.list_versions("python-coveralls", lb, username)
-        assert len(result) == 5
-        assert result[4] == "2.5.0"
-        assert result[2] == "2.7.0"
-        assert result[0] == "2.9.1"
+        assert len(result) == 6
+        assert result[4] == "2.6.0"
+        assert result[1] == "2.9.1"
+        assert result[0] == "2.9.2"
 
     def test_list_installed_packages(self, build_lb_image_for_env_conda):
         """Test list_installed_packages command

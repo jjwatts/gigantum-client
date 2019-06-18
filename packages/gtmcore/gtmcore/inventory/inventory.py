@@ -100,8 +100,9 @@ class InventoryManager(object):
         return lb
 
     @staticmethod
-    def update_linked_dataset(labbook: LabBook, username: str, init: bool = False) -> None:
-        """
+    def update_linked_datasets(labbook: LabBook, username: str, init: bool = False) -> None:
+        """Method to initalize or update all git submodule references for linked datasets. used when loading and
+        initializing linked datasets
 
         Args:
             labbook:
@@ -164,7 +165,7 @@ class InventoryManager(object):
             lb = self._put_labbook(path, username, owner)
 
             # Init dataset submodules if present
-            self.update_linked_dataset(lb, username, init=True)
+            self.update_linked_datasets(lb, username, init=True)
 
             return lb
         except Exception as e:
@@ -443,19 +444,15 @@ class InventoryManager(object):
         lb = self.load_labbook(username, owner, labbook_name)
 
         # Get list of datasets and cache roots to schedule for cleanup
-        submodules = lb.git.list_submodules()
+        datasets = self.get_linked_datasets(lb)
         datasets_to_schedule = list()
-        for submodule in submodules:
+        for ds in datasets:
             try:
-                submodule_dataset_owner, submodule_dataset_name = submodule['name'].split("&")
-                rel_submodule_dir = os.path.join('.gigantum', 'datasets',
-                                                 submodule_dataset_owner, submodule_dataset_name)
-                submodule_dir = os.path.join(lb.root_dir, rel_submodule_dir)
-                ds = self.load_dataset_from_directory(submodule_dir)
-                ds.namespace = self.query_owner_of_linked_dataset(ds)
                 m = Manifest(ds, username)
-                datasets_to_schedule.append(DatasetCleanupJob(namespace=submodule_dataset_owner,
-                                                              name=submodule_dataset_name,
+                if not ds.namespace:
+                    raise ValueError("Dataset namespace required to schedule for cleanup")
+                datasets_to_schedule.append(DatasetCleanupJob(namespace=ds.namespace,
+                                                              name=ds.name,
                                                               cache_root=m.cache_mgr.cache_root))
             except Exception as err:
                 # Skip errors
@@ -619,7 +616,7 @@ class InventoryManager(object):
         try:
             return self._put_dataset(path, username, owner)
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
             raise InventoryException(e)
 
     def _put_dataset(self, path: str, username: str, owner: str) -> Dataset:
@@ -883,3 +880,26 @@ class InventoryManager(object):
             ar.add_detail_object(adr)
             ars = ActivityStore(labbook)
             ars.create_activity_record(ar)
+
+    def get_linked_datasets(self, labbook: LabBook) -> List[Dataset]:
+        """Method to get all datasets linked to a project
+
+        Args:
+            labbook:
+
+        Returns:
+
+        """
+        submodules = labbook.git.list_submodules()
+        datasets = list()
+        for submodule in submodules:
+            try:
+                namespace, dataset_name = submodule['name'].split("&")
+                submodule_dir = os.path.join(labbook.root_dir, '.gigantum', 'datasets', namespace, dataset_name)
+                ds = self.load_dataset_from_directory(submodule_dir, author=labbook.author)
+                ds.namespace = namespace
+                datasets.append(ds)
+            except InventoryException:
+                continue
+
+        return datasets

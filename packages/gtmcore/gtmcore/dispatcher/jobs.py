@@ -608,10 +608,8 @@ def clean_dataset_file_cache(logged_in_username: str, dataset_owner: str, datase
 
         # Check for submodule references
         for lb in im.list_labbooks(logged_in_username):
-            submodules = lb.git.list_submodules()
-            for submodule in submodules:
-                submodule_dataset_owner, submodule_dataset_name = submodule['name'].split("&")
-                if submodule_dataset_owner == dataset_owner and submodule_dataset_name == dataset_name:
+            for ds in im.get_linked_datasets(lb):
+                if ds.namespace == dataset_owner and ds.name == dataset_name:
                     logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} still referenced by {str(lb)}."
                                 f" Skipping file cache clean.")
                     return
@@ -628,44 +626,6 @@ def clean_dataset_file_cache(logged_in_username: str, dataset_owner: str, datase
 def index_labbook_filesystem():
     """To be implemented later. """
     raise NotImplemented
-
-
-def hash_dataset_files(logged_in_username: str, dataset_owner: str, dataset_name: str,
-                       file_list: List, config_file: str = None) -> None:
-    """
-
-    Args:
-        logged_in_username: username for the currently logged in user
-        dataset_owner: Owner of the labbook if this dataset is linked
-        dataset_name: Name of the labbook if this dataset is linked
-        file_list: List of files to be hashed
-        config_file: Optional config file to use
-
-    Returns:
-        None
-    """
-    logger = LMLogger.get_logger()
-
-    p = os.getpid()
-    try:
-        logger.info(f"(Job {p}) Starting hash_dataset_files(logged_in_username={logged_in_username},"
-                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
-
-        ds = InventoryManager(config_file=config_file).load_dataset(logged_in_username, dataset_owner, dataset_name)
-        manifest = Manifest(ds, logged_in_username)
-
-        hash_result, fast_hash_result = manifest.hash_files(file_list)
-
-        job = get_current_job()
-        if job:
-            job.meta['hash_result'] = ",".join(['None' if v is None else v for v in hash_result])
-            job.meta['fast_hash_result'] = ",".join(['None' if v is None else v for v in fast_hash_result])
-            job.save_meta()
-
-    except Exception as err:
-        logger.error(f"(Job {p}) Error in clean_dataset_file_cache job")
-        logger.exception(err)
-        raise
 
 
 def test_exit_success():

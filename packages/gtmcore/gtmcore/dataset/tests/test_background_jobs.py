@@ -16,12 +16,12 @@ from gtmcore.dataset.manifest import Manifest
 from gtmcore.dispatcher import jobs
 
 from gtmcore.dataset.tests.test_storage_local import mock_dataset_with_local_dir
-from gtmcore.fixtures import mock_config_file, mock_config_file_background_tests
+from gtmcore.fixtures import mock_config_file, mock_config_file_background_tests, _MOCK_create_remote_repo2
 from gtmcore.fixtures.datasets import helper_append_file, helper_compress_file, helper_write_big_file, \
     mock_enable_unmanaged_for_testing, mock_dataset_with_cache_dir_local
 
 
-from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.inventory.inventory import InventoryManager, InventoryException
 from gtmcore.dispatcher.dispatcher import Dispatcher
 from gtmcore.dispatcher.tests import BG_SKIP_MSG, BG_SKIP_TEST
 
@@ -741,3 +741,47 @@ class TestDatasetBackgroundJobs(object):
         assert len(ds.git.log()) == 6
         assert "_GTM_ACTIVITY_START_" in ds.git.log()[0]['message']
         assert "Uploaded 1 new file(s)." in ds.git.log()[0]['message']
+
+    def test_check_and_import_dataset_exists(self, mock_config_file):
+        im = InventoryManager(mock_config_file[0])
+        ds = im.create_dataset('default', 'default', "dataset100", storage_type="gigantum_object_v1", description="100")
+
+        # Fake publish to a local bare repo
+        _MOCK_create_remote_repo2(ds, 'test', None, None)
+
+        kwargs = {
+            'logged_in_username': "default",
+            'dataset_owner': "default",
+            'dataset_name': "dataset100",
+            'remote_url': ds.remote,
+            'config_file': mock_config_file[0]
+        }
+
+        gtmcore.dispatcher.dataset_jobs.check_and_import_dataset(**kwargs)
+
+    def test_check_and_import_dataset(self, mock_config_file):
+        im = InventoryManager(mock_config_file[0])
+        ds = im.create_dataset('default', 'default', "dataset100", storage_type="gigantum_object_v1", description="100")
+
+        # Fake publish to a local bare repo
+        _MOCK_create_remote_repo2(ds, 'test', None, None)
+        remote_url = ds.remote
+
+        im.delete_dataset('default', 'default', "dataset100")
+
+        with pytest.raises(InventoryException):
+            im.load_dataset('default', 'default', "dataset100")
+
+        kwargs = {
+            'logged_in_username': "default",
+            'dataset_owner': "default",
+            'dataset_name': "dataset100",
+            'remote_url': remote_url,
+            'config_file': mock_config_file[0]
+        }
+
+        gtmcore.dispatcher.dataset_jobs.check_and_import_dataset(**kwargs)
+
+        ds = im.load_dataset('default', 'default', "dataset100")
+        assert ds.name == 'dataset100'
+        assert ds.namespace == 'default'

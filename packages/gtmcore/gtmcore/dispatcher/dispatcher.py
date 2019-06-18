@@ -28,7 +28,6 @@ import redis
 import rq
 import rq_scheduler
 
-from gtmcore.dispatcher import jobs as bg_jobs
 from gtmcore.logging import LMLogger
 from gtmcore.exceptions import GigantumException
 
@@ -115,15 +114,14 @@ class GigantumQueues(Enum):
 
 JOB_QUEUE_MAP = {
     # Docker builds are the most intense operations, so it has its own queue
-    bg_jobs.build_labbook_image: GigantumQueues.build_queue,
+    "build_labbook_image": GigantumQueues.build_queue,
 
     # The publish queue is for anything interacting with the Git remote
     # it is less intense than a Docker build, bit still should be limited
-    #gtmcore.dispatcher.dataset_jobs.complete_dataset_upload_transaction: GigantumQueues.publish_queue,
-    bg_jobs.download_dataset_files: GigantumQueues.publish_queue,
-    bg_jobs.import_labbook_from_remote: GigantumQueues.publish_queue,
-    bg_jobs.sync_repository: GigantumQueues.publish_queue,
-    bg_jobs.publish_repository: GigantumQueues.publish_queue
+    "download_dataset_files": GigantumQueues.publish_queue,
+    "import_labbook_from_remote": GigantumQueues.publish_queue,
+    "sync_repository": GigantumQueues.publish_queue,
+    "publish_repository": GigantumQueues.publish_queue
 }
 
 
@@ -136,9 +134,9 @@ class Dispatcher(object):
         self._scheduler = rq_scheduler.Scheduler(queue_name=GigantumQueues.default_queue.value,
                                                  connection=self._redis_conn)
 
-    def _get_queue(self, method: Callable) -> rq.Queue:
+    def _get_queue(self, method_name: str) -> rq.Queue:
         # Return the appropriate Queue instance for the given method.
-        queue_name = JOB_QUEUE_MAP.get(method) or GigantumQueues.default_queue
+        queue_name = JOB_QUEUE_MAP.get(method_name) or GigantumQueues.default_queue
         return rq.Queue(queue_name.value, connection=self._redis_conn)
 
     @property
@@ -296,7 +294,7 @@ class Dispatcher(object):
         else:
             timeout = '2h'
 
-        queue = self._get_queue(method_reference)
+        queue = self._get_queue(method_reference.__name__)
         logger.info(
             f"Dispatching {'persistent' if persist else 'ephemeral'} "
             f"task `{method_reference.__name__}` to queue {queue}")

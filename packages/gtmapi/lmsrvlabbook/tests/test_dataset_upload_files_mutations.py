@@ -54,7 +54,8 @@ class TestDatasetUploadFilesMutations(object):
             # Call same method as in mutation
             d = Dispatcher()
             kwargs['dispatcher'] = Dispatcher
-            res = d.dispatch_task(gtmcore.dispatcher.dataset_jobs.complete_dataset_upload_transaction, kwargs=kwargs, metadata=metadata)
+            res = d.dispatch_task(gtmcore.dispatcher.dataset_jobs.complete_dataset_upload_transaction,
+                                  kwargs=kwargs, metadata=metadata)
 
             return res
 

@@ -1,18 +1,59 @@
 import copy
 import os
 import time
-from typing import Optional
+from typing import Optional, List
+from urllib.parse import urlsplit
 
 from humanfriendly import format_size
 from rq import get_current_job
 
+from gtmcore.configuration import Configuration
 from gtmcore.dataset import Manifest
 from gtmcore.dataset.manifest.job import generate_bg_hash_job_list
 from gtmcore.dispatcher import Dispatcher
-from gtmcore.dispatcher.jobs import hash_dataset_files
 from gtmcore.gitlib import GitAuthor
-from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.inventory.inventory import InventoryManager, InventoryException
 from gtmcore.logging import LMLogger
+from gtmcore.workflows import gitworkflows_utils
+from gtmcore.workflows.gitlab import GitLabManager
+
+
+def hash_dataset_files(logged_in_username: str, dataset_owner: str, dataset_name: str,
+                       file_list: List, config_file: str = None) -> None:
+    """
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        dataset_owner: Owner of the labbook if this dataset is linked
+        dataset_name: Name of the labbook if this dataset is linked
+        file_list: List of files to be hashed
+        config_file: Optional config file to use
+
+    Returns:
+        None
+    """
+    logger = LMLogger.get_logger()
+
+    p = os.getpid()
+    try:
+        logger.info(f"(Job {p}) Starting hash_dataset_files(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        ds = InventoryManager(config_file=config_file).load_dataset(logged_in_username, dataset_owner, dataset_name)
+        manifest = Manifest(ds, logged_in_username)
+
+        hash_result, fast_hash_result = manifest.hash_files(file_list)
+
+        job = get_current_job()
+        if job:
+            job.meta['hash_result'] = ",".join(['None' if v is None else v for v in hash_result])
+            job.meta['fast_hash_result'] = ",".join(['None' if v is None else v for v in fast_hash_result])
+            job.save_meta()
+
+    except Exception as err:
+        logger.error(f"(Job {p}) Error in clean_dataset_file_cache job")
+        logger.exception(err)
+        raise
 
 
 def complete_dataset_upload_transaction(logged_in_username: str, logged_in_email: str,
@@ -170,5 +211,72 @@ def complete_dataset_upload_transaction(logged_in_username: str, logged_in_email
 
     except Exception as err:
         logger.error(f"(Job {p}) Error in clean_dataset_file_cache job")
+        logger.exception(err)
+        raise
+
+
+def check_and_import_dataset(logged_in_username: str, dataset_owner: str, dataset_name: str, remote_url: str,
+                             access_token: Optional[str] = None, config_file: Optional[str] = None) -> None:
+    """Job to check if a dataset exists in the user's working directory, and if not import it. This is primarily used
+    when importing, syncing, or switching branches on a project with linked datasets
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        dataset_owner: Owner of the labbook if this dataset is linked
+        dataset_name: Name of the labbook if this dataset is linked
+        remote_url: URL of the dataset to import if needed
+        access_token: The current user's access token, needed to initialize git credentials in certain situations
+        config_file: config file (used for test mocking)
+
+    Returns:
+        None
+    """
+    logger = LMLogger.get_logger()
+
+    p = os.getpid()
+    try:
+        logger.info(f"(Job {p}) Starting check_and_import_dataset(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        im = InventoryManager(config_file=config_file)
+
+        try:
+            # Check for dataset already existing in the user's working directory
+            im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+            logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} exists. Skipping auto-import.")
+            return
+        except InventoryException:
+            # Dataset not found, import it
+            logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} not found. "
+                        f"Auto-importing remote dataset from {remote_url}")
+            config_obj = Configuration(config_file=config_file)
+
+            if access_token:
+                # If the access token is set, git creds should be configured
+                remote_parts = urlsplit(remote_url)
+                if remote_parts.netloc:
+                    remote_target = f"{remote_parts.scheme}://{remote_parts.netloc}/"
+                else:
+                    remote_target = remote_parts.path
+
+                admin_service = None
+                for remote in config_obj.config['git']['remotes']:
+                    if remote == remote_target:
+                        admin_service = config_obj.config['git']['remotes'][remote]['admin_service']
+                        break
+
+                if not admin_service:
+                    raise ValueError(f"Failed to configure admin service URL based on target remote: {remote_target}")
+
+                gl_mgr = GitLabManager(remote_target, admin_service=admin_service, access_token=access_token)
+                gl_mgr.configure_git_credentials(remote_target, logged_in_username)
+
+            gitworkflows_utils.clone_repo(remote_url=remote_url, username=logged_in_username, owner=dataset_owner,
+                                          load_repository=im.load_dataset_from_directory,
+                                          put_repository=im.put_dataset)
+            logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} auto-imported successfully")
+
+    except Exception as err:
+        logger.error(f"(Job {p}) Error in check_and_import_dataset job")
         logger.exception(err)
         raise

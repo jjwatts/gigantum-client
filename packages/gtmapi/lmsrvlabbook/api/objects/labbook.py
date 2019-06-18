@@ -580,17 +580,14 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
 
     @staticmethod
     def helper_resolve_linked_datasets(labbook, info):
-        submodules = labbook.git.list_submodules()
+        dataset_objs = InventoryManager().get_linked_datasets(labbook)
         datasets = list()
-        for submodule in submodules:
+        for ds in dataset_objs:
             try:
-                namespace, dataset_name = submodule['name'].split("&")
-                submodule_dir = os.path.join(labbook.root_dir, '.gigantum', 'datasets', namespace, dataset_name)
-                ds = InventoryManager().load_dataset_from_directory(submodule_dir, author=get_logged_in_author())
-                ds.namespace = namespace
-                info.context.dataset_loader.prime(f"{get_logged_in_username()}&{namespace}&{dataset_name}", ds)
-
-                datasets.append(Dataset(owner=namespace, name=dataset_name))
+                # Prime the dataset loader, so when fields are resolved they resolve from these LINKED dataset
+                # directories inside the project, and not the normal location
+                info.context.dataset_loader.prime(f"{get_logged_in_username()}&{ds.namespace}&{ds.name}", ds)
+                datasets.append(Dataset(owner=ds.namespace, name=ds.name))
             except InventoryException:
                 continue
 
