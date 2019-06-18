@@ -382,13 +382,13 @@ class ComponentManager(object):
             installed_packages.setdefault(package['manager'], []).append(package["package"])
 
         for manager in base_data['package_managers']:
-            packages: List[Dict[str, Any]] = list()
+            packages = list()
             # Build dictionary of packages
             for p_manager in manager.keys():
                 if manager[p_manager]:
                     for pkg in manager[p_manager]:
                         pkg_name, pkg_version = strip_package_and_version(p_manager, pkg)
-                        if any([(pkg_name in [d.keys() for d in l]) for l in installed_packages.get(p_manager, [])]):
+                        if pkg_name in installed_packages.get(p_manager, []):
                             # If package is already installed by this package manager, we expect it gets overwritten
                             # If it's a different package manger, it won't.
                             continue
