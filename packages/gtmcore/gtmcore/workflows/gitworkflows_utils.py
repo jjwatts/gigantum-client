@@ -1,26 +1,8 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import subprocess
-import tempfile
 import time
 import os
+import shutil
+import uuid
 from typing import Any, Optional, Callable
 
 from gtmcore.workflows.gitlab import GitLabManager
@@ -36,6 +18,7 @@ from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.logging import LMLogger
 from gtmcore.configuration.utils import call_subprocess
 from gtmcore.inventory.branching import BranchManager, MergeConflict
+from gtmcore.configuration import Configuration
 
 
 logger = LMLogger.get_logger()
@@ -153,7 +136,7 @@ def _pull(repository: Repository, branch_name: str, override: str, feedback_cb: 
         if isinstance(repository, LabBook):
             if not username:
                 raise ValueError("Current logged in username required to checkout a Project with a linked dataset")
-            InventoryManager().update_linked_dataset(repository, username, init=True)
+            InventoryManager().update_linked_datasets(repository, username, init=True)
 
     except subprocess.CalledProcessError as cp_error:
         if 'Automatic merge failed' in cp_error.stdout.decode():
@@ -302,17 +285,19 @@ def clone_repo(remote_url: str, username: str, owner: str,
                put_repository: Callable[[str, str, str], Any],
                make_owner: bool = False) -> Repository:
 
-    with tempfile.TemporaryDirectory() as tempdir:
-        # Clone into a temporary directory, such that if anything
-        # gets messed up, then this directory will be cleaned up.
-        path = _clone(remote_url=remote_url, working_dir=tempdir)
-        candidate_repo = load_repository(path)
+    # Clone into a temporary directory, such that if anything
+    # gets messed up, then this directory will be cleaned up.
+    tempdir = os.path.join(Configuration().upload_dir, f"{username}_{owner}_clone_{uuid.uuid4().hex[0:10]}")
+    os.makedirs(tempdir)
+    path = _clone(remote_url=remote_url, working_dir=tempdir)
+    candidate_repo = load_repository(path)
 
-        if os.environ.get('WINDOWS_HOST'):
-            logger.warning("Imported on Windows host - set fileMode to false")
-            call_subprocess("git config core.fileMode false".split(),
-                            cwd=candidate_repo.root_dir)
+    if os.environ.get('WINDOWS_HOST'):
+        logger.warning("Imported on Windows host - set fileMode to false")
+        call_subprocess("git config core.fileMode false".split(),
+                        cwd=candidate_repo.root_dir)
 
-        repository = put_repository(candidate_repo.root_dir, username, owner)
+    repository = put_repository(candidate_repo.root_dir, username, owner)
+    shutil.rmtree(tempdir)
 
     return repository

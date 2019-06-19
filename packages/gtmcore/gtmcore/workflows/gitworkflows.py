@@ -33,6 +33,8 @@ from gtmcore.dataset import Dataset
 from gtmcore.inventory.branching import BranchManager
 from gtmcore.dataset.manifest import Manifest
 from gtmcore.dataset.io.manager import IOManager
+from gtmcore.dispatcher import Dispatcher
+import gtmcore.dispatcher.dataset_jobs
 
 logger = LMLogger.get_logger()
 
@@ -116,6 +118,8 @@ class GitWorkflow(ABC):
             override: In the event of conflict, select merge method (mine/theirs/abort)
             pull_only: If true, do not push back after doing a pull.
             feedback_callback: Used to give periodic feedback
+            access_token: current logged in users's access token
+            id_token: current logged in users's id token
 
         Returns:
             Integer number of commits pulled down from remote.
@@ -138,7 +142,7 @@ class GitWorkflow(ABC):
 
             # update dataset references on reset
             if isinstance(self.repository, LabBook):
-                InventoryManager().update_linked_dataset(self.repository, username, init=True)
+                InventoryManager().update_linked_datasets(self.repository, username, init=True)
 
 
 class LabbookWorkflow(GitWorkflow):
@@ -155,10 +159,29 @@ class LabbookWorkflow(GitWorkflow):
             inv_manager = InventoryManager(config_file=config_file)
             _, namespace, repo_name = remote_url.rsplit('/', 2)
             repo = gitworkflows_utils.clone_repo(remote_url=remote_url, username=username, owner=namespace,
-                                      load_repository=inv_manager.load_labbook_from_directory,
-                                      put_repository=inv_manager.put_labbook)
+                                                 load_repository=inv_manager.load_labbook_from_directory,
+                                                 put_repository=inv_manager.put_labbook)
             logger.info(f"Imported remote Project {str(repo)} on branch {repo.active_branch}")
-            return cls(repo)
+            wf = cls(repo)
+
+            # Check for linked datasets, and schedule auto-imports
+            d = Dispatcher()
+            datasets = inv_manager.get_linked_datasets(wf.labbook)
+            for ds in datasets:
+                kwargs = {
+                    'logged_in_username': username,
+                    'dataset_owner': ds.namespace,
+                    'dataset_name': ds.name,
+                    'remote_url': ds.remote,
+                }
+                metadata = {'dataset': f"{username}|{ds.namespace}|{ds.name}",
+                            'method': 'dataset_jobs.check_and_import_dataset'}
+
+                d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
+                                kwargs=kwargs,
+                                metadata=metadata)
+
+            return wf
         except Exception as e:
             logger.error(e)
             raise
@@ -213,6 +236,78 @@ class LabbookWorkflow(GitWorkflow):
 
         return True
 
+    def checkout(self, username: str, branch_name: str) -> None:
+        """Workflow method to checkout a branch in a Project, and if a new linked dataset has been introduced,
+        automatically import it.
+
+        Args:
+            username: Current logged in username
+            branch_name: name of the branch to checkout
+
+        Returns:
+            None
+        """
+        bm = BranchManager(self.labbook, username=username)
+        bm.workon_branch(branch_name=branch_name)
+
+        # Check for linked datasets, and schedule auto-imports
+        d = Dispatcher()
+        im = InventoryManager(config_file=self.labbook.client_config.config_file)
+        datasets = im.get_linked_datasets(self.labbook)
+        for ds in datasets:
+            kwargs = {
+                'logged_in_username': username,
+                'dataset_owner': ds.namespace,
+                'dataset_name': ds.name,
+                'remote_url': ds.remote,
+            }
+            metadata = {'dataset': f"{username}|{ds.namespace}|{ds.name}",
+                        'method': 'dataset_jobs.check_and_import_dataset'}
+
+            d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
+                            kwargs=kwargs,
+                            metadata=metadata)
+
+    def sync(self, username: str, remote: str = "origin", override: MergeOverride = MergeOverride.ABORT,
+             feedback_callback: Callable = lambda _: None, pull_only: bool = False,
+             access_token: Optional[str] = None, id_token: Optional[str] = None) -> int:
+        """ Sync with remote GitLab repo (i.e., pull any upstream changes and push any new changes). Following
+        a sync operation both the local repo and remote should be at the same revision.
+
+        Args:
+            username: Subject user
+            remote: Name of remote (usually only origin for now)
+            override: In the event of conflict, select merge method (mine/theirs/abort)
+            pull_only: If true, do not push back after doing a pull.
+            feedback_callback: Used to give periodic feedback
+
+        Returns:
+            Integer number of commits pulled down from remote.
+        """
+        updates_cnt = super().sync(username, remote, override=override, feedback_callback=feedback_callback,
+                                   pull_only=pull_only, access_token=access_token, id_token=id_token)
+
+        # Check for linked datasets, and schedule auto-imports
+        d = Dispatcher()
+        im = InventoryManager(config_file=self.labbook.client_config.config_file)
+
+        datasets = im.get_linked_datasets(self.labbook)
+        for ds in datasets:
+            kwargs = {
+                'logged_in_username': username,
+                'dataset_owner': ds.namespace,
+                'dataset_name': ds.name,
+                'remote_url': ds.remote,
+            }
+            metadata = {'dataset': f"{username}|{ds.namespace}|{ds.name}",
+                        'method': 'dataset_jobs.check_and_import_dataset'}
+
+            d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
+                            kwargs=kwargs,
+                            metadata=metadata)
+
+        return updates_cnt
+
 
 class DatasetWorkflow(GitWorkflow):
     @property
@@ -226,8 +321,8 @@ class DatasetWorkflow(GitWorkflow):
         inv_manager = InventoryManager(config_file=config_file)
         _, namespace, repo_name = remote_url.rsplit('/', 2)
         repo = gitworkflows_utils.clone_repo(remote_url=remote_url, username=username, owner=namespace,
-                                  load_repository=inv_manager.load_dataset_from_directory,
-                                  put_repository=inv_manager.put_dataset)
+                                             load_repository=inv_manager.load_dataset_from_directory,
+                                             put_repository=inv_manager.put_dataset)
         return cls(repo)
 
     def _push_dataset_objects(self, dataset: Dataset, logged_in_username: str,

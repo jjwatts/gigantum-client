@@ -129,10 +129,10 @@ class WorkonBranch(graphene.relay.ClientIDMutation):
                                              author=get_logged_in_author())
         # TODO - fail fast if already locked.
         with lb.lock():
-            bm = BranchManager(lb, username=username)
-            bm.workon_branch(branch_name=branch_name)
+            wf = LabbookWorkflow(lb)
+            wf.checkout(username, branch_name)
         return WorkonBranch(Labbook(id="{}&{}".format(owner, labbook_name),
-                                            name=labbook_name, owner=owner))
+                                    name=labbook_name, owner=owner))
 
 
 class ResetBranchToRemote(graphene.relay.ClientIDMutation):

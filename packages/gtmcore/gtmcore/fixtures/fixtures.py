@@ -60,6 +60,7 @@ def _create_temp_work_dir(override_dict: dict = None, lfs_enabled: bool = True):
     # Create a temporary working directory
     unit_test_working_dir = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex)
     os.makedirs(unit_test_working_dir)
+    os.makedirs(os.path.join(unit_test_working_dir, '.labmanager', 'upload'), exist_ok=True)
 
     default_override_config = {
         'core': {

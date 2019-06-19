@@ -209,14 +209,9 @@ def start_labbook_container(labbook_root: str, username: str, config_path: str,
     }
 
     # Set up additional bind mounts for datasets if needed.
-    submodules = lb.git.list_submodules()
-    for submodule in submodules:
+    datasets = InventoryManager().get_linked_datasets(lb)
+    for ds in datasets:
         try:
-            namespace, dataset_name = submodule['name'].split("&")
-            submodule_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', namespace, dataset_name)
-            ds = InventoryManager().load_dataset_from_directory(submodule_dir)
-            ds.namespace = namespace
-
             cm_class = get_cache_manager_class(ds.client_config)
             cm = cm_class(ds, username)
             ds_cache_dir = cm.current_revision_dir.replace('/mnt/gigantum', os.environ['HOST_WORK_DIR'])

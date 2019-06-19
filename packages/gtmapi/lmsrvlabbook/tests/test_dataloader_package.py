@@ -60,7 +60,7 @@ class TestDataloaderPackage(object):
         assert version_list[0].description == 'A set of tools to manipulate climate data'
         assert version_list[0].docs_url == 'http://anaconda.org/conda-forge/cdutil'
 
-        assert version_list[1].latest_version == "2.9.1"
+        assert version_list[1].latest_version == "2.9.2"
         assert version_list[1].description == 'Python interface to coveralls.io API\\n'
         assert version_list[1].docs_url == 'http://anaconda.org/conda-forge/python-coveralls'
 
@@ -87,7 +87,7 @@ class TestDataloaderPackage(object):
         assert version_list[0].description == 'A set of tools to manipulate climate data'
         assert version_list[0].docs_url == 'http://anaconda.org/conda-forge/cdutil'
 
-        assert version_list[1].latest_version == "2.9.1"
+        assert version_list[1].latest_version == "2.9.2"
         assert version_list[1].description == 'Python interface to coveralls.io API\\n'
         assert version_list[1].docs_url == 'http://anaconda.org/conda-forge/python-coveralls'
 

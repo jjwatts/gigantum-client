@@ -165,7 +165,7 @@ class BranchManager(object):
         if isinstance(self.repository, LabBook):
             if not self.username:
                 raise ValueError("Current logged in username required to checkout a Project with a linked dataset")
-            InventoryManager().update_linked_dataset(self.repository, self.username, init=True)
+            InventoryManager().update_linked_datasets(self.repository, self.username, init=True)
         logger.info(f'Checked out branch {self.active_branch} in {str(self.repository)}')
 
     def workon_branch(self, branch_name: str) -> None:
