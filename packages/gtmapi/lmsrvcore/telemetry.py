@@ -44,7 +44,7 @@ def check_projects(config: Configuration, username: str = '*') -> Dict[str, Dict
             logger.error(e)
             errors['errors'][project_path.replace(gigantum_root, '')] = str(e)
     tfin = time.time()
-    errors['_collectionTimeSec'] = tfin - t0
+    errors['_collectionTimeSec'] = float(f'{tfin - t0:.2f}')
     return errors
 
 
