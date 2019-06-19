@@ -7,9 +7,7 @@ from pkg_resources import resource_filename
 import pathlib
 import subprocess
 import glob
-from typing import NamedTuple
-
-from typing import Optional, Callable, List, Tuple, Dict
+from typing import Any, NamedTuple, Optional, Callable, List, Tuple, Dict
 
 from gtmcore.exceptions import GigantumException
 from gtmcore.labbook.schemas import CURRENT_SCHEMA as LABBOOK_CURRENT_SCHEMA
@@ -277,7 +275,7 @@ class InventoryManager(object):
 
         return [lb for (lb, key) in sorted_list]
 
-    def _safe_load(self, username, key_f: Callable) -> List:
+    def _safe_load(self, username, key_f: Callable) -> List[Tuple[LabBook, Any]]:
         local_labbooks = []
         for username, owner, lbname in self.list_repository_ids(username, 'labbook'):
             try:

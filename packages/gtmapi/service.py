@@ -2,8 +2,6 @@
 import shutil
 import os
 import base64
-import asyncio
-import threading
 
 from confhttpproxy import ProxyRouter
 from flask import Flask, jsonify, request, abort
@@ -13,7 +11,6 @@ import redis
 import blueprint
 import yaml
 
-
 from gtmcore.configuration import Configuration
 from gtmcore.logging import LMLogger
 from gtmcore.environment import RepositoryManager
@@ -21,11 +18,9 @@ from gtmcore.auth.identity import AuthenticationError, get_identity_manager
 from gtmcore.labbook.lock import reset_all_locks
 from gtmcore.inventory.inventory import InventoryManager
 from lmsrvcore.auth.user import get_logged_in_author
-from lmsrvcore import service_telemetry
+from lmsrvcore import telemetry
 
 logger = LMLogger.get_logger()
-
-# Create Flask app
 app = Flask("lmsrvlabbook")
 
 # Load configuration class into the flask application
@@ -82,7 +77,13 @@ def handle_auth_error(ex):
 @app.route(f"{api_prefix}/sysinfo")
 @cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
 def sysinfo():
-    return jsonify(service_telemetry())
+    return jsonify(telemetry.service_telemetry())
+
+
+@app.route(f"{api_prefix}/project-errors")
+@cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
+def check_projects():
+    return jsonify(telemetry.check_projects(app.config["LABMGR_CONFIG"]))
 
 
 # Set Unauth'd route for API health-check
@@ -108,7 +109,7 @@ def version():
     """
     app_name, built_on, revision = config.config['build_info'].split(' :: ')
     return jsonify({
-        "application": app_name ,
+        "application": app_name,
         "built_on": built_on,
         "revision": revision
     })
