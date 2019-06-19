@@ -1,6 +1,6 @@
 import time
 import glob
-from typing import Optional, Tuple, Dict
+from typing import Any, Optional, Tuple, Dict
 
 from gtmcore.logging import LMLogger
 from gtmcore.inventory.inventory import InventoryManager
@@ -11,7 +11,7 @@ DISK_WARNING_THRESHOLD_GB = 2.5
 logger = LMLogger.get_logger()
 
 
-def check_projects(config: Configuration, username: str = '*') -> Dict[str, Dict[str, str]]:
+def check_projects(config: Configuration, username: str = '*') -> Dict[str, Any]:
     """ Crawl through all projects to check for errors on loading or accessing imporant fields.
     Warning: This method may take a while.
 
@@ -34,7 +34,7 @@ def check_projects(config: Configuration, username: str = '*') -> Dict[str, Dict
     project_paths = glob.glob(f'{gigantum_root}/{username}/*/labbooks/*')
     inventory = InventoryManager(config.config_file)
     t0 = time.time()
-    errors = {'errors': {}}
+    errors: Dict[str, Any] = {'errors': {}}
     for project_path in project_paths:
         try:
             # Try to load the labbook, and it's important fields.
