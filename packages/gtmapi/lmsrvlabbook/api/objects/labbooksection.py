@@ -28,8 +28,8 @@ from lmsrvcore.auth.user import get_logged_in_username
 from lmsrvcore.api.interfaces import GitRepository
 from lmsrvcore.api.connections import ListBasedConnection
 
-from lmsrvlabbook.api.objects.labbookfile import LabbookFavorite, LabbookFile
-from lmsrvlabbook.api.connections.labbookfileconnection import LabbookFileConnection, LabbookFavoriteConnection
+from lmsrvlabbook.api.objects.labbookfile import LabbookFile
+from lmsrvlabbook.api.connections.labbookfileconnection import LabbookFileConnection
 import redis
 import json
 
@@ -48,11 +48,7 @@ class LabbookSection(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRe
     # List of all files and directories within the section
     all_files = graphene.relay.ConnectionField(LabbookFileConnection)
 
-    # List of favorites for a given subdir (code, input, output)
-    favorites = graphene.relay.ConnectionField(LabbookFavoriteConnection)
-
     has_files = graphene.Boolean()
-    has_favorites = graphene.Boolean()
 
     @classmethod
     def get_node(cls, info, id):
@@ -66,7 +62,7 @@ class LabbookSection(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRe
         """Resolve the unique Node id for this object"""
         if not self.id:
             if not self.owner or not self.name or not self.section:
-                raise ValueError("Resolving a LabbookFavorite Node ID requires owner, name, and section to be set")
+                raise ValueError("Resolving a LabbookSection Node ID requires owner, name, and section to be set")
 
             self.id = f"{self.owner}&{self.name}&{self.section}"
 
@@ -157,38 +153,3 @@ class LabbookSection(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRe
         """Resolver for getting all files in a LabBook section"""
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             lambda labbook: self.helper_resolve_all_files(labbook, kwargs))
-
-    def helper_resolve_favorites(self, labbook, kwargs):
-        # Get all files and directories, with the exception of anything in .git or .gigantum
-        edges = [x[1] for x in labbook.get_favorites(self.section).items()]
-        cursors = [base64.b64encode("{}".format(cnt).encode("UTF-8")).decode("UTF-8") for cnt, x in enumerate(edges)]
-
-        # Process slicing and cursor args
-        lbc = ListBasedConnection(edges, cursors, kwargs)
-        lbc.apply()
-
-        edge_objs = []
-        for edge, cursor in zip(lbc.edges, lbc.cursors):
-            create_data = {"id": f"{self.owner}&{self.name}&{self.section}&{edge['key']}",
-                           "owner": self.owner,
-                           "section": self.section,
-                           "name": self.name,
-                           "index": int(edge['index']),
-                           "key": edge['key'],
-                           "_favorite_data": edge}
-            edge_objs.append(LabbookFavoriteConnection.Edge(node=LabbookFavorite(**create_data), cursor=cursor))
-
-        return LabbookFavoriteConnection(edges=edge_objs, page_info=lbc.page_info)
-
-    def resolve_favorites(self, info, **kwargs):
-        """Resolve all favorites for the given section"""
-        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: self.helper_resolve_favorites(labbook, kwargs))
-
-    def resolve_has_favorites(self, info, **kwargs):
-        def _hf(lb):
-            return len(lb.get_favorites(self.section).items()) > 0
-
-        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            _hf
-        )

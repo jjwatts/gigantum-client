@@ -132,7 +132,6 @@ class FileBrowser extends Component {
                   edge: {
                     node: {
                       isDir: true,
-                      isFavorite: false,
                       key: tempKey,
                       modifiedAt: Math.floor(Date.now() / 1000),
                       id: tempKey,
@@ -322,7 +321,6 @@ class FileBrowser extends Component {
     const {
       parentId,
       connection,
-      favoriteConnection,
       mostRecentConnection,
       section,
     } = this.props;
@@ -333,7 +331,6 @@ class FileBrowser extends Component {
       labbookName,
       parentId,
       connection,
-      favoriteConnection,
       section,
     };
   }

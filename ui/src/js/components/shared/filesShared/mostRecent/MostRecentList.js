@@ -55,7 +55,6 @@ export default class MostRecentList extends Component {
               parentId={this.props.edgeId}
               section={selectedPath}
               connection={connection}
-              favoriteConnection={favoriteConnection}
               file={edge}
               owner={this.props.owner}
             />

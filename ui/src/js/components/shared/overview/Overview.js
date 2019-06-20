@@ -13,7 +13,6 @@ import { setErrorMessage } from 'JS/redux/actions/footer';
 // components
 import Base from 'Components/labbook/environment/Base';
 import Type from 'Components/dataset/overview/Type';
-import FilePreview from 'Components/labbook/overview/FilePreview';
 import RecentActivity from 'Components/labbook/overview/RecentActivity';
 import Loader from 'Components/common/Loader';
 import CodeBlock from 'Components/labbook/renderers/CodeBlock';
@@ -375,16 +374,6 @@ export default class Overview extends Component {
                   isManaged={props.isManaged}
                 />
               </div>
-            )
-          }
-
-          { isLabbook
-            && (
-            <FilePreview
-              ref="filePreview"
-              scrollToTop={props.scrollToTop}
-              history={props.history}
-            />
             )
           }
         </div>

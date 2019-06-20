@@ -16,7 +16,6 @@ export default createPaginationContainer(
               node{
                 id
                 isDir
-                isFavorite
                 modifiedAt
                 key
                 size

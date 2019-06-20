@@ -50,7 +50,6 @@ class TestInventoryDatasets(object):
         assert os.path.isdir(os.path.join(dataset_dir, "manifest")) is True
         assert os.path.isdir(os.path.join(dataset_dir, ".gigantum")) is True
         assert os.path.isdir(os.path.join(dataset_dir, ".gigantum", "activity")) is True
-        assert os.path.isdir(os.path.join(dataset_dir, ".gigantum", "favorites")) is True
         assert os.path.isdir(os.path.join(dataset_dir, ".gigantum", "activity", "log")) is True
 
         # Validate dataset data file

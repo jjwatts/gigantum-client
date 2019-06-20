@@ -209,7 +209,6 @@ class TestDatasetFilesMutations(object):
                               id
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }
@@ -260,7 +259,6 @@ class TestDatasetFilesMutations(object):
                               id
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }
@@ -290,7 +288,6 @@ class TestDatasetFilesMutations(object):
                               id
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }
@@ -329,7 +326,6 @@ class TestDatasetFilesMutations(object):
                               id
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }
@@ -355,7 +351,6 @@ class TestDatasetFilesMutations(object):
                               id
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }
@@ -389,7 +384,6 @@ class TestDatasetFilesMutations(object):
                               id
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }
@@ -411,7 +405,6 @@ class TestDatasetFilesMutations(object):
                               id
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }

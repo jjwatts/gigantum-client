@@ -238,7 +238,6 @@ class MoveDatasetFile(graphene.ClientIDMutation):
                                           name=dataset_name,
                                           key=edge_dict['key'],
                                           is_dir=edge_dict['is_dir'],
-                                          is_favorite=edge_dict['is_favorite'],
                                           modified_at=edge_dict['modified_at'],
                                           is_local=edge_dict['is_local'],
                                           size=str(edge_dict['size'])))

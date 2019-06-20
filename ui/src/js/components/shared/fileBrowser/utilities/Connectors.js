@@ -85,7 +85,6 @@ const dragSource = {
             const {
               parentId,
               connection,
-              favoriteConnection,
               section,
             } = props;
             const { owner, labbookName } = store.getState().routes;
@@ -95,7 +94,6 @@ const dragSource = {
               labbookName,
               parentId,
               connection,
-              favoriteConnection,
               section,
             };
 
@@ -152,7 +150,6 @@ const targetSource = {
       const {
         parentId,
         connection,
-        favoriteConnection,
         section,
       } = props;
       const { owner, labbookName } = store.getState().routes;
@@ -162,7 +159,6 @@ const targetSource = {
         labbookName,
         parentId,
         connection,
-        favoriteConnection,
         section,
       };
       // uploads to root directory
@@ -219,7 +215,6 @@ const targetSource = {
             const {
               parentId,
               connection,
-              favoriteConnection,
               section,
             } = props;
             const { owner, labbookName } = store.getState().routes;
@@ -229,7 +224,6 @@ const targetSource = {
               labbookName,
               parentId,
               connection,
-              favoriteConnection,
               section,
             };
 
