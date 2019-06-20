@@ -13,12 +13,10 @@ const getComponetPaths = ((props) => {
   const sectionUpperCase = props.section[0].toUpperCase() + props.section.slice(1);
   const section = ((props.section === 'code') || props.section === 'data') ? props.section : `${props.section}Data`;
   const browserPath = `${sectionPathRoot}/${section}/${sectionUpperCase}Browser`;
-  const favoritePath = props.labbook ? `${sectionPathRoot}/${section}/${sectionUpperCase}Favorites` : '';
   const recentPath = props.labbook ? `${sectionPathRoot}/${section}/MostRecent${sectionUpperCase}` : '';
 
   return ({
     browserPath,
-    favoritePath,
     recentPath,
   });
 });
@@ -26,10 +24,7 @@ const getComponetPaths = ((props) => {
 export default class SectionWrapper extends Component {
   state = {
     selectedFiles: [],
-    selectedFilter: this.props.labbook
-      && this.props.labbook[this.props.section]
-      && this.props.labbook[this.props.section].hasFavorites ?
-      'favorites' : 'recent',
+    selectedFilter: 'recent',
     favoriteRecentAdded: false,
   };
 
@@ -74,16 +69,6 @@ export default class SectionWrapper extends Component {
   }
 
   /**
-  *  @param {string} filterName - Filter for favorites & most recent view.
-  *  update filterName and toggle view
-  *  @return {}
-  */
-  @boundMethod
-  _selectFilter(filterName) {
-    this.setState({ selectedFilter: filterName });
-  }
-
-  /**
   *  @param {string} favoriteRecentAdded
   *  shows hides the most recent section after a file has been added or removed
   *  update filterName and toggle view
@@ -100,7 +85,6 @@ export default class SectionWrapper extends Component {
     const innerSection = props.dataset ? sectionObject : sectionObject[props.section];
     const {
       browserPath,
-      favoritePath,
       recentPath,
     } = getComponetPaths(props);
 
@@ -111,18 +95,12 @@ export default class SectionWrapper extends Component {
         && (state.favoriteRecentAdded);
       const Browser = require(`./../../../${browserPath}`).default;
 
-      let Favorites;
       let MostRecent;
       if (section !== 'data') {
-        Favorites = require(`./../../../${favoritePath}`).default;
         MostRecent = require(`./../../../${recentPath}`).default;
       }
 
       // declare css
-      const favoritesCSS = classNames({
-        SectionWrapper__filter: true,
-        'SectionWrapper__filter--selected': state.selectedFilter === 'favorites',
-      });
       const recentCSS = classNames({
         SectionWrapper__filter: true,
         'SectionWrapper__filter--selected': state.selectedFilter === 'recent',
@@ -147,16 +125,8 @@ export default class SectionWrapper extends Component {
               <div className="SectionWrapper__header">
                 <div className="SectionWrapper__toolbar">
                   <a
-                    ref="favorites"
-                    className={favoritesCSS}
-                    onClick={() => this._selectFilter('favorites')}
-                  >
-                    Favorites
-                  </a>
-                  <a
                     ref="recent"
                     className={recentCSS}
-                    onClick={() => this._selectFilter('recent')}
                   >
                     Most Recent
                   </a>
@@ -165,17 +135,6 @@ export default class SectionWrapper extends Component {
               </div>
 
               <div className="SectionWrapper__files">
-                { (state.selectedFilter === 'favorites')
-                  && (
-                    <Favorites
-                      sectionId={innerSection.id}
-                      labbookId={sectionId}
-                      toggleFavoriteRecent={this._toggleFavoriteRecent}
-                      section={section}
-                      {...sectionProps}
-                    />
-                  )
-                }
                 { (state.selectedFilter === 'recent')
                   && (
                     <MostRecent

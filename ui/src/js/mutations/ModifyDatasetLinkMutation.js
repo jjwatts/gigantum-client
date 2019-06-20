@@ -24,7 +24,6 @@ const mutation = graphql`
                         name
                         key
                         isDir
-                        isFavorite
                         isLocal
                         modifiedAt
                         size

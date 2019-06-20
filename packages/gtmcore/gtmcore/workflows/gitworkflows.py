@@ -1,25 +1,11 @@
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 from abc import ABC, abstractmethod
+import sys
+import os
+import time
 from enum import Enum
-from typing import Optional, Callable, cast
+import glob
+from typing import Optional, Callable, cast, List
+from humanfriendly import format_size
 
 from gtmcore.configuration.utils import call_subprocess
 from gtmcore.logging import LMLogger
@@ -35,6 +21,7 @@ from gtmcore.dataset.manifest import Manifest
 from gtmcore.dataset.io.manager import IOManager
 from gtmcore.dispatcher import Dispatcher
 import gtmcore.dispatcher.dataset_jobs
+from gtmcore.dataset.io.job import BackgroundUploadJob
 
 logger = LMLogger.get_logger()
 
@@ -72,7 +59,7 @@ class GitWorkflow(ABC):
     def publish(self, username: str, access_token: Optional[str] = None, remote: str = "origin",
                 public: bool = False, feedback_callback: Callable = lambda _ : None,
                 id_token: Optional[str] = None) -> None:
-        """ Publish this repository to the remote GitLab instance.
+        """ Publish this repository to the remote GitLab instance. This runs in a bg job
 
         Args:
             username: Subject username
@@ -110,7 +97,7 @@ class GitWorkflow(ABC):
              feedback_callback: Callable = lambda _: None, pull_only: bool = False,
              access_token: Optional[str] = None, id_token: Optional[str] = None) -> int:
         """ Sync with remote GitLab repo (i.e., pull any upstream changes and push any new changes). Following
-        a sync operation both the local repo and remote should be at the same revision.
+        a sync operation both the local repo and remote should be at the same revision. This runs in a bg job
 
         Args:
             username: Subject user
@@ -127,6 +114,7 @@ class GitWorkflow(ABC):
         updates_cnt = gitworkflows_utils.sync_branch(self.repository, username=username,
                                                      override=override.value, pull_only=pull_only,
                                                      feedback_callback=feedback_callback)
+
         return updates_cnt
 
     def reset(self, username: str):
@@ -325,26 +313,116 @@ class DatasetWorkflow(GitWorkflow):
                                              put_repository=inv_manager.put_dataset)
         return cls(repo)
 
-    def _push_dataset_objects(self, dataset: Dataset, logged_in_username: str,
+    def _push_dataset_objects(self, logged_in_username: str,
                               feedback_callback: Callable, access_token, id_token) -> None:
-        dataset.backend.set_default_configuration(logged_in_username, access_token, id_token)
-        m = Manifest(dataset, logged_in_username)
-        iom = IOManager(dataset, m)
-        iom.push_objects(status_update_fn=feedback_callback)
-        iom.manifest.link_revision()
+        """Method to schedule a push operta
+
+        Args:
+            logged_in_username:
+            feedback_callback:
+            access_token:
+            id_token:
+
+        Returns:
+
+        """
+        dispatcher_obj = Dispatcher()
+
+        try:
+            self.dataset.backend.set_default_configuration(logged_in_username, access_token, id_token)
+            m = Manifest(self.dataset, logged_in_username)
+            iom = IOManager(self.dataset, m)
+
+            obj_batches, total_bytes, num_files = iom.compute_push_batches()
+
+            if obj_batches:
+                # Schedule jobs for batches
+                bg_jobs = list()
+                for objs in obj_batches:
+                    job_kwargs = {
+                        'objs': objs,
+                        'logged_in_username': logged_in_username,
+                        'access_token': access_token,
+                        'id_token': id_token,
+                        'dataset_owner': self.dataset.namespace,
+                        'dataset_name': self.dataset.name,
+                        'config_file': self.dataset.client_config.config_file,
+                    }
+                    job_metadata = {'dataset': f"{logged_in_username}|{self.dataset.namespace}|{self.dataset.name}",
+                                    'method': 'pull_objects'}
+
+                    job_key = dispatcher_obj.dispatch_task(method_reference=gtmcore.dispatcher.dataset_jobs.push_dataset_objects,
+                                                           kwargs=job_kwargs,
+                                                           metadata=job_metadata,
+                                                           persist=True)
+                    bg_jobs.append(BackgroundUploadJob(dispatcher_obj, objs, job_key))
+                    logger.info(f"Schedule dataset object upload job for"
+                                f" {logged_in_username}/{self.dataset.namespace}/{self.dataset.name} with"
+                                f" {len(objs)} objects to upload")
+
+                feedback_callback(f"Please wait - Downloading {num_files} files ({format_size(0)} "
+                                  f"of {format_size(total_bytes)}) - 0% complete",
+                                  percent_complete=0)
+
+                while sum([(x.is_complete or x.is_failed) for x in bg_jobs]) != len(bg_jobs):
+                    # Refresh all job statuses and update status feedback
+                    [j.refresh_status() for j in bg_jobs]
+                    total_completed_bytes = sum([j.completed_bytes for j in bg_jobs])
+                    pc = (float(total_completed_bytes) / float(total_bytes)) * 100
+                    feedback_callback(f"Please wait - Uploading {num_files} files ({format_size(total_completed_bytes)}"
+                                      f" of {format_size(total_bytes)}) - {round(pc)}% complete",
+                                      percent_complete=pc)
+                    time.sleep(1)
+
+                # if you get here, all jobs are done or failed.
+                # Remove all the push files so they can be regenerated if needed
+                for f in glob.glob(f'{iom.push_dir}/*'):
+                    os.remove(f)
+
+                # Aggregate failures if they exist
+                failure_keys: List[str] = list()
+                for j in bg_jobs:
+                    if j.is_failed:
+                        # Background job hard failed. Assume entire batch should get re-uploaded
+                        for obj in j.objs:
+                            failure_keys.append(f"{obj.dataset_path} at {obj.revision[0:8]}")
+                            m.queue_to_push(obj.object_path, obj.dataset_path, obj.revision)
+                    else:
+                        for obj in j.get_failed_objects():
+                            # Some individual objects failed
+                            failure_keys.append(f"{obj.dataset_path} at {obj.revision[0:8]}")
+                            m.queue_to_push(obj.object_path, obj.dataset_path, obj.revision)
+
+                # Set final status for UI
+                if len(failure_keys) == 0:
+                    feedback_callback(f"Upload complete!", percent_complete=100, has_failures=False)
+                else:
+                    failure_str = "\n".join(failure_keys)
+                    failure_detail_str = f"Files that failed to upload:\n{failure_str}"
+                    feedback_callback("", percent_complete=100, has_failures=True, failure_detail=failure_detail_str)
+
+                # Finish up by linking everything just in case
+                iom.manifest.link_revision()
+
+                if len(failure_keys) > 0:
+                    # If any downloads failed, exit non-zero to the UI knows there was an error
+                    raise IOError(
+                        f"{len(failure_keys)} file(s) failed to upload. Check message detail for more information"
+                        " and try to sync again.")
+        except Exception as err:
+            logger.exception(err)
+            raise
 
     def publish(self, username: str, access_token: Optional[str] = None, remote: str = "origin",
                 public: bool = False, feedback_callback: Callable = lambda _ : None,
                 id_token: Optional[str] = None):
         super().publish(username, access_token, remote, public, feedback_callback, id_token)
-        self._push_dataset_objects(self.dataset, username, feedback_callback,
-                                   access_token, id_token)
+        self._push_dataset_objects(username, feedback_callback, access_token, id_token)
 
     def sync(self, username: str, remote: str = "origin", override: MergeOverride = MergeOverride.ABORT,
              feedback_callback: Callable = lambda _ : None, pull_only: bool = False,
              access_token: Optional[str] = None, id_token: Optional[str] = None):
         v = super().sync(username, remote, override, feedback_callback, pull_only,
                          access_token, id_token)
-        self._push_dataset_objects(self.dataset, username, feedback_callback,
-                                   access_token, id_token)
+        self._push_dataset_objects(username, feedback_callback, access_token, id_token)
         return v

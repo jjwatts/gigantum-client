@@ -1,40 +1,29 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
 import pprint
 import shutil
 import tempfile
-from mock import patch
+import pytest
+import mock
 
 from gtmcore.configuration import get_docker_client
 from gtmcore.dispatcher import jobs
 from gtmcore.workflows import GitWorkflow, LabbookWorkflow
 import gtmcore.fixtures
 from gtmcore.fixtures.datasets import helper_append_file, helper_compress_file
+from gtmcore.workflows import MergeOverride
 
-from gtmcore.fixtures import mock_config_file, mock_config_with_repo
+
+from gtmcore.fixtures import mock_config_file, mock_config_with_repo, mock_labbook_lfs_disabled,\
+    _MOCK_create_remote_repo2
 from gtmcore.environment import ComponentManager
 from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.inventory.branching import BranchManager
 from gtmcore.imagebuilder import ImageBuilder
 
+from gtmcore.dispatcher.tests import BG_SKIP_MSG, BG_SKIP_TEST
 
+
+@pytest.mark.skipif(BG_SKIP_TEST, reason=BG_SKIP_MSG)
 class TestJobs(object):
     def test_success_import_export_zip(self, mock_config_with_repo):
 
@@ -209,11 +198,49 @@ class TestJobs(object):
             except Exception as e:
                 pass
 
-    def test_publish_respository(self):
-        pass
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo2)
+    def test_publish_respository(self, mock_labbook_lfs_disabled):
+        """Test a simple publish and ensuring master is active branch. """
+        username = 'test'
+        lb = mock_labbook_lfs_disabled[2]
+        bm = BranchManager(lb, username)
+        assert bm.branches_remote == []
+        assert bm.branches_local == ['master']
 
-    def test_sync_repository(self):
-        pass
+        jobs.publish_repository(lb, username=username, access_token='fake', id_token='fake-too')
 
-    def test_download_dataset_files(self):
-        pass
+        assert os.path.exists(lb.remote)
+
+        # Assert that publish only pushes up the master branch.
+        assert bm.branches_local == ['master']
+        assert bm.branches_remote == ['master']
+
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo2)
+    def test_sync_repository(self, mock_labbook_lfs_disabled):
+        username = 'test'
+        lb = mock_labbook_lfs_disabled[2]
+        bm = BranchManager(lb, username)
+        assert bm.branches_remote == []
+        assert bm.branches_local == ['master']
+
+        jobs.publish_repository(lb, username=username, access_token='fake', id_token='fake-too')
+
+        assert os.path.exists(lb.remote)
+
+        # Assert that publish only pushes up the master branch.
+        assert bm.branches_local == ['master']
+        assert bm.branches_remote == ['master']
+
+        assert bm.get_commits_ahead('master') == 0
+        assert bm.get_commits_behind('master') == 0
+
+        lb.write_readme("do a commit")
+
+        assert bm.get_commits_ahead('master') == 2
+        assert bm.get_commits_behind('master') == 0
+
+        jobs.sync_repository(lb, username=username, override=MergeOverride.OURS,
+                             access_token='fake', id_token='fake-too')
+
+        assert bm.get_commits_ahead('master') == 0
+        assert bm.get_commits_behind('master') == 0

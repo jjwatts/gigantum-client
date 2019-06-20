@@ -269,7 +269,7 @@ class Dispatcher(object):
             args(list): Arguments to method_reference
             kwargs(dict): Keyword Argument to method_reference
             metadata(dict): Optional dict of metadata
-            persist(bool): Never timeout if True, otherwise abort after 5 minutes.
+            persist(bool): Never timeout if True, otherwise abort after 2 hours.
             dependent_job(JobKey): The JobKey of the job this task depends on.
 
         Returns:

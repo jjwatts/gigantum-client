@@ -38,6 +38,11 @@ class StorageBackend(metaclass=abc.ABCMeta):
             # If additional config required, append
             self._required_configuration_params.extend(self._required_configuration())
 
+    @property
+    def storage_type(self) -> str:
+        """Return the string identifier for the dataset's storage class"""
+        return self._backend_metadata()['storage_type']
+
     def _backend_metadata(self) -> dict:
         """Method to specify Storage Backend metadata for each implementation. This is used to render the UI
 
@@ -124,7 +129,7 @@ class StorageBackend(metaclass=abc.ABCMeta):
         """
         raise NotImplemented
 
-    def confirm_configuration(self, dataset, status_update_fn: Callable) -> Optional[str]:
+    def confirm_configuration(self, dataset) -> Optional[str]:
         """Method to verify a configuration and optionally allow the user to confirm before proceeding
 
         Should return the desired confirmation message if there is one. If no confirmation is required/possible,
@@ -162,7 +167,7 @@ class StorageBackend(metaclass=abc.ABCMeta):
 
         return current_params
 
-    def prepare_pull(self, dataset, objects: List[PullObject], status_update_fn: Callable) -> None:
+    def prepare_pull(self, dataset, objects: List[PullObject]) -> None:
         """Method to prepare a backend for pulling objects locally
 
         Args:
@@ -175,20 +180,21 @@ class StorageBackend(metaclass=abc.ABCMeta):
         """
         raise NotImplemented
 
-    def pull_objects(self, dataset, objects: List[PullObject], status_update_fn: Callable) -> PullResult:
+    def pull_objects(self, dataset, objects: List[PullObject], progress_update_fn: Callable) -> PullResult:
         """Method to pull objects locally
 
         Args:
             dataset: The dataset instance
             objects: A list of PullObjects, indicating which objects to pull
-            status_update_fn: A callable, accepting a string for logging/providing status to the UI
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                downloaded in since last called
 
         Returns:
-
+            PullResult
         """
         raise NotImplemented
 
-    def finalize_pull(self, dataset, status_update_fn: Callable) -> None:
+    def finalize_pull(self, dataset) -> None:
         """Method to finalize and cleanup a backend after pulling objects locally
 
         Args:
@@ -261,7 +267,7 @@ class ManagedStorageBackend(StorageBackend):
         """
         raise NotImplemented
 
-    def prepare_push(self, dataset, objects: List[PushObject], status_update_fn: Callable) -> None:
+    def prepare_push(self, dataset, objects: List[PushObject]) -> None:
         """Method to prepare a backend for pushing objects to the remote storage backend
 
         Args:
@@ -274,20 +280,22 @@ class ManagedStorageBackend(StorageBackend):
         """
         raise NotImplemented
 
-    def push_objects(self, dataset, objects: List[PushObject], status_update_fn: Callable) -> PushResult:
+    def push_objects(self, dataset, objects: List[PushObject], progress_update_fn: Callable) -> PushResult:
         """Method to push objects to the remote storage backend
 
         Args:
             dataset: The dataset instance
             objects: A list of PushObject, indicating which objects to push
-            status_update_fn: A callable, accepting a string for logging/providing status to the UI
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                uploaded in since last called
 
+                                      
         Returns:
 
         """
         raise NotImplemented
 
-    def finalize_push(self, dataset, status_update_fn: Callable) -> None:
+    def finalize_push(self, dataset) -> None:
         """Method to finalize and cleanup a backend after pushing objects to the remote storage backend
 
         Args:

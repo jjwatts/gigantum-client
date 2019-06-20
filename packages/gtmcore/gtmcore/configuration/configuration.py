@@ -57,6 +57,38 @@ class Configuration(object):
         return os.path.join(self.app_workdir, '.labmanager', 'upload')
 
     @property
+    def download_cpu_limit(self) -> int:
+        """
+
+        Returns:
+
+        """
+        config_val = self.config['datasets']['download_cpu_limit']
+        if config_val == 'auto':
+            num_cpus = os.cpu_count()
+            if not num_cpus:
+                num_cpus = 1
+            return num_cpus
+        else:
+            return int(config_val)
+
+    @property
+    def upload_cpu_limit(self) -> int:
+        """
+
+        Returns:
+
+        """
+        config_val = self.config['datasets']['upload_cpu_limit']
+        if config_val == 'auto':
+            num_cpus = os.cpu_count()
+            if not num_cpus:
+                num_cpus = 1
+            return num_cpus
+        else:
+            return int(config_val)
+
+    @property
     def user_config(self) -> Dict[str, Any]:
         """Return the configuration items loaded from the user's config.yaml"""
 

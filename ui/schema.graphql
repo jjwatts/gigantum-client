@@ -1,5 +1,5 @@
 # source: http://localhost:10000/api/labbook/
-# timestamp: Tue Jun 11 2019 13:34:51 GMT-0400 (Eastern Daylight Time)
+# timestamp: Wed Jun 19 2019 11:41:27 GMT-0400 (Eastern Daylight Time)
 
 schema {
   query: LabbookQuery
@@ -143,21 +143,6 @@ input AddLabbookCollaboratorInput {
 
 type AddLabbookCollaboratorPayload {
   updatedLabbook: Labbook
-  clientMutationId: String
-}
-
-input AddLabbookFavoriteInput {
-  owner: String!
-  labbookName: String!
-  section: String!
-  key: String!
-  description: String
-  isDir: Boolean
-  clientMutationId: String
-}
-
-type AddLabbookFavoritePayload {
-  newFavoriteEdge: LabbookFavoriteEdge
   clientMutationId: String
 }
 
@@ -438,55 +423,6 @@ type ConfigureDatasetPayload {
   clientMutationId: String
 }
 
-input ConfigureDatasetInput {
-  """Owner of the dataset to configure"""
-  datasetOwner: String!
-
-  """Name of the dataset to configure"""
-  datasetName: String!
-  parameters: [DatasetConfigurationParameterInput]
-
-  """
-  Set to true so confirm the configuration and continue. False will clear the configuration to start over
-  """
-  confirm: Boolean
-  clientMutationId: String
-}
-
-"""
-Mutation to configure a dataset backend if needed.
-
-Workflow to configure a dataset:
-- TODO
-"""
-type ConfigureDatasetPayload {
-  dataset: Dataset
-
-  """If true, all parameters a set and OK to continue"""
-  isConfigured: Boolean
-
-  """
-  If true, should confirm configuration with the user and resubmit with confirm=True to finalize
-  """
-  shouldConfirm: Boolean
-
-  """Configuration error message to display to the user"""
-  errorMessage: String
-
-  """Confirmation message to display to the user"""
-  confirmMessage: String
-
-  """
-  If true, this backend type requires background work after confirmation. Check
-  complete_background_key for key to provide user feedback.
-  """
-  hasBackgroundJob: Boolean
-
-  """Background job key to query on for feedback if needed"""
-  backgroundJobKey: String
-  clientMutationId: String
-}
-
 """An enumeration for container image status"""
 enum ContainerStatus {
   NOT_RUNNING
@@ -628,7 +564,6 @@ type DatasetFile implements Node & GitRepository {
   name: String!
   key: String!
   isDir: Boolean
-  isFavorite: Boolean
   isLocal: Boolean
   modifiedAt: Float
   size: String
@@ -1069,36 +1004,6 @@ type LabbookEdge {
 }
 
 """
-A type representing a file or directory that has been favorited in the labbook file system.
-"""
-type LabbookFavorite implements Node & GitRepository {
-  """The ID of the object."""
-  id: ID!
-  owner: String!
-  name: String!
-  section: String!
-  key: String!
-  index: Int
-  description: String
-  associatedLabbookFileId: String
-  isDir: Boolean
-}
-
-"""A connection for paging through labbook favorites. """
-type LabbookFavoriteConnection {
-  pageInfo: PageInfo!
-  edges: [LabbookFavoriteEdge]!
-}
-
-type LabbookFavoriteEdge {
-  """The item at the end of the edge"""
-  node: LabbookFavorite
-
-  """A cursor for use in pagination"""
-  cursor: String!
-}
-
-"""
 A type representing a file or directory inside the labbook file system.
 """
 type LabbookFile implements Node & GitRepository {
@@ -1109,7 +1014,6 @@ type LabbookFile implements Node & GitRepository {
   section: String!
   key: String!
   isDir: Boolean
-  isFavorite: Boolean
   modifiedAt: Float
   size: String
 }
@@ -1192,9 +1096,6 @@ type LabbookMutations {
   deleteLabbookFiles(input: DeleteLabbookFilesInput!): DeleteLabbookFilesPayload
   makeLabbookDirectory(input: MakeLabbookDirectoryInput!): MakeLabbookDirectoryPayload
   removeUserIdentity(input: RemoveUserIdentityInput!): RemoveUserIdentityPayload
-  addFavorite(input: AddLabbookFavoriteInput!): AddLabbookFavoritePayload
-  updateFavorite(input: UpdateLabbookFavoriteInput!): UpdateLabbookFavoritePayload
-  removeFavorite(input: RemoveLabbookFavoriteInput!): RemoveLabbookFavoritePayload
   addDatasetCollaborator(input: AddDatasetCollaboratorInput!): AddDatasetCollaboratorPayload
   deleteDatasetCollaborator(input: DeleteDatasetCollaboratorInput!): DeleteDatasetCollaboratorPayload
   writeLabbookReadme(input: WriteLabbookReadmeInput!): WriteLabbookReadmePayload
@@ -1270,10 +1171,7 @@ type LabbookSection implements Node & GitRepository {
   section: String
   files(rootDir: String, before: String, after: String, first: Int, last: Int): LabbookFileConnection
   allFiles(before: String, after: String, first: Int, last: Int): LabbookFileConnection
-  favorites(before: String, after: String, first: Int, last: Int): LabbookFavoriteConnection
-  isUntracked: Boolean
   hasFiles: Boolean
-  hasFavorites: Boolean
 }
 
 input MakeDatasetDirectoryInput {
@@ -1341,7 +1239,7 @@ input ModifyDatasetLinkInput {
   """Name of the dataset to link"""
   datasetName: String!
 
-  """Action to perform, either `link` or `unlink`"""
+  """Action to perform, either `link`, `unlink`, or `update`"""
   action: String!
 
   """URL to the Dataset to link. Only required when `action=link`"""
@@ -1583,20 +1481,6 @@ type RemoveCustomDockerPayload {
   clientMutationId: String
 }
 
-input RemoveLabbookFavoriteInput {
-  owner: String!
-  labbookName: String!
-  section: String!
-  key: String!
-  clientMutationId: String
-}
-
-type RemoveLabbookFavoritePayload {
-  success: Boolean
-  removedNodeId: String
-  clientMutationId: String
-}
-
 input RemovePackageComponentsInput {
   owner: String!
   labbookName: String!
@@ -1822,21 +1706,6 @@ input SyncLabbookInput {
 
 type SyncLabbookPayload {
   jobKey: String
-  clientMutationId: String
-}
-
-input UpdateLabbookFavoriteInput {
-  owner: String!
-  labbookName: String!
-  section: String!
-  key: String!
-  updatedIndex: Int
-  updatedDescription: String
-  clientMutationId: String
-}
-
-type UpdateLabbookFavoritePayload {
-  updatedFavoriteEdge: LabbookFavoriteEdge
   clientMutationId: String
 }
 

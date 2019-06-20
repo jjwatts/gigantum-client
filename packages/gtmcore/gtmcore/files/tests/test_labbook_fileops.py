@@ -44,7 +44,6 @@ class TestLabbookFileOperations(object):
         assert os.path.exists(os.path.join(lb.root_dir, 'code', base_name))
         assert new_file_data['key'] == f'{base_name}'
         assert new_file_data['is_dir'] is False
-        assert new_file_data['is_favorite'] is False
 
     def test_insert_file_upload_id(self, mock_labbook):
         lb = mock_labbook[2]
@@ -362,53 +361,3 @@ class TestLabbookFileOperations(object):
         lb = mock_labbook[2]
         with pytest.raises(ValueError):
             FO.listdir(lb, "code", base_path='blah')
-
-    def test_walkdir_with_favorites(self, mock_labbook, sample_src_file):
-        lb = mock_labbook[2]
-        dirs = ["code/cat_dir", "code/dog_dir"]
-        for d in dirs:
-            FO.makedir(lb, d)
-
-        sfile = '/tmp/testwalkdirwithfavorites.file'
-        for d in ['', 'dog_dir', 'cat_dir']:
-            open(sfile, 'w').write('xxx')
-            FO.insert_file(lb, 'code', sfile, d)
-
-        sample_filename = os.path.basename(sfile)
-
-        # Since the file is in a hidden directory, it should not be found.
-        dir_walks = FO.walkdir(lb, 'code')
-        # Spot check some entries
-        assert len(dir_walks) == 5
-        assert dir_walks[0]['key'] == 'cat_dir/'
-        assert dir_walks[0]['is_dir'] is True
-        assert dir_walks[0]['is_favorite'] is False
-        assert dir_walks[1]['key'] == 'dog_dir/'
-        assert dir_walks[1]['is_dir'] is True
-        assert dir_walks[1]['is_favorite'] is False
-        assert dir_walks[2]['is_favorite'] is False
-        assert dir_walks[2]['is_dir'] is False
-        assert dir_walks[3]['is_favorite'] is False
-        assert dir_walks[3]['is_dir'] is False
-        assert dir_walks[4]['is_favorite'] is False
-        assert dir_walks[4]['is_dir'] is False
-
-        lb.create_favorite("code", sample_filename, description="Fav 1")
-        lb.create_favorite("code", f"dog_dir/{sample_filename}", description="Fav 2")
-        lb.create_favorite("code", f"cat_dir/", description="Fav 3", is_dir=True)
-
-        dir_walks = FO.walkdir(lb, 'code')
-        # Spot check some entries
-        assert len(dir_walks) == 5
-        assert dir_walks[0]['key'] == 'cat_dir/'
-        assert dir_walks[0]['is_dir'] is True
-        assert dir_walks[0]['is_favorite'] is True
-        assert dir_walks[1]['key'] == 'dog_dir/'
-        assert dir_walks[1]['is_dir'] is True
-        assert dir_walks[1]['is_favorite'] is False
-        assert dir_walks[2]['is_favorite'] is True
-        assert dir_walks[2]['is_dir'] is False
-        assert dir_walks[3]['is_favorite'] is False
-        assert dir_walks[3]['is_dir'] is False
-        assert dir_walks[4]['is_favorite'] is True
-        assert dir_walks[4]['is_dir'] is False

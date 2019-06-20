@@ -392,8 +392,7 @@ class FileOperations(object):
                   'key': rel_file_path,
                   'is_dir': is_dir,
                   'size': file_info.st_size if not is_dir else 0,
-                  'modified_at': file_info.st_mtime,
-                  'is_favorite': rel_file_path in labbook.favorite_keys[section]
+                  'modified_at': file_info.st_mtime
                }
 
     @classmethod

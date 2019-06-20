@@ -5,8 +5,6 @@ import MakeLabbookDirectoryMutation from 'Mutations/fileBrowser/MakeLabbookDirec
 import MakeDatasetDirectoryMutation from 'Mutations/fileBrowser/MakeDatasetDirectoryMutation';
 import MoveLabbookFileMutation from 'Mutations/fileBrowser/MoveLabbookFileMutation';
 import MoveDatasetFileMutation from 'Mutations/fileBrowser/MoveDatasetFileMutation';
-import AddFavoriteMutation from 'Mutations/fileBrowser/AddFavoriteMutation';
-import RemoveFavoriteMutation from 'Mutations/fileBrowser/RemoveFavoriteMutation';
 import DownloadDatasetFilesMutation from 'Mutations/DownloadDatasetFilesMutation';
 import CompleteBatchUploadTransactionMutation from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
 import UpdateUnmanagedDatasetMutation from 'Mutations/UpdateUnmanagedDatasetMutation';
@@ -196,96 +194,6 @@ class FileBrowserMutations {
 
   /**
   *  @param {Object} data
-  *         {string} data.key
-  *         {Object} data.edge
-  *  @param {function} callback
-  *  add file favorite to appear in favorite section
-  */
-  addFavorite(data, callback) {
-    const {
-      key,
-      edge,
-    } = data;
-
-    const {
-      connection,
-      favoriteConnection,
-      owner,
-      labbookName,
-      section,
-      parentId,
-    } = this.state;
-
-    AddFavoriteMutation(
-      favoriteConnection,
-      connection,
-      parentId,
-      owner,
-      labbookName,
-      key,
-      '',
-      edge.node.isDir,
-      edge,
-      section,
-      (response, error) => {
-        if (error) {
-          console.error(error);
-          setErrorMessage(`ERROR: could not add favorite ${key}`, error);
-        }
-      },
-    );
-  }
-
-  /**
-  *  @param {Object} data
-  *         {string} data.key
-  *         {Object} data.edge
-  *  @param {function} callback
-  *  remove file from favorite section
-  */
-  removeFavorite(data, callback) {
-    const {
-      key,
-      edge,
-    } = data;
-
-
-    const edgeId = edge.node.id;
-    const {
-      favoriteConnection,
-      owner,
-      labbookName,
-      section,
-      parentId,
-    } = this.state;
-
-    RemoveFavoriteMutation(
-      favoriteConnection,
-      parentId,
-      owner,
-      labbookName,
-      section,
-      key,
-      edgeId,
-      edge,
-      (response, error) => {
-        if (error) {
-          console.error(error);
-          setErrorMessage(`ERROR: could not remove favorite ${key}`, error);
-        } else {
-          let tempKey = key;
-          if (tempKey[0] === '/') {
-            tempKey = tempKey.slice(1);
-          }
-
-          callback(tempKey);
-        }
-      },
-    );
-  }
-
-  /**
-  *  @param {Object} data
   *         {Array[string]} data.filePaths
   *         {Array[Object]} data.edges
   *  @param {function} callback
@@ -304,17 +212,6 @@ class FileBrowserMutations {
       section,
     } = this.state;
 
-    if (section !== 'data') {
-      edges.forEach((edge) => {
-        if (edge && edge.node && edge.node.isFavorite) {
-          const data = {
-            key: edge.node.key,
-            edge,
-          };
-          this.removeFavorite(data, () => {});
-        }
-      });
-    }
     if (section !== 'data') {
       DeleteLabbookFilesMutation(
         connection,

@@ -547,7 +547,6 @@ class InventoryManager(object):
             # Create Directory Structure
             dirs = [
                 'manifest', 'metadata', '.gigantum',
-                os.path.join('.gigantum', 'favorites'),
                 os.path.join('.gigantum', 'activity'),
                 os.path.join('.gigantum', 'activity', 'log')
             ]

@@ -127,7 +127,7 @@ class ConfigureDataset(graphene.relay.ClientIDMutation):
 
             # Validate the configuration
             try:
-                confirm_message = ds.backend.confirm_configuration(ds, logger.info)
+                confirm_message = ds.backend.confirm_configuration(ds)
                 if confirm_message is not None:
                     should_confirm = True
             except ValueError as err:

@@ -108,7 +108,7 @@ const FooterUtils = {
             const responseId = id || response.data.jobStatus.id;
             const { html, message } = messageParser(response);
             // executes while job status is still running, refetches until status is finished or failed
-            if (response.data.jobStatus.status === 'started') {
+            if (response.data.jobStatus.status === 'started' || response.data.jobStatus.status === 'queued') {
               if (html.length) {
                 const messageData = {
                   id: responseId,
@@ -215,7 +215,7 @@ const FooterUtils = {
           const { jobStatus } = response.data;
           const metaData = JSON.parse(jobStatus.jobMetadata);
 
-          if (jobStatus.status === 'started') {
+          if (jobStatus.status === 'started' || jobStatus.status === 'queued') {
             setTimeout(() => {
               fetchStatus({ backgroundJobKey });
               setUploadMessageUpdate(
