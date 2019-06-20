@@ -53,11 +53,5 @@ exports[`ActionsMenu Component Renders a snapshot 1`] = `
     onClick={[Function]}
     type="button"
   />
-  <button
-    className="ActionsMenu__item Btn Btn--fileBrowser Tooltip-data Tooltip-data--small Btn--round Btn--bordered Btn__Favorite-off"
-    data-tooltip="Favorite"
-    onClick={[Function]}
-    type="button"
-  />
 </div>
 `;

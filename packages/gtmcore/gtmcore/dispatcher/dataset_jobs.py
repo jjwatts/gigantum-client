@@ -1,8 +1,10 @@
+import sys
 import copy
 import os
 import time
-from typing import Optional, List
+from typing import Optional, List, Callable
 from urllib.parse import urlsplit
+import glob
 
 from humanfriendly import format_size
 from rq import get_current_job
@@ -16,6 +18,9 @@ from gtmcore.inventory.inventory import InventoryManager, InventoryException
 from gtmcore.logging import LMLogger
 from gtmcore.workflows import gitworkflows_utils
 from gtmcore.workflows.gitlab import GitLabManager
+from gtmcore.dataset.io.manager import IOManager
+from gtmcore.dataset.io.job import BackgroundDownloadJob, BackgroundUploadJob
+from gtmcore.dataset.io import PushObject
 
 
 def hash_dataset_files(logged_in_username: str, dataset_owner: str, dataset_name: str,
@@ -57,7 +62,8 @@ def hash_dataset_files(logged_in_username: str, dataset_owner: str, dataset_name
 
 
 def complete_dataset_upload_transaction(logged_in_username: str, logged_in_email: str,
-                                        dataset_owner: str, dataset_name: str, dispatcher, config_file: str = None) -> None:
+                                        dataset_owner: str, dataset_name: str, dispatcher,
+                                        config_file: str = None) -> None:
     """Method to import a dataset from a zip file
 
     Args:
@@ -278,5 +284,278 @@ def check_and_import_dataset(logged_in_username: str, dataset_owner: str, datase
 
     except Exception as err:
         logger.error(f"(Job {p}) Error in check_and_import_dataset job")
+        logger.exception(err)
+        raise
+
+
+def push_dataset_objects(objs: List[PushObject], logged_in_username: str, access_token: str, id_token: str,
+                         dataset_owner: str, dataset_name: str, config_file: str = None) -> None:
+    """Method to pull a collection of objects from a dataset's backend
+
+    Args:
+        objs: List if file PushObject to push
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+        config_file: config file (used for test mocking)
+
+    Returns:
+        str: directory path of imported labbook
+    """
+    logger = LMLogger.get_logger()
+
+    def progress_update_callback(completed_bytes: int) -> None:
+        """Method to update the job's metadata and provide feedback to the UI"""
+        current_job = get_current_job()
+        if not current_job:
+            return
+        if 'completed_bytes' not in current_job.meta:
+            current_job.meta['completed_bytes'] = 0
+
+        current_job.meta['completed_bytes'] = int(current_job.meta['completed_bytes']) + completed_bytes
+        current_job.save_meta()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting push_dataset_objects(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        im = InventoryManager(config_file=config_file)
+        ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+        m = Manifest(ds, logged_in_username)
+        iom = IOManager(ds, m)
+
+        result = iom.push_objects(objs, progress_update_fn=progress_update_callback)
+
+        job = get_current_job()
+        if job:
+            job.meta['failures'] = ",".join([f"{x.object_path}|{x.dataset_path}|{x.revision}" for x in result.failure])
+            job.meta['message'] = result.message
+            job.save_meta()
+
+    except Exception as err:
+        logger.exception(err)
+        raise
+
+
+def pull_objects(keys: List[str], logged_in_username: str, access_token: str, id_token: str,
+                 dataset_owner: str, dataset_name: str,
+                 labbook_owner: Optional[str] = None, labbook_name: Optional[str] = None,
+                 config_file: str = None) -> None:
+    """Method to pull a collection of objects from a dataset's backend.
+
+    This runs the IOManager.pull_objects() method with `link_revision=False`. This is because this job can be run in
+    parallel multiple times with different sets of keys. You don't want to link until the very end, which is handled
+    in the `download_dataset_files` job, which is what scheduled this job.
+
+    Args:
+        keys: List if file keys to download
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+        labbook_owner: Owner of the labbook if this dataset is linked
+        labbook_name: Name of the labbook if this dataset is linked
+        config_file: config file (used for test mocking)
+
+    Returns:
+        str: directory path of imported labbook
+    """
+    logger = LMLogger.get_logger()
+
+    def progress_update_callback(completed_bytes: int) -> None:
+        """Method to update the job's metadata and provide feedback to the UI"""
+        current_job = get_current_job()
+        if not current_job:
+            return
+        if 'completed_bytes' not in current_job.meta:
+            current_job.meta['completed_bytes'] = 0
+
+        current_job.meta['completed_bytes'] = int(current_job.meta['completed_bytes']) + completed_bytes
+        current_job.save_meta()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting pull_objects(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}, labbook_owner={labbook_owner},"
+                    f" labbook_name={labbook_name}")
+
+        im = InventoryManager(config_file=config_file)
+
+        if labbook_owner is not None and labbook_name is not None:
+            # This is a linked dataset, load repo from the Project
+            lb = im.load_labbook(logged_in_username, labbook_owner, labbook_name)
+            dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
+            ds = im.load_dataset_from_directory(dataset_dir)
+        else:
+            # this is a normal dataset. Load repo from working dir
+            ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+        m = Manifest(ds, logged_in_username)
+        iom = IOManager(ds, m)
+
+        result = iom.pull_objects(keys=keys, progress_update_fn=progress_update_callback, link_revision=False)
+
+        job = get_current_job()
+        if job:
+            job.meta['failure_keys'] = ",".join([x.dataset_path for x in result.failure])
+            job.meta['message'] = result.message
+            job.save_meta()
+
+    except Exception as err:
+        logger.exception(err)
+        raise
+
+
+def download_dataset_files(logged_in_username: str, access_token: str, id_token: str,
+                           dataset_owner: str, dataset_name: str,
+                           labbook_owner: Optional[str] = None, labbook_name: Optional[str] = None,
+                           all_keys: Optional[bool] = False, keys: Optional[List[str]] = None,
+                           config_file: str = None) -> None:
+    """Method to download files from a dataset in the background and provide status to the UI.
+
+    This job schedules `pull_objects` jobs after splitting up the download work into batches. At the end, the job
+    removes any partially downloaded files (due to failures) and links all the files for the dataset.
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+        labbook_owner: Owner of the labbook if this dataset is linked
+        labbook_name: Name of the labbook if this dataset is linked
+        all_keys: Boolean indicating if all remaining files should be downloaded
+        keys: List if file keys to download
+        config_file: config file (used for test mocking)
+
+    Returns:
+        str: directory path of imported labbook
+    """
+    dispatcher_obj = Dispatcher()
+
+    def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                        percent_complete: Optional[float] = None) -> None:
+        """Method to update the job's metadata and provide feedback to the UI"""
+        current_job = get_current_job()
+        if not current_job:
+            return
+        if has_failures:
+            current_job.meta['has_failures'] = has_failures
+        if failure_detail:
+            current_job.meta['failure_detail'] = failure_detail
+        if percent_complete:
+            current_job.meta['percent_complete'] = percent_complete
+
+        current_job.meta['feedback'] = msg
+        current_job.save_meta()
+    logger = LMLogger.get_logger()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting download_dataset_files(logged_in_username={logged_in_username},"
+                    f" dataset_owner={dataset_owner}, dataset_name={dataset_name}, labbook_owner={labbook_owner},"
+                    f" labbook_name={labbook_name}, all_keys={all_keys}, keys={keys}")
+
+        im = InventoryManager(config_file=config_file)
+
+        if labbook_owner is not None and labbook_name is not None:
+            # This is a linked dataset, load repo from the Project
+            lb = im.load_labbook(logged_in_username, labbook_owner, labbook_name)
+            dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
+            ds = im.load_dataset_from_directory(dataset_dir)
+        else:
+            # this is a normal dataset. Load repo from working dir
+            ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+        m = Manifest(ds, logged_in_username)
+        iom = IOManager(ds, m)
+
+        key_batches, total_bytes, num_files = iom.compute_pull_batches(keys, pull_all=all_keys)
+
+        # Schedule jobs for batches
+        bg_jobs = list()
+        for keys in key_batches:
+            job_kwargs = {
+                'keys': keys,
+                'logged_in_username': logged_in_username,
+                'access_token': access_token,
+                'id_token': id_token,
+                'dataset_owner': dataset_owner,
+                'dataset_name': dataset_name,
+                'labbook_owner': labbook_owner,
+                'labbook_name': labbook_name,
+                'config_file': config_file,
+            }
+            job_metadata = {'dataset': f"{logged_in_username}|{dataset_owner}|{dataset_name}",
+                            'method': 'pull_objects'}
+
+            job_key = dispatcher_obj.dispatch_task(method_reference=pull_objects,
+                                                   kwargs=job_kwargs,
+                                                   metadata=job_metadata,
+                                                   persist=True)
+            bg_jobs.append(BackgroundDownloadJob(dispatcher_obj, keys, job_key))
+
+        update_feedback(f"Please wait - Downloading {num_files} files ({format_size(total_bytes)}) - 0% complete",
+                        percent_complete=0,
+                        has_failures=False)
+        logger.info(f"(Job {p}) Starting file downloads for"
+                    f" {logged_in_username}/{dataset_owner}/{dataset_name} with {len(key_batches)} jobs")
+
+        while sum([(x.is_complete or x.is_failed) for x in bg_jobs]) != len(bg_jobs):
+            # Refresh all job statuses and update status feedback
+            [j.refresh_status() for j in bg_jobs]
+            total_completed_bytes = sum([j.completed_bytes for j in bg_jobs])
+            pc = (float(total_completed_bytes) / float(total_bytes)) * 100
+            update_feedback(f"Please wait - Downloading {num_files} files ({format_size(total_completed_bytes)} of "
+                            f"{format_size(total_bytes)}) - {round(pc)}% complete",
+                            percent_complete=pc)
+            time.sleep(1)
+
+        # Aggregate failures if they exist
+        failure_keys = list()
+        for j in bg_jobs:
+            if j.is_failed:
+                # Whole job failed...assume entire batch should get re-uploaded for now
+                failure_keys.extend(j.keys)
+            else:
+                failure_keys.extend(j.get_failed_keys())
+
+        # Set final status for UI
+        if len(failure_keys) == 0:
+            update_feedback(f"Download complete!", percent_complete=100, has_failures=False)
+        else:
+            failure_str = ""
+            for f in failure_keys:
+                # If any failed files partially downloaded, remove them.
+                abs_dataset_path = os.path.join(m.cache_mgr.current_revision_dir, f)
+                abs_object_path = m.dataset_to_object_path(f)
+                if os.path.exists(abs_dataset_path):
+                    os.remove(abs_dataset_path)
+                if os.path.exists(abs_object_path):
+                    os.remove(abs_object_path)
+                failure_str = f"{failure_str}{f}\n"
+
+            failure_detail_str = f"Files that failed to download:\n{failure_str}"
+            update_feedback("", has_failures=True, failure_detail=failure_detail_str)
+
+        # Link dataset files, so anything that was successfully pulled will materialize
+        m.link_revision()
+
+        if len(failure_keys) > 0:
+            # If any downloads failed, exit non-zero to the UI knows there was an error
+            raise IOError(f"{len(failure_keys)} file(s) failed to download. Check message detail and try again.")
+
+    except Exception as err:
         logger.exception(err)
         raise

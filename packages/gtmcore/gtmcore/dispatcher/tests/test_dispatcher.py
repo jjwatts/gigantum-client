@@ -1,10 +1,7 @@
-import threading
 import json
 import time
 import pytest
 import datetime
-
-import multiprocessing
 import os
 import rq
 
@@ -12,6 +9,10 @@ from gtmcore.dispatcher import Dispatcher
 import gtmcore.dispatcher.jobs as bg_jobs
 
 
+from gtmcore.dispatcher.tests import BG_SKIP_MSG, BG_SKIP_TEST
+
+
+@pytest.mark.skipif(BG_SKIP_TEST, reason=BG_SKIP_MSG)
 class TestDispatcher(object):
 
     def test_simple_task(self):

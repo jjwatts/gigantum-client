@@ -21,8 +21,10 @@ def helper_write_object(directory, object_id, contents):
     return object_file
 
 
-def updater(msg):
-    print(msg)
+def chunk_update_callback(completed_bytes: int):
+    """Method to update the job's metadata and provide feedback to the UI"""
+    assert type(completed_bytes) == int
+    assert completed_bytes > 0
 
 
 @pytest.fixture()
@@ -87,7 +89,7 @@ class TestStorageBackendGigantum(object):
         sb.set_default_configuration('test', 'asdf', '1234')
         assert sb.is_configured is True
 
-        assert sb.confirm_configuration(ds, lambda x: print(x)) is None
+        assert sb.confirm_configuration(ds) is None
 
     @pytest.mark.asyncio
     async def test_presigneds3upload_get_presigned_s3_url(self, event_loop, mock_dataset_with_cache_dir):
@@ -251,25 +253,25 @@ class TestStorageBackendGigantum(object):
         ds = mock_dataset_with_cache_dir[0]
 
         with pytest.raises(ValueError):
-            sb.prepare_push(ds, [], updater)
+            sb.prepare_push(ds, [])
 
         sb.configuration['username'] = "test-user"
         with pytest.raises(ValueError):
-            sb.prepare_push(ds, [], updater)
+            sb.prepare_push(ds, [])
 
         sb.configuration['gigantum_bearer_token'] = "asdf"
         with pytest.raises(ValueError):
-            sb.prepare_push(ds, [], updater)
+            sb.prepare_push(ds, [])
 
         sb.configuration['gigantum_id_token'] = "1234"
-        sb.prepare_push(ds, [], updater)
+        sb.prepare_push(ds, [])
 
     def test_prepare_push_errors(self, mock_dataset_with_cache_dir):
         sb = get_storage_backend("gigantum_object_v1")
         ds = mock_dataset_with_cache_dir[0]
 
         sb.set_default_configuration("test-user", "abcd", '1234')
-        sb.prepare_push(ds, [], updater)
+        sb.prepare_push(ds, [])
 
     def test_push_objects(self, mock_dataset_with_cache_dir, temp_directories):
         with aioresponses() as mocked_responses:
@@ -323,7 +325,7 @@ class TestStorageBackendGigantum(object):
                                  payload={},
                                  status=200)
 
-            result = sb.push_objects(ds, objects, updater)
+            result = sb.push_objects(ds, objects, chunk_update_callback)
             assert len(result.success) == 2
             assert len(result.failure) == 0
             assert isinstance(result, PushResult) is True
@@ -381,7 +383,7 @@ class TestStorageBackendGigantum(object):
                                  payload={},
                                  status=200)
 
-            result = sb.push_objects(ds, objects, updater)
+            result = sb.push_objects(ds, objects, chunk_update_callback)
             assert len(result.success) == 2
             assert len(result.failure) == 0
             assert isinstance(result, PushResult) is True
@@ -439,7 +441,7 @@ class TestStorageBackendGigantum(object):
                                  payload={},
                                  status=200)
 
-            result = sb.push_objects(ds, objects, updater)
+            result = sb.push_objects(ds, objects, chunk_update_callback)
             assert len(result.success) == 1
             assert len(result.failure) == 1
             assert isinstance(result, PushResult) is True
@@ -499,7 +501,7 @@ class TestStorageBackendGigantum(object):
                                  payload={},
                                  status=500)
 
-            result = sb.push_objects(ds, objects, updater)
+            result = sb.push_objects(ds, objects, chunk_update_callback)
             assert len(result.success) == 1
             assert len(result.failure) == 1
             assert isinstance(result, PushResult) is True
@@ -510,29 +512,25 @@ class TestStorageBackendGigantum(object):
     def test_finalize_push(self, mock_dataset_with_cache_dir):
         sb = get_storage_backend("gigantum_object_v1")
         ds = mock_dataset_with_cache_dir[0]
-
-        def check_updater(msg):
-            assert msg == f"Done pushing objects to tester/dataset-1"
-
-        sb.finalize_push(ds, check_updater)
+        sb.finalize_push(ds)
 
     def test_prepare_pull(self, mock_dataset_with_cache_dir):
         sb = get_storage_backend("gigantum_object_v1")
         ds = mock_dataset_with_cache_dir[0]
 
         with pytest.raises(ValueError):
-            sb.prepare_pull(ds, [], updater)
+            sb.prepare_pull(ds, [])
 
         sb.configuration['username'] = "test-user"
         with pytest.raises(ValueError):
-            sb.prepare_pull(ds, [], updater)
+            sb.prepare_pull(ds, [])
 
         sb.configuration['gigantum_bearer_token'] = "asdf"
         with pytest.raises(ValueError):
-            sb.prepare_pull(ds, [], updater)
+            sb.prepare_pull(ds, [])
 
         sb.configuration['gigantum_id_token'] = "1234"
-        sb.prepare_pull(ds, [], updater)
+        sb.prepare_pull(ds, [])
 
     def test_pull_objects(self, mock_dataset_with_cache_dir, temp_directories):
         with aioresponses() as mocked_responses:
@@ -599,7 +597,7 @@ class TestStorageBackendGigantum(object):
                                      body=data2.read(), status=200,
                                      content_type='application/octet-stream')
 
-            result = sb.pull_objects(ds, objects, updater)
+            result = sb.pull_objects(ds, objects, chunk_update_callback)
             assert len(result.success) == 2
             assert len(result.failure) == 0
             assert isinstance(result, PullResult) is True
@@ -683,7 +681,7 @@ class TestStorageBackendGigantum(object):
                                      body=data2.read(), status=200,
                                      content_type='application/octet-stream')
 
-            result = sb.pull_objects(ds, objects, updater)
+            result = sb.pull_objects(ds, objects, chunk_update_callback)
             assert len(result.success) == 1
             assert len(result.failure) == 1
             assert isinstance(result, PullResult) is True
@@ -762,7 +760,7 @@ class TestStorageBackendGigantum(object):
                                      body=data2.read(), status=200,
                                      content_type='application/octet-stream')
 
-            result = sb.pull_objects(ds, objects, updater)
+            result = sb.pull_objects(ds, objects, chunk_update_callback)
             assert len(result.success) == 1
             assert len(result.failure) == 1
             assert isinstance(result, PullResult) is True
@@ -788,4 +786,4 @@ class TestStorageBackendGigantum(object):
         def check_updater(msg):
             assert msg == f"Done pulling objects from tester/dataset-1"
 
-        sb.finalize_pull(ds, check_updater)
+        sb.finalize_pull(ds)

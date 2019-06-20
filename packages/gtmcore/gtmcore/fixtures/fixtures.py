@@ -171,6 +171,8 @@ def mock_config_file_background_tests():
     overrides = {"datasets": {
         "cache_manager": "host",
         "hash_cpu_limit": 2,
+        "download_cpu_limit": 2,
+        "upload_cpu_limit": 2,
         "backends": {
             "gigantum_object_v1": {
                 "upload_chunk_size": 4096,

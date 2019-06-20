@@ -18,8 +18,6 @@ import codeDataFavorites from 'Tests/components/labbook/code/__relaydata__/CodeF
 import DeleteLabbookFilesMutation from 'Mutations/fileBrowser/DeleteLabbookFilesMutation';
 import MakeLabbookDirectoryMutation from 'Mutations/fileBrowser/MakeLabbookDirectoryMutation';
 import MoveLabbookFileMutation from 'Mutations/fileBrowser/MoveLabbookFileMutation';
-import AddFavoriteMutation from 'Mutations/fileBrowser/AddFavoriteMutation';
-import RemoveFavoriteMutation from 'Mutations/fileBrowser/RemoveFavoriteMutation';
 import DownloadDatasetFilesMutation from 'Mutations/DownloadDatasetFilesMutation';
 import CompleteBatchUploadTransactionMutation from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
 
@@ -55,8 +53,6 @@ const fixtures = {
 jest.mock('Mutations/fileBrowser/DeleteLabbookFilesMutation', () => jest.fn());
 jest.mock('Mutations/fileBrowser/MakeLabbookDirectoryMutation', () => jest.fn());
 jest.mock('Mutations/fileBrowser/MoveLabbookFileMutation', () => jest.fn());
-jest.mock('Mutations/fileBrowser/AddFavoriteMutation', () => jest.fn());
-jest.mock('Mutations/fileBrowser/RemoveFavoriteMutation', () => jest.fn());
 jest.mock('Mutations/DownloadDatasetFilesMutation', () => jest.fn());
 jest.mock('Mutations/fileBrowser/CompleteBatchUploadTransactionMutation', () => jest.fn());
 

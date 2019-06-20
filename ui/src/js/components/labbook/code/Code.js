@@ -10,9 +10,7 @@ export default createFragmentContainer(
         code @skip (if: $codeSkip){
           id
           hasFiles
-          hasFavorites
           ...CodeBrowser_code
-          ...CodeFavorites_code
           ...MostRecentCode_code
         }
       }

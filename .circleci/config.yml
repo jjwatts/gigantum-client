@@ -3,7 +3,7 @@ version: 2.1
 executors:
   gig_client:
     docker:
-      - image: gigantum/circleci-client:e9d1f69a99-2019-06-11
+      - image: gigantum/circleci-client:d60c503bd5-2019-06-14
 
 jobs:
   mypy-gtmcore:
@@ -117,14 +117,14 @@ jobs:
           name: Set authentication credentials
           command: bash /home/circleci/repo/.circleci/write_auth.sh
       - run:
-          name: Run background job tests
+          name: Run Dispatcher and background job tests
           command: |
             export PYTHONPATH=$PYTHONPATH:/home/circleci/repo/packages/gtmcore
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
             python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
-            pytest --cov=gtmcore packages/gtmcore/gtmcore/dataset/tests/test_background_jobs.py
+            pytest --cov=gtmcore packages/gtmcore/gtmcore/dispatcher/tests
             codecov -F core
 
   test-ui-components:

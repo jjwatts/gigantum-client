@@ -17,7 +17,6 @@ export default createPaginationContainer(
                       id
                       key
                       isDir
-                      isFavorite
                       modifiedAt
                       size
                   }

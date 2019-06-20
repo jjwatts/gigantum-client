@@ -18,36 +18,38 @@ exports[`FileBrowser component Test FileBrowser Rendering 1`] = `
     <div
       className="FileBrowser__menu-buttons"
     >
-      <label
-        className="FileBrowser__upload-label"
-        htmlFor="browser_upload"
-      >
-        <div
-          className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow inline-block Btn"
-        />
-        <span>
-          Upload Files
-        </span>
-        <input
-          className="hidden"
-          id="browser_upload"
-          multiple={true}
-          onChange={[Function]}
-          type="file"
-        />
-      </label>
-      <button
-        className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
-        data-click-id="addFolder"
-        onClick={[Function]}
-        type="button"
-      >
-        <div
-          className="Btn--fileBrowser Btn--round Btn--bordered Btn__addFolder Btn"
+      <div>
+        <label
+          className="FileBrowser__upload-label"
+          htmlFor="browser_upload"
+        >
+          <div
+            className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow inline-block Btn"
+          />
+          <span>
+            Upload Files
+          </span>
+          <input
+            className="hidden"
+            id="browser_upload"
+            multiple={true}
+            onChange={[Function]}
+            type="file"
+          />
+        </label>
+        <button
+          className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
           data-click-id="addFolder"
-        />
-        New Folder
-      </button>
+          onClick={[Function]}
+          type="button"
+        >
+          <div
+            className="Btn--fileBrowser Btn--round Btn--bordered Btn__addFolder Btn"
+            data-click-id="addFolder"
+          />
+          New Folder
+        </button>
+      </div>
     </div>
   </div>
   <div

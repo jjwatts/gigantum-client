@@ -119,9 +119,7 @@ class SectionBrowser extends Component {
           isProcessing={props.isProcessing}
           parentId={props.sectionId}
           connection={`${capitalSection}Browser_allFiles`}
-          favoriteConnection={`${capitalSection}Favorites_favorites`}
           mostRecentConnection={`MostRecent${capitalSection}_allFiles`}
-          favorites={props.favorites}
           isLocked={props.isLocked}
           containerStatus={props.containerStatus}
           loadMore={this._loadMore}

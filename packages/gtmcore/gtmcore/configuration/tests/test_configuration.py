@@ -188,3 +188,11 @@ class TestConfiguration(object):
         """Test get upload directory"""
         configuration = Configuration()
         assert configuration.upload_dir == os.path.join(configuration.app_workdir, '.labmanager', 'upload')
+
+    def test_download_cpu_limit(self):
+        configuration = Configuration()
+        assert configuration.download_cpu_limit > 0
+
+    def test_upload_cpu_limit(self):
+        configuration = Configuration()
+        assert configuration.upload_cpu_limit > 0

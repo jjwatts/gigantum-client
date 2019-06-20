@@ -363,11 +363,9 @@ class Manifest(object):
         Returns:
             dict
         """
-        # TODO: Support favorites
         abs_path = os.path.join(self.cache_mgr.cache_root, self.dataset_revision, key)
         return {'key': key,
                 'size': item.get('b'),
-                'is_favorite': False,
                 'is_local': os.path.exists(abs_path),
                 'is_dir': True if abs_path[-1] == "/" else False,
                 'modified_at': float(item.get('m'))}
@@ -381,14 +379,12 @@ class Manifest(object):
         Returns:
             dict
         """
-        # TODO: Support favorites
         abs_path = self.get_abs_path(key)
         stat = os.stat(abs_path)
         is_dir = True if S_ISDIR(stat.st_mode) else False
 
         return {'key': key,
                 'size': str(stat.st_size) if not is_dir else '0',
-                'is_favorite': False,
                 'is_local': True,
                 'is_dir': is_dir,
                 'modified_at': stat.st_mtime}

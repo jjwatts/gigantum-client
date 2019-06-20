@@ -1,9 +1,10 @@
 import os
-from typing import List, Callable
+from typing import List, Callable, Optional, Tuple
 import subprocess
 import glob
 from natsort import natsorted
 from operator import attrgetter
+import math
 
 from gtmcore.dataset.dataset import Dataset
 from gtmcore.dataset.manifest import Manifest
@@ -97,28 +98,17 @@ class IOManager(object):
         """
         return len(self.objects_to_push(remove_duplicates))
 
-    def _log_updater(self, message: str, append: bool = False) -> None:
-        """A status updater method that simply logs. Used by default if a custom status updater isn't provided in some
-        methods that are expected to run in the background.
-
-        Args:
-            message(str): Message to update
-
-        Returns:
-            None
-        """
-        if append:
-            self._status_msg = f"{self._status_msg}\n{message}"
-        else:
-            self._status_msg = message
-        logger.info(self._status_msg)
-
-    def push_objects(self, status_update_fn: Callable = None) -> PushResult:
-        """Method to push all available objects
+    def push_objects(self, objs: List[PushObject], progress_update_fn: Callable) -> PushResult:
+        """Method to push the provided objects
 
         This method hands most of the work over to the StorageBackend implementation for the dataset. It is expected
         that the StorageBackend will return a PushResult named tuple so the user can be properly notified and
         everything stays consistent.
+
+        Args:
+            objs: list of PushObjects, detailing the objects to push to the backend
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                uploaded in since last called
 
         Returns:
             IOResult
@@ -126,28 +116,13 @@ class IOManager(object):
         if isinstance(self, UnmanagedStorageBackend):
             raise TypeError("Cannot push objects using an Unmanaged dataset storage type")
 
-        if not status_update_fn:
-            status_update_fn = self._log_updater
-
-        should_dedup = self.dataset.backend.client_should_dedup_on_push # type: ignore
-        objs: List[PushObject] = self.objects_to_push(remove_duplicates=should_dedup)
-
         try:
-            self.dataset.backend.prepare_push(self.dataset, objs, status_update_fn)  # type: ignore
-            result = self.dataset.backend.push_objects(self.dataset, objs, status_update_fn)  # type: ignore
-            self.dataset.backend.finalize_push(self.dataset, status_update_fn)  # type: ignore
+            self.dataset.backend.prepare_push(self.dataset, objs)  # type: ignore
+            result = self.dataset.backend.push_objects(self.dataset, objs, progress_update_fn)  # type: ignore
+            self.dataset.backend.finalize_push(self.dataset)  # type: ignore
         except Exception as err:
             logger.exception(err)
             raise
-
-        # Remove push files that have been processed
-        files = glob.glob(f'{self.push_dir}/*')
-        for f in files:
-            os.remove(f)
-
-        # Collect objects that still need to be pushed due to errors and write push files
-        for failed_push in result.failure:
-            self.manifest.queue_to_push(failed_push.object_path, failed_push.dataset_path, failed_push.revision)
 
         return result
 
@@ -168,40 +143,43 @@ class IOManager(object):
 
         return result
 
-    def pull_objects(self, keys: List[str], status_update_fn: Callable = None) -> PullResult:
+    def pull_objects(self, keys: List[str], progress_update_fn: Callable, link_revision: bool = True) -> PullResult:
         """Method to pull a single object
 
         This method hands most of the work over to the StorageBackend implementation for the dataset. It is expected
         that the StorageBackend will return a PushResult named tuple so the user can be properly notified and
         everything stays consistent.
 
+        Args:
+            keys: list of keys (relative paths) to pull
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                downloaded in since last called
+            link_revision: flag indicating if you should link the files. Typically true, but useful to be false when
+                           multiple processes are downloading files (e.g. the `pull_objects` background job).
+
         Returns:
             PullResult
         """
-        if not status_update_fn:
-            status_update_fn = self._log_updater
-
         objs: List[PullObject] = self._gen_pull_objects(keys)
 
         # Pull the object
-        self.dataset.backend.prepare_pull(self.dataset, objs, status_update_fn)
-        result = self.dataset.backend.pull_objects(self.dataset, objs, status_update_fn)
-        self.dataset.backend.finalize_pull(self.dataset, status_update_fn)
+        self.dataset.backend.prepare_pull(self.dataset, objs)
+        result = self.dataset.backend.pull_objects(self.dataset, objs, progress_update_fn)
+        self.dataset.backend.finalize_pull(self.dataset)
 
         # Relink the revision
-        self.manifest.link_revision()
+        if link_revision:
+            self.manifest.link_revision()
 
         # Return pull result
         return result
 
-    def pull_all(self, status_update_fn: Callable = None) -> PullResult:
-        """Helper to pull every object in the dataset, ignoring files that already exist and linking files if needed
-
-        Args:
-            status_update_fn: Callable to provide status during pull
+    def _get_pull_all_keys(self) -> List[str]:
+        """Helper to get all keys for files that need to be downloaded, ignoring files that already exist and
+        linking files if needed
 
         Returns:
-            PullResult
+            list
         """
         keys_to_pull = list()
         for key in self.manifest.manifest:
@@ -223,7 +201,64 @@ class IOManager(object):
             # Queue for downloading
             keys_to_pull.append(key)
 
-        if keys_to_pull:
-            return self.pull_objects(keys_to_pull, status_update_fn)
-        else:
-            return PullResult(success=[], failure=[], message="Dataset already downloaded.")
+        return keys_to_pull
+
+    def compute_pull_batches(self, keys: Optional[List[str]] = None,
+                             pull_all: Optional[bool] = False) -> Tuple[List[List[str]], int, int]:
+        """Method to compute object pull batches that attempt to spread io across available cores
+
+        Args:
+            keys: List of keys to download (relative file paths)
+            pull_all: Optional flag, if True, will download all remaining files in the dataset
+
+        Returns:
+            list, int
+        """
+        if pull_all:
+            keys = self._get_pull_all_keys()
+
+        if not keys:
+            raise ValueError("Either `keys` must be provided or `pull_all` set to True for batch computation.")
+
+        num_cores = self.dataset.client_config.download_cpu_limit
+        key_batches: List[List] = [list() for _ in range(num_cores)]
+        size_sums = [0 for _ in range(num_cores)]
+
+        # Build batches by dividing keys across batches by file size
+        for key in keys:
+            data = self.manifest.get(key)
+            index = size_sums.index(min(size_sums))
+            key_batches[index].append(key)
+            file_size = int(data['size'])
+            size_sums[index] += file_size
+
+        # Prune Jobs back if there are lots of cores but not lots of work
+        key_batches = [x for x in key_batches if x != []]
+
+        return key_batches, sum(size_sums), len(keys)
+
+    def compute_push_batches(self) -> Tuple[List[List[PushObject]], int, int]:
+        """Method to compute object push batches that attempt to spread io across available cores
+
+        Returns:
+            list, int, int, int
+        """
+        num_cores = self.dataset.client_config.upload_cpu_limit
+        obj_batches: List[List] = [list() for _ in range(num_cores)]
+        size_sums = [0 for _ in range(num_cores)]
+
+        should_dedup = self.dataset.backend.client_should_dedup_on_push  # type: ignore
+        objs: List[PushObject] = self.objects_to_push(remove_duplicates=should_dedup)
+
+        # Build batches by dividing keys across batches by file size
+        for obj in objs:
+            data = self.manifest.get(obj.dataset_path)
+            index = size_sums.index(min(size_sums))
+            obj_batches[index].append(obj)
+            file_size = int(data['size'])
+            size_sums[index] += file_size
+
+        # Prune Jobs back if there are lots of cores but not lots of work
+        obj_batches = [x for x in obj_batches if x != []]
+
+        return obj_batches, sum(size_sums), len(objs)

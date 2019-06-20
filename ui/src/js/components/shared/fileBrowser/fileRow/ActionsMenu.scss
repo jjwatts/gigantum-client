@@ -31,28 +31,6 @@
           }
       }
 
-      &--favorite-on {
-          background: url('~Images/icons/star__on.svg') no-repeat 50% 50%;
-          background-size: 20px;
-
-          &:hover {
-              //change color here
-              background: url('~Images/icons/star__on.svg') no-repeat 50% 50%;
-              background-size: 20px;
-          }
-      }
-
-      &--favorite-off {
-          background: url('~Images/icons/star__off.svg') no-repeat 50% 50%;
-          background-size: 20px;
-
-          &:hover {
-              //change color here
-              background: url('~Images/icons/star__off.svg') no-repeat 50% 50%;
-              background-size: 20px;
-          }
-      }
-
       &--menu {
           width: 50px;
 

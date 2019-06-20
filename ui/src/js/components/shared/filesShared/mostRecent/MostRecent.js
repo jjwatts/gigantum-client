@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 // store
 import store from 'JS/redux/store';
 // componenets
-import FileEmpty from 'Components/labbook/overview/FileEmpty';
 import MostRecentList from './MostRecentList';
 // assets
 import './MostRecent.scss';
@@ -115,10 +114,7 @@ export default class MostRecent extends Component {
         );
       }
       return (
-        <FileEmpty
-          section={state.fullPathName}
-          mainText="This Project has No Recent Files"
-        />
+        <div />
       );
     }
     return (<div>No Files Found</div>);

@@ -17,9 +17,6 @@ class DatasetFile(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
     # True indicates that path points to a directory
     is_dir = graphene.Boolean()
 
-    # True indicates that path points to a favorite
-    is_favorite = graphene.Boolean()
-
     # True indicates that the file has been downloaded and exists locally
     is_local = graphene.Boolean()
 
@@ -50,7 +47,6 @@ class DatasetFile(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
         self.is_dir = self._file_info['is_dir']
         self.modified_at = self._file_info['modified_at']
         self.size = f"{self._file_info['size']}"
-        self.is_favorite = self._file_info['is_favorite']
         self.is_local = self._file_info['is_local']
 
     @classmethod
@@ -87,12 +83,6 @@ class DatasetFile(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
         if self.size is None:
             self._load_file_info(info.context.dataset_loader)
         return self.size
-
-    def resolve_is_favorite(self, info):
-        """Resolve the is_favorite field"""
-        if self.is_favorite is None:
-            self._load_file_info(info.context.dataset_loader)
-        return self.is_favorite
 
     def resolve_is_local(self, info):
         """Resolve the is_local field"""

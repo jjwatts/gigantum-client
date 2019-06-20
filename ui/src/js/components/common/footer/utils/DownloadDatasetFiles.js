@@ -29,9 +29,7 @@ export default {
     const { response, failureCall, mutations } = callbackData;
     let reportedFailureMessage = response.data.jobStatus.failureMessage;
     let errorMessage = response.data.jobStatus.failureMessage;
-    const successKeys = JSON.parse(response.data.jobStatus.jobMetadata).success_keys;
-    const failureKeys = JSON.parse(response.data.jobStatus.jobMetadata).failure_keys;
-    const totalAmount = successKeys.length + failureKeys.length;
+    const failureDetail = JSON.parse(response.data.jobStatus.jobMetadata).failure_detail;
     const metaDataArr = JSON.parse(response.data.jobStatus.jobMetadata).dataset.split('|');
     const isLabbookSection = metaDataArr[3] === 'LINKED';
     if (!isLabbookSection) {
@@ -55,11 +53,9 @@ export default {
         },
       );
     }
-    errorMessage = `Failed to download ${failureKeys.length} of ${totalAmount} Files.`;
-    reportedFailureMessage = 'Failed to download the following Files:';
-    failureKeys.forEach((failedKey) => {
-      reportedFailureMessage = `${reportedFailureMessage}\n${failedKey}`;
-    });
+
+    reportedFailureMessage = failureDetail;
+    errorMessage = errorMessage.indexOf(':') ? errorMessage.split(':')[1] : errorMessage;
     return {
       errorMessage,
       reportedFailureMessage,
