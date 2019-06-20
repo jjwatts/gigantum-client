@@ -117,7 +117,7 @@ class GitWorkflow(ABC):
 
         return updates_cnt
 
-    def reset(self, username: str):
+    def reset(self, username: str) -> None:
         """ Perform a Git reset to undo all local changes"""
         bm = BranchManager(self.repository, username)
         if self.remote and bm.active_branch in bm.branches_remote:
@@ -127,10 +127,6 @@ class GitWorkflow(ABC):
                             cwd=self.repository.root_dir)
             call_subprocess(['git', 'clean', '-fd'], cwd=self.repository.root_dir)
             self.repository.git.clear_checkout_context()
-
-            # update dataset references on reset
-            if isinstance(self.repository, LabBook):
-                InventoryManager().update_linked_datasets(self.repository, username, init=True)
 
 
 class LabbookWorkflow(GitWorkflow):
@@ -153,21 +149,7 @@ class LabbookWorkflow(GitWorkflow):
             wf = cls(repo)
 
             # Check for linked datasets, and schedule auto-imports
-            d = Dispatcher()
-            datasets = inv_manager.get_linked_datasets(wf.labbook)
-            for ds in datasets:
-                kwargs = {
-                    'logged_in_username': username,
-                    'dataset_owner': ds.namespace,
-                    'dataset_name': ds.name,
-                    'remote_url': ds.remote,
-                }
-                metadata = {'dataset': f"{username}|{ds.namespace}|{ds.name}",
-                            'method': 'dataset_jobs.check_and_import_dataset'}
-
-                d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
-                                kwargs=kwargs,
-                                metadata=metadata)
+            gitworkflows_utils.process_linked_datasets(wf.labbook, username)
 
             return wf
         except Exception as e:
@@ -235,26 +217,12 @@ class LabbookWorkflow(GitWorkflow):
         Returns:
             None
         """
+        # Checkout the branch
         bm = BranchManager(self.labbook, username=username)
         bm.workon_branch(branch_name=branch_name)
 
-        # Check for linked datasets, and schedule auto-imports
-        d = Dispatcher()
-        im = InventoryManager(config_file=self.labbook.client_config.config_file)
-        datasets = im.get_linked_datasets(self.labbook)
-        for ds in datasets:
-            kwargs = {
-                'logged_in_username': username,
-                'dataset_owner': ds.namespace,
-                'dataset_name': ds.name,
-                'remote_url': ds.remote,
-            }
-            metadata = {'dataset': f"{username}|{ds.namespace}|{ds.name}",
-                        'method': 'dataset_jobs.check_and_import_dataset'}
-
-            d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
-                            kwargs=kwargs,
-                            metadata=metadata)
+        # Update linked datasets inside the Project, clean them out if needed, and schedule auto-imports
+        gitworkflows_utils.process_linked_datasets(self.labbook, username)
 
     def sync(self, username: str, remote: str = "origin", override: MergeOverride = MergeOverride.ABORT,
              feedback_callback: Callable = lambda _: None, pull_only: bool = False,
@@ -268,6 +236,8 @@ class LabbookWorkflow(GitWorkflow):
             override: In the event of conflict, select merge method (mine/theirs/abort)
             pull_only: If true, do not push back after doing a pull.
             feedback_callback: Used to give periodic feedback
+            access_token: User's current access token
+            id_token: User's current ID token
 
         Returns:
             Integer number of commits pulled down from remote.
@@ -275,26 +245,24 @@ class LabbookWorkflow(GitWorkflow):
         updates_cnt = super().sync(username, remote, override=override, feedback_callback=feedback_callback,
                                    pull_only=pull_only, access_token=access_token, id_token=id_token)
 
-        # Check for linked datasets, and schedule auto-imports
-        d = Dispatcher()
-        im = InventoryManager(config_file=self.labbook.client_config.config_file)
-
-        datasets = im.get_linked_datasets(self.labbook)
-        for ds in datasets:
-            kwargs = {
-                'logged_in_username': username,
-                'dataset_owner': ds.namespace,
-                'dataset_name': ds.name,
-                'remote_url': ds.remote,
-            }
-            metadata = {'dataset': f"{username}|{ds.namespace}|{ds.name}",
-                        'method': 'dataset_jobs.check_and_import_dataset'}
-
-            d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
-                            kwargs=kwargs,
-                            metadata=metadata)
+        # Update linked datasets inside the Project, clean them out if needed, and schedule auto-imports
+        gitworkflows_utils.process_linked_datasets(self.labbook, username)
 
         return updates_cnt
+
+    def reset(self, username: str) -> None:
+        """ Perform a Git reset to undo all local changes based on remote branch state
+
+        Args:
+            username: current logged in username
+
+        Returns:
+            None
+        """
+        super().reset(username)
+
+        # Update linked datasets inside the Project, clean them out if needed, and schedule auto-imports
+        gitworkflows_utils.process_linked_datasets(self.labbook, username)
 
 
 class DatasetWorkflow(GitWorkflow):
