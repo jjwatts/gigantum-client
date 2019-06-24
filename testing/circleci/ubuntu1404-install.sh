@@ -8,7 +8,7 @@ function install_python36 () {
     echo "Installing Python 3.6..."
     sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt-get update
     sudo apt-get -y install libssl-dev libxss1 libappindicator1 libindicator7 libappindicator3-1
-    sudo apt-get -y install python3.6 python3-pip
+    sudo apt-get -y install python3.6 python3.6-dev python3-pip
     echo "Finished install Python 3.6."
 }
 
