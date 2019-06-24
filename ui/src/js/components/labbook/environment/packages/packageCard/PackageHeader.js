@@ -9,7 +9,7 @@ import './PackageTable.scss';
 export default class PackageHeader extends Component {
   /**
   *  @param{}
-  *  removes singular package
+  *  removes all selected packages
   */
   _removePackages() {
     const { props } = this;
@@ -25,8 +25,37 @@ export default class PackageHeader extends Component {
     props.packageMutations.removePackages(data, callback);
   }
 
+  /**
+  *  @param {Array} updateablePackages
+  *  updates selected updateable packages
+  */
+  _updatePackages(updateablePackages) {
+    const { props } = this;
+    const duplicateArray = [];
+    const newPackageData = updateablePackages.map((pkg) => {
+      duplicateArray.push(pkg.id);
+      return {
+        ...pkg,
+        version: pkg.latestVersion,
+      };
+    });
+    const data = {
+      packages: newPackageData,
+      duplicates: duplicateArray,
+    };
+    const callback = () => {
+      props.buildCallback();
+    };
+
+    props.selectPackages(true);
+    props.setBuildingState(true);
+    props.packageMutations.addPackages(data, callback);
+  }
+
   render() {
     const { props } = this;
+    const packageValues = [...props.selectedPackages.values()];
+    const updateablePackages = packageValues.filter(pkg => pkg.latestVersion && (pkg.version !== pkg.latestVersion));
     const multiSelectButtonCSS = classNames({
       CheckboxMultiselect: true,
       CheckboxMultiselect__check: props.multiSelect === 'all',
@@ -50,21 +79,33 @@ export default class PackageHeader extends Component {
         {
           (props.selectedPackages.size !== 0)
           && (
-          <div className="PackageHeader__toolbar flex align-items--center">
+          <div className="PackageHeader__toolbar flex align-items--center justify--space-between">
             <div className="PackageHeader__toolbar-text">
               {`${props.selectedPackages.size} packages selected`}
             </div>
-            <button
-              type="button"
-            >
-              Update
-            </button>
-            <button
-              type="button"
-              onClick={() => this._removePackages()}
-            >
-              Delete
-            </button>
+            <div>
+              {
+                (updateablePackages.length !== 0)
+                && (
+                <button
+                  className="Btn align-self--end Btn__upArrow-white Btn--background-left Btn--action Btn--padding-left"
+                  type="button"
+                  disabled={props.isLocked}
+                  onClick={() => this._updatePackages(updateablePackages)}
+                >
+                  Update
+                </button>
+                )
+              }
+              <button
+                type="button"
+                className="Btn align-self--end Btn__delete-white Btn--background-left Btn--action Btn--padding-left"
+                onClick={() => this._removePackages()}
+                disabled={props.isLocked}
+              >
+                Delete
+              </button>
+            </div>
           </div>
           )
         }

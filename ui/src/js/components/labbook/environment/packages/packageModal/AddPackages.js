@@ -30,7 +30,8 @@ export default class AddPackages extends Component {
     const existingPackages = props.packages;
     const newPackages = state.packageQueue.slice();
     const existingPackagesObject = {};
-    const duplicates = [];
+    const duplicates = {};
+    const seperatedNewPackages = {};
     existingPackages.forEach((pkg) => {
       if (existingPackagesObject[pkg.manager]) {
         existingPackagesObject[pkg.manager][pkg.package] = {
@@ -44,23 +45,44 @@ export default class AddPackages extends Component {
         };
       }
     });
+
     newPackages.forEach((newPackage) => {
       if (existingPackagesObject[newPackage.manager] && existingPackagesObject[newPackage.manager][newPackage.package]) {
         duplicates.push(existingPackagesObject[newPackage.manager][newPackage.package].id);
+        if (duplicates[newPackage.manager]) {
+          duplicates[newPackage.manager].push(existingPackagesObject[newPackage.manager][newPackage.package].id);
+        } else {
+          duplicates[newPackage.manager] = [existingPackagesObject[newPackage.manager][newPackage.package].id];
+        }
+      }
+      if (seperatedNewPackages[newPackage.manager]) {
+        seperatedNewPackages[newPackage.manager].push(newPackage);
+      } else {
+        seperatedNewPackages[newPackage.manager] = [newPackage];
       }
     });
-    const data = {
-      packages: newPackages,
-      duplicates,
-    };
-    props.setBuildingState(true);
+
     const buildCb = (response, error, id) => {
       props.setBuildId(id);
     };
-    const callback = () => {
-      props.buildCallback(buildCb);
-    };
-    props.packageMutations.addPackages(data, callback);
+    const managers = Object.keys(seperatedNewPackages);
+    managers.forEach((manager, index) => {
+      const isLast = (managers.length - 1) === index;
+
+      const data = {
+        packages: seperatedNewPackages[manager],
+        duplicates: duplicates[manager] || [],
+      };
+      if (isLast) {
+        props.setBuildingState(true);
+      }
+      const callback = (response) => {
+        if (response && isLast) {
+          props.buildCallback(buildCb);
+        }
+      };
+      props.packageMutations.addPackages(data, callback);
+    });
   }
 
   /**
@@ -84,7 +106,7 @@ export default class AddPackages extends Component {
       const packages = evt.target.result.split('\n');
       packages.forEach((pkg) => {
         const splitPackage = pkg.split('==');
-        this._queuePackage({ manager: 'pip', package: splitPackage[0], version: splitPackage[1] })
+        this._queuePackage({ manager: 'pip', package: splitPackage[0], version: splitPackage[1] });
       });
     };
     reader.readAsText(file);
@@ -102,35 +124,47 @@ export default class AddPackages extends Component {
     const newPackageData = [packageData];
     const newPackageQueue = state.packageQueue.slice();
     const currentPosition = index !== undefined ? index : newPackageQueue.length;
-    if (index !== undefined) {
-      newPackageQueue[index] = Object.assign({}, newPackageData[0], { verified: false, error: false });
-    } else {
-      newPackageQueue.push(Object.assign({}, newPackageData[0], { verified: false }));
-    }
-    this.setState({ packageQueue: newPackageQueue });
-    PackageLookup.query(props.name, props.owner, newPackageData).then((response) => {
-      const newState = this.state;
-      const responsePackageQueue = newState.packageQueue.slice();
-      if (response.errors) {
-        responsePackageQueue[currentPosition].error = true;
-        responsePackageQueue[currentPosition].verified = true;
-        this.setState({ packageQueue: responsePackageQueue });
-      } else {
-        const {
-          version,
-          isValid,
-          latestVersion,
-          description,
-        } = response.data.labbook.checkPackages[0];
 
-        responsePackageQueue[currentPosition].latestVersion = latestVersion;
-        responsePackageQueue[currentPosition].version = version;
-        responsePackageQueue[currentPosition].description = description;
-        responsePackageQueue[currentPosition].verified = true;
-        responsePackageQueue[currentPosition].error = !isValid;
-        this.setState({ packageQueue: responsePackageQueue });
+    const currentPackages = newPackageQueue.concat(props.packages)
+    let packageExists = false;
+    currentPackages.forEach((pkg) => {
+      if ((pkg.package === packageData.package) && (pkg.manager === packageData.manager)) {
+        packageExists = true;
       }
     });
+
+    if (!packageExists || index !== undefined) {
+      if (index !== undefined) {
+        newPackageQueue[index] = Object.assign({}, newPackageData[0], { verified: false, error: false });
+      } else {
+        newPackageQueue.push(Object.assign({}, newPackageData[0], { verified: false }));
+      }
+      this.setState({ packageQueue: newPackageQueue });
+      PackageLookup.query(props.name, props.owner, newPackageData).then((response) => {
+        const newState = this.state;
+        const responsePackageQueue = newState.packageQueue.slice();
+        if (response.errors) {
+          responsePackageQueue[currentPosition].error = true;
+          responsePackageQueue[currentPosition].verified = true;
+          this.setState({ packageQueue: responsePackageQueue });
+        } else {
+          const {
+            version,
+            isValid,
+            latestVersion,
+            description,
+          } = response.data.labbook.checkPackages[0];
+          if (responsePackageQueue[currentPosition]) {
+            responsePackageQueue[currentPosition].latestVersion = latestVersion;
+            responsePackageQueue[currentPosition].version = version;
+            responsePackageQueue[currentPosition].description = description;
+            responsePackageQueue[currentPosition].verified = true;
+            responsePackageQueue[currentPosition].error = !isValid;
+            this.setState({ packageQueue: responsePackageQueue });
+          }
+        }
+      });
+    }
   }
 
   /**

@@ -74,6 +74,14 @@ button {
       color: $romanSilver;
       border: 1px solid $romanSilver;
     }
+    &--white {
+      color: $white;
+      border: 1px solid $white;
+      &:disabled{
+        color: $white;
+        border: 1px solid $white;
+      }
+    }
   }
   // flat button
   &--flat {
@@ -191,6 +199,10 @@ button {
     background-size: 18px !important;
   }
 
+  &--background-left {
+    background-position-x: 3px !important;
+  }
+
   &--no-underline {
     text-decoration: none;
   }
@@ -239,6 +251,10 @@ button {
     &:disabled{
       padding: 0px;
     }
+  }
+
+  &--padding-left{
+    padding-left: 25px;
   }
 
   &--noMargin{
@@ -366,6 +382,10 @@ button {
       background-size: 22px !important;
     }
  }
+  &__delete-white {
+    background: url(~Images/icons/trash-white.svg) no-repeat center center;
+    background-size: 16px;
+  }
 
   &__rename {
     background: url(~Images/icons/rename-azure.svg) no-repeat center center;
@@ -483,6 +503,11 @@ button {
     background-size: 24px !important;
 
   }
+ }
+
+ &__upArrow-white {
+  background: url(~Images/icons/update-white.svg) no-repeat center center;
+  background-size: 22px;
  }
 
  &__Favorite-off {
@@ -650,16 +675,16 @@ button {
 
   &__subtract {
     background: url(~Images/icons/form/checkbox/checkbox-minus.svg) no-repeat center center;
-    background-size: 20px !important;
+    background-size: 22px !important;
     &:focus {
       background: url(~Images/icons/form/checkbox/checkbox-minus.svg) no-repeat center center;
-      background-size: 20px !important;
+      background-size: 22px !important;
       border: 0px;
     }
 
     &:hover {
       background: url(~Images/icons/form/checkbox/checkbox-minus.svg) no-repeat center center;
-      background-size: 20px !important;
+      background-size: 22px !important;
       border: 0px;
     }
   }

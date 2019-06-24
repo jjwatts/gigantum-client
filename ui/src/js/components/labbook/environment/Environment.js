@@ -48,7 +48,12 @@ class Environment extends Component {
   */
   _buildCallback = (callback) => {
     const { labbookName, owner } = this.state;
-
+    let buildData = false;
+    if (callback) {
+      buildData = {
+        hideFooter: true,
+      };
+    }
     setBuildingState(true);
     if (store.getState().containerStatus.status === 'Running') {
       StopContainerMutation(
@@ -62,7 +67,7 @@ class Environment extends Component {
             BuildImageMutation(
               owner,
               labbookName,
-              false,
+              buildData,
               (response, error, id) => {
                 if (error) {
                   setErrorMessage(`${labbookName} failed to build`, error);
@@ -81,7 +86,7 @@ class Environment extends Component {
       BuildImageMutation(
         owner,
         labbookName,
-        false,
+        buildData,
         (response, error, id) => {
           if (error) {
             setErrorMessage(`${labbookName} failed to build`, error);

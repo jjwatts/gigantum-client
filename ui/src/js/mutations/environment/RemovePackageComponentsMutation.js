@@ -4,6 +4,8 @@ import {
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
 import RelayRuntime from 'relay-runtime';
+// redux store
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 let tempID = 0;
 const mutation = graphql`
@@ -67,7 +69,7 @@ export default function RemovePackageComponentsMutation(
       config,
       onCompleted: (response, error) => {
         if (error) {
-          console.log(error);
+          setErrorMessage('ERROR: Packages failed to delete', error);
         }
         callback(response, error);
       },

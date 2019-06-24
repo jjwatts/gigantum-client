@@ -1,1 +1,24 @@
 @import '~Styles/_imports.scss';
+
+.Requirements__dropped-file {
+  &--loading {
+    background: url('~Images/loaders/status-spinner.svg') no-repeat left 20px top 20px;
+  }
+}
+.Requirements__file-name {
+  &:before {
+    font-family: octicons;
+    font-size: 16px;
+    top: 1px;
+    content: "\f011";
+  }
+}
+
+.Requirements__rejectedPackages{
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.Requirements__rejected-package {
+  color: $crimson;
+}

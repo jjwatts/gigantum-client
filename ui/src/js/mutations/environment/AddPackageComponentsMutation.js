@@ -5,6 +5,8 @@ import {
 import environment from 'JS/createRelayEnvironment';
 import RelayRuntime from 'relay-runtime';
 import uuidv4 from 'uuid/v4';
+// redux store
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 let tempID = 0;
 const mutation = graphql`
@@ -108,6 +110,7 @@ export default function AddPackageComponentsMutation(
       onCompleted: (response, error) => {
         if (error) {
           console.log(error);
+          setErrorMessage('ERROR: Packages failed to delete', error);
         }
         callback(response, error);
       },
