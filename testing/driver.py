@@ -27,7 +27,7 @@ if __name__ == '__main__':
                            help='Port of GraphQL API (Default 10000)')
     argparser.add_argument('--width', default=1440, type=int,
                            help='Default width in px of the browser window')
-    argparser.add_argument('test_path', nargs='?', type=str, default="",
+    argparser.add_argument('test_path', nargs='+', type=str, default="",
                            help='Optional name of specific playbook')
     args = argparser.parse_args()
 
