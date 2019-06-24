@@ -3,8 +3,8 @@ import React, { Component } from 'react';
 import { boundMethod } from 'autobind-decorator';
 // components
 import Modal from 'Components/common/Modal';
+import BuildProgress from 'Components/common/BuildProgress';
 import AddPackages from './AddPackages';
-import InstallProgress from './InstallProgress';
 // assets
 // import './PackageBody.scss';
 
@@ -46,9 +46,12 @@ export default class PackageModal extends Component {
             )
           }
           return (
-            <InstallProgress
+            <BuildProgress
+              headerText="Installing Packages"
               toggleModal={props.togglePackageModal}
               buildId={state.buildId}
+              name={props.name}
+              owner={props.owner}
             />
           )
         }}

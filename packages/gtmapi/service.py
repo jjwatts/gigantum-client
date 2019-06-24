@@ -1,31 +1,24 @@
 #!/usr/bin/python3
+
 import shutil
 import os
 import base64
-import asyncio
-import threading
-
-from confhttpproxy import ProxyRouter
-from flask import Flask, jsonify, request, abort
 import flask
-from flask_cors import CORS, cross_origin
-import redis
 import blueprint
 import yaml
+from flask_cors import CORS
+from confhttpproxy import ProxyRouter
+from flask import Flask, jsonify
 
-
+import rest_routes
 from gtmcore.configuration import Configuration
 from gtmcore.logging import LMLogger
 from gtmcore.environment import RepositoryManager
 from gtmcore.auth.identity import AuthenticationError, get_identity_manager
 from gtmcore.labbook.lock import reset_all_locks
-from gtmcore.inventory.inventory import InventoryManager
-from lmsrvcore.auth.user import get_logged_in_author
-from lmsrvcore import service_telemetry
+
 
 logger = LMLogger.get_logger()
-
-# Create Flask app
 app = Flask("lmsrvlabbook")
 
 # Load configuration class into the flask application
@@ -54,8 +47,6 @@ if config.config["flask"]["allow_cors"]:
 
 # Set Debug mode
 app.config['DEBUG'] = config.config["flask"]["DEBUG"]
-
-# Register LabBook service
 app.register_blueprint(blueprint.complete_labbook_service)
 
 # Configure CHP
@@ -67,7 +58,10 @@ try:
     proxy_router = ProxyRouter.get_proxy(app.config["LABMGR_CONFIG"].config['proxy'])
     proxy_router.add("http://localhost:10001", "api")
     logger.info(f"Proxy routes ({type(proxy_router)}): {proxy_router.routes}")
+
+    app.register_blueprint(rest_routes.rest_routes, url_prefix=api_prefix)
 except Exception as e:
+    logger.error(e)
     logger.exception(e)
 
 
@@ -77,78 +71,6 @@ def handle_auth_error(ex):
     response = jsonify(ex.error)
     response.status_code = ex.status_code
     return response
-
-
-@app.route(f"{api_prefix}/sysinfo")
-@cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
-def sysinfo():
-    return jsonify(service_telemetry())
-
-
-# Set Unauth'd route for API health-check
-@app.route(f"{api_prefix}/ping/")
-@cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
-def ping():
-    """Unauthorized endpoint for validating the API is up"""
-    app_name, built_on, revision = config.config['build_info'].split(' :: ')
-    return jsonify({
-        "application": app_name,
-        "built_on": built_on,
-        "revision": revision
-    })
-
-
-@app.route(f"{api_prefix}/version/")
-@cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
-def version():
-    """Unauthorized endpoint for validating the API is up.
-
-    Note: /api/version endpoint added due to popup blockers starting to block /api/ping/
-
-    """
-    app_name, built_on, revision = config.config['build_info'].split(' :: ')
-    return jsonify({
-        "application": app_name ,
-        "built_on": built_on,
-        "revision": revision
-    })
-
-
-@app.route(f'{api_prefix}/savehook/<username>/<owner>/<labbook_name>')
-def savehook(username, owner, labbook_name):
-    try:
-        changed_file = request.args.get('file')
-        jupyter_token = request.args.get('jupyter_token')
-        logger.debug(f"Received save hook for {changed_file} in {username}/{owner}/{labbook_name}")
-
-        redis_conn = redis.Redis(db=1)
-        lb_jupyter_token_key = '-'.join(['gmlb', username, owner, labbook_name, 'jupyter-token'])
-        lb_active_key = f"{'|'.join([username, owner, labbook_name])}&is-busy*"
-
-        r = redis_conn.get(lb_jupyter_token_key.encode())
-        if r is None:
-            logger.error(f"Could not find jupyter token for {username}/{owner}/{labbook_name}")
-            abort(400)
-
-        if r.decode() != jupyter_token:
-            raise ValueError("Incoming jupyter token must be valid")
-
-        if len(redis_conn.keys(lb_active_key.encode())) > 0:
-            # A kernel in this project is still active. Don't save auto-commit because it can blow up the
-            # repository size depending on what the user is doing
-            logger.info(f"Skipping jupyter savehook for {username}/{owner}/{labbook_name} due to active kernel")
-            return 'success'
-
-        lb = InventoryManager().load_labbook(username, owner, labbook_name,
-                                             author=get_logged_in_author())
-        with lb.lock():
-            lb.sweep_uncommitted_changes()
-
-        logger.info(f"Jupyter save hook saved {changed_file} from {str(lb)}")
-        return 'success'
-    except Exception as err:
-        logger.error(err)
-        return abort(400)
 
 
 # TEMPORARY KLUDGE

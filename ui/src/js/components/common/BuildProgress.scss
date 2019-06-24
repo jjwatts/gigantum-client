@@ -1,0 +1,97 @@
+@import '~Styles/_imports.scss';
+
+.BuildProgress {
+  height: 100%;
+}
+
+.BuildProgress__body {
+  height: 351px;
+  border-top: 2px solid $grey-border;
+  border-bottom: 2px solid $grey-border;
+  text-align: center;
+}
+
+.BuildProgress__header{
+  text-align: center;
+}
+
+.BuildProgress__header-text{
+  display:inline-block;
+  &--complete {
+    padding-left: 30px;
+    background: url('~Images/icons/status-verified.svg') no-repeat left center;
+  }
+  &--failed {
+    padding-left: 30px;
+    background: url(~Images/icons/notifications/info-exclamation-red.svg) no-repeat left center;
+  }
+}
+
+.BuildProgress__close-text{
+  font-size: 24px;
+}
+
+.BuildProgress__text{
+  font-size: 18px;
+  &--complete {
+    padding-left: 30px;
+    background: url('~Images/icons/status-verified.svg') no-repeat left center;
+    color: $green;
+  }
+  &--failed {
+    padding-left: 30px;
+    background: url(~Images/icons/notifications/info-exclamation-red.svg) no-repeat left center;
+    color: $crimson;
+  }
+}
+
+.BuildProgress__buttons {
+  height: 75px;
+}
+
+.BuildProgress__progress {
+  width: 130px;
+  height: 130px;
+  line-height: 130px;
+  font-size: 32px;
+  background: url('~Images/loaders/status-spinner.svg') no-repeat center center;
+  background-size: 130px;
+  margin: 25px 0;
+  &--failed {
+    border: 10px solid $crimson;
+    border-radius: 50%;
+    line-height: 115px;
+    background: transparent;
+  }
+  &--completed {
+    border: 10px solid $green;
+    border-radius: 50%;
+    line-height: 115px;
+    background: transparent;
+  }
+}
+
+.BuildProgress__output{
+  background: $jet;
+  color: $white;
+  text-align: left;
+  white-space: pre-line;
+  height: 351px;
+  overflow: auto;
+  padding: 20px;
+  font-family: monospace;
+
+  &::-webkit-scrollbar {
+      width: 16px;
+      background-color: $mineShaft;
+  }
+
+  &::-webkit-scrollbar-thumb {
+      background-color: $mineShaft;
+      background-color: rgba(255,255,255,0.32);
+  }
+  transform: scale(1,-1);
+  * {
+    transform: scale(1,-1);
+  }
+}

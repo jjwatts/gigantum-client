@@ -169,6 +169,7 @@ class Footer extends Component {
           <FooterNotificationList
             showMessageBody={this._showMessageBody}
             parentState={this.props}
+            toggleMessageList={this._toggleMessageList}
           />
 
           <FooterUploadBar

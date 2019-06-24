@@ -117,6 +117,7 @@ const FooterUtils = {
                   error: false,
                   messageBody: [{ message: html }],
                   messageListOpen: !hideFooter,
+                  buildProgress: type === 'buildImage',
                 };
                 setMultiInfoMessage(messageData);
               }
@@ -130,6 +131,7 @@ const FooterUtils = {
                 isLast: true,
                 error: null,
                 messageBody: [{ message: html }],
+                buildProgress: type === 'buildImage',
               };
 
               setMultiInfoMessage(messageData);
@@ -169,6 +171,7 @@ const FooterUtils = {
                 isLast: true,
                 error: true,
                 messageBody: [{ message: errorHTML }],
+                buildProgress: type === 'buildImage',
               };
               setMultiInfoMessage(messageData);
             } else {

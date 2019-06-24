@@ -1,9 +1,51 @@
 import time
-from typing import Tuple
+import glob
+from typing import Any, Optional, Tuple, Dict
 
+from gtmcore.logging import LMLogger
+from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.configuration import Configuration
 from gtmcore.configuration.utils import call_subprocess
 
 DISK_WARNING_THRESHOLD_GB = 2.5
+logger = LMLogger.get_logger()
+
+
+def check_projects(config: Configuration, username: str) -> Dict[str, Any]:
+    """ Crawl through all projects to check for errors on loading or accessing imporant fields.
+    Warning: This method may take a while.
+
+    Args:
+        config: Configuration to include root gigantum directory
+        username: Active username - if none provided crawl for all users.
+
+    Returns:
+        Dictionary mapping a project path to errors
+
+    Schema:
+    {
+        'errors': {
+            'username/owner/labbooks/project-name': 'This is the error msg'
+        },
+        '_collectionTimeSec': 2.0
+    }
+    """
+    gigantum_root = config.app_workdir
+    project_paths = glob.glob(f'{gigantum_root}/{username}/*/labbooks/*')
+    inventory = InventoryManager(config.config_file)
+    t0 = time.time()
+    errors: Dict[str, Any] = {'errors': {}}
+    for project_path in project_paths:
+        try:
+            # Try to load the labbook, and it's important fields.
+            labbook = inventory.load_labbook_from_directory(project_path)
+            _ = labbook.creation_date, labbook.modified_on, labbook.data
+        except Exception as e:
+            logger.error(e)
+            errors['errors'][project_path.replace(gigantum_root, '')] = str(e)
+    tfin = time.time()
+    errors['_collectionTimeSec'] = float(f'{tfin - t0:.2f}')
+    return errors
 
 
 def service_telemetry():

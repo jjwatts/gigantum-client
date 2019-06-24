@@ -7,9 +7,7 @@ from pkg_resources import resource_filename
 import pathlib
 import subprocess
 import glob
-from typing import NamedTuple
-
-from typing import Optional, List, Tuple, Dict
+from typing import Any, NamedTuple, Optional, Callable, List, Tuple, Dict
 
 from gtmcore.exceptions import GigantumException
 from gtmcore.labbook.schemas import CURRENT_SCHEMA as LABBOOK_CURRENT_SCHEMA
@@ -261,22 +259,31 @@ class InventoryManager(object):
         Returns:
             Sorted list of LabBook objects
         """
+        if sort_mode == "name":
+            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.name)
+            sorted_list = natsorted(local_labbooks, key=lambda tup: tup[1])
+        elif sort_mode == 'modified_on':
+            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.modified_on)
+            sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
+        elif sort_mode == 'created_on':
+            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.creation_date)
+            sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
+        else:
+            raise InventoryException(f"Invalid sort mode {sort_mode}")
+
+        return [lb for (lb, key) in sorted_list]
+
+    def _safe_load(self, username, key_f: Callable) -> List[Tuple[LabBook, Any]]:
+        """Helper method to prevent loading corrupt LabBooks into the list of local labbooks."""
         local_labbooks = []
         for username, owner, lbname in self.list_repository_ids(username, 'labbook'):
             try:
                 labbook = self.load_labbook(username, owner, lbname)
-                local_labbooks.append(labbook)
+                key = key_f(labbook)
+                local_labbooks.append((labbook, key))
             except Exception as e:
                 logger.error(e)
-
-        if sort_mode == "name":
-            return natsorted(local_labbooks, key=lambda lb: lb.name)
-        elif sort_mode == 'modified_on':
-            return sorted(local_labbooks, key=lambda lb: lb.modified_on)
-        elif sort_mode == 'created_on':
-            return sorted(local_labbooks, key=lambda lb: lb.creation_date)
-        else:
-            raise InventoryException(f"Invalid sort mode {sort_mode}")
+        return local_labbooks
 
     def create_labbook_disabled_lfs(self, username: str, owner: str, labbook_name: str,
                                     description: Optional[str] = None,
