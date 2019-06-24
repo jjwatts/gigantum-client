@@ -11,7 +11,7 @@ DISK_WARNING_THRESHOLD_GB = 2.5
 logger = LMLogger.get_logger()
 
 
-def check_projects(config: Configuration, username: str = '*') -> Dict[str, Any]:
+def check_projects(config: Configuration, username: str) -> Dict[str, Any]:
     """ Crawl through all projects to check for errors on loading or accessing imporant fields.
     Warning: This method may take a while.
 

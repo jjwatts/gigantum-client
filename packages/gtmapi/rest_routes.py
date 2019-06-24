@@ -22,7 +22,18 @@ def sysinfo():
 @rest_routes.route(f"/project-errors")
 @cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
 def check_projects():
-    return jsonify(telemetry.check_projects(Configuration()))
+    """Check a user's set of projects to find any that may be corrupted, and return
+    it as a JSON object with the schema specified in the `check_projects` method.
+
+    Note: We only use username loaded from the request headers for security reasons --
+    i.e., we don't want to invite someone to crawl anyone else's projects. """
+
+    try:
+        username = get_logged_in_username()
+        return jsonify(telemetry.check_projects(Configuration(), username))
+    except Exception as e:
+        logger.error(e)
+        return jsonify({'error': 'Cannot load username from request.'})
 
 
 # Set Unauth'd route for API health-check
