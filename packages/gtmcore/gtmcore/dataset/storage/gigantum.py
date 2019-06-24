@@ -82,23 +82,28 @@ class PresignedS3Upload(object):
                 raise IOError(f"Failed to get pre-signed URL for PUT at {self.object_details.dataset_path}:{obj_id}."
                               f" Status: {response.status}. Response: {body}")
 
-    async def _file_loader(self, filename: str):
+    async def _file_loader(self, filename: str, progress_update_fn: Callable):
         """Method to provide non-blocking chunked reads of files, useful if large.
 
         Args:
             filename: absolute path to the file to upload
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                uploaded in since last called
         """
         async with aiofiles.open(filename, 'rb') as f:
             chunk = await f.read(self.upload_chunk_size)
             while chunk:
+                progress_update_fn(completed_bytes=len(chunk))
                 yield chunk
                 chunk = await f.read(self.upload_chunk_size)
 
-    async def put_object(self, session: aiohttp.ClientSession) -> None:
+    async def put_object(self, session: aiohttp.ClientSession, progress_update_fn: Callable) -> None:
         """Method to put the object in S3 after the pre-signed URL has been obtained
 
         Args:
             session: The current aiohttp session
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                uploaded in since last called
 
         Returns:
             None
@@ -110,7 +115,7 @@ class PresignedS3Upload(object):
         _, object_id = self.object_details.object_path.rsplit("/", 1)
         temp_compressed_path = os.path.join(tempfile.gettempdir(), object_id)
 
-        # gzip object before upload
+        # compress object before upload
         try:
             with open(self.object_details.object_path, "rb") as src_file:
                 with open(temp_compressed_path, "wb") as compressed_file:
@@ -120,13 +125,13 @@ class PresignedS3Upload(object):
 
             # Stream the file up to S3
             async with session.put(self.presigned_s3_url, headers=headers,
-                                   data=self._file_loader(filename=temp_compressed_path)) as response:
+                                   data=self._file_loader(filename=temp_compressed_path,
+                                                          progress_update_fn=progress_update_fn)) as response:
                 if response.status != 200:
                     # An error occurred
                     body = await response.text()
                     raise IOError(f"Failed to push {self.object_details.dataset_path} to storage backend."
                                   f" Status: {response.status}. Response: {body}")
-
         finally:
             try:
                 os.remove(temp_compressed_path)
@@ -178,11 +183,13 @@ class PresignedS3Download(object):
                 raise IOError(f"Failed to get pre-signed URL for GET at {self.object_details.dataset_path}:{obj_id}."
                               f" Status: {response.status}. Response: {body}")
 
-    async def get_object(self, session: aiohttp.ClientSession) -> None:
+    async def get_object(self, session: aiohttp.ClientSession, progress_update_fn: Callable) -> None:
         """Method to get the object from S3 after the pre-signed URL has been obtained
 
         Args:
             session: The current aiohttp session
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                downloaded in since last called
 
         Returns:
             None
@@ -202,10 +209,13 @@ class PresignedS3Download(object):
                         if not chunk:
                             fd.write(decompressor.flush())
                             break
-                        await fd.write(decompressor.decompress(chunk))
+
+                        decompressed_chunk = decompressor.decompress(chunk)
+                        await fd.write(decompressed_chunk)
+                        progress_update_fn(completed_bytes=len(decompressed_chunk))
         except Exception as err:
             logger.exception(err)
-            raise IOError(f"Failed to get {self.object_details.dataset_path} to storage backend. {err}")
+            raise IOError(f"Failed to get {self.object_details.dataset_path} from storage backend. {err}")
 
 
 class GigantumObjectStore(ManagedStorageBackend):
@@ -266,7 +276,7 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         # No additional config required beyond defaults
         return list()
 
-    def confirm_configuration(self, dataset, status_update_fn: Callable) -> Optional[str]:
+    def confirm_configuration(self, dataset) -> Optional[str]:
         """Method to verify a configuration and optionally allow the user to confirm before proceeding
 
         Should return the desired confirmation message if there is one. If no confirmation is required/possible,
@@ -308,13 +318,12 @@ to Gigantum Cloud will count towards your storage quota and include all versions
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'}
 
-    def prepare_push(self, dataset, objects: List[PushObject], status_update_fn: Callable) -> None:
+    def prepare_push(self, dataset, objects: List[PushObject]) -> None:
         """Gigantum Object Service only requires that the user's tokens have been set
 
         Args:
             dataset: The current dataset instance
             objects: A list of PushObjects to be pushed
-            status_update_fn: A function to update status during pushing
 
         Returns:
             None
@@ -328,18 +337,15 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         if 'gigantum_id_token' not in self.configuration.keys():
             raise ValueError("User must have valid session to push objects to Gigantum Cloud")
 
-        status_update_fn(f"Ready to push objects to {dataset.namespace}/{dataset.name}")
+    def finalize_push(self, dataset) -> None:
+        pass
 
-    def finalize_push(self, dataset, status_update_fn: Callable) -> None:
-        status_update_fn(f"Done pushing objects to {dataset.namespace}/{dataset.name}")
-
-    def prepare_pull(self, dataset, objects: List[PullObject], status_update_fn: Callable) -> None:
+    def prepare_pull(self, dataset, objects: List[PullObject]) -> None:
         """Gigantum Object Service only requires that the user's tokens have been set
 
         Args:
             dataset: The current dataset instance
             objects: A list of PushObjects to be pulled
-            status_update_fn: A function to update status during pushing
 
         Returns:
             None
@@ -353,19 +359,18 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         if 'gigantum_id_token' not in self.configuration.keys():
             raise ValueError("User must have valid session to push objects to Gigantum Cloud")
 
-        status_update_fn(f"Ready to pull objects from {dataset.namespace}/{dataset.name}")
-
-    def finalize_pull(self, dataset, status_update_fn: Callable) -> None:
-        status_update_fn(f"Done pulling objects from {dataset.namespace}/{dataset.name}")
+    def finalize_pull(self, dataset) -> None:
+        pass
 
     async def _push_object_consumer(self, queue: asyncio.LifoQueue, session: aiohttp.ClientSession,
-                                    status_update_fn: Callable) -> None:
+                                    progress_update_fn: Callable) -> None:
         """Async Queue consumer worker for pushing objects to the object service/s3
 
         Args:
             queue: The current work queue
             session: The current aiohttp session
-            status_update_fn: the update function for providing feedback
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                uploaded in since last called
 
         Returns:
             None
@@ -377,18 +382,16 @@ to Gigantum Cloud will count towards your storage quota and include all versions
                 if presigned_request.skip_object is False:
                     if not presigned_request.is_presigned:
                         # Fetch the signed URL
-                        status_update_fn(f'Preparing upload for {presigned_request.object_details.dataset_path}')
                         await presigned_request.get_presigned_s3_url(session)
                         queue.put_nowait(presigned_request)
                     else:
                         # Process S3 Upload
-                        status_update_fn(f'Uploading {presigned_request.object_details.dataset_path}')
-                        await presigned_request.put_object(session)
+                        await presigned_request.put_object(session, progress_update_fn)
                         self.successful_requests.append(presigned_request)
                 else:
                     # Object skipped because it already exists in the backend (de-duplicating)
-                    status_update_fn(f'{presigned_request.object_details.dataset_path} already exists.'
-                                     f' Skipping upload to avoid duplicated storage.')
+                    logger.info(f"Skipping duplicate download {presigned_request.object_details.dataset_path}")
+                    progress_update_fn(os.path.getsize(presigned_request.object_details.object_path))
                     self.successful_requests.append(presigned_request)
 
             except Exception as err:
@@ -421,15 +424,16 @@ to Gigantum Cloud will count towards your storage quota and include all versions
             await queue.put(presigned_request)
 
     async def _run_push_pipeline(self, object_service_root: str, object_service_headers: dict,
-                                 objects: List[PushObject], status_update_fn: Callable,
-                                 upload_chunk_size: int = 4194304, num_workers: int = 4):
+                                 objects: List[PushObject], progress_update_fn: Callable,
+                                 upload_chunk_size: int = 4194304, num_workers: int = 4) -> None:
         """Method to run the async upload pipeline
 
         Args:
             object_service_root: The root URL to use for all objects, including the namespace and dataset name
             object_service_headers: The headers to use when requesting signed urls, including auth info
             objects: A list of PushObjects to push
-            status_update_fn: the update function for providing feedback
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                uploaded in since last called
             upload_chunk_size: Size in bytes for streaming IO chunks
             num_workers: the number of consumer workers to start
 
@@ -444,7 +448,7 @@ to Gigantum Cloud will count towards your storage quota and include all versions
             # Start workers
             workers = []
             for i in range(num_workers):
-                task = asyncio.ensure_future(self._push_object_consumer(queue, session, status_update_fn))
+                task = asyncio.ensure_future(self._push_object_consumer(queue, session, progress_update_fn))
                 workers.append(task)
 
             # Populate the work queue
@@ -461,13 +465,15 @@ to Gigantum Cloud will count towards your storage quota and include all versions
             for worker in workers:
                 worker.cancel()
 
-    def push_objects(self, dataset: Dataset, objects: List[PushObject], status_update_fn: Callable) -> PushResult:
+    def push_objects(self, dataset: Dataset, objects: List[PushObject],
+                     progress_update_fn: Callable) -> PushResult:
         """High-level method to push objects to the object service/s3
 
         Args:
             dataset: The current dataset
             objects: A list of PushObjects the enumerate objects to push
-            status_update_fn: A callback to update status and provide feedback to the user
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                uploaded in since last called
 
         Returns:
             PushResult
@@ -476,7 +482,6 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         self.successful_requests = list()
         self.failed_requests = list()
         message = "Successfully synced all objects"
-        status_update_fn(f"Uploading {len(objects)} objects to Gigantum Cloud")
 
         backend_config = dataset.client_config.config['datasets']['backends']['gigantum_object_v1']
         upload_chunk_size = backend_config['upload_chunk_size']
@@ -486,7 +491,7 @@ to Gigantum Cloud will count towards your storage quota and include all versions
 
         loop = get_event_loop()
         loop.run_until_complete(self._run_push_pipeline(object_service_root, self._object_service_headers(), objects,
-                                                        status_update_fn=status_update_fn,
+                                                        progress_update_fn=progress_update_fn,
                                                         upload_chunk_size=upload_chunk_size,
                                                         num_workers=num_workers))
 
@@ -496,20 +501,20 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         for f in self.failed_requests:
             # An exception was raised during task processing
             logger.error(f"Failed to push {f.object_details.dataset_path}:{f.object_details.object_path}")
-            status_update_fn(f"Failed to upload object {f.object_details.dataset_path}.")
             message = "Some objects failed to upload and will be retried on the next sync operation. Check results."
             failures.append(f.object_details)
 
         return PushResult(success=successes, failure=failures, message=message)
 
     async def _pull_object_consumer(self, queue: asyncio.LifoQueue, session: aiohttp.ClientSession,
-                                    status_update_fn: Callable) -> None:
+                                    progress_update_fn: Callable) -> None:
         """Async Queue consumer worker for downloading objects from the object service/s3
 
         Args:
             queue: The current work queue
             session: The current aiohttp session
-            status_update_fn: the update function for providing feedback
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                downloaded in since last called
 
         Returns:
             None
@@ -520,13 +525,11 @@ to Gigantum Cloud will count towards your storage quota and include all versions
             try:
                 if not presigned_request.is_presigned:
                     # Fetch the signed URL
-                    status_update_fn(f'Preparing download for {presigned_request.object_details.dataset_path}')
                     await presigned_request.get_presigned_s3_url(session)
                     queue.put_nowait(presigned_request)
                 else:
                     # Process S3 Download
-                    status_update_fn(f'Downloading {presigned_request.object_details.dataset_path}')
-                    await presigned_request.get_object(session)
+                    await presigned_request.get_object(session, progress_update_fn)
                     self.successful_requests.append(presigned_request)
 
             except Exception as err:
@@ -564,15 +567,16 @@ to Gigantum Cloud will count towards your storage quota and include all versions
             await queue.put(presigned_request)
 
     async def _run_pull_pipeline(self, object_service_root: str, object_service_headers: dict,
-                                 objects: List[PullObject], status_update_fn: Callable,
-                                 download_chunk_size: int = 4194304, num_workers: int = 4):
+                                 objects: List[PullObject], progress_update_fn: Callable,
+                                 download_chunk_size: int = 4194304, num_workers: int = 4) -> None:
         """Method to run the async download pipeline
 
         Args:
             object_service_root: The root URL to use for all objects, including the namespace and dataset name
             object_service_headers: The headers to use when requesting signed urls, including auth info
             objects: A list of PushObjects to push
-            status_update_fn: the update function for providing feedback
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                downloaded in since last called
             download_chunk_size: Size in bytes for streaming IO chunks
             num_workers: the number of consumer workers to start
 
@@ -586,7 +590,7 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         async with aiohttp.ClientSession() as session:
             workers = []
             for i in range(num_workers):
-                task = asyncio.ensure_future(self._pull_object_consumer(queue, session, status_update_fn))
+                task = asyncio.ensure_future(self._pull_object_consumer(queue, session, progress_update_fn))
                 workers.append(task)
 
             # Populate the work queue
@@ -603,14 +607,15 @@ to Gigantum Cloud will count towards your storage quota and include all versions
             for worker in workers:
                 worker.cancel()
 
-    def pull_objects(self, dataset: Dataset, objects: List[PullObject], status_update_fn: Callable) -> PullResult:
+    def pull_objects(self, dataset: Dataset, objects: List[PullObject],
+                     progress_update_fn: Callable) -> PullResult:
         """High-level method to pull objects from the object service/s3
 
         Args:
             dataset: The current dataset
             objects: A list of PullObjects the enumerate objects to push
-            status_update_fn: A callback to update status and provide feedback to the user
-
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                downloaded in since last called
         Returns:
             PushResult
         """
@@ -618,7 +623,6 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         self.successful_requests = list()
         self.failed_requests = list()
         message = "Successfully synced all objects"
-        status_update_fn(f"Downloading {len(objects)} objects from Gigantum Cloud")
 
         backend_config = dataset.client_config.config['datasets']['backends']['gigantum_object_v1']
         download_chunk_size = backend_config['download_chunk_size']
@@ -628,7 +632,7 @@ to Gigantum Cloud will count towards your storage quota and include all versions
 
         loop = get_event_loop()
         loop.run_until_complete(self._run_pull_pipeline(object_service_root, self._object_service_headers(), objects,
-                                                        status_update_fn=status_update_fn,
+                                                        progress_update_fn=progress_update_fn,
                                                         download_chunk_size=download_chunk_size,
                                                         num_workers=num_workers))
 
@@ -638,7 +642,6 @@ to Gigantum Cloud will count towards your storage quota and include all versions
         for f in self.failed_requests:
             # An exception was raised during task processing
             logger.error(f"Failed to pull {f.object_details.dataset_path}:{f.object_details.object_path}")
-            status_update_fn(f"Failed to download object {f.object_details.dataset_path}.")
             message = "Some objects failed to download and will be retried on the next sync operation. Check results."
             failures.append(f.object_details)
 

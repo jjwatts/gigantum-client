@@ -777,7 +777,7 @@ class FileBrowser extends Component {
             {
               !readOnly
               && (
-                <div>
+                <div className="flex">
                   <label
                     htmlFor="browser_upload"
                     className="FileBrowser__upload-label"

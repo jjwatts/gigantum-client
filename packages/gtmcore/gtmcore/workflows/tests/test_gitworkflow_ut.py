@@ -1,3 +1,4 @@
+from typing import Optional
 import pytest
 import mock
 import tempfile
@@ -6,7 +7,9 @@ import subprocess
 import os
 from pkg_resources import resource_filename
 import time
+import glob
 from mock import patch
+from collections import namedtuple
 
 from gtmcore.configuration.utils import call_subprocess
 from gtmcore.inventory.inventory import InventoryManager, InventoryException
@@ -17,10 +20,12 @@ from gtmcore.inventory.branching import BranchManager, MergeConflict
 
 from gtmcore.dispatcher import Dispatcher
 import gtmcore.dispatcher.dataset_jobs
+from gtmcore.dataset.manifest import Manifest
+from gtmcore.fixtures.datasets import helper_append_file
+from gtmcore.dataset.io.manager import IOManager
 
 
 class TestGitWorkflowsMethods(object):
-
     @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
     def test_publish__simple(self, mock_labbook_lfs_disabled):
         """Test a simple publish and ensuring master is active branch. """
@@ -605,3 +610,72 @@ class TestGitWorkflowsMethods(object):
             wf.labbook.git.checkout('gm.workspace')
             assert wf.should_migrate() is False
 
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
+    def test_publish__dataset(self, mock_config_file):
+        def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                            percent_complete: Optional[float] = None):
+            """Method to update the job's metadata and provide feedback to the UI"""
+            assert has_failures is None or has_failures is False
+            assert failure_detail is None
+
+        def dispatch_query_mock(self, job_key):
+            JobStatus = namedtuple("JobStatus", ['status', 'meta'])
+            return JobStatus(status='finished', meta={'completed_bytes': '500'})
+
+        def dispatch_mock(self, method_reference, kwargs, metadata, persist):
+                return "afakejobkey"
+
+        username = 'test'
+        im = InventoryManager(mock_config_file[0])
+        ds = im.create_dataset(username, username, 'dataset-1', 'gigantum_object_v1')
+        m = Manifest(ds, username)
+        wf = DatasetWorkflow(ds)
+
+        # Put a file into the dataset that needs to be pushed
+        helper_append_file(m.cache_mgr.cache_root, m.dataset_revision, "test1.txt", "asdfadfsdf")
+        m.sweep_all_changes()
+
+        iom = IOManager(ds, m)
+        assert len(glob.glob(f'{iom.push_dir}/*')) == 1
+
+        with patch.object(Dispatcher, 'dispatch_task', dispatch_mock):
+            with patch.object(Dispatcher, 'query_task', dispatch_query_mock):
+                wf.publish(username=username, feedback_callback=update_feedback)
+                assert os.path.exists(wf.remote)
+                assert len(glob.glob(f'{iom.push_dir}/*')) == 0
+
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
+    def test_sync__dataset(self, mock_config_file):
+        def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                            percent_complete: Optional[float] = None):
+            """Method to update the job's metadata and provide feedback to the UI"""
+            assert has_failures is None or has_failures is False
+            assert failure_detail is None
+
+        def dispatch_query_mock(self, job_key):
+            JobStatus = namedtuple("JobStatus", ['status', 'meta'])
+            return JobStatus(status='finished', meta={'completed_bytes': '100'})
+
+        def dispatch_mock(self, method_reference, kwargs, metadata, persist):
+                return "afakejobkey"
+
+        username = 'test'
+        im = InventoryManager(mock_config_file[0])
+        ds = im.create_dataset(username, username, 'dataset-1', 'gigantum_object_v1')
+        m = Manifest(ds, username)
+        wf = DatasetWorkflow(ds)
+
+        iom = IOManager(ds, m)
+        assert len(glob.glob(f'{iom.push_dir}/*')) == 0
+        wf.publish(username=username, feedback_callback=update_feedback)
+
+        # Put a file into the dataset that needs to be pushed
+        helper_append_file(m.cache_mgr.cache_root, m.dataset_revision, "test1.txt", "asdfadfsdf")
+        m.sweep_all_changes()
+
+        assert len(glob.glob(f'{iom.push_dir}/*')) == 1
+        with patch.object(Dispatcher, 'dispatch_task', dispatch_mock):
+            with patch.object(Dispatcher, 'query_task', dispatch_query_mock):
+                wf.sync(username=username, feedback_callback=update_feedback)
+                assert os.path.exists(wf.remote)
+                assert len(glob.glob(f'{iom.push_dir}/*')) == 0

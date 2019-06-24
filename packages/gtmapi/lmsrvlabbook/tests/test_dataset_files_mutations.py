@@ -23,8 +23,7 @@ class JobResponseMock(object):
 
 class TestDatasetFilesMutations(object):
     def test_download_dataset_files(self, fixture_working_dir, snapshot):
-
-        def dispatcher_mock(self, function_ref, kwargs, metadata):
+        def dispatcher_mock(self, function_ref, kwargs, metadata, persist):
             assert kwargs['logged_in_username'] == 'default'
             assert kwargs['access_token'] == 'asdf'
             assert kwargs['id_token'] == '1234'
@@ -34,6 +33,7 @@ class TestDatasetFilesMutations(object):
             assert kwargs['labbook_name'] is None
             assert kwargs['all_keys'] is None
             assert kwargs['keys'] == ["test1.txt"]
+            assert persist is True
 
             assert metadata['dataset'] == 'default|default|dataset100'
             assert metadata['labbook'] is None
@@ -63,7 +63,7 @@ class TestDatasetFilesMutations(object):
 
     def test_download_dataset_files_linked(self, fixture_working_dir, snapshot):
 
-        def dispatcher_mock(self, function_ref, kwargs, metadata):
+        def dispatcher_mock(self, function_ref, kwargs, metadata, persist):
             assert kwargs['logged_in_username'] == 'default'
             assert kwargs['access_token'] == 'asdf'
             assert kwargs['id_token'] == '1234'
@@ -73,6 +73,7 @@ class TestDatasetFilesMutations(object):
             assert kwargs['labbook_name'] == 'test-lb'
             assert kwargs['all_keys'] is None
             assert kwargs['keys'] == ["test1.txt"]
+            assert persist is True
 
             assert metadata['dataset'] == 'default|default|test-lb|LINKED|default|default|dataset100'
             assert metadata['labbook'] == 'default|default|test-lb'

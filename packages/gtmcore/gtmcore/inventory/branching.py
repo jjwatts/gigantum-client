@@ -116,6 +116,12 @@ class BranchManager(object):
             logger.info(f"Creating rollback branch from revision {revision} in {str(self.repository)}")
             r = subprocess.check_output(f'git checkout {revision}', cwd=self.repository.root_dir, shell=True)
             logger.info(r)
+            # If you are creating a branch via rollback, this is the only place to you cleanup linked datasets that have
+            # been removed during the rollback process due to the repo being detached and another checkout occurring
+            if isinstance(self.repository, LabBook):
+                if not self.username:
+                    raise ValueError("Username is required when creating a new branch at a specific revision")
+                InventoryManager().update_linked_datasets(self.repository, self.username)
         self.repository.checkout_branch(branch_name=title, new=True)
         logger.info(f'Activated new branch {self.active_branch} in {str(self.repository)}')
 

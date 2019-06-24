@@ -1,8 +1,12 @@
 import time
 import pprint
+import pytest
 from gtmcore.dispatcher import Dispatcher, worker, jobs
 
+from gtmcore.dispatcher.tests import BG_SKIP_MSG, BG_SKIP_TEST
 
+
+@pytest.mark.skipif(BG_SKIP_TEST, reason=BG_SKIP_MSG)
 class TestWorkerService:
     def test_worker_service_already_initialized(self):
         ws = worker.WorkerService()

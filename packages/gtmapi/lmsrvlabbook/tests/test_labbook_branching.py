@@ -174,7 +174,6 @@ class TestWorkflowsBranching(object):
         assert branches[2]['branchName'] == 'tester2'
         assert branches[2]['isMergeable'] is False
 
-
     def test_create_feature_branch_bad_name_fail(self, mock_create_labbooks):
         lb, client = mock_create_labbooks[0], mock_create_labbooks[1]
         bm = BranchManager(lb, username=UT_USERNAME)
@@ -600,3 +599,49 @@ class TestWorkflowsBranching(object):
         assert r['data']['mergeFromBranch']['labbook']['activeBranchName'] == 'master'
         assert not os.path.exists(os.path.join(lb.root_dir, 'code', 's1.txt'))
 
+    def test_create_rollback_branch_remove_linked_dataset(self, mock_create_labbooks):
+        """ test creating a rollback branch that removes a linked dataset"""
+        lb, client = mock_create_labbooks[0], mock_create_labbooks[1]
+
+        im = InventoryManager(config_file=lb.client_config.config_file)
+        ds = im.create_dataset(UT_USERNAME, UT_USERNAME, 'test-ds', storage_type='gigantum_object_v1')
+
+        rollback_to = lb.git.commit_hash
+
+        # Link dataset to project
+        im.link_dataset_to_labbook(f"{ds.root_dir}/.git", UT_USERNAME, ds.name, lb)
+        dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', UT_USERNAME, 'test-ds')
+        assert os.path.exists(dataset_dir) is True
+
+        q = f"""
+        mutation makeFeatureBranch {{
+            createExperimentalBranch(input: {{
+                owner: "{UT_USERNAME}",
+                labbookName: "{UT_LBNAME}",
+                branchName: "rollback-branch",
+                revision: "{rollback_to}",
+                description: "testing rollback",
+            }}) {{
+                labbook{{
+                    name
+                    activeBranchName
+                    description
+                    branches {{
+                        branchName
+                    }}
+                    linkedDatasets{{
+                        name
+                    }}
+                }}
+            }}
+        }}
+        """
+        r = client.execute(q)
+        assert 'errors' not in r
+        assert r['data']['createExperimentalBranch']['labbook']['activeBranchName'] == 'rollback-branch'
+        assert r['data']['createExperimentalBranch']['labbook']['description'] == "testing rollback"
+        assert r['data']['createExperimentalBranch']['labbook']['linkedDatasets'] == []
+
+        assert lb.is_repo_clean
+
+        assert os.path.exists(dataset_dir) is False

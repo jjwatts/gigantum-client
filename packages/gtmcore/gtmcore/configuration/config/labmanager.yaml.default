@@ -99,11 +99,15 @@ proxy:
 datasets:
   cache_manager: "host"
   hash_cpu_limit: "auto"
+  download_cpu_limit: "auto"
+  upload_cpu_limit: "auto"
   backends:
     gigantum_object_v1:
-      upload_chunk_size: 4096
+      upload_chunk_size: 4194304
       download_chunk_size: 4194304
       num_workers: 10
+    public_s3_bucket:
+      download_chunk_size: 4194304
 
 # Dispatcher and permitted number of workers -
 # NOTE! Only the default queue is burstable

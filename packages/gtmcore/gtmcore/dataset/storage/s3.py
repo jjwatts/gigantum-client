@@ -94,7 +94,7 @@ Due to the possibility of storing lots of data, when updating you can optionally
     def _get_client(self):
         return boto3.client('s3', config=Config(signature_version=UNSIGNED))
 
-    def confirm_configuration(self, dataset, status_update_fn: Callable) -> Optional[str]:
+    def confirm_configuration(self, dataset) -> Optional[str]:
         """Method to verify a configuration and optionally allow the user to confirm before proceeding
 
         Should return the desired confirmation message if there is one. If no confirmation is required/possible,
@@ -126,7 +126,7 @@ Due to the possibility of storing lots of data, when updating you can optionally
 
         return confirm_message
 
-    def prepare_pull(self, dataset, objects: List[PullObject], status_update_fn: Callable) -> None:
+    def prepare_pull(self, dataset, objects: List[PullObject]) -> None:
         """Gigantum Object Service only requires that the user's tokens have been set
 
         Args:
@@ -140,9 +140,7 @@ Due to the possibility of storing lots of data, when updating you can optionally
         if not self.is_configured:
             raise ValueError("S3 backend must be fully configured before running pull.")
 
-        status_update_fn(f"Ready to download files for {dataset.namespace}/{dataset.name}")
-
-    def finalize_pull(self, dataset, status_update_fn: Callable) -> None:
+    def finalize_pull(self, dataset) -> None:
         pass
 
     def _get_etag_file(self, dataset) -> str:
@@ -169,21 +167,24 @@ Due to the possibility of storing lots of data, when updating you can optionally
         with open(etag_file, 'wt') as ef:
             json.dump(etag_data, ef)
 
-    def pull_objects(self, dataset: Dataset, objects: List[PullObject], status_update_fn: Callable) -> PullResult:
+    def pull_objects(self, dataset: Dataset, objects: List[PullObject],
+                     progress_update_fn: Callable) -> PullResult:
         """High-level method to simply link files from the source dir to the object directory to the revision directory
 
         Args:
             dataset: The current dataset
             objects: A list of PullObjects the enumerate objects to push
-            status_update_fn: A callback to update status and provide feedback to the user
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                downloaded in since last called
 
         Returns:
-            PushResult
+            PullResult
         """
         client = self._get_client()
         bucket, prefix = self._get_s3_config()
 
-        chunk_size = 4096
+        backend_config = dataset.client_config.config['datasets']['backends'][dataset.backend.storage_type]
+        chunk_size = backend_config['download_chunk_size']
         success = list()
         failure = list()
         message = f"Downloaded {len(objects)} objects successfully."
@@ -198,13 +199,8 @@ Due to the possibility of storing lots of data, when updating you can optionally
                 with open(obj.object_path, 'wb') as out_file:
                     for cnt, chunk in enumerate(response['Body'].iter_chunks(chunk_size=chunk_size)):
                         out_file.write(chunk)
+                        progress_update_fn(len(chunk))
 
-                        if (cnt + 1) % 10000:
-                            current_mb = cnt * chunk_size * (10 ** -6)
-                            total_mb = response['ContentLength'] * (10 ** -6)
-                            status_update_fn(f"{obj.dataset_path}: downloaded {current_mb} of {total_mb} MB")
-
-                status_update_fn(f"{obj.dataset_path}: download complete")
                 success.append(obj)
             else:
                 failure.append(obj)

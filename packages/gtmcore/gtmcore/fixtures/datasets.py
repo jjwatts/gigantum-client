@@ -11,7 +11,7 @@ from pkg_resources import resource_filename
 import tempfile
 
 from gtmcore.configuration import Configuration
-from gtmcore.fixtures.fixtures import _create_temp_work_dir
+from gtmcore.fixtures.fixtures import _create_temp_work_dir, mock_config_file_background_tests
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.dataset import Manifest
 from gtmcore.dispatcher.jobs import import_dataset_from_zip
@@ -84,6 +84,23 @@ def mock_dataset_with_manifest(mock_dataset_with_cache_dir):
 
     # yield dataset, manifest, working_dir
     yield mock_dataset_with_cache_dir[0], m, mock_dataset_with_cache_dir[1]
+
+
+@pytest.fixture()
+def mock_dataset_with_manifest_bg_tests(mock_config_file_background_tests):
+    """A pytest fixture that creates a dataset in a temp working dir and provides a cache manager, configured with
+    additional overrides for dataset tests running in the background"""
+    conf_file, working_dir = mock_config_file_background_tests
+    with patch.object(Configuration, 'find_default_config', lambda self: conf_file):
+        im = InventoryManager(conf_file)
+        ds = im.create_dataset(USERNAME,  USERNAME, 'dataset-1', description="my dataset 1",
+                               storage_type="gigantum_object_v1")
+
+        m = Manifest(ds, USERNAME)
+        m.link_revision()
+
+        # yield dataset, manifest, working_dir
+        yield ds, m, working_dir
 
 
 @pytest.fixture()

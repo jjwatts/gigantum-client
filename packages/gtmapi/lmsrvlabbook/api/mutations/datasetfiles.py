@@ -7,7 +7,7 @@ import flask
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.logging import LMLogger
-from gtmcore.dispatcher import Dispatcher, jobs, dataset_jobs
+from gtmcore.dispatcher import Dispatcher, dataset_jobs
 
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 from lmsrvcore.api.mutations import ChunkUploadMutation, ChunkUploadInput
@@ -122,14 +122,16 @@ class CompleteDatasetUploadTransaction(graphene.relay.ClientIDMutation):
                 'logged_in_username': logged_in_username,
                 'logged_in_email': logged_in_author.email,
                 'dataset_owner': owner,
-                'dataset_name': dataset_name
+                'dataset_name': dataset_name,
+                'dispatcher': Dispatcher
             }
 
             # Gen unique keys for tracking jobs
             metadata = {'dataset': f"{logged_in_username}|{owner}|{dataset_name}",
                         'method': 'complete_dataset_upload_transaction'}
 
-            res = d.dispatch_task(dataset_jobs.complete_dataset_upload_transaction, kwargs=job_kwargs, metadata=metadata)
+            res = d.dispatch_task(dataset_jobs.complete_dataset_upload_transaction, kwargs=job_kwargs,
+                                  metadata=metadata)
 
         return CompleteDatasetUploadTransaction(background_job_key=res.key_str)
 
@@ -150,17 +152,6 @@ class DownloadDatasetFiles(graphene.relay.ClientIDMutation):
                                all_keys=None, keys=None, client_mutation_id=None):
         logged_in_username = get_logged_in_username()
 
-        lb = None
-        im = InventoryManager()
-        if labbook_name:
-            # This is a linked dataset, load repo from the Project
-            lb = im.load_labbook(logged_in_username, labbook_owner, labbook_name)
-            dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
-            ds = im.load_dataset_from_directory(dataset_dir)
-        else:
-            # this is a normal dataset. Load repo from working dir
-            ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
-
         d = Dispatcher()
         dl_kwargs = {
             'logged_in_username': logged_in_username,
@@ -175,7 +166,7 @@ class DownloadDatasetFiles(graphene.relay.ClientIDMutation):
         }
 
         # Gen unique keys for tracking jobs
-        lb_key = f"{logged_in_username}|{labbook_owner}|{labbook_name}" if lb else None
+        lb_key = f"{logged_in_username}|{labbook_owner}|{labbook_name}" if labbook_owner else None
         ds_key = f"{logged_in_username}|{dataset_owner}|{dataset_name}"
         if lb_key:
             ds_key = f"{lb_key}|LINKED|{ds_key}"
@@ -184,7 +175,7 @@ class DownloadDatasetFiles(graphene.relay.ClientIDMutation):
                     'labbook': lb_key,
                     'method': 'download_dataset_files'}
 
-        res = d.dispatch_task(jobs.download_dataset_files, kwargs=dl_kwargs, metadata=metadata)
+        res = d.dispatch_task(dataset_jobs.download_dataset_files, kwargs=dl_kwargs, metadata=metadata, persist=True)
 
         return DownloadDatasetFiles(background_job_key=res.key_str)
 

@@ -9,8 +9,14 @@ import snappy
 from gtmcore.inventory.branching import BranchManager
 from gtmcore.dataset.io.manager import IOManager
 from gtmcore.fixtures.datasets import mock_dataset_with_cache_dir, mock_dataset_with_manifest, helper_append_file,\
-    USERNAME, helper_compress_file
+    USERNAME, helper_compress_file, mock_dataset_with_manifest_bg_tests
+from gtmcore.fixtures.fixtures import _create_temp_work_dir, mock_config_file_background_tests
 from gtmcore.dataset.io import PushResult, PushObject
+
+
+def chunk_update_callback(completed_chunk: bool):
+    """Mock callback for collecting chunk feedback"""
+    assert completed_chunk is True
 
 
 class TestIOManager(object):
@@ -154,8 +160,8 @@ class TestIOManager(object):
             assert len(glob.glob(f'{iom.push_dir}/*')) == 1
             iom.dataset.backend.set_default_configuration("test-user", "abcd", '1234')
 
-            result = iom.push_objects()
-            assert len(glob.glob(f'{iom.push_dir}/*')) == 0
+            result = iom.push_objects(obj_to_push, chunk_update_callback)
+            assert len(glob.glob(f'{iom.push_dir}/*')) == 1
 
             assert len(result.success) == 2
             assert len(result.failure) == 0
@@ -214,8 +220,9 @@ class TestIOManager(object):
             assert len(glob.glob(f'{iom.push_dir}/*')) == 1
             iom.dataset.backend.set_default_configuration("test-user", "abcd", '1234')
 
-            result = iom.push_objects()
-            assert len(glob.glob(f'{iom.push_dir}/*')) == 0
+            obj_to_push = iom.objects_to_push(remove_duplicates=True)
+            result = iom.push_objects(obj_to_push, chunk_update_callback)
+            assert len(glob.glob(f'{iom.push_dir}/*')) == 1
 
             assert len(result.success) == 2
             assert len(result.failure) == 0
@@ -270,15 +277,20 @@ class TestIOManager(object):
             assert len(glob.glob(f'{iom.push_dir}/*')) == 1
             iom.dataset.backend.set_default_configuration("test-user", "abcd", '1234')
     
-            result = iom.push_objects()
+            result = iom.push_objects(obj_to_push, chunk_update_callback)
             assert len(glob.glob(f'{iom.push_dir}/*')) == 1
-    
+
             assert len(result.success) == 1
             assert len(result.failure) == 1
             assert result.success[0].object_path == obj_to_push[0].object_path
             assert result.failure[0].object_path == obj_to_push[1].object_path
 
     def test_pull_objects(self, mock_dataset_with_manifest):
+        def chunk_update_callback(completed_bytes: int):
+            """Method to update the job's metadata and provide feedback to the UI"""
+            assert type(completed_bytes) == int
+            assert completed_bytes > 0
+
         ds, manifest, working_dir = mock_dataset_with_manifest
         iom = IOManager(ds, manifest)
 
@@ -341,7 +353,7 @@ class TestIOManager(object):
             assert len(glob.glob(f'{iom.push_dir}/*')) == 1
             iom.dataset.backend.set_default_configuration("test-user", "abcd", '1234')
 
-            result = iom.pull_objects(keys=["test1.txt"])
+            result = iom.pull_objects(keys=["test1.txt"], progress_update_fn=chunk_update_callback)
             assert len(glob.glob(f'{iom.push_dir}/*')) == 1
             assert len(result.success) == 1
             assert len(result.failure) == 0
@@ -352,7 +364,7 @@ class TestIOManager(object):
             with open(obj1_target, 'rt') as dd:
                 assert "test content 1" == dd.read()
 
-            result = iom.pull_objects(keys=["test2.txt"])
+            result = iom.pull_objects(keys=["test2.txt"], progress_update_fn=chunk_update_callback)
             assert len(glob.glob(f'{iom.push_dir}/*')) == 1
             assert len(result.success) == 1
             assert len(result.failure) == 0
@@ -365,179 +377,89 @@ class TestIOManager(object):
             with open(obj2_target, 'rt') as dd:
                 assert "test content 2" == dd.read()
 
-    def test_pull_objects_all(self, mock_dataset_with_manifest):
+    def test__get_pull_all_keys(self, mock_dataset_with_manifest):
         ds, manifest, working_dir = mock_dataset_with_manifest
         iom = IOManager(ds, manifest)
 
         revision = manifest.dataset_revision
         os.makedirs(os.path.join(manifest.cache_mgr.cache_root, revision, "other_dir"))
-        helper_append_file(manifest.cache_mgr.cache_root, revision, "test1.txt", "test content 1")
-        helper_append_file(manifest.cache_mgr.cache_root, revision, "test2.txt", "test content 2")
-        manifest.sweep_all_changes()
-
-        obj_to_push = iom.objects_to_push()
-        assert len(obj_to_push) == 2
-        _, obj_id_1 = obj_to_push[0].object_path.rsplit('/', 1)
-        _, obj_id_2 = obj_to_push[1].object_path.rsplit('/', 1)
-        obj1_target = obj_to_push[0].object_path
-        obj2_target = obj_to_push[1].object_path
-
-        obj1_source = os.path.join('/tmp', uuid.uuid4().hex)
-        obj2_source = os.path.join('/tmp', uuid.uuid4().hex)
-
-        check_info = {obj1_target: obj1_source,
-                      obj2_target: obj2_source}
-
-        assert os.path.exists(obj1_target) is True
-        assert os.path.exists(obj2_target) is True
-
-        helper_compress_file(obj1_target, obj1_source)
-        helper_compress_file(obj2_target, obj2_source)
-
-        assert os.path.isfile(obj1_target) is False
-        assert os.path.isfile(obj2_target) is False
-        assert os.path.isfile(obj1_source) is True
-        assert os.path.isfile(obj2_source) is True
-
-        # remove data from the local file cache
-        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt"))
-        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test2.txt"))
-        shutil.rmtree(os.path.join(manifest.cache_mgr.cache_root, 'objects'))
-        os.makedirs(os.path.join(manifest.cache_mgr.cache_root, 'objects'))
-
-        with aioresponses() as mocked_responses:
-            mocked_responses.get(f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_1}',
-                                 payload={
-                                         "presigned_url": f"https://dummyurl.com/{obj_id_1}?params=1",
-                                         "namespace": ds.namespace,
-                                         "obj_id": obj_id_1,
-                                         "dataset": ds.name
-                                 },
-                                 status=200)
-
-            with open(obj1_source, 'rb') as data1:
-                mocked_responses.get(f"https://dummyurl.com/{obj_id_1}?params=1",
-                                     body=data1.read(), status=200,
-                                     content_type='application/octet-stream')
-
-            mocked_responses.get(f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_2}',
-                                 payload={
-                                         "presigned_url": f"https://dummyurl.com/{obj_id_2}?params=1",
-                                         "namespace": ds.namespace,
-                                         "obj_id": obj_id_2,
-                                         "dataset": ds.name
-                                 },
-                                 status=200)
-
-            with open(obj2_source, 'rb') as data2:
-                mocked_responses.get(f"https://dummyurl.com/{obj_id_2}?params=1",
-                                     body=data2.read(), status=200,
-                                     content_type='application/octet-stream')
-
-            iom.dataset.backend.set_default_configuration("test-user", "abcd", '1234')
-
-            result = iom.pull_all()
-            assert len(result.success) == 2
-            assert len(result.failure) == 0
-            assert result.success[0].object_path != result.success[1].object_path
-            assert result.success[0].object_path in [obj_to_push[0].object_path, obj_to_push[1].object_path]
-            assert result.success[1].object_path in [obj_to_push[0].object_path, obj_to_push[1].object_path]
-
-            assert os.path.isfile(obj1_target) is True
-            assert os.path.isfile(obj2_target) is True
-
-            decompressor = snappy.StreamDecompressor()
-            for r in result.success:
-                with open(check_info[r.object_path], 'rb') as dd:
-                    source1 = decompressor.decompress(dd.read())
-                    source1 += decompressor.flush()
-                with open(r.object_path, 'rt') as dd:
-                    dest1 = dd.read()
-                assert source1.decode("utf-8") == dest1
-
-    def test_pull_objects_all_partial_download(self, mock_dataset_with_manifest):
-        ds, manifest, working_dir = mock_dataset_with_manifest
-        iom = IOManager(ds, manifest)
-
-        revision = manifest.dataset_revision
-        os.makedirs(os.path.join(manifest.cache_mgr.cache_root, revision, "other_dir"))
-        helper_append_file(manifest.cache_mgr.cache_root, revision, "other_dir/test3.txt", "1")
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "other_dir/test3.txt", "dummy content")
         helper_append_file(manifest.cache_mgr.cache_root, revision, "test1.txt", "test content 1")
         helper_append_file(manifest.cache_mgr.cache_root, revision, "test2.txt", "test content 2")
         manifest.sweep_all_changes()
 
         obj_to_push = iom.objects_to_push()
         assert len(obj_to_push) == 3
-        _, obj_id_1 = obj_to_push[0].object_path.rsplit('/', 1)
-        _, obj_id_2 = obj_to_push[1].object_path.rsplit('/', 1)
-        _, obj_id_3 = obj_to_push[2].object_path.rsplit('/', 1)
-        obj1_target = obj_to_push[0].object_path
-        obj2_target = obj_to_push[1].object_path
-        obj3_target = obj_to_push[2].object_path
+        obj3 = obj_to_push[0].object_path
+        obj1 = obj_to_push[1].object_path
+        obj2 = obj_to_push[2].object_path
 
-        obj1_source = os.path.join('/tmp', uuid.uuid4().hex)
+        rev_dir = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision)
+        file3 = os.path.join(rev_dir, obj_to_push[0].dataset_path)
+        file1 = os.path.join(rev_dir, obj_to_push[1].dataset_path)
+        file2 = os.path.join(rev_dir, obj_to_push[2].dataset_path)
 
-        assert "test3.txt" in obj_to_push[0].dataset_path
+        assert os.path.exists(obj1) is True
+        assert os.path.exists(obj2) is True
+        assert os.path.exists(obj3) is True
+        assert os.path.exists(file1) is True
+        assert os.path.exists(file2) is True
+        assert os.path.exists(file3) is True
 
-        assert os.path.exists(obj1_target) is True
-        assert os.path.exists(obj2_target) is True
-        assert os.path.exists(obj3_target) is True
+        result = iom._get_pull_all_keys()
+        assert len(result) == 0
 
         # Completely remove other_dir/test3.txt object
-        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "other_dir", "test3.txt"))
-        helper_compress_file(obj1_target, obj1_source)
+        os.remove(obj3)
+        os.remove(file3)
 
-        # Remove link for test1.txt
-        os.remove(os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "test1.txt"))
+        # Remove link for test1.txt, should relink automatically and not need to be pulled
+        os.remove(file1)
 
-        assert os.path.isfile(obj1_target) is False
-        assert os.path.isfile(obj2_target) is True
-        assert os.path.isfile(obj3_target) is True
+        assert os.path.exists(obj1) is True
+        assert os.path.exists(obj2) is True
+        assert os.path.exists(obj3) is False
+        assert os.path.exists(file1) is False
+        assert os.path.exists(file2) is True
+        assert os.path.exists(file3) is False
 
-        with aioresponses() as mocked_responses:
-            mocked_responses.get(f'https://api.gigantum.com/object-v1/{ds.namespace}/{ds.name}/{obj_id_1}',
-                                 payload={
-                                         "presigned_url": f"https://dummyurl.com/{obj_id_1}?params=1",
-                                         "namespace": ds.namespace,
-                                         "obj_id": obj_id_1,
-                                         "dataset": ds.name
-                                 },
-                                 status=200)
+        result = iom._get_pull_all_keys()
+        assert len(result) == 1
+        assert result[0] == 'other_dir/test3.txt'
 
-            with open(obj1_source, 'rb') as data1:
-                mocked_responses.get(f"https://dummyurl.com/{obj_id_1}?params=1",
-                                     body=data1.read(), status=200,
-                                     content_type='application/octet-stream')
+        assert os.path.exists(obj1) is True
+        assert os.path.exists(obj2) is True
+        assert os.path.exists(obj3) is False
+        assert os.path.exists(file1) is True
+        assert os.path.exists(file2) is True
+        assert os.path.exists(file3) is False
 
-            iom.dataset.backend.set_default_configuration("test-user", "abcd", '1234')
+    def test_compute_pull_batches(self, mock_dataset_with_manifest_bg_tests):
+        ds, manifest, working_dir = mock_dataset_with_manifest_bg_tests
+        iom = IOManager(ds, manifest)
 
-            result = iom.pull_all()
-            assert len(result.success) == 1
-            assert len(result.failure) == 0
-            assert result.success[0].object_path == obj1_target
-            assert "test3.txt" in result.success[0].dataset_path
+        revision = manifest.dataset_revision
+        os.makedirs(os.path.join(manifest.cache_mgr.cache_root, revision, "other_dir"))
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "other_dir/test3.txt", "test content 3")
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "test1.txt", "test" * 4300000)
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "test2.txt", "test content 2")
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "test4.txt", "test content 4")
+        helper_append_file(manifest.cache_mgr.cache_root, revision, "test5.txt", "test content 5")
+        manifest.sweep_all_changes()
 
-            assert os.path.isfile(obj1_target) is True
-            assert os.path.isfile(obj2_target) is True
-            assert os.path.isfile(obj3_target) is True
+        with pytest.raises(ValueError):
+            iom.compute_pull_batches()
 
-            filename = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision, "other_dir", "test3.txt")
-            assert os.path.isfile(filename) is True
-            with open(filename, 'rt') as dd:
-                assert dd.read() == "1"
+        # Remove all files so everything needs to be pulled
+        rev_dir = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision)
+        object_dir = os.path.join(manifest.cache_mgr.cache_root, 'objects')
+        shutil.rmtree(rev_dir)
+        shutil.rmtree(object_dir)
 
-            filename = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision,  "test1.txt")
-            assert os.path.isfile(filename) is True
-            with open(filename, 'rt') as dd:
-                assert dd.read() == "test content 1"
-
-            filename = os.path.join(manifest.cache_mgr.cache_root, manifest.dataset_revision,  "test2.txt")
-            assert os.path.isfile(filename) is True
-            with open(filename, 'rt') as dd:
-                assert dd.read() == "test content 2"
-
-            # Try pulling all again with nothing to pull
-            result = iom.pull_all()
-            assert len(result.success) == 0
-            assert len(result.failure) == 0
-            assert result.message == "Dataset already downloaded."
+        key_batches, total_bytes, num_files = iom.compute_pull_batches(pull_all=True)
+        assert num_files == 5
+        assert total_bytes == (4*4300000) + (14*4)
+        assert len(key_batches) == 2
+        assert len(key_batches[0]) == 4
+        assert len(key_batches[1]) == 1
+        assert key_batches[1][0] == 'test1.txt'

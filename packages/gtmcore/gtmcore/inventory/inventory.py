@@ -101,16 +101,17 @@ class InventoryManager(object):
 
     @staticmethod
     def update_linked_datasets(labbook: LabBook, username: str, init: bool = False) -> None:
-        """Method to initalize or update all git submodule references for linked datasets. used when loading and
-        initializing linked datasets
+        """Method to initialize or update all git submodule references for linked datasets.
+
+        This is used when loading and initializing linked datasets
 
         Args:
-            labbook:
-            username:
-            init:
+            labbook: The labbook instance to inspect
+            username: the current logged in username
+            init: a flag indicating if the `git submodule init` command should be run
 
         Returns:
-
+            None
         """
         # List all existing linked datasets IN this repository
         existing_dataset_abs_paths = glob.glob(os.path.join(labbook.root_dir, '.gigantum', 'datasets', "*/*"))
@@ -163,9 +164,6 @@ class InventoryManager(object):
         """
         try:
             lb = self._put_labbook(path, username, owner)
-
-            # Init dataset submodules if present
-            self.update_linked_datasets(lb, username, init=True)
 
             return lb
         except Exception as e:
