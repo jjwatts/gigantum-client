@@ -274,6 +274,7 @@ class InventoryManager(object):
         return [lb for (lb, key) in sorted_list]
 
     def _safe_load(self, username, key_f: Callable) -> List[Tuple[LabBook, Any]]:
+        """Helper method to prevent loading corrupt LabBooks into the list of local labbooks."""
         local_labbooks = []
         for username, owner, lbname in self.list_repository_ids(username, 'labbook'):
             try:
