@@ -157,6 +157,7 @@ jobs:
       - run: 
           name: Build and start Gigantum client
           command: |
+            bash testing/circleci/ubuntu1404-install.sh
             python3.6 -m venv gtm-env
             source gtm-env/bin/activate
             cd gtm && pip install -e . && cd ..
@@ -172,7 +173,6 @@ jobs:
       - run:
           name: Run the setup and preparation script
           command: |
-            bash testing/circleci/ubuntu1404-install.sh
             cp credentials.txt testing/credentials.txt
             cd testing
             python3.6 -m venv test-env
