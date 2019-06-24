@@ -181,14 +181,18 @@ class TestRunner:
             lf.write('\n'.join(parsed_lines))
 
 
-def load_playbooks(test_root, path: Optional[str] = None) -> List[Playbook]:
+def load_playbooks(test_root, path_list: List[str]) -> List[Playbook]:
     playbooks_dir = os.path.join(test_root, 'gigantum_tests')
     sys.path.append(playbooks_dir)
 
-    if path and 'test_' == path[:5]:
-        yield load_playbook(path)
-    else:
-        # Else, get all test playbooks, but skip examples
+    if len(path_list) == 0:
+        # If no explicit path list, get all test playbooks, but skip examples
         for test_file in os.listdir(playbooks_dir):
             if '.py' in test_file and 'test_examples.py' != test_file:
                 yield load_playbook(test_file)
+    else:
+        for path in path_list:
+            logging.info(f"START running playbook: {path}")
+            if path and 'test_' == path[:5]:
+                yield load_playbook(path)
+
