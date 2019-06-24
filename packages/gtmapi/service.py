@@ -59,7 +59,7 @@ try:
     proxy_router.add("http://localhost:10001", "api")
     logger.info(f"Proxy routes ({type(proxy_router)}): {proxy_router.routes}")
 
-    app.register_blueprint(rest_routes.rest_routes)
+    app.register_blueprint(rest_routes.rest_routes, url_prefix=api_prefix)
 except Exception as e:
     logger.error(e)
     logger.exception(e)

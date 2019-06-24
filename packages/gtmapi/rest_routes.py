@@ -22,8 +22,7 @@ def sysinfo():
 @rest_routes.route(f"/project-errors")
 @cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
 def check_projects():
-    return jsonify({})
-    # return jsonify(telemetry.check_projects(rest_routes.config["LABMGR_CONFIG"]))
+    return jsonify(telemetry.check_projects(Configuration()))
 
 
 # Set Unauth'd route for API health-check
