@@ -50,6 +50,7 @@ def ping():
     })
 
 
+@rest_routes.route(f"/version/")
 @rest_routes.route(f"/version")
 @cross_origin(headers=["Content-Type", "Authorization"], max_age=7200)
 def version():
@@ -57,6 +58,7 @@ def version():
 
     Note: /api/version endpoint added due to popup blockers starting to block /api/ping/
 
+    TODO! By August 2019, remove the .route(f'/version/') route.
     """
     config = Configuration()
     app_name, built_on, revision = config.config['build_info'].split(' :: ')
