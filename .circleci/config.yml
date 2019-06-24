@@ -174,7 +174,7 @@ jobs:
           command: |
             cd testing
             source test-env/bin/activate
-            python3 driver.py test_examples
+            python3 driver.py test_graphql test_delete_project test_branching
 
   fossa:
     executor: gig_client
