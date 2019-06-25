@@ -11,6 +11,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import testutils
 from testutils import graphql_helpers
 
+
 def test_pip_packages(driver: selenium.webdriver, *args, **kwargs):
     """
     Test that pip packages install successfully.
@@ -28,7 +29,7 @@ def test_pip_packages(driver: selenium.webdriver, *args, **kwargs):
     logging.info("Extracting package versions from environment")
     environment_package_versions = env_elts.get_all_versions()
 
-    #Open JupyterLab and create Jupyter notebook
+    # Open JupyterLab and create Jupyter notebook
     project_control = testutils.ProjectControlElements(driver)
     project_control.container_status_stopped.wait(120)
     project_control.launch_devtool('JupyterLab')
@@ -52,6 +53,55 @@ def test_pip_packages(driver: selenium.webdriver, *args, **kwargs):
     # Get JupyterLab package versions
     logging.info("Extracting package versions from JupyterLab")
     jupyterlab_package_output = jupyterlab_elts.code_output.find().text.split(" ")
+    jupyterlab_package_versions = jupyterlab_package_output
+    logging.info(f"Environment package version {environment_package_versions} \n "
+                 f"JupyterLab package version {jupyterlab_package_versions}")
+
+    assert environment_package_versions == jupyterlab_package_versions,\
+        "Environment and JupyterLab package versions do not match"
+
+
+def test_conda_packages(driver: selenium.webdriver, *args, **kwargs):
+    """
+    Test that conda packages install successfully.
+
+    Args:
+        driver
+    """
+    # Create project
+    r = testutils.prep_py3_minimal_base(driver)
+    username, project_title = r.username, r.project_name
+    # Add pip packages
+    env_elts = testutils.EnvironmentElements(driver)
+    env_elts.add_conda_packages("numpy")
+    # Get environment package versions
+    logging.info("Extracting package versions from environment")
+    environment_package_versions = env_elts.package_info_table_version_one.wait().text
+
+    # Open JupyterLab and create Jupyter notebook
+    project_control = testutils.ProjectControlElements(driver)
+    project_control.container_status_stopped.wait(120)
+    project_control.launch_devtool('JupyterLab')
+    jupyterlab_elts = testutils.JupyterLabElements(driver)
+    # TODO DC This seems unnecessary given the wait below
+    time.sleep(5)
+    jupyterlab_elts.jupyter_notebook_button.wait().click()
+    time.sleep(5)
+    logging.info("Running script to import packages and print package versions")
+    package_script = "import numpy\n" \
+                     "print(numpy.__version__)"
+    actions = ActionChains(driver)
+    actions.move_to_element(jupyterlab_elts.code_input.find()) \
+        .click(jupyterlab_elts.code_input.find()) \
+        .send_keys(package_script) \
+        .key_down(Keys.SHIFT).send_keys(Keys.ENTER).key_up(Keys.SHIFT).key_up(Keys.CONTROL) \
+        .perform()
+
+    time.sleep(3)
+
+    # Get JupyterLab package versions
+    logging.info("Extracting package versions from JupyterLab")
+    jupyterlab_package_output, = jupyterlab_elts.code_output.find().text.split()
     jupyterlab_package_versions = jupyterlab_package_output
     logging.info(f"Environment package version {environment_package_versions} \n "
                  f"JupyterLab package version {jupyterlab_package_versions}")

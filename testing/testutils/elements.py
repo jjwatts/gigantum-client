@@ -308,7 +308,8 @@ class EnvironmentElements(UiComponent):
         self.driver.execute_script("window.scrollBy(0, 400);")
         self.add_packages_button.wait().click()
         self.package_manager_dropdown.wait().click()
-        self.conda_package_manager_dropdown.wait().click()
+        self.conda_package_manager_dropdown.wait(5).click()
+        time.sleep(1)
         for con_pack in conda_packages:
             logging.info(f"Adding conda package {con_pack}")
             self.package_name_input.find().send_keys(con_pack)
@@ -319,7 +320,7 @@ class EnvironmentElements(UiComponent):
         self.close_install_window.wait().click()
         time.sleep(1)
         project_control = ProjectControlElements(self.driver)
-        project_control.container_status_stopped.wait(240)
+        project_control.container_status_stopped.wait(120)
 
 
     '''Timing should be adjusted before use
