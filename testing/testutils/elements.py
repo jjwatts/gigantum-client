@@ -685,7 +685,7 @@ class CloudProjectElements(UiComponent):
 
     @property
     def merge_conflict_use_mine_button(self):
-        return CssElement(self.driver, ".ForceSync__buttonContainer button:nth-child(1)")
+        return CssElement(self.driver, ".ForceSync__buttonContainer > button:nth-child(1)")
 
     @property
     def merge_conflict_use_theirs_button(self):

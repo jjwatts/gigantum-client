@@ -129,7 +129,7 @@ def test_publish_collaborator(driver: selenium.webdriver, *args, ** kwargs):
     cloud_project_elts.delete_cloud_project(project_title)
 
     # Assert cloud project does not exist remotely (via GraphQL)
-    remote_projects = graphql.list_remote_projects()
+    remote_projects = graphql_helpers.list_remote_projects()
 
     assert (username, project_title) not in remote_projects
 

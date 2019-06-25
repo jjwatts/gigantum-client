@@ -7,7 +7,7 @@ import selenium
 from selenium.webdriver.common.by import By
 
 import testutils
-from testutils import graphql
+from testutils import graphql_helpers
 
 
 def test_use_mine_merge_conflict_project(driver: selenium.webdriver, *args, **kwargs):
@@ -20,10 +20,15 @@ def test_use_mine_merge_conflict_project(driver: selenium.webdriver, *args, **kw
     cloud_project_elts = testutils.CloudProjectElements(driver)
     cloud_project_elts.merge_conflict_use_mine_button.wait(30).click()
     timeout = time.time() + 30
-    while cloud_project_elts.sync_cloud_project_message.find().text != "Sync complete":
-        cloud_project_elts.sync_cloud_project_message.wait(3)
-        if time.time() > timeout:
+
+    while timeout > time.time():
+        try:
+            assert(cloud_project_elts.sync_cloud_project_message.find().text == "Sync complete")
             break
+        except AssertionError:
+            time.sleep(1)
+            logging.warning("Error finding Sync complete notification")
+
     # Check that merge conflict resolves to 'Use Mine'
     file_path = os.path.join(os.environ['GIGANTUM_HOME'], username, username, 'labbooks',
                              project_title, 'input', 'sample-upload.txt')
@@ -45,19 +50,25 @@ def test_use_theirs_merge_conflict_project(driver: selenium.webdriver, *args, **
     cloud_project_elts = testutils.CloudProjectElements(driver)
     cloud_project_elts.merge_conflict_use_theirs_button.wait(30).click()
     timeout = time.time() + 30
-    while cloud_project_elts.sync_cloud_project_message.find().text != "Sync complete":
-        cloud_project_elts.sync_cloud_project_message.wait(3)
-        if time.time() > timeout:
+
+    while timeout > time.time():
+        try:
+            assert(cloud_project_elts.sync_cloud_project_message.find().text == "Sync complete")
             break
+        except AssertionError:
+            time.sleep(1)
+            logging.warning("Error finding Sync complete notification")
+
     # Check that merge conflict resolves to 'Use Theirs'
     file_path = os.path.join(os.environ['GIGANTUM_HOME'], username, username, 'labbooks',
                              project_title, 'input', 'sample-upload.txt')
+
     with open(file_path, "r") as resolve_merge_conflict_file:
         resolve_merge_conflict_file = resolve_merge_conflict_file.read()
 
     assert resolve_merge_conflict_file == "Collaborator", \
-        f"Merge did not resolve to 'Use Theirs' expected to see 'Collaborator' in file, " \
-        f"but instead got {resolve_merge_conflict_file}"
+            f"Merge did not resolve to 'Use Theirs' expected to see 'Collaborator' in file, " \
+            f"but instead got {resolve_merge_conflict_file}"
 
 
 def test_abort_merge_conflict_project(driver: selenium.webdriver, *args, **kwargs):
@@ -120,6 +131,7 @@ def prep_merge_conflict(driver: selenium.webdriver, *args, **kwargs):
     driver.get(f'{os.environ["GIGANTUM_HOST"]}/projects/{username}/{project_title}/inputData')
     time.sleep(2)
     file_browser_elts = testutils.FileBrowserElements(driver)
+    time.sleep(5)
     file_browser_elts.drag_drop_file_in_drop_zone(file_content="Collaborator")
     cloud_project_elts.sync_cloud_project(project_title)
     side_bar_elts.do_logout(collaborator)
@@ -137,6 +149,7 @@ def prep_merge_conflict(driver: selenium.webdriver, *args, **kwargs):
     driver.get(f'{os.environ["GIGANTUM_HOST"]}/projects/{username}/{project_title}/inputData')
     time.sleep(2)
     file_browser_elts = testutils.FileBrowserElements(driver)
+    time.sleep(5)
     file_browser_elts.drag_drop_file_in_drop_zone(file_content="Owner")
     cloud_project_elts = testutils.CloudProjectElements(driver)
     cloud_project_elts.sync_cloud_project(project_title)
