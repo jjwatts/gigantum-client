@@ -44,6 +44,7 @@ def test_delete_file_local_branch(driver: selenium.webdriver, *args, **kwargs):
     driver.get(f"{os.environ['GIGANTUM_HOST']}/projects/{username}/{project_title}/inputData")
     time.sleep(2)
     logging.info(f"Adding a file to the master branch of project {project_title}")
+    time.sleep(4)
     file_browser_elts = testutils.FileBrowserElements(driver)
     file_browser_elts.drag_drop_file_in_drop_zone()
     time.sleep(4)
