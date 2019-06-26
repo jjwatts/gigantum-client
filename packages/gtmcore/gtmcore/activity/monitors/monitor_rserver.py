@@ -477,7 +477,7 @@ class RStudioServerMonitor(ActivityMonitor):
                 doc_id = params[0]
                 self.doc_properties.setdefault(doc_id, {})['name'] = fname
 
-        # If it's an Rmd *document*, we'll get these events - chunk output is configurable
+        # This is called after a recently opened document?
         # TODO DC Why did randal use regex below, not just string match?
         m = re.match(r"/rpc/refresh_chunk_output.*", exchange.path)
         if m:
