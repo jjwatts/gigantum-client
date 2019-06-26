@@ -76,16 +76,30 @@ def test_abort_merge_conflict_project(driver: selenium.webdriver, *args, **kwarg
     Test a merge conflict in a cloud project in which the owner resolves it with 'Abort.'
     """
     # Prepare merge conflict
-    prep_merge_conflict(driver,"abort")
+    username, project_title, collaborator = prep_merge_conflict(driver)
+    # Owner uploads file, syncs, and resolves the merge conflict with 'Abort'
+    cloud_project_elts = testutils.CloudProjectElements(driver)
+    project_path = os.path.join(os.environ['GIGANTUM_HOME'], username, username,
+                                'labbooks', project_title)
+    git_get_log_command_1 = Popen(['git', 'log', '--pretty=format%H'],
+                                  cwd=project_path, stdout=PIPE, stderr=PIPE)
+    before_merge_conflict_resolve_stdout = git_get_log_command_1.stdout.readline().decode('utf-8').strip()
+    cloud_project_elts.merge_conflict_abort_button.wait(30).click()
+    time.sleep(2)
+    # Check that merge conflict resolves to 'Abort'
+    git_get_log_command_2 = Popen(['git', 'log', '--pretty=format%H'],
+                                  cwd=project_path, stdout=PIPE, stderr=PIPE)
+    after_merge_conflict_resolve_stdout = git_get_log_command_2.stdout.readline().decode('utf-8').strip()
 
+    assert before_merge_conflict_resolve_stdout == after_merge_conflict_resolve_stdout, \
+        f"Merge did not resolve to 'Abort' expected to see {before_merge_conflict_resolve_stdout}, " \
+        f"but instead got {after_merge_conflict_resolve_stdout}"
 
 
 def prep_merge_conflict(driver: selenium.webdriver, *args, **kwargs):
     """
     Prepare a merge conflict in a cloud project.
     """
-    mc_resolve=args[0]
-
     # Owner creates a project, publishes it, adds a collaborator, and logs out
     r = testutils.prep_py3_minimal_base(driver)
     username, project_title = r.username, r.project_name
@@ -139,26 +153,4 @@ def prep_merge_conflict(driver: selenium.webdriver, *args, **kwargs):
     file_browser_elts.drag_drop_file_in_drop_zone(file_content="Owner")
     cloud_project_elts = testutils.CloudProjectElements(driver)
     cloud_project_elts.sync_cloud_project(project_title)
-    #return username, project_title, collaborator
-    if(mc_resolve == "abort"):
-        # Owner uploads file, syncs, and resolves the merge conflict with 'Abort'
-        cloud_project_elts = testutils.CloudProjectElements(driver)
-        project_path = os.path.join(os.environ['GIGANTUM_HOME'], username, username,
-                                    'labbooks', project_title)
-        git_get_log_command_1 = Popen(['git', 'log', '--pretty=format%H'],
-                                      cwd=project_path, stdout=PIPE, stderr=PIPE)
-        before_merge_conflict_resolve_stdout = git_get_log_command_1.stdout.readline().decode('utf-8').strip()
-        cloud_project_elts.merge_conflict_abort_button.wait(30).click()
-        time.sleep(2)
-        # Check that merge conflict resolves to 'Abort'
-        git_get_log_command_2 = Popen(['git', 'log', '--pretty=format%H'],
-                                      cwd=project_path, stdout=PIPE, stderr=PIPE)
-        after_merge_conflict_resolve_stdout = git_get_log_command_2.stdout.readline().decode('utf-8').strip()
-
-        assert before_merge_conflict_resolve_stdout == after_merge_conflict_resolve_stdout, \
-            f"Merge did not resolve to 'Abort' expected to see {before_merge_conflict_resolve_stdout}, " \
-                f"but instead got {after_merge_conflict_resolve_stdout}"
-    elif(mc_resolve == "mine"):
-        return -1
-    elif(mc_resolve == "theirs"):
-        return -1
+    return username, project_title, collaborator
