@@ -4,10 +4,8 @@ import os
 
 import selenium
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
 
 import testutils
-from testutils import graphql_helpers
 
 
 def test_create_local_branch(driver: selenium.webdriver, *args, **kwargs):

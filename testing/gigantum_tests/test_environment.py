@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
 import testutils
-from testutils import graphql_helpers
+
 
 def test_pip_packages(driver: selenium.webdriver, *args, **kwargs):
     """

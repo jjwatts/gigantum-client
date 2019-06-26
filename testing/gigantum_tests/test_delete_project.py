@@ -5,8 +5,6 @@ import os
 import docker
 import selenium
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 import testutils
 
@@ -60,3 +58,4 @@ def test_delete_project(driver: selenium.webdriver, *args, **kwargs):
                 project_img.append(img)
     assert len(project_img) == 0, \
         f"Docker image for {project_path}: {project_img[0]} still exists"
+
