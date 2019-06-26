@@ -41,8 +41,8 @@ jobs:
             echo "import docker; c = docker.from_env()" > runtests.py
             echo "c.images.build(path='.', tag='httpconf')" >> runtests.py
             echo "print(c.containers.run('httpconf', 'pytest /app').decode())" >> runtests.py
-            #python3 runtests.py
-            #cd ~/repo
+            python3 runtests.py
+            cd ~/repo
 
   test-gtmcore:
     executor: gig_client
@@ -61,9 +61,9 @@ jobs:
             export SKIP_BG_TESTS=1
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            #python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
-            #pytest --cov=gtmcore packages/gtmcore/gtmcore/
-            #codecov -F core
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
+            pytest --cov=gtmcore packages/gtmcore/gtmcore/
+            codecov -F core
 
   test-gtmapi:
     executor: gig_client
@@ -83,11 +83,11 @@ jobs:
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            #python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
-            #pytest --cov=lmsrvlabbook --cov=lmsrvcore packages/gtmapi/lmsrvlabbook
-            #pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvcore
-            #pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvlabbook/tests/int_labbook_mutations.py
-            #codecov -F api
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
+            pytest --cov=lmsrvlabbook --cov=lmsrvcore packages/gtmapi/lmsrvlabbook
+            pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvcore
+            pytest --cov=lmsrvlabbook --cov=lmsrvcore --cov-append packages/gtmapi/lmsrvlabbook/tests/int_labbook_mutations.py
+            codecov -F api
 
   test-gtmcore-environment:
     executor: gig_client
@@ -105,9 +105,9 @@ jobs:
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            #python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
-            #pytest --cov=gtmcore packages/gtmcore/gtmcore/environment/tests
-            #codecov -F core
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
+            pytest --cov=gtmcore packages/gtmcore/gtmcore/environment/tests
+            codecov -F core
 
   test-background-jobs:
     executor: gig_client
@@ -125,9 +125,9 @@ jobs:
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
-            #python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
-            #pytest --cov=gtmcore packages/gtmcore/gtmcore/dispatcher/tests
-            #codecov -F core
+            python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
+            pytest --cov=gtmcore packages/gtmcore/gtmcore/dispatcher/tests
+            codecov -F core
 
   test-ui-components:
     executor: gig_client
@@ -228,10 +228,10 @@ workflows:
           requires:
             - mypy-gtmcore
             - mypy-gtmapi
-      - test-harness:
-          requires:
-            - mypy-gtmcore
-            - mypy-gtmapi
+      #- test-harness:
+      #    requires:
+      #      - mypy-gtmcore
+      #      - mypy-gtmapi
       - test-background-jobs:
           requires:
             - mypy-gtmcore
@@ -239,3 +239,4 @@ workflows:
       - fossa:
           requires:
             - test-confhttpproxy
+
