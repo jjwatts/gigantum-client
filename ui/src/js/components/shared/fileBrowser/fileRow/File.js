@@ -199,8 +199,8 @@ class File extends Component {
   *  sets dragging state
   *  @return {}
   */
-  _submitRename(evt) {
-    if (evt.key === 'Enter') {
+  _submitRename(evt, fileName) {
+    if (evt.key === 'Enter' && this.state.newFileName !== fileName) {
       this._triggerMutation();
     }
 
@@ -372,7 +372,7 @@ class File extends Component {
                 onClick={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
                 onDragStart={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
                 onChange={(evt) => { this._updateFileName(evt); }}
-                onKeyDown={(evt) => { this._submitRename(evt); }}
+                onKeyDown={(evt) => { this._submitRename(evt, fileName); }}
               />
             </div>
             <div className="flex justify-space-around">
@@ -384,6 +384,7 @@ class File extends Component {
               <button
                 type="button"
                 className="File__btn--round File__btn--add File__btn--rename-add"
+                disabled={this.state.newFileName === fileName}
                 onClick={() => { this._triggerMutation(); }}
               />
             </div>

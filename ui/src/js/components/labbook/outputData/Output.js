@@ -11,7 +11,6 @@ export default createFragmentContainer(
           id
           hasFiles
           ...OutputBrowser_output
-          ...MostRecentOutput_output
         }
       }
     `,

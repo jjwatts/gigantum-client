@@ -71,24 +71,11 @@ export default function MoveLabbookFileMutation(
     },
   };
 
-  // TODO: remove this, key should propogate down from each section and get passed to the mutation data class
-  const recentConnectionKey = section === 'code' ? 'MostRecentCode_allFiles'
-    : section === 'input' ? 'MostRecentInput_allFiles'
-      : 'MostRecentOutput_allFiles';
-
   const configs = [{
     type: 'RANGE_ADD',
     parentID: labbookId,
     connectionInfo: [{
       key: connectionKey,
-      rangeBehavior: 'append',
-    }],
-    edgeName: 'newLabbookFileEdge',
-  }, {
-    type: 'RANGE_ADD',
-    parentID: labbookId,
-    connectionInfo: [{
-      key: recentConnectionKey,
       rangeBehavior: 'append',
     }],
     edgeName: 'newLabbookFileEdge',
@@ -149,7 +136,6 @@ export default function MoveLabbookFileMutation(
       },
       updater: (store, response) => {
         sharedDeleteUpdater(store, labbookId, removeIds, connectionKey);
-        sharedDeleteUpdater(store, labbookId, removeIds, recentConnectionKey);
         if (response && response.moveLabbookFile && response.moveLabbookFile.updatedEdges) {
           response.moveLabbookFile.updatedEdges.forEach((edge) => {
             const labbookProxy = store.get(labbookId);
@@ -159,11 +145,6 @@ export default function MoveLabbookFileMutation(
                 labbookProxy,
                 connectionKey,
               );
-              const recentConn = RelayRuntime.ConnectionHandler.getConnection(
-                labbookProxy,
-                recentConnectionKey,
-              );
-
               const node = store.get(edge.node.id) ? store.get(edge.node.id) : store.create(edge.node.id, 'LabbookFile');
 
               node.setValue(edge.node.id, 'id');
@@ -180,18 +161,6 @@ export default function MoveLabbookFileMutation(
               RelayRuntime.ConnectionHandler.insertEdgeAfter(
                 conn,
                 newEdge,
-                edge.cursor,
-              );
-
-              const newRecentEdge = RelayRuntime.ConnectionHandler.createEdge(
-                store,
-                recentConn,
-                node,
-                'newLabbookFileEdge',
-              );
-              RelayRuntime.ConnectionHandler.insertEdgeAfter(
-                recentConn,
-                newRecentEdge,
                 edge.cursor,
               );
             }

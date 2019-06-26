@@ -321,7 +321,6 @@ class FileBrowser extends Component {
     const {
       parentId,
       connection,
-      mostRecentConnection,
       section,
     } = this.props;
     const { owner, labbookName } = store.getState().routes;
@@ -357,6 +356,22 @@ class FileBrowser extends Component {
     const comparePaths = [];
     const edges = [];
     const deletedKeys = [];
+
+    Object.keys(this.state.childrenState).forEach((key) => {
+      if (this.state.childrenState[key].isSelected) {
+        const { edge } = this.state.childrenState[key];
+        delete this.state.childrenState[key];
+        if (edge.node.isDir) {
+          deletedKeys.push(key);
+        }
+        comparePaths.push(edge.node.key);
+        filePaths.push(edge.node.key);
+        edges.push(edge);
+        if (edge.node.isDir) {
+          dirList.push(edge.node.key);
+        }
+      }
+    });
 
     Object.keys(this.state.childrenState).forEach((key) => {
       deletedKeys.forEach((deletedKey) => {

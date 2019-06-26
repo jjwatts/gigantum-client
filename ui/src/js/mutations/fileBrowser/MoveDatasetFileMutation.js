@@ -71,24 +71,11 @@ export default function MoveDatasetFileMutation(
     },
   };
 
-  // TODO: remove this, key should propogate down from each section and get passed to the mutation data class
-  const recentConnectionKey = section === 'code' ? 'MostRecentCode_allFiles'
-    : section === 'input' ? 'MostRecentInput_allFiles'
-      : 'MostRecentOutput_allFiles';
-
   const configs = [{
     type: 'RANGE_ADD',
     parentID: datasetId,
     connectionInfo: [{
       key: connectionKey,
-      rangeBehavior: 'append',
-    }],
-    edgeName: 'newDatasetFileEdge',
-  }, {
-    type: 'RANGE_ADD',
-    parentID: datasetId,
-    connectionInfo: [{
-      key: recentConnectionKey,
       rangeBehavior: 'append',
     }],
     edgeName: 'newDatasetFileEdge',
@@ -147,7 +134,6 @@ export default function MoveDatasetFileMutation(
       },
       updater: (store, response) => {
         sharedDeleteUpdater(store, datasetId, removeIds, connectionKey);
-        sharedDeleteUpdater(store, datasetId, removeIds, recentConnectionKey);
         if (response && response.moveDatasetFile && response.moveDatasetFile.updatedEdges) {
           response.moveDatasetFile.updatedEdges.forEach((edge) => {
             const datasetProxy = store.get(datasetId);

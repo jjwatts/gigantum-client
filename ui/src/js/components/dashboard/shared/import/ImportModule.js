@@ -291,18 +291,20 @@ export default class ImportModule extends Component {
   }
 
   /**
-  *  @param {Object} evt
   *  imports labbook from remote url, builds the image, and redirects to imported labbook
   *  @return {}
   */
-  _import = (evt) => {
+  _import = () => {
     const { props, state } = this;
+    const id = uuidv4();
+    const name = state.remoteURL.split('/')[state.remoteURL.split('/').length - 1];
+    const owner = state.remoteURL.split('/')[state.remoteURL.split('/').length - 2];
+    const remote = `https://repo.${config.domain}/${owner}/${name}.git`;
+
+
     if (state.files[0] !== undefined) {
-      const id = uuidv4();
-      const name = state.remoteURL.split('/')[state.remoteURL.split('/').length - 1];
-      const owner = state.remoteURL.split('/')[state.remoteURL.split('/').length - 2];
-      const remote = `https://repo.${config.domain}/${owner}/${name}.git`;
       const self = this;
+
 
       UserIdentity.getUserIdentity().then((response) => {
         if (navigator.onLine) {
@@ -340,6 +342,12 @@ export default class ImportModule extends Component {
           this.setState({ showLoginPrompt: true });
         }
       });
+    } else if (state.remoteURL) {
+      if (props.section === 'labbook') {
+        this._importRemoteProject(owner, name, remote, id);
+      } else {
+        this._importRemoteDataset(owner, name, remote, id);
+      }
     }
   }
 
@@ -427,6 +435,7 @@ export default class ImportModule extends Component {
   */
   _importRemoteProject(owner, name, remote, id) {
     const self = this;
+    self._importingState();
     const sucessCall = () => {
       this._clearState();
       store.dispatch({
@@ -471,7 +480,7 @@ export default class ImportModule extends Component {
   */
   _importRemoteDataset(owner, name, remote, id) {
     const self = this;
-
+    self._importingState();
     ImportRemoteDatasetMutation(owner, name, remote, (response, error) => {
       this._clearState();
       document.getElementById('modal__cover').classList.add('hidden');

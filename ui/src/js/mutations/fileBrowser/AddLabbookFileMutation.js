@@ -127,11 +127,7 @@ export default function AddLabbookFileMutation(
       clientMutationId,
     },
   };
-  // TODO remove this, connections should be passed down from section
-  const recentConnectionKey = section === 'code'
-    ? 'MostRecentCode_allFiles'
-    : section === 'input' ? 'MostRecentInput_allFiles'
-      : 'MostRecentOutput_allFiles';
+
   commitMutation(
     environment,
     {
@@ -154,7 +150,6 @@ export default function AddLabbookFileMutation(
 
           const responseNode = response.addLabbookFile.newLabbookFileEdge.node;
           deleteEdge(store, sectionId, optimisticId, connectionKey);
-          deleteEdge(store, sectionId, optimisticId, recentConnectionKey);
           const { id } = responseNode;
           const nodeExists = store.get(id);
 
@@ -167,7 +162,6 @@ export default function AddLabbookFileMutation(
           node.setValue(responseNode.modifiedAt, 'modifiedAt');
 
           sharedUpdater(store, sectionId, connectionKey, node);
-          sharedUpdater(store, sectionId, recentConnectionKey, node);
         }
       },
     },

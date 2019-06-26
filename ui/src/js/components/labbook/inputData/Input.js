@@ -11,7 +11,6 @@ export default createFragmentContainer(
           id
           hasFiles
           ...InputBrowser_input
-          ...MostRecentInput_input
         }
         linkedDatasets @skip (if: $inputSkip){
           name

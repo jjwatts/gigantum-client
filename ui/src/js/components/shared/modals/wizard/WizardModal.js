@@ -219,6 +219,8 @@ export default class WizardModal extends React.Component {
       (response, error) => {
         if (error) {
           setErrorMessage(`An error occured while trying to create Project '${name}'.`, error);
+          document.getElementById('modal__cover').classList.add('hidden');
+          document.getElementById('loader').classList.add('hidden');
           this.setState({
             modalBlur: false,
             createLabbookButtonState: 'error',

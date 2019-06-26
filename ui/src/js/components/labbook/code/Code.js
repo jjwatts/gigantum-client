@@ -11,7 +11,6 @@ export default createFragmentContainer(
           id
           hasFiles
           ...CodeBrowser_code
-          ...MostRecentCode_code
         }
       }
     `,

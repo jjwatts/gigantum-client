@@ -357,8 +357,9 @@ class Folder extends Component {
     *  sumbit or clear
     *  @return {}
     */
-  _submitCancel(evt) {
-    if (evt.key === 'Enter') {
+  _submitCancel(evt, folderName) {
+    const { state } = this;
+    if (evt.key === 'Enter' && state.renameValue !== folderName) {
       this._triggerMutation();
     }
 
@@ -581,7 +582,7 @@ class Folder extends Component {
                 value={state.renameValue}
                 onDragStart={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
                 onChange={(evt) => { this._updateFileName(evt); }}
-                onKeyDown={(evt) => { this._submitCancel(evt); }}
+                onKeyDown={(evt) => { this._submitCancel(evt, folderName); }}
               />
             </div>
             <div className="flex justify-space-around">
@@ -593,6 +594,7 @@ class Folder extends Component {
               <button
                 type="button"
                 className="File__btn--round File__btn--add File__input--rename-add"
+                disabled={state.renameValue === folderName}
                 onClick={() => { this._triggerMutation(); }}
               />
             </div>
