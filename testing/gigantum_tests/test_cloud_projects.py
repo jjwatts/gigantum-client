@@ -43,7 +43,7 @@ def test_publish_sync_delete_project(driver: selenium.webdriver, *args, **kwargs
 
     # Add a file and sync cloud project
     driver.get(f'{os.environ["GIGANTUM_HOST"]}/projects/{username}/{project_title}/inputData')
-    time.sleep(3)
+    time.sleep(6)
     file_browser_elts = testutils.FileBrowserElements(driver)
     file_browser_elts.drag_drop_file_in_drop_zone()
     cloud_project_elts.sync_cloud_project(project_title)
@@ -55,7 +55,7 @@ def test_publish_sync_delete_project(driver: selenium.webdriver, *args, **kwargs
     cloud_project_elts.delete_cloud_project(project_title)
 
     # Assert project does not exist remotely (via GraphQL)
-    remote_projects = graphql.list_remote_projects()
+    remote_projects = graphql_helpers.list_remote_projects()
 
     assert (username, project_title) not in remote_projects
 
