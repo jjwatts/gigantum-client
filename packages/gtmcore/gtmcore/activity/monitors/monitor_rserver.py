@@ -185,10 +185,10 @@ class RStudioExchange:
     Attributes are stored in a way that is ready for activity records. bytes get decoded, and images get
     base64-encoded.
 
-    Parsing may throw a json.JSONDecodeError.
     """
 
     def __init__(self, mitm_message: mitmio.flow.Flow):
+        """Note, parsing may throw a json.JSONDecodeError (though it shouldn't!)"""
         raw_message = mitm_message.get_state()
 
         self.path = raw_message['request']['path'].decode()
@@ -239,8 +239,12 @@ class RStudioServerMonitor(ActivityMonitor):
         self.register_processors()
 
         # R's chunks are about equivalent to cells in Jupyter, these will be indexed by chunk_id
+        # Console / script output will be indexed with chunk_id 'console'
         self.current_chunks: Dict[str, ExecutionData] = {}
-        self.cell_data: List[ExecutionData] = []
+        # ExecutioniData that's ready to be stored
+        # For now, we stop and save an activity record whenever we change context from
+        # self.previous_chunk_context, so doc_id doesn't need to be stored here
+        self.completed_executions: List[ExecutionData] = []
 
         # TODO DC: Delete these commented fields
         # Previous variables that tracked the context of messages in the log, assuming a linear progression
@@ -250,9 +254,12 @@ class RStudioServerMonitor(ActivityMonitor):
         # self.is_console = False
         # self.is_notebook = False
         # self.chunk_id = None
-        # self.nbname = None
+        # self.nbname = None -> converting to 'name' in doc_properties
         # This will attempt to mirror what the RStudio backend knows for each doc_id
-        self.doc_properties: Dict[str, Dict] = {}
+        self.doc_properties: Dict[str, Dict] = {'console': {'name': 'console'}}
+        # This will also be 'console' or a chunk_id
+        # TODO DC: Figure out if there's a way to track context between .R scripts and console
+        self.previous_chunk_context = None
 
     def register_processors(self) -> None:
         """Method to register processors
@@ -298,15 +305,18 @@ class RStudioServerMonitor(ActivityMonitor):
                     redis_conn.delete(self.monitor_key)
                     break
 
-                previous_cells = len(self.cell_data)
+                # TODO DC: Clean up commented code
+                # previous_cells = len(self.completed_executions)
 
                 # Read activity and update aggregated "cell" data
                 self.process_activity(mitmlog)
 
                 # We are processing every second, then aggregating activity records when idle
-                if previous_cells == len(self.cell_data) and self.current_cell.is_empty():
-                    # there are no new cells in the last second, and no cells are in-process
-                    self.store_record()
+                # if previous_cells == len(self.completed_executions) and self.current_cell.is_empty():
+                # TODO DC: switch to something like
+                # if self.completed_executions and self.previous_chunk_context not in self.current_chunks:
+                #     # there are no new cells in the last second, and no cells are in-process
+                #     self.store_record()
 
                 # Check for new records every second
                 time.sleep(1)
@@ -325,22 +335,24 @@ class RStudioServerMonitor(ActivityMonitor):
     def store_record(self) -> None:
         """Store R input/output/code to ActivityRecord / git commit
 
-        store_record() should be called after moving any data in self.current_cell to
-        self.cell_data. Any data remaining in self.current_cell will be removed.
+        store_record() should be called after moving any data in self.current_chunks to
+        self.completed_executions.
+
+        Previously, any data remaining for current executions was removed. Given the current architecture,
+        this is no longer necessary.
 
         Args:
             None
         """
-        if len(self.cell_data) > 0:
+        if len(self.completed_executions) > 0:
             t_start = time.time()
 
             # Process collected data and create an activity record
-            if self.is_console:
-                codepath = "console"
-            else:
-                codepath = self.nbname if self.nbname else "Unknown notebook"
+            # TODO DC: Check that we always get an appropriate doc_id for this
+            # Otherwise, may need to create a chunk_context dict that maps chunks to doc_ids
+            codepath = self.safe_doc_name(self.previous_chunk_context)
 
-            activity_record = self.process(ActivityType.CODE, list(reversed(self.cell_data)),
+            activity_record = self.process(ActivityType.CODE, list(reversed(self.completed_executions)),
                                            {'path': codepath})
 
             # Commit changes to the related Notebook file
@@ -353,7 +365,7 @@ class RStudioServerMonitor(ActivityMonitor):
 
         # Reset for next execution
         self.current_cells = ExecutionData()
-        self.cell_data = list()
+        self.completed_executions = list()
         self.is_notebook = False
         self.is_console = False
 
@@ -376,10 +388,10 @@ class RStudioServerMonitor(ActivityMonitor):
             if self.is_console:
                 # switch from console to notebook. store record
                 if self.current_cell.code:
-                    self.cell_data.append(self.current_cell)
+                    self.completed_executions.append(self.current_cell)
                     self.store_record()
             elif self.is_notebook and self.current_cell.code:
-                self.cell_data.append(self.current_cell)
+                self.completed_executions.append(self.current_cell)
                 self.current_cell = ExecutionData()
                 self.chunk_id = None
 
@@ -393,7 +405,7 @@ class RStudioServerMonitor(ActivityMonitor):
             if self.is_notebook:
                 # switch to console. store record
                 if self.current_cell.code:
-                    self.cell_data.append(self.current_cell)
+                    self.completed_executions.append(self.current_cell)
                     self.store_record()
                 self.current_cell.tags.append('console')
 
@@ -426,7 +438,7 @@ class RStudioServerMonitor(ActivityMonitor):
                 # new cell advance cell
                 if self.chunk_id is None or self.chunk_id != edata['chunk_id']:
                     if self.current_cell.code:
-                        self.cell_data.append(self.current_cell)
+                        self.completed_executions.append(self.current_cell)
                     self.current_cell = ExecutionData()
                     self.chunk_id = edata['chunk_id']
                     self.current_cell.tags.append('notebook')
@@ -453,6 +465,14 @@ class RStudioServerMonitor(ActivityMonitor):
         else:
             return False
 
+    def safe_doc_name(self, doc_id: str) -> str:
+        """"Try to get a name from doc_properties safely
+
+        If it's missing, we create a default name for the doc_id. Hopefully one that gets fixed later!
+        """
+        properties = self.doc_properties.get(doc_id, {'name': f'ID: {doc_id}'})
+        return properties['name']
+
     def _handle_image(self, exchange: RStudioExchange):
         if exchange.path.startswith('/chunk_output/'):
             # This is from a document chunk execution, and looks like:
@@ -461,10 +481,10 @@ class RStudioServerMonitor(ActivityMonitor):
             chunk_id = segments[4]
             if chunk_id not in self.current_chunks:
                 doc_id = segments[3]
-                # We try to get a name from doc_properties, if it's missing, we return the doc_id
-                doc_name = self.doc_properties.get(doc_id, {'name': doc_id})['name']
+                doc_name = self.safe_doc_name(doc_id)
+                logger.error(f'RStudioServerMonitor found graphic without execution context for {doc_name}')
+                # But we'll store what we can
                 self.current_chunks[chunk_id] = ExecutionData()
-                logger.warning(f'RStudioServerMonitor found graphic without execution context for {doc_name}')
 
             self.current_chunks[chunk_id].result.append({'data': {'image/png': exchange.response}})
         elif exchange.path.startswith("/graphics/"):
@@ -499,7 +519,7 @@ class RStudioServerMonitor(ActivityMonitor):
         if m:
             # A new chunk, so potentially a new notebook.
             if self.current_cell.code:
-                self.cell_data.append(self.current_cell)
+                self.completed_executions.append(self.current_cell)
                 # RB was always storing a record here
                 # with new logic, running cells in two notebooks within a second seems unlikely
                 # self.store_record()
@@ -534,10 +554,6 @@ class RStudioServerMonitor(ActivityMonitor):
         # get an fstream generator object
         fstream = iter(mitmio.FlowReader(mitmlog).stream())
 
-        # no context yet.  not a notebook or console
-        self.is_console = False
-        self.is_notebook = False
-
         while True:
             try:
                 mitm_message = next(fstream)
@@ -566,9 +582,10 @@ class RStudioServerMonitor(ActivityMonitor):
                 self._parse_json(rstudio_exchange)
 
         # Flush cell data IFF anything happened
-        if self.current_cell.code:
-            self.cell_data.append(self.current_cell)
-        self.store_record()
-        self.current_cell = ExecutionData()
-        self.cell_data = list()
-        self.chunk_id = None
+        # TODO DC: needs to be completely re-done
+        # if self.current_cell.code:
+        #     self.completed_executions.append(self.current_cell)
+        # self.store_record()
+        # self.current_cell = ExecutionData()
+        # self.completed_executions = list()
+        # self.chunk_id = None
