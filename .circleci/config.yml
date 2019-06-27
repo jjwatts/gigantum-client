@@ -147,7 +147,7 @@ jobs:
           name: Run jest tests
           command: |
             cd /home/circleci/repo/ui
-            #jest shared/fileBrowser activity dashboard -u
+            jest shared/fileBrowser activity dashboard -u
 
   test-harness:
     executor: test_harness_exec
