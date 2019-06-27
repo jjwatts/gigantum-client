@@ -22,31 +22,32 @@ class PackageDataloader(DataLoader):
         self.labbook = labbook
         self.username = username
 
-    def populate_results(self):
+    def populate_results(self) -> None:
         # Repack key data
-        packages = {'conda2': list(),
-                    'conda3': list(),
-                    'pip': list(),
-                    'apt': list()}
+        packages: Dict[str, List[Tuple[str, str, str]]] = {'conda2': list(),
+                                                           'conda3': list(),
+                                                           'pip': list(),
+                                                           'apt': list()}
         for key in self.keys:
             manager, package = key.split('&')
             packages[manager].append((manager, package, key))
 
         for manager in packages.keys():
             package_names = [x[1] for x in packages[manager]]
-            mgr = get_package_manager(manager)
+            if package_names:
+                mgr = get_package_manager(manager)
 
-            try:
-                metadata = mgr.get_packages_metadata(package_names, labbook=self.labbook, username=self.username)
+                try:
+                    metadata = mgr.get_packages_metadata(package_names, labbook=self.labbook, username=self.username)
 
-                # save
-                for pkg_input, metadata in zip(packages[manager], metadata):
-                    self.results[pkg_input[2]] = metadata
+                    # save
+                    for pkg_input, metadata in zip(packages[manager], metadata):
+                        self.results[pkg_input[2]] = metadata
 
-            except ValueError as err:
-                logger.warning(f"An error occurred while looking up {manager} latest versions and metadata: {err}")
+                except ValueError as err:
+                    logger.warning(f"An error occurred while looking up {manager} latest versions and metadata: {err}")
 
-    def get_data(self, key: str):
+    def get_data(self, key: str) -> PackageMetadata:
         if not self.results:
             self.populate_results()
 

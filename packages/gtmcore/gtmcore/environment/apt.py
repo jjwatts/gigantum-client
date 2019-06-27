@@ -158,7 +158,7 @@ class AptPackageManager(PackageManager):
                 lines = result.decode('utf-8').split('\n')
                 for l in lines:
                     if l:
-                        pkg_name, pkg_description = l.split(" - ")
+                        pkg_name, pkg_description = l.split(" - ", 1)
                         if pkg_name == package:
                             description = pkg_description.strip()
                             break
