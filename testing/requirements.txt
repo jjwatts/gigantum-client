@@ -1,5 +1,5 @@
 selenium==3.14.1
-docker==3.5.0
+docker==4.0.1
 pillow==6.0.0
 boto3==1.9.130
 sgqlc==7.0
