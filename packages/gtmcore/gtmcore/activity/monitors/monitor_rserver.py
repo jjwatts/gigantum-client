@@ -238,18 +238,19 @@ class RStudioServerMonitor(ActivityMonitor):
         # For now, register processors by default
         self.register_processors()
 
-        # Let's call them cells as if they were Jupyter
-        self.current_cell = ExecutionData()
-        self.cell_data: List[ExecutionData] = list()
+        # R's chunks are about equivalent to cells in Jupyter, these will be indexed by chunk_id
+        self.current_chunks: Dict[str, ExecutionData] = {}
+        self.cell_data: List[ExecutionData] = []
 
-        # variables that track the context of messages in the log
+        # TODO DC: Delete these commented fields
+        # Previous variables that tracked the context of messages in the log, assuming a linear progression
         #   am I in the console, or the notebook?
         #   what chunk is being executed?
         #   in what notebook?
-        self.is_console = False
-        self.is_notebook = False
-        self.chunk_id = None
-        self.nbname = None
+        # self.is_console = False
+        # self.is_notebook = False
+        # self.chunk_id = None
+        # self.nbname = None
         # This will attempt to mirror what the RStudio backend knows for each doc_id
         self.doc_properties: Dict[str, Dict] = {}
 
@@ -351,7 +352,7 @@ class RStudioServerMonitor(ActivityMonitor):
             logger.info(f"Created auto-generated activity record {activity_commit} in {time.time() - t_start} seconds")
 
         # Reset for next execution
-        self.current_cell = ExecutionData()
+        self.current_cells = ExecutionData()
         self.cell_data = list()
         self.is_notebook = False
         self.is_console = False
@@ -453,10 +454,25 @@ class RStudioServerMonitor(ActivityMonitor):
             return False
 
     def _handle_image(self, exchange: RStudioExchange):
-        # The first are from documents (XXX DC and probably not notebooks), the second are from scripts.
-        if re.match(r"/chunk_output/(([\w]+)/)+([\w]+.png)", exchange.path) or \
-           re.match(r"/graphics/(?:[^[\\/:\"*?<>|]+])*([\w-]+).png", exchange.path):
-            self.current_cell.result.append({'data': {'image/png': exchange.response}})
+        if exchange.path.startswith('/chunk_output/'):
+            # This is from a document chunk execution, and looks like:
+            # /chunk_output/46E01830e058b169/C065EDF7/cln6e9n2q4150/000003.png
+            segments = exchange.path.split('/')
+            chunk_id = segments[4]
+            if chunk_id not in self.current_chunks:
+                doc_id = segments[3]
+                # We try to get a name from doc_properties, if it's missing, we return the doc_id
+                doc_name = self.doc_properties.get(doc_id, {'name': doc_id})['name']
+                self.current_chunks[chunk_id] = ExecutionData()
+                logger.warning(f'RStudioServerMonitor found graphic without execution context for {doc_name}')
+
+            self.current_chunks[chunk_id].result.append({'data': {'image/png': exchange.response}})
+        elif exchange.path.startswith("/graphics/"):
+            # This is from a script/console execution and looks like this (pretty sure a UUID):
+            # /graphics/ce4c938e-15f3-4da8-b193-0e3bdae0cf7d.png
+            self.current_chunks['console'].result.append({'data': {'image/png': exchange.response}})
+
+
 
     def _parse_json(self, exchange: RStudioExchange) -> None:
         """Parse the JSON response information from RStudio - keeping track of code, output, and metadata
