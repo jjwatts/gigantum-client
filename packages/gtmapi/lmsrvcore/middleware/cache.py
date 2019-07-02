@@ -1,8 +1,10 @@
 import time
-from typing import Dict, Tuple
+import datetime
+from typing import Any, Dict, Tuple
 
 import redis
 from gtmcore.logging import LMLogger
+from gtmcore.inventory.inventory import InventoryManager
 from lmsrvcore.auth.user import get_logged_in_username
 
 logger = LMLogger.get_logger()
@@ -62,26 +64,58 @@ def parse_mutation(operation_obj, variable_values: Dict) -> Tuple[str, str, str]
     return get_logged_in_username(), owner, repo_name
 
 
+def _make_key(id_tuple: Tuple[str, str, str]) -> str:
+    return '&'.join(['MODIFY_CACHE', *id_tuple])
+
+
+def _extract_id(key_value: str) -> Tuple[str, str, str]:
+    token, user, owner, name = key_value.rsplit('&', 3)
+    assert token == 'MODIFY_CACHE'
+    return user, owner, name
+
+
 class RepoCacheEntry:
-    def __init__(self, x):
-        pass
+    # 24 Hours
+    REFRESH_PERIOD_SEC = 60 * 60 * 24
+
+    def __init__(self, redis_conn: redis.Redis, key: str):
+        self.db = redis_conn
+        self.key = key
+
+    def _fetch_timestamps(self) -> Tuple[datetime.datetime, datetime.datetime]:
+        lb = InventoryManager().load_labbook(*_extract_id(self.key))
+        create_ts = lb.creation_date
+        modify_ts = lb.modified_on
+        self.db.hdel(self.key)
+        self.db.hset(self.key, 'creation_date', modify_ts)
+        self.db.hset(self.key, 'modified_on', modify_ts)
+        self.db.hset(self.key, 'last_cache_update', datetime.datetime.utcnow())
+        return create_ts, modify_ts
+
+    def _fetch_property(self, hash_field: str) -> datetime.datetime:
+        last_update = self.db.hget(self.key, 'last_cache_update')
+        delay_secs = (datetime.datetime.utcnow() - last_update).total_seconds()
+        if delay_secs > self.REFRESH_PERIOD_SEC:
+            logger.warning(f"Flushing cache for {self.key}")
+            self._fetch_timestamps()
+        return self.db.hget(self.key, hash_field)
+
+    @property
+    def modified_on(self) -> datetime.datetime:
+        return self._fetch_property('modified_on')
+
+    @property
+    def created_time(self) -> datetime.datetime:
+        return self._fetch_property('creation_date')
 
 
 class RepoCacheController:
     def __init__(self):
         self.db = redis.Redis(db=7)
 
-    @staticmethod
-    def _make_key(id_tuple: Tuple[str, str, str]) -> str:
-        return '&'.join(['MODIFY_CACHE', *id_tuple])
-
-    @staticmethod
-    def _extract_id(key_value: str) -> Tuple[str, str, str]:
-        token, user, owner, name = key_value.rsplit('&', 3)
-        assert token == 'MODIFY_CACHE'
-
-    def set_repo_modified(self, id_tuple: Tuple[str, str, str]):
+    def set_repo_modified(self, id_tuple: Tuple[str, str, str]) -> None:
         logger.warning(f"Set {id_tuple} modified at {time.time()}")
 
-    def query_repo_modified(self, id_tuple: Tuple[str, str, str]):
+    def query_repo_modified(self, id_tuple: Tuple[str, str, str]) -> float:
         logger.warning(f"Querying for {id_tuple} modified")
+        return time.time()
