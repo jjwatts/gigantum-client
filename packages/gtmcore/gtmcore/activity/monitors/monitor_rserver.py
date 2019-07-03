@@ -4,12 +4,12 @@ import gzip
 import base64
 import json
 import pandas
-import re
 import redis
 from docker.errors import NotFound
-from mitmproxy import io as mitmio
+import mitmproxy
+import mitmproxy.flow
 from mitmproxy.exceptions import FlowReadException
-from typing import (Dict, List, Optional)
+from typing import (Dict, List, Optional, BinaryIO)
 
 from gtmcore.activity import ActivityType
 from gtmcore.activity.monitors.activity import ActivityMonitor
@@ -187,7 +187,7 @@ class RStudioExchange:
 
     """
 
-    def __init__(self, mitm_message: mitmio.flow.Flow):
+    def __init__(self, mitm_message: mitmproxy.flow.Flow):
         """Note, parsing may throw a json.JSONDecodeError (though it shouldn't!)"""
         raw_message = mitm_message.get_state()
 
@@ -254,7 +254,7 @@ class RStudioServerMonitor(ActivityMonitor):
         # There are at least four ways that code is communicated back and forth between the front and back end
         # For now, we use the rpc execution paths to switch to a new context
         # This means we need to keep context if we saw multiple chunks in one request
-        self.remaining_chunks = List[Dict] = []
+        self.remaining_chunks: List[Dict] = []
 
         # This will attempt to mirror what the RStudio backend knows for each doc_id
         self.doc_properties: Dict[str, Dict] = {'console': {'name': 'console'}}
@@ -312,18 +312,8 @@ class RStudioServerMonitor(ActivityMonitor):
                     redis_conn.delete(self.monitor_key)
                     break
 
-                # TODO DC: Clean up commented code
-                # previous_cells = len(self.completed_executions)
-
                 # Read activity and update aggregated "cell" data
                 self.process_activity(mitmlog)
-
-                # We are processing every second, then aggregating activity records when idle
-                # if previous_cells == len(self.completed_executions) and self.current_cell.is_empty():
-                # TODO DC: switch to something like
-                # if self.completed_executions and self.previous_chunk_context not in self.active_execution:
-                #     # there are no new cells in the last second, and no cells are in-process
-                #     self.store_record()
 
                 # Check for new records every second
                 time.sleep(1)
@@ -344,9 +334,6 @@ class RStudioServerMonitor(ActivityMonitor):
 
         store_record() should be called after moving any data in self.active_execution to
         self.completed_executions. You should also check self.expected_images before calling this.
-
-        Args:
-            None
         """
         if len(self.completed_executions) > 0:
             t_start = time.time()
@@ -416,6 +403,8 @@ class RStudioServerMonitor(ActivityMonitor):
             elif etype == 'console_output':
                 self.active_execution.result.append({'data': {'text/plain': edata['text']}})
 
+            # TODO DC: handle etype of console_error?
+
     def _is_error(self, result: Dict) -> bool:
         """Check if there's an error in the message"""
         for entry in result:
@@ -473,6 +462,9 @@ class RStudioServerMonitor(ActivityMonitor):
                 # We'll check that our `write_console_input` events match this
                 self.active_console = chunks[0]['chunk_id']
                 self.remaining_chunks = chunks[1:]
+            else:
+                logger.error(f'Unknown path for new execution {exchange.path}')
+                return
 
         elif self.remaining_chunks:
             next_chunk = self.remaining_chunks[0]
@@ -485,9 +477,11 @@ class RStudioServerMonitor(ActivityMonitor):
                 new_doc = next_chunk['doc_id']
             else:
                 logger.error(f'Found unexpected console input from {new_console}')
+                return
 
         else:
             logger.error('Trying to shift to new chunk execution, but no expected chunks remain')
+            return
 
         if not self.active_execution.is_empty():
             self.completed_executions.append(self.active_execution)
@@ -556,7 +550,7 @@ class RStudioServerMonitor(ActivityMonitor):
         if doc_id and fname:
             self.doc_properties.setdefault(doc_id, {})['name'] = fname.lstrip('/mnt/labbook/')
 
-    def process_activity(self, mitmlog):
+    def process_activity(self, mitmlog: BinaryIO):
         """Collect tail of the activity log and turn into an activity record.
 
         Args:
@@ -566,7 +560,7 @@ class RStudioServerMonitor(ActivityMonitor):
             ar(): activity record
         """
         # get an fstream generator object
-        fstream = iter(mitmio.FlowReader(mitmlog).stream())
+        fstream = iter(mitmproxy.io.FlowReader(mitmlog).stream())
 
         while True:
             try:
@@ -585,9 +579,8 @@ class RStudioServerMonitor(ActivityMonitor):
 
             # process images
             if rstudio_exchange.response_type == 'image/png':
-                # For some reason, Randal only wanted to parse gzip'd images
-                # I guess non-zipped images should not occur
-                if self.response_headers.get('Content-Encoding') == 'gzip':
+                # I guess non-zipped images should not occur?
+                if rstudio_exchange.response_headers.get('Content-Encoding') == 'gzip':
                     self._handle_image(rstudio_exchange)
                 else:
                     logger.error(f"RSERVER Found image/png that was not gzip encoded.")
@@ -605,11 +598,10 @@ class RStudioServerMonitor(ActivityMonitor):
                 else:
                     self._update_doc_names(rstudio_exchange)
 
-        # Flush cell data IFF anything happened
-        # TODO DC: needs to be completely re-done
-        # if self.current_cell.code:
-        #     self.completed_executions.append(self.current_cell)
-        # self.store_record()
-        # self.current_cell = ExecutionData()
-        # self.completed_executions = list()
-        # self.chunk_id = None
+        # This logic isn't air-tight, but should at worst simply split what should've been in one execution across
+        # two ActivityRecords
+        if not (self.expected_images or self.remaining_chunks):
+            if not self.active_execution.is_empty():
+                self.completed_executions.append(self.active_execution)
+                self.active_execution = ExecutionData()
+            self.store_record()
