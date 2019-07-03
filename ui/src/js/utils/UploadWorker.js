@@ -23,8 +23,8 @@ const addFileUpload = (data) => {
   const {
     fullPath,
   } = file.file.entry;
-  const path = `${file.path}${fullPath}`;
 
+  const path = file.path === '/' ? fullPath : `${file.path}${fullPath}`;
   const chunkStart = file.chunkSize * file.chunkIndex;
   const chunkEnd = (file.chunkSize * (file.chunkIndex + 1) < file.size)
     ? file.chunkSize * (file.chunkIndex + 1)

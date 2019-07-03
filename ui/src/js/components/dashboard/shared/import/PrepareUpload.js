@@ -95,20 +95,23 @@ const prepareUpload = (file, typeOfUpload, buildImage, state, history) => {
     * @return {array}
   */
   const finishedCallback = (response) => {
+    const {
+      name,
+      owner,
+    } = state.ready;
+
     window.removeEventListener('beforeunload', navigateConfirm);
     setFileBrowserLock(false);
     setUploadMessageRemove('Completed Import');
 
-    if ((response.data.jobStatus.status === 'finished') && buildImage) {
-      const {
-        name,
-        owner,
-      } = state.ready;
-      buildImage(
-        name,
-        owner,
-        uuidv4(),
-      );
+    if (response.data.jobStatus.status === 'finished') {
+      if (buildImage) {
+        buildImage(
+          name,
+          owner,
+          uuidv4(),
+        );
+      }
 
       history.replace(`/projects/${owner}/${name}`);
     }

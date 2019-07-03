@@ -52,7 +52,7 @@ export default function PublishDatasetMutation(
       variables,
       onCompleted: (response, error) => {
         if (error) {
-          setErrorMessage(error);
+          setErrorMessage('An error occurred while publishing this Dataset', error);
           console.log(error);
         }
 

@@ -324,7 +324,7 @@ export default class ImportModule extends Component {
               if (props.section === 'labbook') {
                 prepareUpload(state.files[0], 'ImportLabbookMutation', buildImage, state, props.history);
               } else {
-                prepareUpload(state.files[0], 'ImportDatasetMutation');
+                prepareUpload(state.files[0], 'ImportDatasetMutation', false, state, props.history);
               }
 
               document.getElementById('modal__cover').classList.remove('hidden');

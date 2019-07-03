@@ -127,7 +127,6 @@ export default class PackageCard extends Component {
     } else {
       const newSelectedPackages = new Map();
       packageEdges.forEach((edge) => {
-        console.log(edge)
         if (!edge.fromBase) {
           newSelectedPackages.set(edge.id, edge);
         }

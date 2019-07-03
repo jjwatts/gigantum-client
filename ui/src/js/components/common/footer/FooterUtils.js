@@ -11,7 +11,6 @@ import {
 // mutations
 import FetchLabbookEdgeMutation from 'Mutations/FetchLabbookEdgeMutation';
 import FetchDatasetEdgeMutation from 'Mutations/FetchDatasetEdgeMutation';
-import FetchCompleteDatasetEdgeMutation from 'Mutations/FetchCompleteDatasetEdgeMutation';
 import FetchDatasetFilesMutation from 'Mutations/FetchDatasetFilesMutation';
 import FetchLabbookDatasetFilesMutation from 'Mutations/FetchLabbookDatasetFilesMutation';
 
@@ -198,7 +197,7 @@ const FooterUtils = {
     *  updates footer with a message
     *  @return {}
     */
-  datasetUploadStatus: (mutationResponse, refetch) => {
+  datasetUploadStatus: (mutationResponse, finishedCallback) => {
     const {
       completeDatasetUploadTransaction,
     } = mutationResponse;
@@ -221,20 +220,29 @@ const FooterUtils = {
           if (jobStatus.status === 'started' || jobStatus.status === 'queued') {
             setTimeout(() => {
               fetchStatus({ backgroundJobKey });
-              setUploadMessageUpdate(
-                metaData.feedback,
-                1,
-                parseFloat(metaData.percent_complete),
-              );
+
+              if (metaData.feedback === undefined) {
+                setUploadMessageUpdate(
+                  'Please wait while contents are analyzed.',
+                  1,
+                  0,
+                );
+              } else {
+                setUploadMessageUpdate(
+                  metaData.feedback,
+                  1,
+                  parseFloat(metaData.percent_complete),
+                );
+              }
             }, 1000);
           } else if ((jobStatus.status === 'finished') || (jobStatus.status === 'failed')) {
+            finishedCallback();
+
             setUploadMessageUpdate(
               metaData.feedback,
               1,
               parseFloat(metaData.percent_complete),
             );
-
-            refetch();
 
             setTimeout(() => {
               setUploadMessageRemove(metaData.feedback);

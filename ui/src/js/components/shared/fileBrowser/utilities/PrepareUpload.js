@@ -198,7 +198,7 @@ const handleCallback = (filesTemp, path, mutationData, component) => {
           path,
           mutationData,
           maxThreads: 4,
-          refetch: component._refetch,
+          component,
         });
 
         window.addEventListener('beforeunload', navigateConfirm);

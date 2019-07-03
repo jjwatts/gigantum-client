@@ -1,14 +1,12 @@
 // vendor
 import uuidv4 from 'uuid/v4';
+
 // store
 import {
   setUploadMessageUpdate,
   setUploadMessageRemove,
   setErrorMessage,
 } from 'JS/redux/actions/footer';
-import {
-  setFinishedUploading,
-} from 'JS/redux/actions/shared/fileBrowser/fileBrowserWrapper';
 // mutations
 import CompleteBatchUploadTransactionMutation
   from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
@@ -16,6 +14,7 @@ import CompleteDatasetUploadTransactionMutation
   from 'Mutations/fileBrowser/CompleteDatasetUploadTransactionMutation';
 // footer utils
 import FooterUtils from 'Components/common/footer/FooterUtils';
+import UpdateFileBrowserStore from 'Mutations/localCommits/FileBrowserStore';
 
 
 const chunkSize = 16 * 1000 * 1000;
@@ -118,15 +117,15 @@ const chunkForWorkQueue = (filesData) => {
 */
 const getDeadLetterFailures = (deadLetter) => {
   const failures = Object.keys(deadLetter).filter((key) => {
-     return (deadLetter[key].attempts > 3)
+      return (deadLetter[key].attempts > 3);
   });
 
   const failureFileNames = failures.map((key) => {
-    return deadLetter[key].chunk.file.entry.fullPath
+      return deadLetter[key].chunk.file.entry.fullPath
   });
 
   return failureFileNames;
-}
+};
 
 /**
 * matches type to the mutation
@@ -165,8 +164,7 @@ export default class MultithreadUploader {
     this.transactionId = uuidv4();
     this.uploadData = configureUploadData(config, this.transactionId);
     this.type = getType(config.mutationData.connection);
-
-    this.refetch = config.refetch;
+    this.component = config.component;
 
     this.mutationData = config.mutationData;
 
@@ -283,6 +281,7 @@ export default class MultithreadUploader {
     });
 
     this.inFlight.splice(index, 1);
+
     if (!isDeadLetter) {
       this.continueUpload();
     }
@@ -330,8 +329,18 @@ export default class MultithreadUploader {
       const { data } = evt;
       const { response } = data;
       if (response[this.type]) {
-        this.chunksUploaded += 1;
+        const fileType = this.type === 'addLabbookFile' ? 'newLabbookFileEdge' : 'newDatasetFileEdge';
+        if (response[this.type]
+          && response[this.type][fileType]
+          && response[this.type][fileType].node) {
+          UpdateFileBrowserStore.insertFileBrowserEdge(
+            response[this.type][fileType],
+            this.mutationData,
+            this.component,
+          );
+        }
 
+        this.chunksUploaded += 1;
         const totalChunks = (this.uploadData.filesData.length + this.uploadData.lastChunks.length);
         const percentage = (this.chunksUploaded / totalChunks) * 100;
         const prettyPercentage = percentage.toFixed(0);
@@ -342,7 +351,6 @@ export default class MultithreadUploader {
           this.chunksUploaded,
           percentage,
         );
-
         if (response[this.type].importJobKey !== null) {
           this.importJobKey = response[this.type].importJobKey;
         }
@@ -373,13 +381,16 @@ export default class MultithreadUploader {
   */
   addToDeadLetter(chunk) {
     const chunkName = chunk.file.file.entry.fullPath + chunk.file.chunkIndex;
+
     if (this.deadLetter[chunkName]) {
       const { failedAttempts } = this.deadLetter[chunkName];
+
       if (failedAttempts < 4) {
         this.deadLetter[chunkName].failedAttempts += 1;
         this.removeFromInflight(chunk.transactionId, true);
         this.pushToInflight(chunk);
       } else {
+        this.addToWorkQueue();
         this.removeFromInflight(chunk.transactionId, false);
       }
     } else {
@@ -409,22 +420,21 @@ export default class MultithreadUploader {
 
     const callback = (response, error) => {
       const totalFiles = this.uploadData.filesData.length;
-      setFinishedUploading();
-      setUploadMessageRemove(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, 100);
-      this.finishedCallback();
 
-      if (response) {
-        if (response.completeDatasetUploadTransaction) {
-          FooterUtils.datasetUploadStatus(response, this.refetch);
-        } else {
-          this.refetch();
-        }
+      if (connection !== 'DataBrowser_allFiles') {
+        setUploadMessageRemove(`Uploaded ${totalFiles} files. Please wait while upload is finalizing.`, null, 100);
+        this.finishedCallback();
+      }
+
+      if (response && response.completeDatasetUploadTransaction) {
+        FooterUtils.datasetUploadStatus(response, this.finishedCallback);
       }
 
       if (error) {
-        setErrorMessage(error);
+        setErrorMessage('Upload failed: ', error);
       }
     };
+
     if (connection.indexOf('_allFiles') > -1) {
       if (connection === 'DataBrowser_allFiles') {
         CompleteDatasetUploadTransactionMutation(
@@ -446,6 +456,8 @@ export default class MultithreadUploader {
           this.transactionId,
           callback,
         );
+
+        // setFinishedUploading();
       }
     } else {
       const { importJobKey } = this;
@@ -461,6 +473,7 @@ export default class MultithreadUploader {
     }
 
     const failures = getDeadLetterFailures(this.deadLetter);
+
     if (failures.length > 0) {
       const failureString = failures.join(', ');
       setErrorMessage({ message: `Failed to upload the following files: ${failureString}` });

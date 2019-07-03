@@ -47,7 +47,7 @@ export default function FetchLabbookDatasetFilesMutation(
     onCompleted: (response, error) => {
       if (error) {
         console.log(error);
-        setErrorMessage(error);
+        setErrorMessage('An error occurred while refetching data', error);
       }
       callback(error);
     },

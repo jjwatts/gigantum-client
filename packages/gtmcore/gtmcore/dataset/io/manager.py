@@ -214,28 +214,29 @@ class IOManager(object):
         Returns:
             list, int
         """
+        if not keys and not pull_all:
+            raise ValueError("Either `keys` must be provided or `pull_all` set to True for batch computation.")
+
         if pull_all:
             keys = self._get_pull_all_keys()
-
-        if not keys:
-            raise ValueError("Either `keys` must be provided or `pull_all` set to True for batch computation.")
 
         num_cores = self.dataset.client_config.download_cpu_limit
         key_batches: List[List] = [list() for _ in range(num_cores)]
         size_sums = [0 for _ in range(num_cores)]
 
         # Build batches by dividing keys across batches by file size
-        for key in keys:
-            data = self.manifest.get(key)
-            index = size_sums.index(min(size_sums))
-            key_batches[index].append(key)
-            file_size = int(data['size'])
-            size_sums[index] += file_size
+        if keys:
+            for key in keys:
+                data = self.manifest.get(key)
+                index = size_sums.index(min(size_sums))
+                key_batches[index].append(key)
+                file_size = int(data['size'])
+                size_sums[index] += file_size
 
         # Prune Jobs back if there are lots of cores but not lots of work
         key_batches = [x for x in key_batches if x != []]
 
-        return key_batches, sum(size_sums), len(keys)
+        return key_batches, sum(size_sums), (len(keys) if keys else 0)
 
     def compute_push_batches(self) -> Tuple[List[List[PushObject]], int, int]:
         """Method to compute object push batches that attempt to spread io across available cores

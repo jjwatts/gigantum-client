@@ -1,16 +1,22 @@
 // vendor
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 // assets
 import './FooterUploadBar.scss';
 
-export default class FooterUploadBar extends Component {
+export default class FooterUploadBar extends PureComponent {
   render() {
     const { props } = this;
     const footerUploadClass = classNames({
       hidden: !props.parentState.uploadOpen,
       'FooterUploadBar--status': props.parentState.uploadOpen,
       'FooterUploadBar--error': props.parentState.uploadError,
+    });
+
+    const isNotZero = props.parentState.progessBarPercentage !== 0;
+    const footerUploadBarClass = classNames({
+      FooterUploadBar__progressBar: true,
+      'FooterUploadBar__progressBar--animation': isNotZero,
     });
 
     return (
@@ -22,7 +28,7 @@ export default class FooterUploadBar extends Component {
         <div
           id="footerProgressBar"
           style={{ width: `${props.parentState.progessBarPercentage}%` }}
-          className="FooterUploadBar__progressBar"
+          className={footerUploadBarClass}
         />
 
         {

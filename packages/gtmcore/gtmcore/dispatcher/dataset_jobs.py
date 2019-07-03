@@ -483,53 +483,54 @@ def download_dataset_files(logged_in_username: str, access_token: str, id_token:
 
         key_batches, total_bytes, num_files = iom.compute_pull_batches(keys, pull_all=all_keys)
 
-        # Schedule jobs for batches
-        bg_jobs = list()
-        for keys in key_batches:
-            job_kwargs = {
-                'keys': keys,
-                'logged_in_username': logged_in_username,
-                'access_token': access_token,
-                'id_token': id_token,
-                'dataset_owner': dataset_owner,
-                'dataset_name': dataset_name,
-                'labbook_owner': labbook_owner,
-                'labbook_name': labbook_name,
-                'config_file': config_file,
-            }
-            job_metadata = {'dataset': f"{logged_in_username}|{dataset_owner}|{dataset_name}",
-                            'method': 'pull_objects'}
-
-            job_key = dispatcher_obj.dispatch_task(method_reference=pull_objects,
-                                                   kwargs=job_kwargs,
-                                                   metadata=job_metadata,
-                                                   persist=True)
-            bg_jobs.append(BackgroundDownloadJob(dispatcher_obj, keys, job_key))
-
-        update_feedback(f"Please wait - Downloading {num_files} files ({format_size(total_bytes)}) - 0% complete",
-                        percent_complete=0,
-                        has_failures=False)
-        logger.info(f"(Job {p}) Starting file downloads for"
-                    f" {logged_in_username}/{dataset_owner}/{dataset_name} with {len(key_batches)} jobs")
-
-        while sum([(x.is_complete or x.is_failed) for x in bg_jobs]) != len(bg_jobs):
-            # Refresh all job statuses and update status feedback
-            [j.refresh_status() for j in bg_jobs]
-            total_completed_bytes = sum([j.completed_bytes for j in bg_jobs])
-            pc = (float(total_completed_bytes) / float(total_bytes)) * 100
-            update_feedback(f"Please wait - Downloading {num_files} files ({format_size(total_completed_bytes)} of "
-                            f"{format_size(total_bytes)}) - {round(pc)}% complete",
-                            percent_complete=pc)
-            time.sleep(1)
-
-        # Aggregate failures if they exist
         failure_keys = list()
-        for j in bg_jobs:
-            if j.is_failed:
-                # Whole job failed...assume entire batch should get re-uploaded for now
-                failure_keys.extend(j.keys)
-            else:
-                failure_keys.extend(j.get_failed_keys())
+        if key_batches:
+            # Schedule jobs for batches
+            bg_jobs = list()
+            for keys in key_batches:
+                job_kwargs = {
+                    'keys': keys,
+                    'logged_in_username': logged_in_username,
+                    'access_token': access_token,
+                    'id_token': id_token,
+                    'dataset_owner': dataset_owner,
+                    'dataset_name': dataset_name,
+                    'labbook_owner': labbook_owner,
+                    'labbook_name': labbook_name,
+                    'config_file': config_file,
+                }
+                job_metadata = {'dataset': f"{logged_in_username}|{dataset_owner}|{dataset_name}",
+                                'method': 'pull_objects'}
+
+                job_key = dispatcher_obj.dispatch_task(method_reference=pull_objects,
+                                                       kwargs=job_kwargs,
+                                                       metadata=job_metadata,
+                                                       persist=True)
+                bg_jobs.append(BackgroundDownloadJob(dispatcher_obj, keys, job_key))
+
+            update_feedback(f"Please wait - Downloading {num_files} files ({format_size(total_bytes)}) - 0% complete",
+                            percent_complete=0,
+                            has_failures=False)
+            logger.info(f"(Job {p}) Starting file downloads for"
+                        f" {logged_in_username}/{dataset_owner}/{dataset_name} with {len(key_batches)} jobs")
+
+            while sum([(x.is_complete or x.is_failed) for x in bg_jobs]) != len(bg_jobs):
+                # Refresh all job statuses and update status feedback
+                [j.refresh_status() for j in bg_jobs]
+                total_completed_bytes = sum([j.completed_bytes for j in bg_jobs])
+                pc = (float(total_completed_bytes) / float(total_bytes)) * 100
+                update_feedback(f"Please wait - Downloading {num_files} files ({format_size(total_completed_bytes)} of "
+                                f"{format_size(total_bytes)}) - {round(pc)}% complete",
+                                percent_complete=pc)
+                time.sleep(1)
+
+            # Aggregate failures if they exist
+            for j in bg_jobs:
+                if j.is_failed:
+                    # Whole job failed...assume entire batch should get re-uploaded for now
+                    failure_keys.extend(j.keys)
+                else:
+                    failure_keys.extend(j.get_failed_keys())
 
         # Set final status for UI
         if len(failure_keys) == 0:

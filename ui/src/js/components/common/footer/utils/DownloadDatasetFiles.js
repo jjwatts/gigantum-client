@@ -45,7 +45,7 @@ export default {
     } else {
       const owner = metaDataArr[1];
       const labbookName = metaDataArr[2];
-      mutations.FetchDatasetFilesMutation(
+      mutations.FetchLabbookDatasetFilesMutation(
         owner,
         labbookName,
         () => {

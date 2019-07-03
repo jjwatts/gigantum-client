@@ -51,7 +51,7 @@ export default function FetchDatasetEdgeMutation(
     variables,
     onCompleted: (response, error) => {
       if (error) {
-        setErrorMessage(error);
+        setErrorMessage('An error occurred while refetching data', error);
         console.log(error);
       }
       callback(error);

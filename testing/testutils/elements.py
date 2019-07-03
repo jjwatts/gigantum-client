@@ -24,7 +24,6 @@ class CssElement:
 
     def find(self):
         """Immediately try to find and return the element.
-
         raises NoSuchElementException if selector doesn't match anything"""
         return self.driver.find_element_by_css_selector(self.selector)
 
@@ -324,7 +323,6 @@ class EnvironmentElements(UiComponent):
 
     '''Timing should be adjusted before use
      should be reintroduced when apt functions properly
-
     def add_apt_packages(self, *apt_packages):
         logging.info("Adding conda packages")
         self.environment_tab_button.wait().click()
@@ -649,7 +647,7 @@ class CloudProjectElements(UiComponent):
 
     @property
     def sync_cloud_project_button(self):
-        return CssElement(self.driver, ".Btn--branch--sync--upToDate")
+        return CssElement(self.driver, ".Btn--branch--sync")
 
     @property
     def sync_cloud_project_message(self):
@@ -761,7 +759,6 @@ class ProjectControlElements(UiComponent):
 
     def launch_devtool(self, tool_name='dev tool'):
         """Launch a dev tool, then switch to it
-
         tool_name:
             Name of the dev tool, used only for messages
         """
@@ -771,7 +768,6 @@ class ProjectControlElements(UiComponent):
 
     def open_devtool_tab(self, tool_name='dev tool') -> None:
         """Wait for a new tab, then switch to it
-
         tool_name:
             Name of the dev tool, used only in Exception message
         """
@@ -880,4 +876,3 @@ class ActivityElements(UiComponent):
     def first_card_img(self):
         """Returns the first img in an Activity Detail List - not necessarily from the first list!"""
         return CssElement(self.driver, "li.DetailsRecords__item img")
-

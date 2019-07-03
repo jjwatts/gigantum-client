@@ -53,7 +53,7 @@ export default function PublishLabbookMutation(
       variables,
       onCompleted: (response, error) => {
         if (error) {
-          setErrorMessage(error);
+          setErrorMessage('An error occurred while publishing this Project', error);
           console.log(error);
         }
 
