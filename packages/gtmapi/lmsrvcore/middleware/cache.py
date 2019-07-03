@@ -5,6 +5,7 @@ from typing import Any, Dict, Tuple
 import redis
 from gtmcore.logging import LMLogger
 from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.labbook import LabBook
 from lmsrvcore.auth.user import get_logged_in_username
 
 logger = LMLogger.get_logger()
@@ -113,9 +114,8 @@ class RepoCacheController:
     def __init__(self):
         self.db = redis.Redis(db=7)
 
-    def set_repo_modified(self, id_tuple: Tuple[str, str, str]) -> None:
-        logger.warning(f"Set {id_tuple} modified at {time.time()}")
+    def cached_modified_on(self, id_tuple: Tuple[str, str, str]) -> datetime.datetime:
+        return RepoCacheEntry(self.db, _make_key(id_tuple)).modified_on
 
-    def query_repo_modified(self, id_tuple: Tuple[str, str, str]) -> float:
-        logger.warning(f"Querying for {id_tuple} modified")
-        return time.time()
+    def cached_created_time(self, id_tuple: Tuple[str, str, str]) -> datetime.datetime:
+        return RepoCacheEntry(self.db, _make_key(id_tuple)).created_time

@@ -101,11 +101,24 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
 
         # Collect all labbooks for all owners
         inv_manager = InventoryManager()
-        local_lbs = inv_manager.list_labbooks(username=username, sort_mode=order_by)
-        if reverse:
-            local_lbs.reverse()
+        local_lbs = inv_manager.list_labbooks(username=username) #, sort_mode=order_by)
 
-        edges = [(inv_manager.query_owner(lb), lb.name) for lb in local_lbs]
+        from lmsrvcore.middleware.cache import RepoCacheController
+
+        r = RepoCacheController()
+        if order_by == 'modified_on':
+            sort_key = lambda lb: r.cached_modified_on((username, lb.owner, lb.name))
+        elif order_by == 'created_on':
+            sort_key = lambda lb: r.cached_modified_on((username, lb.owner, lb.name))
+        else:
+            sort_key = lambda lb: lb.name
+
+        sorted_lbs = sorted(local_lbs, key=sort_key)
+
+        if reverse:
+            sorted_lbs.reverse()
+
+        edges = [(inv_manager.query_owner(lb), lb.name) for lb in sorted_lbs]
         cursors = [base64.b64encode("{}".format(cnt).encode("UTF-8")).decode("UTF-8") for cnt, x in enumerate(edges)]
 
         # Process slicing and cursor args
