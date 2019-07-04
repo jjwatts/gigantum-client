@@ -1,0 +1,148 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.13.5
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-450202:
+    - relay-compiler > @babel/core > @babel/traverse > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - webpack-bundle-analyzer > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - hard-source-webpack-plugin > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - eslint-plugin-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - '@babel/traverse > lodash':
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-schema-linter > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > express-request-proxy > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - '@babel/plugin-transform-modules-commonjs > @babel/helper-module-transforms > lodash':
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > inquirer > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - '@babel/plugin-transform-modules-commonjs > @babel/helper-simple-access > @babel/types > lodash':
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > tmp-graphql-config-extension-openapi > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > babel-preset-fbjs > @babel/plugin-transform-block-scoping > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-config-extension-graphcool > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > tmp-graphql-config-extension-openapi > @kbrandwijk/swagger-to-graphql > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-config-extension-prisma > prisma-yml > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > @babel/traverse > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-config-extension-graphcool > graphcool-yml > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-cli-prepare > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - jsdom > request-promise-native > request-promise-core > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > express-request-proxy > async > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > creato > inquirer > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-config-extension-prisma > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - '@babel/plugin-transform-modules-commonjs > @babel/helper-module-transforms > @babel/helper-simple-access > @babel/types > lodash':
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-cli-prepare > graphql-static-binding > cucumber-html-reporter > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > @babel/traverse > @babel/helper-function-name > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-core > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > tmp-graphql-config-extension-openapi > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > babel-preset-fbjs > @babel/plugin-transform-classes > @babel/helper-define-map > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-config-extension-prisma > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > graphql-config-extension-graphcool > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-core > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - react-tag-input > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > babel-preset-fbjs > @babel/plugin-transform-classes > @babel/helper-replace-supers > @babel/traverse > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - '@babel/plugin-transform-modules-commonjs > @babel/helper-module-transforms > @babel/helper-simple-access > @babel/template > @babel/types > lodash':
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > tmp-graphql-config-extension-openapi > @kbrandwijk/swagger-to-graphql > request-promise > request-promise-core > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-typescript-legacy > apollo-codegen-core > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-typescript > apollo-codegen-core > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-swift > apollo-codegen-core > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-scala > apollo-codegen-core > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-flow-legacy > apollo-codegen-core > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-flow > apollo-codegen-core > graphql-config > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-core > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-typescript-legacy > apollo-codegen-core > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-typescript > apollo-codegen-core > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-swift > apollo-codegen-core > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-scala > apollo-codegen-core > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-flow-legacy > apollo-codegen-core > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-flow > apollo-codegen-core > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-core > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-swift > apollo-codegen-core > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > babel-preset-fbjs > @babel/plugin-transform-classes > @babel/helper-function-name > @babel/helper-get-function-arity > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > @babel/core > @babel/traverse > @babel/helper-function-name > @babel/helper-get-function-arity > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-flow > apollo-codegen-core > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-scala > apollo-codegen-core > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-swift > apollo-codegen-core > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-typescript > apollo-codegen-core > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-typescript-legacy > apollo-codegen-core > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-flow > apollo-codegen-core > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-flow-legacy > apollo-codegen-core > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-scala > apollo-codegen-core > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-typescript > apollo-codegen-core > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-typescript-legacy > apollo-codegen-core > graphql-config > graphql-import > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - graphql-cli > apollo-codegen > apollo-codegen-flow-legacy > apollo-codegen-core > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > babel-preset-fbjs > @babel/plugin-transform-classes > @babel/helper-replace-supers > @babel/traverse > @babel/generator > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > @babel/core > @babel/helpers > @babel/traverse > @babel/helper-function-name > @babel/template > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > babel-preset-fbjs > @babel/plugin-proposal-class-properties > @babel/helper-create-class-features-plugin > @babel/helper-replace-supers > @babel/traverse > @babel/helper-function-name > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'
+    - relay-compiler > babel-preset-fbjs > @babel/plugin-proposal-class-properties > @babel/helper-create-class-features-plugin > @babel/helper-replace-supers > @babel/traverse > @babel/helper-function-name > @babel/template > @babel/types > lodash:
+        patched: '2019-07-04T04:41:48.256Z'

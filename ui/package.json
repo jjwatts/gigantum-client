@@ -128,7 +128,8 @@
     "uuid": "^3.1.0",
     "webpack-bundle-analyzer": "^3.0.3",
     "whatwg-encoding": "1.0.5",
-    "xmlhttprequest": "^1.8.0"
+    "xmlhttprequest": "^1.8.0",
+    "snyk": "^1.189.0"
   },
   "scripts": {
     "start": "node scripts/start.js NODE_ENV='development'",
@@ -146,7 +147,9 @@
     "lint-fix": "eslint ./.eslintrc --fix ./src",
     "rebuild-sass": "npm rebuild node-sass --force",
     "generate-icons": "babel-node ./scripts/generateIcons.js",
-    "update-globals": "npm install -g @babel/cli@7.2.3 @babel/core@7.2.2 jest@23.6.0 relay-compiler@2.0.0"
+    "update-globals": "npm install -g @babel/cli@7.2.3 @babel/core@7.2.2 jest@23.6.0 relay-compiler@2.0.0",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "eslint": {
     "plugins": [
@@ -154,5 +157,6 @@
       "jsx-a11y",
       "react"
     ]
-  }
+  },
+  "snyk": true
 }
