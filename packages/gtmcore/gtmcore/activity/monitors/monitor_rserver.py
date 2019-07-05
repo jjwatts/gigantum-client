@@ -7,6 +7,7 @@ import pandas
 import redis
 from docker.errors import NotFound
 import mitmproxy
+import mitmproxy.io as mitmio
 import mitmproxy.flow
 from mitmproxy.exceptions import FlowReadException
 from typing import (Dict, List, Optional, BinaryIO)
@@ -560,7 +561,7 @@ class RStudioServerMonitor(ActivityMonitor):
             ar(): activity record
         """
         # get an fstream generator object
-        fstream = iter(mitmproxy.io.FlowReader(mitmlog).stream())
+        fstream = iter(mitmio.FlowReader(mitmlog).stream())
 
         while True:
             try:
