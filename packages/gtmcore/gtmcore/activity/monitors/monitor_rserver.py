@@ -88,13 +88,13 @@ class RServerMonitor(DevEnvMonitor):
         # Get list of active Activity Monitor Instances from redis
         # dev_env_monitor_key should specify rstudio at this point, and there should only be one key
         activity_monitor_keys = redis_conn.keys('{}:activity_monitor:*'.format(dev_env_monitor_key))
-        activity_monitor_keys = [x.decode('utf-8') for x in activity_monitor_keys]
+        activity_monitor_keys = [x.decode() for x in activity_monitor_keys]
         retlist = []
         try:
             for am in activity_monitor_keys:
-                logfid = redis_conn.hget(am, "logfile_id").decode()
+                logfid = redis_conn.hget(am, "logfile_id")
                 if logfid:
-                    retlist.append(logfid)
+                    retlist.append(logfid.decode())
         # decode throws error on unset values.  not sure how to check RB
         except Exception as e:
             logger.error(f'Unhandled exception in get_activity_monitor_lb_names: {e}')
@@ -151,7 +151,7 @@ class RServerMonitor(DevEnvMonitor):
             MITMProxyOperations.stop_mitm_proxy(labbook_container_name)
         else:
             am_running = redis_conn.hget(activity_monitor_key, 'run')
-            if not am_running or am_running.decode() == 'False':
+            if not am_running or am_running == b'False':
                 # Get author info
                 # RB this is not populated until a labbook is started why running?
                 author_name = redis_conn.hget(dev_env_monitor_key, "author_name").decode()
@@ -195,26 +195,33 @@ class RStudioExchange:
         self.path = raw_message['request']['path'].decode()
         self.request_headers = {k.decode(): v.decode() for k, v in raw_message['request']['headers']}
 
-        # strict=False allows control codes, as used in tidyverse output
-        # Not sure if necessary for requests
-        self.request = json.loads(raw_message['request']['content'].decode(), strict=False)
+        request_text = raw_message['request']['content'].decode()
+        if request_text:
+            self.request = json.loads(request_text)
 
         self.response_headers = {k.decode(): v.decode() for k, v in raw_message['response']['headers']}
         self.response_type = self.response_headers.get('Content-Type')
 
         # This could get fairly resource intensive if our records get large,
         # but for now we keep things simple - all parsing happens in this class, and we can optimize later
-        response = raw_message['response']['content']
+        response_bytes = raw_message['response']['content']
         if self.response_headers.get('Content-Encoding') == 'gzip':
-            response = gzip.decompress(response)
+            response_bytes = gzip.decompress(response_bytes)
+
+        # Default response is empty string
+        response = ''
         if self.response_type == 'application/json':
             # strict=False allows control codes, as used in tidyverse output
-            response = json.loads(response.decode(), strict=False)
+            response = json.loads(response_bytes.decode(), strict=False)
         elif self.response_type == 'img/png':
+            response = base64.b64encode(response_bytes).decode('ascii')
             # if we actually wanted to work with the image, could do so like this:
-            # img = Image.open(io.BytesIO(response))
-            response = base64.b64encode(response)
-        self.response = response
+            # img = Image.open(io.BytesIO(response_bytes))
+        else:
+            if response_bytes:
+                response = '**unsupported**'
+
+        self.response: str = response
 
 
 class RStudioServerMonitor(ActivityMonitor):
@@ -308,7 +315,7 @@ class RStudioServerMonitor(ActivityMonitor):
                 still_running = redis_conn.hget(self.monitor_key, "run")
                 # Check if you should exit
                 # sometimes this runs after key has been deleted.  None is shutdown too.
-                if not still_running or still_running.decode() == "False":
+                if not still_running or still_running == b"False":
                     logger.info(f"Received Activity Monitor Shutdown Message for {self.monitor_key}")
                     redis_conn.delete(self.monitor_key)
                     break
@@ -586,12 +593,12 @@ class RStudioServerMonitor(ActivityMonitor):
                 else:
                     logger.error(f"RSERVER Found image/png that was not gzip encoded.")
 
-            if rstudio_exchange.response_type == 'application/json':
+            elif rstudio_exchange.response_type == 'application/json':
                 # code or output event
                 if rstudio_exchange.path == "/events/get_events":
                     # There are some special case get_events calls at the beginning of a session.
                     # We ignore those.
-                    if rstudio_exchange.request['params'][0] == -1:
+                    if rstudio_exchange.request['params'][0] != -1:
                         # get text/code fields out of dictionary
                         self._parse_backend_events(rstudio_exchange.response)
                 elif rstudio_exchange.path in ['/rpc/console_input', '/rpc/execute_notebook_chunks']:

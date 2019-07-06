@@ -130,8 +130,8 @@ class RStudioServerImageExtractorProcessor(ActivityProcessor):
                                                            action=ActivityAction.CREATE,
                                                            importance=max(255-result_cnt, 0))
 
-                            # Image data must be represented as a string.
-                            strdata = result_entry['data'][mime_type].decode()
+                            # All RStudio responses, even b64encoded data is represented as a string.
+                            strdata = result_entry['data'][mime_type]
                             adr_img.add_value(mime_type, strdata)
 
                             adr_img.tags = cell.tags
