@@ -220,6 +220,27 @@ const handleCallback = (filesTemp, path, mutationData, component) => {
   }
 };
 
+
+/**
+* formats files for upload
+* @param {Object} dndItem
+* @param {function} setCallbackRoute
+*
+* @calls {callback}
+*/
+const uploadFromFileSelector = (dndItem, callback) => {
+  const files = dndItem.map(item => ({
+    file: item,
+    entry: {
+      fullPath: item.name,
+      name: item.name,
+    },
+  }));
+
+
+  callback(files);
+};
+
 /**
 * @param {Object} dndItem
 * @param {Object} props
@@ -236,6 +257,11 @@ const prepareUpload = (dndItem, props, monitor, mutationData, component) => {
     };
 
     uploadDirContent(dndItem, props, monitor, callback);
+  } else {
+    const callback = (filesTemp) => {
+      handleCallback(filesTemp, '', mutationData, component);
+    };
+    uploadFromFileSelector(dndItem, callback);
   }
 };
 export default prepareUpload;

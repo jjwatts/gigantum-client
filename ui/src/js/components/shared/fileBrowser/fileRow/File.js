@@ -28,7 +28,7 @@ class File extends Component {
     super(props);
     this.state = {
       isDragging: props.isDragging,
-      isSelected: (props.isSelected || this.props.childrenState[this.props.fileData.edge.node.key].isSelected) || false,
+      isSelected: (props.isSelected || (this.props.childrenState[this.props.fileData.edge.node.key] && this.props.childrenState[this.props.fileData.edge.node.key].isSelected)) || false,
       stateSwitch: false,
       newFileName: props.filename,
       renameEditMode: false,
