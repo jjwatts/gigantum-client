@@ -5,7 +5,6 @@ from typing import Any, Dict, Tuple, List
 import redis
 from gtmcore.logging import LMLogger
 from gtmcore.inventory.inventory import InventoryManager
-from gtmcore.labbook import LabBook
 from lmsrvcore.auth.user import get_logged_in_username
 
 logger = LMLogger.get_logger()
@@ -20,7 +19,8 @@ class RepositoryCacheMiddleware:
         if info.operation.operation == 'mutation':
             try:
                 username, owner, name = parse_mutation(info.operation, info.variable_values)
-                logger.warning((username, owner, name))
+                r = RepoCacheController()
+                r.clear_entry((username, owner, name))
             except UnknownRepo as e:
                 pass
             finally:
@@ -83,12 +83,15 @@ class RepoCacheEntry:
         self.db = redis_conn
         self.key = key
 
+    def __str__(self):
+        return f"RepoCacheEntry({self.key})"
+
     def _fetch_timestamps(self) -> Tuple[datetime.datetime, datetime.datetime]:
         logger.warning(f"Fetching {self.key} from disk.")
         lb = InventoryManager().load_labbook(*_extract_id(self.key))
         create_ts = lb.creation_date
         modify_ts = lb.modified_on
-        self.db.hdel(self.key, 'creation_date', 'modified_on', 'last_cache_update')
+        self.clear()
         self.db.hset(self.key, 'creation_date', modify_ts.strftime("%Y-%m-%dT%H:%M:%S.%f"))
         self.db.hset(self.key, 'modified_on', modify_ts.strftime("%Y-%m-%dT%H:%M:%S.%f"))
         self.db.hset(self.key, 'last_cache_update', datetime.datetime.utcnow().isoformat())
@@ -109,7 +112,6 @@ class RepoCacheEntry:
             logger.warning(f"Using cached timestamp for {self.key}")
         delay_secs = (datetime.datetime.utcnow() - last_update).total_seconds()
         if delay_secs > self.REFRESH_PERIOD_SEC:
-            logger.warning(f"Flushing cache for {self.key}")
             self._fetch_timestamps()
         return self._date(self.db.hget(self.key, hash_field))
 
@@ -121,6 +123,11 @@ class RepoCacheEntry:
     def created_time(self) -> datetime.datetime:
         return self._fetch_property('creation_date')
 
+    def clear(self):
+        """Remove this entry from the Redis cache. """
+        logger.warning(f"Flushing cache entry for {self}")
+        self.db.hdel(self.key, 'creation_date', 'modified_on', 'last_cache_update')
+
 
 class RepoCacheController:
     def __init__(self):
@@ -131,3 +138,6 @@ class RepoCacheController:
 
     def cached_created_time(self, id_tuple: Tuple[str, str, str]) -> datetime.datetime:
         return RepoCacheEntry(self.db, _make_key(id_tuple)).created_time
+
+    def clear_entry(self, id_tuple: Tuple[str, str, str]) -> None:
+        RepoCacheEntry(self.db, _make_key(id_tuple)).clear()
