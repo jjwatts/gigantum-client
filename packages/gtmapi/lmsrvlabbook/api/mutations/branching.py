@@ -1,7 +1,6 @@
 import graphene
 
 from gtmcore.logging import LMLogger
-
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.inventory.branching import BranchManager
 from gtmcore.activity import ActivityStore, ActivityDetailRecord, ActivityDetailType, ActivityRecord, ActivityType

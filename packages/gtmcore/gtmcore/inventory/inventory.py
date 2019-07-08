@@ -254,7 +254,6 @@ class InventoryManager(object):
 
         Args:
             username: Active username
-            sort_mode: One of "name", "modified_on" or "created_on"
 
         Returns:
             Sorted list of LabBook objects
@@ -267,20 +266,6 @@ class InventoryManager(object):
             except Exception as e:
                 logger.error(e)
         return local_labbooks
-
-        # if sort_mode == "name":
-        #     local_labbooks = self._safe_load(username, key_f=lambda lb: lb.name)
-        #     sorted_list = natsorted(local_labbooks, key=lambda tup: tup[1])
-        # elif sort_mode == 'modified_on':
-        #     local_labbooks = self._safe_load(username, key_f=lambda lb: lb.modified_on)
-        #     sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
-        # elif sort_mode == 'created_on':
-        #     local_labbooks = self._safe_load(username, key_f=lambda lb: lb.creation_date)
-        #     sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
-        # else:
-        #     raise InventoryException(f"Invalid sort mode {sort_mode}")
-
-        return [lb for (lb, key) in sorted_list]
 
     def _safe_load(self, username, key_f: Callable) -> List[Tuple[LabBook, Any]]:
         """Helper method to prevent loading corrupt LabBooks into the list of local labbooks."""
