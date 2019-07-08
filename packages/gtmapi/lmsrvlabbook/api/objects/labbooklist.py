@@ -17,20 +17,26 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import time
 import base64
 import graphene
 import requests
 import flask
+from typing import Any, Optional, Tuple
+
+from gtmcore.logging import LMLogger
+from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.configuration import Configuration
+
+from lmsrvcore.middleware.cache import RepoCacheController
+from lmsrvcore.auth.user import get_logged_in_username
+from lmsrvcore.api.connections import ListBasedConnection
+from lmsrvcore.auth.identity import parse_token
 
 from lmsrvlabbook.api.connections.labbook import LabbookConnection, Labbook
 from lmsrvlabbook.api.connections.remotelabbook import RemoteLabbookConnection, RemoteLabbook
 
-from gtmcore.inventory.inventory import InventoryManager
-from gtmcore.configuration import Configuration
-
-from lmsrvcore.auth.user import get_logged_in_username
-from lmsrvcore.api.connections import ListBasedConnection
-from lmsrvcore.auth.identity import parse_token
+logger = LMLogger.get_logger()
 
 
 class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
@@ -90,6 +96,7 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         Returns:
             list(Labbook)
         """
+        tSTART = time.time()
         username = get_logged_in_username()
 
         if sort == "desc":
@@ -103,9 +110,20 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         inv_manager = InventoryManager()
         local_lbs = inv_manager.list_labbooks(username=username) #, sort_mode=order_by)
 
-        from lmsrvcore.middleware.cache import RepoCacheController
+        logger.warning(f"Listed LBs after {time.time()-tSTART:.2f}")
 
         r = RepoCacheController()
+        safe_lbs = []
+        for lb in local_lbs:
+            try:
+                r.cached_modified_on((username, lb.owner, lb.name))
+                r.cached_created_time((username, lb.owner, lb.name))
+                safe_lbs.append(lb)
+            except Exception as e:
+                logger.warning(f"Error loading timestamp on {str(lb)}: {e}")
+
+        logger.warning(f"Ran safe LBs after {time.time()-tSTART:.2f}sec")
+
         if order_by == 'modified_on':
             sort_key = lambda lb: r.cached_modified_on((username, lb.owner, lb.name))
         elif order_by == 'created_on':
@@ -113,10 +131,10 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         else:
             sort_key = lambda lb: lb.name
 
-        sorted_lbs = sorted(local_lbs, key=sort_key)
-
+        sorted_lbs = sorted(safe_lbs, key=sort_key)
         if reverse:
             sorted_lbs.reverse()
+        logger.warning(f"Sorted all safe LBs after {time.time()-tSTART:.2f}sec")
 
         edges = [(inv_manager.query_owner(lb), lb.name) for lb in sorted_lbs]
         cursors = [base64.b64encode("{}".format(cnt).encode("UTF-8")).decode("UTF-8") for cnt, x in enumerate(edges)]
@@ -135,6 +153,7 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
             edge_objs.append(LabbookConnection.Edge(node=Labbook(**create_data),
                                                     cursor=cursor))
 
+        logger.warning(f"Returning from mutation after {time.time()-tSTART:.2f}sec")
         return LabbookConnection(edges=edge_objs, page_info=lbc.page_info)
 
     def resolve_remote_labbooks(self, info, order_by: str, sort: str, **kwargs):

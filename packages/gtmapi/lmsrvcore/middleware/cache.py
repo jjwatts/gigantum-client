@@ -1,6 +1,6 @@
 import time
 import datetime
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List
 
 import redis
 from gtmcore.logging import LMLogger
@@ -84,22 +84,34 @@ class RepoCacheEntry:
         self.key = key
 
     def _fetch_timestamps(self) -> Tuple[datetime.datetime, datetime.datetime]:
+        logger.warning(f"Fetching {self.key} from disk.")
         lb = InventoryManager().load_labbook(*_extract_id(self.key))
         create_ts = lb.creation_date
         modify_ts = lb.modified_on
-        self.db.hdel(self.key)
-        self.db.hset(self.key, 'creation_date', modify_ts)
-        self.db.hset(self.key, 'modified_on', modify_ts)
-        self.db.hset(self.key, 'last_cache_update', datetime.datetime.utcnow())
+        self.db.hdel(self.key, 'creation_date', 'modified_on', 'last_cache_update')
+        self.db.hset(self.key, 'creation_date', modify_ts.strftime("%Y-%m-%dT%H:%M:%S.%f"))
+        self.db.hset(self.key, 'modified_on', modify_ts.strftime("%Y-%m-%dT%H:%M:%S.%f"))
+        self.db.hset(self.key, 'last_cache_update', datetime.datetime.utcnow().isoformat())
         return create_ts, modify_ts
 
+    @staticmethod
+    def _date(bin_str: bytes):
+        if bin_str is None:
+            return None
+        return datetime.datetime.strptime(bin_str.decode(), "%Y-%m-%dT%H:%M:%S.%f")
+
     def _fetch_property(self, hash_field: str) -> datetime.datetime:
-        last_update = self.db.hget(self.key, 'last_cache_update')
+        last_update = self._date(self.db.hget(self.key, 'last_cache_update'))
+        if last_update is None:
+            self._fetch_timestamps()
+            last_update = self._date(self.db.hget(self.key, 'last_cache_update'))
+        else:
+            logger.warning(f"Using cached timestamp for {self.key}")
         delay_secs = (datetime.datetime.utcnow() - last_update).total_seconds()
         if delay_secs > self.REFRESH_PERIOD_SEC:
             logger.warning(f"Flushing cache for {self.key}")
             self._fetch_timestamps()
-        return self.db.hget(self.key, hash_field)
+        return self._date(self.db.hget(self.key, hash_field))
 
     @property
     def modified_on(self) -> datetime.datetime:

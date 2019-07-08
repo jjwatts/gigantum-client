@@ -35,5 +35,6 @@ def time_all_resolvers_middleware(next, root, info, **args):
             "field_name": info.field_name,
             "duration_ms": round(duration * 1000, 2)}
 
-    logger.info(f"METRIC :: {json.dumps(data)}")
+    if duration * 1000 > 10:
+        logger.info(f"METRIC :: {json.dumps(data)}")
     return return_value

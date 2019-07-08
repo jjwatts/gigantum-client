@@ -62,7 +62,7 @@ class LabBook(Repository):
             return None
 
     @property
-    def creation_date(self) -> Optional[datetime.datetime]:
+    def creation_date(self) -> datetime.datetime:
         """ Return the timestamp of creation of this project """
         date_str = self._data.get('creation_utc') or self._data['created_on']
         try:

@@ -103,7 +103,7 @@ def log_in(driver: selenium.webdriver, user_index: int = 0) -> str:
         logging.info("Clicking 'Not your account?'")
         auth0_elts.not_your_account_button.wait().click()
     auth0_elts.do_login(username, password)
-    time.sleep(5)
+    time.sleep(1)
     # Set the ID and ACCESS TOKENS -- Used as headers for GraphQL mutations
     access_token = driver.execute_script("return window.localStorage.getItem('access_token')")
     id_token = driver.execute_script("return window.localStorage.getItem('id_token')")

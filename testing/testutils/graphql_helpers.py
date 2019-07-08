@@ -146,12 +146,23 @@ def list_local_projects():
     labbook_list_query = """
     {
         labbookList {
-            localLabbooks(first: 2000) {
+            localLabbooks(first: 2000, orderBy: "modified_on") {
                 edges {
                     node {
-                        owner
+                        id
                         name
+                        description
+                        owner
+                        creationDateUtc
+                        modifiedOnUtc
                     }
+                    cursor
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
                 }
             }
         }
@@ -161,7 +172,7 @@ def list_local_projects():
     if 'errors' in results:
         raise GraphQLException(json.dumps(results))
 
-    pprint.pprint(results)
+    #pprint.pprint(results)
     return [(r['node']['owner'], r['node']['name'])
             for r in results['data']['labbookList']['localLabbooks']['edges']]
 

@@ -249,7 +249,7 @@ class InventoryManager(object):
                     logger.warning(f'Unknown artifact in inventory: {repository_dir}')
         return repository_paths
 
-    def list_labbooks(self, username: str, sort_mode: str = "name") -> List[LabBook]:
+    def list_labbooks(self, username: str) -> List[LabBook]:
         """ Return list of all available labbooks for a given user
 
         Args:
@@ -259,17 +259,26 @@ class InventoryManager(object):
         Returns:
             Sorted list of LabBook objects
         """
-        if sort_mode == "name":
-            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.name)
-            sorted_list = natsorted(local_labbooks, key=lambda tup: tup[1])
-        elif sort_mode == 'modified_on':
-            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.modified_on)
-            sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
-        elif sort_mode == 'created_on':
-            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.creation_date)
-            sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
-        else:
-            raise InventoryException(f"Invalid sort mode {sort_mode}")
+        local_labbooks = []
+        for username, owner, lbname in self.list_repository_ids(username, 'labbook'):
+            try:
+                labbook = self.load_labbook(username, owner, lbname)
+                local_labbooks.append(labbook)
+            except Exception as e:
+                logger.error(e)
+        return local_labbooks
+
+        # if sort_mode == "name":
+        #     local_labbooks = self._safe_load(username, key_f=lambda lb: lb.name)
+        #     sorted_list = natsorted(local_labbooks, key=lambda tup: tup[1])
+        # elif sort_mode == 'modified_on':
+        #     local_labbooks = self._safe_load(username, key_f=lambda lb: lb.modified_on)
+        #     sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
+        # elif sort_mode == 'created_on':
+        #     local_labbooks = self._safe_load(username, key_f=lambda lb: lb.creation_date)
+        #     sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
+        # else:
+        #     raise InventoryException(f"Invalid sort mode {sort_mode}")
 
         return [lb for (lb, key) in sorted_list]
 
