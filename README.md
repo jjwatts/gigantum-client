@@ -61,7 +61,7 @@ app)
 ```bash
 python -m venv gtm-env
 source gtm-env/bin/activate
-cd gtm && pip install -e . && cd ..
+( cd gtm && pip install -e . )
 ```
 
 `gtm` is a command line tool to help build and configure the Client. This is a Python 3 application, so you must have
