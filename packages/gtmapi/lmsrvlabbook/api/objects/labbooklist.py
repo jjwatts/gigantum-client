@@ -108,35 +108,38 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
 
         # Collect all labbooks for all owners
         inv_manager = InventoryManager()
-        local_lbs = inv_manager.list_labbooks(username=username) #, sort_mode=order_by)
+        #local_lbs = inv_manager.list_labbooks(username=username) #, sort_mode=order_by)
 
         logger.warning(f"Listed LBs after {time.time()-tSTART:.2f}")
 
         r = RepoCacheController()
-        safe_lbs = []
-        for lb in local_lbs:
+        ids = inv_manager.list_repository_ids(username, 'labbook')
+
+        safe_ids = []
+        for (uname, owner, project_name) in ids:
             try:
-                r.cached_modified_on((username, lb.owner, lb.name))
-                r.cached_created_time((username, lb.owner, lb.name))
-                safe_lbs.append(lb)
+                #lb = inv_manager.load_labbook(uname, owner, project_name)
+                r.cached_modified_on((username, owner, project_name))
+                r.cached_created_time((username, owner, project_name))
+                safe_ids.append((uname, owner, project_name))
             except Exception as e:
-                logger.warning(f"Error loading timestamp on {str(lb)}: {e}")
+                logger.warning(f"Error loading LabBook {uname, owner, project_name}: {e}")
 
         logger.warning(f"Ran safe LBs after {time.time()-tSTART:.2f}sec")
 
         if order_by == 'modified_on':
-            sort_key = lambda lb: r.cached_modified_on((username, lb.owner, lb.name))
+            sort_key = lambda tup: r.cached_modified_on(tup)
         elif order_by == 'created_on':
-            sort_key = lambda lb: r.cached_modified_on((username, lb.owner, lb.name))
+            sort_key = lambda tup: r.cached_created_time(tup)
         else:
-            sort_key = lambda lb: lb.name
+            sort_key = lambda tup: tup[2]
 
-        sorted_lbs = sorted(safe_lbs, key=sort_key)
+        sorted_ids = sorted(safe_ids, key=sort_key)
         if reverse:
-            sorted_lbs.reverse()
+            sorted_ids.reverse()
         logger.warning(f"Sorted all safe LBs after {time.time()-tSTART:.2f}sec")
 
-        edges = [(inv_manager.query_owner(lb), lb.name) for lb in sorted_lbs]
+        edges = [(tup[1], tup[2]) for tup in sorted_ids]
         cursors = [base64.b64encode("{}".format(cnt).encode("UTF-8")).decode("UTF-8") for cnt, x in enumerate(edges)]
 
         # Process slicing and cursor args
