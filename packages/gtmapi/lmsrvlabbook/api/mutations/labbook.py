@@ -19,14 +19,10 @@
 # SOFTWARE.
 import base64
 import os
-import shutil
-
-import flask
 import graphene
 
 from gtmcore.container.container import ContainerOperations
 from gtmcore.dispatcher import (Dispatcher, jobs)
-from gtmcore.dataset.manifest import Manifest
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.logging import LMLogger
@@ -34,7 +30,7 @@ from gtmcore.files import FileOperations
 from gtmcore.activity import ActivityStore, ActivityDetailRecord, ActivityDetailType, ActivityRecord, ActivityType
 from gtmcore.environment import ComponentManager
 
-from lmsrvcore.api.mutations import ChunkUploadMutation, ChunkUploadInput
+from lmsrvcore.api.mutations import ChunkUploadMutation, ChunkUploadInput, LabbookMutationInput
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 
 from lmsrvlabbook.api.connections.labbookfileconnection import LabbookFileConnection
@@ -171,18 +167,16 @@ class ChangeLabbookBase(graphene.relay.ClientIDMutation):
 
 
 class SetLabbookDescription(graphene.relay.ClientIDMutation):
-    class Input:
-        owner = graphene.String(required=True)
-        labbook_name = graphene.String(required=True)
+    class Input(LabbookMutationInput):
         description_content = graphene.String(required=True)
 
     success = graphene.Boolean()
 
     @classmethod
-    def mutate_and_get_payload(cls, root, info, owner, labbook_name,
+    def mutate_and_get_payload(cls, root, info, owner, name,
                                description_content, client_mutation_id=None):
         username = get_logged_in_username()
-        lb = InventoryManager().load_labbook(username, owner, labbook_name,
+        lb = InventoryManager().load_labbook(username, owner, name,
                                              author=get_logged_in_author())
         lb.description = description_content
         with lb.lock():

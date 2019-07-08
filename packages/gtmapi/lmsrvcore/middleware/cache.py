@@ -39,12 +39,10 @@ class RepositoryCacheMiddleware:
                 username, owner, name = self.parse_mutation(info.operation, info.variable_values)
                 r = RepoCacheController()
                 r.clear_entry((username, owner, name))
-                logger.warning(f'Clearing entry for {username, owner, name}')
             except UnknownRepo as e:
                 logger.warning(f'Mutation {info.operation.name}: {e}')
             except SkipRepo:
-                #logger.warning(f'Skip {info.operation.name}')
-                pass
+                logger.debug(f'Skip {info.operation.name}')
             finally:
                 info.context.repo_cache_middleware_complete = True
 
@@ -64,9 +62,11 @@ class RepositoryCacheMiddleware:
         if owner is None:
             raise UnknownRepo("No repository owner detected")
 
-        repo_name = input_vals.get('labbook_name')
+        repo_name = input_vals.get('name')
         if not repo_name:
-            repo_name = input_vals.get('name')
+            repo_name = input_vals.get('labbook_name')
+        if not repo_name:
+            repo_name = input_vals.get('dataset_name')
 
         if repo_name is None:
             raise UnknownRepo("No repository name detected")
