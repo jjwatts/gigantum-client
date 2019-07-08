@@ -48,32 +48,6 @@ let count = 0;
 
 const Loading = () => <Loader />;
 
-/*
- * Code splitting imports intended to boost initial load speed
-*/
-
-// const Overview = Loadable({
-//   loader: () => import('./overview/LabbookOverviewContainer'),
-//   loading: Loading,
-// });
-// const Activity = Loadable({
-//   loader: () => import('./activity/LabbookActivityContainer'),
-//   loading: Loading,
-// });
-// const Code = Loadable({
-//   loader: () => import('./code/Code'),
-//   loading: Loading,
-// });
-// const InputData = Loadable({
-//   loader: () => import('./inputData/Input'),
-//   loading: Loading,
-// });
-// const OutputData = Loadable({
-//   loader: () => import('./outputData/Output'),
-//   loading: Loading,
-// });
-
-
 class Labbook extends Component {
   constructor(props) {
     super(props);
