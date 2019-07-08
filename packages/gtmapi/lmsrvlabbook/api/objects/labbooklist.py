@@ -118,7 +118,6 @@ class LabbookList(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         safe_ids = []
         for (uname, owner, project_name) in ids:
             try:
-                #lb = inv_manager.load_labbook(uname, owner, project_name)
                 r.cached_modified_on((username, owner, project_name))
                 r.cached_created_time((username, owner, project_name))
                 safe_ids.append((uname, owner, project_name))

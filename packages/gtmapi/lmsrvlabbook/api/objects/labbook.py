@@ -134,18 +134,9 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         return self.id
 
     def resolve_description(self, info):
-        """Get number of commits the active_branch is behind its remote counterpart.
-        Returns 0 if up-to-date or if local only."""
-        if not self.description:
-            def get_desc(lb):
-                t0 = time.time()
-                v = lb.description
-                logger.warning(f"Retrieved description in {time.time()-t0:.3f}sec")
-                return v
-            return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-                lambda labbook: get_desc(labbook))
-
-        return self.description
+        """Return the description. """
+        r = RepoCacheController()
+        return r.cached_description((get_logged_in_username(), self.owner, self.name))
 
     def resolve_environment(self, info):
         """"""
@@ -242,15 +233,8 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         Returns:
 
         """
-        # Note! creation_date might be None!!
-        def cached_cr(username, lb):
-            r = RepoCacheController()
-            t0 = time.time()
-            v = r.cached_created_time((username, lb.owner, lb.name))
-            logger.warning(f"Retrieved created on in {time.time()-t0:.3f}sec")
-            return v
-        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: cached_cr(get_logged_in_username(), labbook))
+        r = RepoCacheController()
+        return r.cached_created_time((get_logged_in_username(), self.owner, self.name))
 
     def resolve_modified_on_utc(self, info):
         """Return the modified on timestamp
@@ -263,14 +247,8 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         Returns:
 
         """
-        def cached_mo(username, lb):
-            r = RepoCacheController()
-            t0 = time.time()
-            v = r.cached_modified_on((username, lb.owner, lb.name))
-            logger.warning(f"Retrieved modified on in {time.time()-t0:.3f}sec")
-            return v
-        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: cached_mo(get_logged_in_username(), labbook))
+        r = RepoCacheController()
+        return r.cached_modified_on((get_logged_in_username(), self.owner, self.name))
 
     @staticmethod
     def helper_resolve_default_remote(labbook):

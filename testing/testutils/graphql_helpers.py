@@ -151,8 +151,8 @@ def list_local_projects():
                     node {
                         id
                         name
-                        description
                         owner
+                        description
                         creationDateUtc
                         modifiedOnUtc
                     }
