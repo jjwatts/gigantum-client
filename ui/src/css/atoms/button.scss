@@ -87,6 +87,7 @@ button {
   &--flat {
       width: auto;
       padding: 7px 20px;
+      font-size: 15px;
 
       cursor: pointer;
       text-decoration: underline;
@@ -99,7 +100,7 @@ button {
 
       &:hover {
         font-size: 17px;
-        padding: 7px 18px 7px 20px;
+        padding: 7px 14px 7px 14px;
       }
 
       &:disabled{

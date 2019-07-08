@@ -9,7 +9,7 @@ const dragSource = {
 
   canDrag(props) {
     // You can disallow drag based on props
-    return props.lockFileBrowser;
+    return !props.lockFileBrowser;
   },
 
   isDragging(props, monitor) {
@@ -123,7 +123,7 @@ const targetSource = {
     const item = monitor.getItem();
     const { uploading } = store.getState().fileBrowser;
     const mouseoverAllowed = !uploading && (!(props.section === 'data' && !item.isLocal) || (!item.fileData));
-    return monitor.isOver({ shallow: true }) && mouseoverAllowed;
+    return monitor.isOver({ shallow: true }) && mouseoverAllowed && !props.lockFileBrowser;
   },
   drop(props, monitor, component) {
     // TODO: clean up this code, some of this logic is being duplicated. make better use of functions

@@ -12,6 +12,7 @@ import StoreUpdaterFunctions from './StoreUpdaterFunctions';
  @calls {StoreUpdaterFunctions.insertEdgeAfter}
 */
 const insertFileBrowserEdge = (edge, mutationData, component) => {
+
   reactRelay.commitLocalUpdate(component.props.relay.environment, (store) => {
     const responseNode = edge.node;
     const { id } = responseNode;

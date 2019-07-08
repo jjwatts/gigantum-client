@@ -22,6 +22,10 @@ import { getFilesFromDragEvent } from 'JS/utils/html-dir-content';
 import BranchMutations from 'Components/shared/utils/BranchMutations';
 // config
 import Config from 'JS/config';
+// mutations
+import LabbookContainerStatusMutation from 'Mutations/LabbookContainerStatusMutation';
+import LabbookLookupMutation from 'Mutations/LabbookLookupMutation';
+import MigrateProjectMutation from 'Mutations/MigrateProjectMutation';
 // components
 import Login from 'Components/login/Login';
 import Loader from 'Components/common/Loader';
@@ -29,10 +33,12 @@ import ErrorBoundary from 'Components/common/ErrorBoundary';
 import Header from 'Components/shared/header/Header';
 import ButtonLoader from 'Components/common/ButtonLoader';
 import Modal from 'Components/common/Modal';
-// mutations
-import LabbookContainerStatusMutation from 'Mutations/LabbookContainerStatusMutation';
-import LabbookLookupMutation from 'Mutations/LabbookLookupMutation';
-import MigrateProjectMutation from 'Mutations/MigrateProjectMutation';
+import Activity from './activity/LabbookActivityContainer';
+import Overview from './overview/LabbookOverviewContainer';
+import Environment from './environment/Environment';
+import Code from './code/Code';
+import InputData from './inputData/Input';
+import OutputData from './outputData/Output';
 // query
 import fetchMigrationInfoQuery from './queries/fetchMigrationInfoQuery';
 // assets
@@ -41,35 +47,6 @@ import './Labbook.scss';
 let count = 0;
 
 const Loading = () => <Loader />;
-
-/*
- * Code splitting imports intended to boost initial load speed
-*/
-
-const Overview = Loadable({
-  loader: () => import('./overview/LabbookOverviewContainer'),
-  loading: Loading,
-});
-const Activity = Loadable({
-  loader: () => import('./activity/LabbookActivityContainer'),
-  loading: Loading,
-});
-const Code = Loadable({
-  loader: () => import('./code/Code'),
-  loading: Loading,
-});
-const InputData = Loadable({
-  loader: () => import('./inputData/Input'),
-  loading: Loading,
-});
-const OutputData = Loadable({
-  loader: () => import('./outputData/Output'),
-  loading: Loading,
-});
-const Environment = Loadable({
-  loader: () => import('./environment/Environment'),
-  loading: Loading,
-});
 
 class Labbook extends Component {
   constructor(props) {
@@ -233,7 +210,7 @@ class Labbook extends Component {
   }
 
   /**
-   @param {}
+   @param {String} section
    refetch labbook
    */
   @boundMethod
@@ -488,7 +465,8 @@ class Labbook extends Component {
   }
 
   /**
-    @param {boolean, boolean}
+    @param {boolean} branchesOpen
+    @param {boolean} mergeFilter
     updates branchOpen state
   */
   @boundMethod
@@ -738,6 +716,7 @@ class Labbook extends Component {
             }
             <Header
               {...props}
+              ref={header => header }
               description={labbook.description}
               toggleBranchesView={this._toggleBranchesView}
               sectionType="labbook"

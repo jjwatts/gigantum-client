@@ -85,8 +85,6 @@ class FileBrowser extends Component {
       downloadingAll: false,
       isRefetching: false,
     };
-
-    this._deleteSelectedFiles = this._deleteSelectedFiles.bind(this);
   }
 
   static getDerivedStateFromProps(props, state) {
@@ -158,7 +156,12 @@ class FileBrowser extends Component {
     processChildState(files);
 
     if (props.linkedDatasets) {
-      props.linkedDatasets.forEach(dataset => processChildState(dataset.allFiles.edges, dataset.name));
+      props.linkedDatasets.forEach(
+        dataset => processChildState(
+          dataset.allFiles.edges,
+          dataset.name,
+        ),
+      );
     }
 
     return {
@@ -171,23 +174,20 @@ class FileBrowser extends Component {
   }
 
   /**
-      sets worker
-    */
+   sets worker
+  */
   componentDidMount() {
+    const { props } = this;
+    const files = props.files.edges;
+    const { linkedDatasets } = props;
     this.fileHandler = new FileFormatter(fileHandler);
-    const files = this.props.files.edges;
-    const { linkedDatasets } = this.props;
     this.fileHandler.postMessage({
       files,
       linkedDatasets,
       search: this.state.search,
     });
 
-    this.fileHandler.addEventListener('message', (evt) => {
-      if (this.state.fileHash !== evt.data.hash) {
-        this.setState({ fileHash: evt.data.hash, files: evt.data.files });
-      }
-    });
+    this.fileHandler.addEventListener('message', this._fileHandlerMessage);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -213,6 +213,25 @@ class FileBrowser extends Component {
       linkedDatasets,
       search: this.state.search,
     });
+  }
+
+  componentWillUnmount() {
+    this.fileHandler.removeEventListener('message', this._fileHandlerMessage);
+    this.fileHandler.terminate();
+    delete this.fildHandler;
+  }
+
+  /**
+    *  @param {Object} evt
+    *  sets state of fileHash and files when computed by
+    *  the worker
+    *  @return {}
+    */
+  _fileHandlerMessage = (evt) => {
+    const { state } = this;
+    if (state.fileHash !== evt.data.hash) {
+      this.setState({ fileHash: evt.data.hash, files: evt.data.files });
+    }
   }
 
   /**
@@ -348,17 +367,17 @@ class FileBrowser extends Component {
   *  loops through selcted files and deletes them
   *  @return {}
   */
-  @boundMethod
-  _deleteSelectedFiles() {
-    const self = this;
+  _deleteSelectedFiles = () => {
+    const { state } = this;
     const filePaths = [];
     const dirList = [];
     const comparePaths = [];
     const edges = [];
     const deletedKeys = [];
 
-    Object.keys(this.state.childrenState).forEach((key) => {
-      if (this.state.childrenState[key].isSelected) {
+    Object.keys(state.childrenState).forEach((key) => {
+
+      if (state.childrenState[key].isSelected) {
         const { edge } = this.state.childrenState[key];
         delete this.state.childrenState[key];
         if (edge.node.isDir) {
@@ -377,6 +396,7 @@ class FileBrowser extends Component {
       deletedKeys.forEach((deletedKey) => {
         if (key.startsWith(deletedKey) && this.state.childrenState[key]) {
           const { edge } = this.state.childrenState[key];
+
           delete this.state.childrenState[key];
           comparePaths.push(edge.node.key);
           filePaths.push(edge.node.key);
@@ -389,14 +409,11 @@ class FileBrowser extends Component {
     });
 
     const filteredPaths = filePaths.filter((key) => {
-      let folderKey = key.substr(0, key.lastIndexOf('/'));
-      folderKey = `${folderKey}/`;
-
       const hasDir = dirList.some(dir => ((key.indexOf(dir) > -1) && (dir !== key)));
       return !hasDir;
     });
-    self._togglePopup(false);
-    self._deleteMutation(filteredPaths, edges);
+    this._togglePopup(false);
+    this._deleteMutation(filteredPaths, edges);
   }
 
   /**
@@ -406,17 +423,15 @@ class FileBrowser extends Component {
   */
   _selectFiles() {
     const { state } = this;
-    let isSelected = false;
     let count = 0;
     let selectedCount = 0;
 
     Object.keys(state.childrenState).forEach((key) => {
       if (this.state.childrenState[key]) {
         if (this.state.childrenState[key].isSelected) {
-          isSelected = true;
-          selectedCount++;
+          selectedCount += 1;
         }
-        count++;
+        count += 1;
       }
     });
 
@@ -426,7 +441,7 @@ class FileBrowser extends Component {
     Object.keys(state.childrenState).forEach((key) => {
       if (childrenState[key]) {
         childrenState[key].isSelected = (multiSelect === 'all');
-        count++;
+        count += 1;
       }
     });
     this.setState({ multiSelect, childrenState });
@@ -439,12 +454,13 @@ class FileBrowser extends Component {
   *  @return {}
   */
   _deleteMutation(filePaths, edges) {
+    const { state } = this;
     const data = {
       filePaths,
       edges,
     };
     this.setState({ multiSelect: 'none' });
-    this.state.mutations.deleteLabbookFiles(data, (response) => {});
+    state.mutations.deleteLabbookFiles(data, () => {});
   }
 
   /**
@@ -539,8 +555,9 @@ class FileBrowser extends Component {
   *  @return {}
   */
   _handleSort(type) {
-    if (type === this.state.sort) {
-      this.setState({ reverse: !this.state.reverse });
+    const { state } = this
+    if (type === state.sort) {
+      this.setState({ reverse: !state.reverse });
     } else {
       this.setState({ sort: type, reverse: false });
     }
@@ -649,22 +666,45 @@ class FileBrowser extends Component {
     return text;
   }
 
+  /**
+  *  @param {Array} files
+  *  sends file selection upload to be prepared for upload
+  *  @return {string}
+  */
   _uploadFiles(files) {
     const { props, state } = this;
-    // TODO fix this
-    const promptType = props.section ?
-      props.section
-      : ((state.mutationData) && (state.mutationData.section))
-      ? state.mutationData.section
-      : '';
-    // const fileSizeData = Connectors.checkFileSize(files, promptType);
-    prepareUpload(files, props, state.mutationData);
+    prepareUpload(
+      files,
+      props,
+      false,
+      state.mutationData,
+      this, // component
+    );
+  }
+
+  /**
+  *  @param {} -
+  *  fires updateUnmanagedDataset mutation
+  *  @return {}
+  */
+  _updateUnmanagedDatasetMutation() {
+    const { state } = this;
+
+    state.mutations.updateUnmanagedDataset(
+      {
+        fromRemote: true,
+        fromLocal: false,
+      },
+      () => {
+        this.setState({ confirmUpdateVisible: false });
+      },
+    );
   }
 
   render() {
     const { props, state } = this;
     const { files, mutationData } = state;
-    const { isOver } = props;
+    const { isOver, canDrop } = props;
     const { isSelected } = this._checkChildState();
     const allFilesLocal = checkLocalAll(files);
     const uploadPromptText = this._getFilePromptText();
@@ -681,6 +721,8 @@ class FileBrowser extends Component {
       FileBrowser: true,
       'FileBrowser--linkVisible': state.showLinkModal,
       'FileBrowser--highlight': isOver,
+      'FileBrowser--cursor-drop': isOver && canDrop,
+      'FileBrowser--cursor-no-drop': isOver && !canDrop,
       'FileBrowser--dropzone': fileKeys.length === 0,
     });
     const deleteButtonCSS = classNames({
@@ -828,7 +870,7 @@ class FileBrowser extends Component {
               <div className="flex">
                 <button
                   className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
-                  onClick={() => { this.state.mutations.verifyDataset({}, () => {}) }}
+                  onClick={() => { state.mutations.verifyDataset({}, () => {}) }}
                   type="button"
                 >
                   <div
@@ -859,7 +901,7 @@ class FileBrowser extends Component {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { this.state.mutations.updateUnmanagedDataset({ fromRemote: true, fromLocal: false }, () => { this.setState({ confirmUpdateVisible: false }) }) }}
+                        onClick={() => this._updateUnmanagedDatasetMutation}
                       >
                         Confirm
                       </button>
