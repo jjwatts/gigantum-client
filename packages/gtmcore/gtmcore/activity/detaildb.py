@@ -160,7 +160,6 @@ class ActivityDetailDB(object):
         basename = detail_key[0:36]
         detail_header = detail_key[36:]
 
-        logger.info('_parse_detail_key() in detaildb.py')
         return basename, base64.b64decode(detail_header.encode('utf-8'))
         
     def _open_for_append_and_rotate(self):
