@@ -163,6 +163,9 @@ button {
   &--smallMargin {
     margin: 0 2px;
   }
+  &--margin-right{
+    margin: 0 12.5px 0 0;
+  }
 
   &--action{
     width: auto;
@@ -192,6 +195,10 @@ button {
   &--medium {
     width: 30px;
     height: 30px;
+  }
+
+  &--width-80 {
+    width: 80px;
   }
 
   &--fileBrowser {
@@ -374,7 +381,7 @@ button {
      }
   }
 
-  &__delete-grey {
+  &__delete-secondary {
     background: $background-color url(~Images/icons/trash-azure.svg) no-repeat center center;
     background-size: 22px;
 
@@ -382,7 +389,14 @@ button {
       background: $background-color url(~Images/icons/trash.svg) no-repeat center center !important;
       background-size: 22px !important;
     }
- }
+    &--medium {
+      background-size: 20px !important;
+      &:disabled {
+        background-size: 20px !important;
+      }
+    }
+  }
+
   &__delete-white {
     background: url(~Images/icons/trash-white.svg) no-repeat center center;
     background-size: 16px;
@@ -447,6 +461,14 @@ button {
      border: 0px;
      background-size: 30px !important
     }
+    &--grey {
+      background: url('~Images/icons/status-verified.svg') no-repeat center center;
+      background-size: 20px !important;
+      &:disabled {
+        background: url('~Images/icons/status-check-disabled.svg') no-repeat center center;
+        background-size: 20px !important;
+      }
+    }
  }
 
  &__addDataset {
@@ -495,7 +517,7 @@ button {
   }
  }
 
- &__upArrow-grey {
+ &__upArrow-secondary {
   background: $background-color url(~Images/icons/update-azure.svg) no-repeat center center;
   background-size: 24px;
 
@@ -600,7 +622,21 @@ button {
       top: 0;
      }
   }
+  &__edit-secondary {
+    background: $background-color url(~Images/icons/edit-azure.svg) no-repeat center center;
+    background-size: 22px;
 
+    &:disabled {
+      background: $background-color url(~Images/icons/edit-disabled.svg) no-repeat center center !important;
+      background-size: 22px !important;
+    }
+    &--medium {
+      background-size: 20px !important;
+      &:disabled {
+        background-size: 20px !important;
+      }
+    }
+  }
   &__info {
     background: url(~Images/icons/info-exclamation-azure.svg) no-repeat center top 2px;
     background-size: 24px;
@@ -659,6 +695,10 @@ button {
       background: url(~Images/icons/close.svg) no-repeat center center;
       background-size: 34px;
       border: 0px;
+    }
+    &--grey {
+      background: url('~Images/icons/status-x.svg') no-repeat center center;
+      background-size: 20px !important;
     }
   }
 

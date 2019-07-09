@@ -53,13 +53,13 @@ export default class PackageActions extends Component {
     return (
       <div className="PackageActions flex flex--column justify--space-between">
         <button
-          className="Btn Btn--medium Btn--round Btn__upArrow-grey"
+          className="Btn Btn--medium Btn--round Btn__upArrow-secondary"
           type="button"
           onClick={() => this._updatePackage()}
           disabled={disableUpdate}
         />
         <button
-          className="Btn Btn--medium Btn--round Btn__delete-grey"
+          className="Btn Btn--medium Btn--round Btn__delete-secondary"
           type="button"
           onClick={() => this._removePackage()}
           disabled={disableDelete}

@@ -142,6 +142,8 @@
   top: 25px;
   right: -100px;
   word-break: break-word;
+  z-index: index($elements, popup);
+
   a {
     text-decoration: underline;
   }
