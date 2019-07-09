@@ -1,23 +1,4 @@
-
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+from typing import Optional
 import graphene
 
 from gtmcore.workflows.gitlab import GitLabManager
@@ -27,7 +8,7 @@ from gtmcore.inventory.branching import BranchManager
 from lmsrvcore.auth.identity import parse_token
 from lmsrvcore.auth.user import get_logged_in_username
 from lmsrvcore.api.interfaces import GitCommit, GitRepository
-
+from lmsrvlabbook.dataloader.fetch import FetchLoader
 
 
 class LabbookCommit(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepository, GitCommit)):
@@ -61,6 +42,7 @@ class LabbookCommit(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRep
 
 class Branch(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepository)):
     """ Represents a branch in the repo """
+    _fetch_loader: Optional[FetchLoader] = None
 
     branch_name = graphene.String(required=True)
 
@@ -146,18 +128,28 @@ class Branch(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepository
         return mgr
 
     def resolve_commits_ahead(self, info):
-        lb = InventoryManager().load_labbook(get_logged_in_username(),
+        logged_in_user = get_logged_in_username()
+        lb = InventoryManager().load_labbook(logged_in_user,
                                              self.owner,
                                              self.name)
         self._configure_git(lb, info)
         bm = BranchManager(lb)
-        return bm.get_commits_ahead(branch_name=self.branch_name)
+        if self._fetch_loader:
+            return self._fetch_loader.load(f"labbook&{logged_in_user}&{self.owner}&{self.name}").then(
+                lambda _: bm.get_commits_ahead(branch_name=self.branch_name))
+        else:
+            return bm.get_commits_ahead(branch_name=self.branch_name)
 
     def resolve_commits_behind(self, info):
-
-        lb = InventoryManager().load_labbook(get_logged_in_username(),
+        logged_in_user = get_logged_in_username()
+        lb = InventoryManager().load_labbook(logged_in_user,
                                              self.owner,
                                              self.name)
         self._configure_git(lb, info)
         bm = BranchManager(lb)
-        return bm.get_commits_behind(branch_name=self.branch_name)
+        if self._fetch_loader:
+            return self._fetch_loader.load(f"labbook&{logged_in_user}&{self.owner}&{self.name}").then(
+                lambda _: bm.get_commits_behind(branch_name=self.branch_name))
+        else:
+            return bm.get_commits_behind(branch_name=self.branch_name)
+

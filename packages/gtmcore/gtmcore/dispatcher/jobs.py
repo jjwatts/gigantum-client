@@ -2,8 +2,7 @@ import importlib
 import json
 import os
 import time
-from typing import Optional, List
-import sys
+from typing import Optional
 import shutil
 
 from rq import get_current_job
@@ -19,8 +18,6 @@ from gtmcore.logging import LMLogger
 from gtmcore.workflows import ZipExporter, LabbookWorkflow, DatasetWorkflow, MergeOverride
 from gtmcore.container.core import (build_docker_image as build_image)
 
-from gtmcore.dataset.manifest import Manifest
-from gtmcore.dataset.io.manager import IOManager
 from gtmcore.dataset.storage.backend import UnmanagedStorageBackend
 
 
@@ -36,27 +33,37 @@ def publish_repository(repository: Repository, username: str, access_token: str,
     logger = LMLogger.get_logger()
     logger.info(f"(Job {p}) Starting publish_repository({str(repository)})")
 
-    def update_meta(msg):
-        job = get_current_job()
-        if not job:
+    def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                        percent_complete: Optional[float] = None):
+        """Method to update the job's metadata and provide feedback to the UI"""
+        current_job = get_current_job()
+        if not current_job:
             return
-        if 'feedback' not in job.meta:
-            job.meta['feedback'] = msg
-        else:
-            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
-        job.save_meta()
+        if has_failures:
+            current_job.meta['has_failures'] = has_failures
+        if failure_detail:
+            current_job.meta['failure_detail'] = failure_detail
+        if percent_complete:
+            current_job.meta['percent_complete'] = percent_complete
+
+        current_job.meta['feedback'] = msg
+        current_job.save_meta()
+
+    logger = LMLogger.get_logger()
 
     try:
-        update_meta("Publish task in queue")
+        update_feedback("Publish task in queue")
         with repository.lock():
             if isinstance(repository, LabBook):
                 wf = LabbookWorkflow(repository)
             else:
-                wf = DatasetWorkflow(repository) # type: ignore
+                wf = DatasetWorkflow(repository)  # type: ignore
             wf.publish(username=username, access_token=access_token, remote=remote or "origin",
-                       public=public, feedback_callback=update_meta, id_token=id_token)
+                       public=public, feedback_callback=update_feedback, id_token=id_token)
+    except IOError:
+        raise
     except Exception as e:
-        logger.exception(f"(Job {p}) Error on publish_repository: {e}")
+        logger.exception(e)
         raise Exception("Could not publish - try to log out and log in again.")
 
 
@@ -67,36 +74,41 @@ def sync_repository(repository: Repository, username: str, override: MergeOverri
     logger = LMLogger.get_logger()
     logger.info(f"(Job {p}) Starting sync_repository({str(repository)})")
 
-    def update_meta(msg):
-        job = get_current_job()
-        if not job:
+    def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                        percent_complete: Optional[float] = None):
+        """Method to update the job's metadata and provide feedback to the UI"""
+        current_job = get_current_job()
+        if not current_job:
             return
-        if msg is None or (not msg.strip()):
-            return
+        if has_failures:
+            current_job.meta['has_failures'] = has_failures
+        if failure_detail:
+            current_job.meta['failure_detail'] = failure_detail
+        if percent_complete:
+            current_job.meta['percent_complete'] = percent_complete
 
-        if 'feedback' not in job.meta:
-            job.meta['feedback'] = msg.strip()
-        else:
-            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg.strip()}'
-        job.save_meta()
+        current_job.meta['feedback'] = msg
+        current_job.save_meta()
 
     try:
-        update_meta("Sync task in queue")
+        update_feedback("Sync task in queue")
         with repository.lock():
             if isinstance(repository, LabBook):
                 wf = LabbookWorkflow(repository)
             else:
-                wf = DatasetWorkflow(repository) # type: ignore
+                wf = DatasetWorkflow(repository)  # type: ignore
             cnt = wf.sync(username=username, remote=remote, override=override,
-                          feedback_callback=update_meta, access_token=access_token,
+                          feedback_callback=update_feedback, access_token=access_token,
                           id_token=id_token, pull_only=pull_only)
         logger.info(f"(Job {p} Completed sync_repository with cnt={cnt}")
         return cnt
     except MergeConflict as me:
         logger.exception(f"(Job {p}) Merge conflict: {me}")
         raise
+    except IOError:
+        raise
     except Exception as e:
-        logger.exception(f"(Job {p}) Error on sync_repository: {e}")
+        logger.exception(e)
         raise Exception("Could not sync - try to log out and log in again.")
 
 
@@ -341,83 +353,6 @@ def start_and_run_activity_monitor(module_name, class_name, user, owner, labbook
     except Exception as e:
         logger.error("Error on start_and_run_activity_monitor in pid {}: {}".format(os.getpid(), e))
         raise e
-
-
-def download_dataset_files(logged_in_username: str, access_token: str, id_token: str,
-                           dataset_owner: str, dataset_name: str,
-                           labbook_owner: Optional[str] = None, labbook_name: Optional[str] = None,
-                           all_keys: Optional[bool] = False, keys: Optional[List[str]] = None):
-    """Method to import a dataset from a zip file
-
-    Args:
-        logged_in_username: username for the currently logged in user
-        access_token: bearer token
-        id_token: identity token
-        dataset_owner: Owner of the dataset containing the files to download
-        dataset_name: Name of the dataset containing the files to download
-        labbook_owner: Owner of the labbook if this dataset is linked
-        labbook_name: Name of the labbook if this dataset is linked
-        all_keys: Boolean indicating if all remaining files should be downloaded
-        keys: List if file keys to download
-
-    Returns:
-        str: directory path of imported labbook
-    """
-    def update_meta(msg):
-        job = get_current_job()
-        if not job:
-            return
-        if 'feedback' not in job.meta:
-            job.meta['feedback'] = msg
-        else:
-            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
-        job.save_meta()
-
-    logger = LMLogger.get_logger()
-
-    try:
-        p = os.getpid()
-        logger.info(f"(Job {p}) Starting download_dataset_files(logged_in_username={logged_in_username},"
-                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}, labbook_owner={labbook_owner},"
-                    f" labbook_name={labbook_name}, all_keys={all_keys}, keys={keys}")
-
-        im = InventoryManager()
-
-        if labbook_owner is not None and labbook_name is not None:
-            # This is a linked dataset, load repo from the Project
-            lb = im.load_labbook(logged_in_username, labbook_owner, labbook_name)
-            dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
-            ds = im.load_dataset_from_directory(dataset_dir)
-        else:
-            # this is a normal dataset. Load repo from working dir
-            ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
-
-        ds.namespace = dataset_owner
-        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
-        m = Manifest(ds, logged_in_username)
-        iom = IOManager(ds, m)
-
-        if all_keys:
-            result = iom.pull_all(status_update_fn=update_meta)
-        elif keys:
-            result = iom.pull_objects(keys=keys, status_update_fn=update_meta)
-        else:
-            raise ValueError("Must provide a list of keys or set all_keys=True")
-
-        # Save the Relay node IDs to the job metadata so the UI can re-fetch as needed
-        job = get_current_job()
-        if job:
-            job.meta['success_keys'] = [x.dataset_path for x in result.success]
-            job.meta['failure_keys'] = [x.dataset_path for x in result.failure]
-            job.save_meta()
-
-        if len(result.failure) > 0:
-            # If any downloads failed, exit non-zero to the UI knows there was an error
-            sys.exit(-1)
-
-    except Exception as err:
-        logger.exception(err)
-        raise
 
 
 def update_unmanaged_dataset_from_remote(logged_in_username: str, access_token: str, id_token: str,

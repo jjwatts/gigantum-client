@@ -32,7 +32,7 @@ export default function BuildImageMutation(
     input: {
       labbookName,
       owner,
-      noCache: buildData && buildData.noCache,
+      noCache: (buildData && buildData.noCache) || false,
       clientMutationId: tempID++,
     },
   };
@@ -53,6 +53,7 @@ export default function BuildImageMutation(
           type: 'buildImage',
           key: 'backgroundJobKey',
           footerCallback,
+          hideFooter: buildData && buildData.hideFooter,
         };
         FooterUtils.getJobStatus(footerData);
         callback(response, error, id);

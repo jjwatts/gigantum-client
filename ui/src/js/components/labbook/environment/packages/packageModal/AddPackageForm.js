@@ -163,6 +163,7 @@ export default class AddPackageForm extends Component {
     });
     const specificVersionCSS = classNames({
       'Radio flex relative': true,
+      'AddPackageForm__version--active': state.version !== null,
       'Radio--disabled': state.selectedManager === 'apt',
     });
     return (

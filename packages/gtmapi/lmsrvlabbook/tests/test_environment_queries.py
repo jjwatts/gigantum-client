@@ -1,12 +1,11 @@
 import pytest
 import graphene
-import pprint
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.fixtures import ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
 from gtmcore.environment import ComponentManager
 from gtmcore.environment.bundledapp import BundledAppManager
-
+import gtmcore
 
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped, fixture_working_dir
 
@@ -447,3 +446,54 @@ class TestEnvironmentServiceQueries(object):
         bam.add_bundled_app(9001, 'dash 3', 'a demo dash app 3', 'python app3.py')
 
         snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+    def test_base_update_available(self, fixture_working_dir_env_repo_scoped, snapshot):
+        """Test checking if the base is able to be updated"""
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook('default', 'default', 'labbook-base-test-update')
+
+        cm = ComponentManager(lb)
+
+        # Add an old base.
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 1)
+
+        query = """
+                {
+                  labbook(owner: "default", name: "labbook-base-test-update") {
+                    name
+                    description
+                    environment {
+                      base{                        
+                        id
+                        revision
+                      }
+                      baseLatestRevision
+                    }
+                  }
+                }
+        """
+        r = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['labbook']['environment']['base']['revision'] == 1
+        assert r['data']['labbook']['environment']['baseLatestRevision'] == 2
+
+        # We upgrade our base to the latest
+        cm.change_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 2)
+        r = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['labbook']['environment']['base']['revision'] == 2
+        assert r['data']['labbook']['environment']['baseLatestRevision'] == 2
+
+        query = """
+                {
+                  labbook(owner: "default", name: "labbook-base-test-update") {
+                    name                    
+                    environment {
+                      baseLatestRevision
+                    }
+                  }
+                }
+        """
+        r = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['labbook']['environment']['baseLatestRevision'] == 2

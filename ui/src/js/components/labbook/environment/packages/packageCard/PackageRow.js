@@ -2,7 +2,6 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 // components
-import Tooltip from 'Components/common/Tooltip';
 import PackageActions from './PackageActions';
 // assets
 import './PackageTable.scss';
@@ -14,6 +13,7 @@ export default (props) => {
     CheckboxMultiselect__check: isSelected,
     CheckboxMultiselect__uncheck: !isSelected,
   });
+
   return (
     <div className="PackageRow Table__Row">
       <div className="flex">
@@ -27,7 +27,21 @@ export default (props) => {
           {props.manager}
         </div>
         <div className="PackageRow__name">
-          <h5 className="margin--0">{props.package}</h5>
+          <h5 className="margin--0">
+            {props.package}
+            {
+              props.docsUrl
+              && (
+              <a
+                href={props.docsUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <div className="PackageRow__external" />
+              </a>
+              )
+            }
+          </h5>
           <div className="PackageRow__description">
             {props.description}
           </div>

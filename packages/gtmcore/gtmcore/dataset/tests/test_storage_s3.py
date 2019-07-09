@@ -25,6 +25,12 @@ def updater(msg):
     print(msg)
 
 
+def chunk_update_callback(completed_bytes: int):
+    """Method to update the job's metadata and provide feedback to the UI"""
+    assert type(completed_bytes) == int
+    assert completed_bytes > 0
+
+
 class TestStorageBackendS3PublicBuckets(object):
     def test_get_storage_backend(self, mock_config_class):
         sb = get_storage_backend("public_s3_bucket")
@@ -66,7 +72,7 @@ class TestStorageBackendS3PublicBuckets(object):
         ds.backend.set_default_configuration('test', 'asdf', '1234')
 
         with pytest.raises(ValueError):
-            ds.backend.confirm_configuration(ds, updater)
+            ds.backend.confirm_configuration(ds)
 
         current_config = ds.backend_config
         current_config['Bucket Name'] = "gigantum-not-a-bucket"
@@ -77,7 +83,7 @@ class TestStorageBackendS3PublicBuckets(object):
         assert len(ds.backend.missing_configuration) == 0
 
         with pytest.raises(ValueError):
-            ds.backend.confirm_configuration(ds, updater)
+            ds.backend.confirm_configuration(ds)
 
         # use mocked bucket
         current_config = ds.backend_config
@@ -85,7 +91,7 @@ class TestStorageBackendS3PublicBuckets(object):
         current_config['Prefix'] = ""
         ds.backend_config = current_config
 
-        confirm_msg = ds.backend.confirm_configuration(ds, updater)
+        confirm_msg = ds.backend.confirm_configuration(ds)
 
         assert "Creating this dataset will download 5 files" in confirm_msg
 
@@ -95,7 +101,7 @@ class TestStorageBackendS3PublicBuckets(object):
         current_config['Prefix'] = "metadata"
         ds.backend_config = current_config
 
-        confirm_msg = ds.backend.confirm_configuration(ds, updater)
+        confirm_msg = ds.backend.confirm_configuration(ds)
 
         assert "Creating this dataset will download 3 files" in confirm_msg
 
@@ -105,7 +111,7 @@ class TestStorageBackendS3PublicBuckets(object):
                                storage_type="public_s3_bucket")
 
         with pytest.raises(ValueError):
-            ds.backend.prepare_pull(ds, [], updater)
+            ds.backend.prepare_pull(ds, [])
 
     def test_update_from_remote(self, mock_config_class, mock_public_bucket):
         im = mock_config_class[0]
@@ -221,7 +227,7 @@ class TestStorageBackendS3PublicBuckets(object):
             assert os.path.isfile(m.dataset_to_object_path(key)) is False
 
         # Pull 1 File (duplicate contents so 2 files show up)
-        ds.backend.pull_objects(ds, [pull_objects[0]], updater)
+        ds.backend.pull_objects(ds, [pull_objects[0]], chunk_update_callback)
         assert os.path.isdir(os.path.join(m.cache_mgr.cache_root, m.dataset_revision))
         assert os.path.isfile(os.path.join(m.cache_mgr.cache_root, m.dataset_revision, 'test-file-1.bin')) is True
         assert os.path.isfile(os.path.join(m.cache_mgr.cache_root, m.dataset_revision, 'test-file-2.bin')) is True
@@ -229,7 +235,7 @@ class TestStorageBackendS3PublicBuckets(object):
         assert os.path.isfile(m.dataset_to_object_path('test-file-2.bin')) is True
 
         # Pull all Files
-        ds.backend.pull_objects(ds, pull_objects, updater)
+        ds.backend.pull_objects(ds, pull_objects, chunk_update_callback)
         assert os.path.isdir(os.path.join(m.cache_mgr.cache_root, m.dataset_revision))
         assert os.path.isfile(os.path.join(m.cache_mgr.cache_root, m.dataset_revision, 'test-file-1.bin')) is True
         assert os.path.isfile(os.path.join(m.cache_mgr.cache_root, m.dataset_revision, 'test-file-2.bin')) is True

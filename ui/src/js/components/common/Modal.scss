@@ -181,6 +181,13 @@
     border-radius: 50px;
   }
 
+  &--change {
+    background: url('~Images/icons/cogwheel.svg') no-repeat center center;
+    background-size: 70px;
+
+    border-radius: 50px;
+  }
+
   &--rollback {
     background: url('~Images/icons/rollback.svg') no-repeat center center;
     background-size: 50px;

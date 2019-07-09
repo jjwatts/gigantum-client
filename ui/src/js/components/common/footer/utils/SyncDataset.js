@@ -17,12 +17,14 @@ export default {
   },
   failed: (callbackData) => {
     const { response, failureCall } = callbackData;
-    const reportedFailureMessage = response.data.jobStatus.failureMessage;
-    const errorMessage = response.data.jobStatus.failureMessage;
+    let errorMessage = response.data.jobStatus.failureMessage;
+    const failureDetail = JSON.parse(response.data.jobStatus.jobMetadata).failure_detail;
+    errorMessage = errorMessage.indexOf(':') ? errorMessage.split(':')[1] : errorMessage;
+
     failureCall(response.data.jobStatus.failureMessage);
     return {
       errorMessage,
-      reportedFailureMessage,
+      reportedFailureMessage: failureDetail,
     };
   },
 };

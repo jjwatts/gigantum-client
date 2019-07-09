@@ -38,9 +38,6 @@ class SectionBrowser extends Component {
     hasFiles = (props.section === 'output') ? (props[props.section]
       && (props[props.section].allFiles.edges.length > 1)) : hasFiles;
 
-    if ((props.section !== 'data') && (state.hasFiles !== hasFiles)) {
-      props.toggleFavoriteRecent(hasFiles);
-    }
     return {
       ...state,
       hasFiles,
@@ -119,9 +116,6 @@ class SectionBrowser extends Component {
           isProcessing={props.isProcessing}
           parentId={props.sectionId}
           connection={`${capitalSection}Browser_allFiles`}
-          favoriteConnection={`${capitalSection}Favorites_favorites`}
-          mostRecentConnection={`MostRecent${capitalSection}_allFiles`}
-          favorites={props.favorites}
           isLocked={props.isLocked}
           containerStatus={props.containerStatus}
           loadMore={this._loadMore}

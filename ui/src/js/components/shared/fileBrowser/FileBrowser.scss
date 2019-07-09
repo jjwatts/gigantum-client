@@ -22,6 +22,14 @@
     &--linkVisible {
       z-index: 13 !important;
     }
+
+    &--cursor-drop {
+      cursor: move;
+    }
+
+    &--cursor-no-drop {
+      cursor: not-allowed !important;
+    }
 }
 
 .FileBrowser__empty{
@@ -203,7 +211,7 @@
 }
 
 .FileBrowser__button-container{
-  width: 500px;
+  width: 600px;
 }
 
 .FileBrowser__button {

@@ -4,8 +4,6 @@ import FileBrowserMutations from 'Components/shared/fileBrowser/utilities/FileBr
 import DeleteLabbookFilesMutation from 'Mutations/fileBrowser/DeleteLabbookFilesMutation';
 import MakeLabbookDirectoryMutation from 'Mutations/fileBrowser/MakeLabbookDirectoryMutation';
 import MoveLabbookFileMutation from 'Mutations/fileBrowser/MoveLabbookFileMutation';
-import AddFavoriteMutation from 'Mutations/fileBrowser/AddFavoriteMutation';
-import RemoveFavoriteMutation from 'Mutations/fileBrowser/RemoveFavoriteMutation';
 import DownloadDatasetFilesMutation from 'Mutations/DownloadDatasetFilesMutation';
 import CompleteBatchUploadTransactionMutation from 'Mutations/fileBrowser/CompleteBatchUploadTransactionMutation';
 import store from 'JS/redux/store';
@@ -22,8 +20,6 @@ const mutationData = {
 jest.mock('Mutations/fileBrowser/DeleteLabbookFilesMutation', () => jest.fn());
 jest.mock('Mutations/fileBrowser/MakeLabbookDirectoryMutation', () => jest.fn());
 jest.mock('Mutations/fileBrowser/MoveLabbookFileMutation', () => jest.fn());
-jest.mock('Mutations/fileBrowser/AddFavoriteMutation', () => jest.fn());
-jest.mock('Mutations/fileBrowser/RemoveFavoriteMutation', () => jest.fn());
 jest.mock('Mutations/DownloadDatasetFilesMutation', () => jest.fn());
 jest.mock('Mutations/fileBrowser/CompleteBatchUploadTransactionMutation', () => jest.fn());
 
@@ -74,42 +70,6 @@ describe('FileBrowserMutations', () => {
 
       expect(MoveLabbookFileMutation.mock.calls.length).toEqual(1);
   });
-
-
-  it('addFavorite calls AddFavoriteMutation', () => {
-      var data = {
-        key: 'temp/file.py',
-        edge: {
-          node: {
-            id: '',
-            key: 'file.py',
-            isDir: false,
-          },
-        },
-      };
-
-      fileBrowserMutations.addFavorite(data, () => {});
-
-      expect(AddFavoriteMutation.mock.calls.length).toEqual(1);
-  });
-
-  it('removeFavorite calls RemoveFavoriteMutation', () => {
-      var data = {
-        key: 'temp/file.py',
-        edge: {
-          node: {
-            id: '',
-            key: 'file.py',
-            isDir: false,
-          },
-        },
-      };
-
-      fileBrowserMutations.removeFavorite(data, () => {});
-
-      expect(RemoveFavoriteMutation.mock.calls.length).toEqual(1);
-  });
-
 
   it('deleteLabbookFiles calls DeleteLabbookFilesMutation', () => {
       var data = {

@@ -19,6 +19,8 @@ from gtmcore.logging import LMLogger
 from gtmcore.configuration.utils import call_subprocess
 from gtmcore.inventory.branching import BranchManager, MergeConflict
 from gtmcore.configuration import Configuration
+from gtmcore.dispatcher import Dispatcher
+import gtmcore.dispatcher.dataset_jobs
 
 
 logger = LMLogger.get_logger()
@@ -133,10 +135,6 @@ def _pull(repository: Repository, branch_name: str, override: str, feedback_cb: 
     cp = repository.git.commit_hash
     try:
         call_subprocess(f'git pull'.split(), cwd=repository.root_dir)
-        if isinstance(repository, LabBook):
-            if not username:
-                raise ValueError("Current logged in username required to checkout a Project with a linked dataset")
-            InventoryManager().update_linked_datasets(repository, username, init=True)
 
     except subprocess.CalledProcessError as cp_error:
         if 'Automatic merge failed' in cp_error.stdout.decode():
@@ -301,3 +299,37 @@ def clone_repo(remote_url: str, username: str, owner: str,
     shutil.rmtree(tempdir)
 
     return repository
+
+
+def process_linked_datasets(labbook: LabBook, logged_in_username: str) -> None:
+    """Method to update or init any linked dataset submodule references, clean up lingering files, and schedule
+    jobs to auto-import if needed
+
+    Args:
+        labbook: the labbook to analyze
+        logged_in_username: the current logged in username
+
+    Returns:
+
+    """
+    im = InventoryManager(config_file=labbook.client_config.config_file)
+
+    # Update linked datasets inside the Project or clean them out if needed
+    im.update_linked_datasets(labbook, logged_in_username, init=True)
+
+    # Check for linked datasets, and schedule auto-imports
+    d = Dispatcher()
+    datasets = im.get_linked_datasets(labbook)
+    for ds in datasets:
+        kwargs = {
+            'logged_in_username': logged_in_username,
+            'dataset_owner': ds.namespace,
+            'dataset_name': ds.name,
+            'remote_url': ds.remote,
+        }
+        metadata = {'dataset': f"{logged_in_username}|{ds.namespace}|{ds.name}",
+                    'method': 'dataset_jobs.check_and_import_dataset'}
+
+        d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
+                        kwargs=kwargs,
+                        metadata=metadata)

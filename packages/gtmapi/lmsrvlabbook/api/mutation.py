@@ -5,7 +5,6 @@ from lmsrvlabbook.api.mutations.labbook import (CreateLabbook, DeleteLabbook,
                                                 SetLabbookDescription,
                                                 MakeLabbookDirectory,
                                                 AddLabbookFile, MoveLabbookFile, DeleteLabbookFiles,
-                                                AddLabbookFavorite, RemoveLabbookFavorite, UpdateLabbookFavorite,
                                                 WriteLabbookReadme, CompleteBatchUploadTransaction, FetchLabbookEdge)
 from lmsrvlabbook.api.mutations.migrations import MigrateLabbookSchema
 from lmsrvlabbook.api.mutations.environment import (BuildImage, StartContainer, StopContainer, CancelBuild)
@@ -191,15 +190,6 @@ class LabbookMutations(BranchMutations, LabbookSharingMutations,
 
     # Remove a locally stored user identity (no-op for non-local installations)
     remove_user_identity = RemoveUserIdentity.Field()
-
-    # Add a favorite file or dir in a labbook subdirectory (code, input, output)
-    add_favorite = AddLabbookFavorite.Field()
-
-    # Update a favorite file or dir in a labbook subdirectory (code, input, output)
-    update_favorite = UpdateLabbookFavorite.Field()
-
-    # Remove a favorite file or dir in a labbook subdirectory (code, input, output)
-    remove_favorite = RemoveLabbookFavorite.Field()
 
     # Adds a dataset collaborator
     add_dataset_collaborator = AddDatasetCollaborator.Field()

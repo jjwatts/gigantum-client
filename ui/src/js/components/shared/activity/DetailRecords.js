@@ -71,10 +71,6 @@ export default class UserNote extends Component {
     window.addEventListener('resize', this._setLinks.bind(this));
   }
 
-  componentWillUnmount() {
-    window.removeEventListener('resize', this._setLinks.bind(this));
-  }
-
   componentDidUpdate() {
     const self = this;
     setTimeout(() => {
@@ -82,10 +78,13 @@ export default class UserNote extends Component {
     }, 100);
   }
 
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._setLinks.bind(this));
+  }
+
   /**
    * Lifecycle methods end
    */
-
   _setLinks() {
     const elements = Array.prototype.slice.call(document.getElementsByClassName('ReactMarkdown'));
     const moreObj = {};
@@ -94,6 +93,7 @@ export default class UserNote extends Component {
       if (this._checkOverflow(elOuter.childNodes[elOuter.childNodes.length - 1]) === true) moreObj[index] = true;
     });
     const pElements = Array.prototype.slice.call(document.getElementsByClassName('DetailsRecords__link'));
+
     for (const key in pElements) {
       if (!moreObj[key]) {
         pElements[key].className = 'DetailsRecords__link hidden';
@@ -145,7 +145,13 @@ export default class UserNote extends Component {
       case 'image/gif':
         return (<img alt="detail" src={item[1]} />);
       case 'text/markdown':
-        return (<ReactMarkdown renderers={{ code: props => <CodeBlock {...props} /> }} className="ReactMarkdown" source={item[1]} />);
+        return (
+          <ReactMarkdown
+            renderers={{ code: props => <CodeBlock {...props} /> }}
+            className="ReactMarkdown"
+            source={item[1]}
+          />
+        );
       default:
         return (<b>{item[1]}</b>);
     }

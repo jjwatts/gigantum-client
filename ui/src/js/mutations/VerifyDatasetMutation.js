@@ -39,7 +39,6 @@ export default function VerifyDatasetMutation(
         if (error) {
           console.log(error);
         }
-        console.log(response)
         FooterUtils.getJobStatus(response, 'verifyDataset', 'backgroundJobKey');
         callback(response, error);
       },

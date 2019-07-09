@@ -64,7 +64,7 @@ more, check out the docs here: [https://docs.gigantum.com](https://docs.gigantum
                  'type': "str"
                  }]
 
-    def confirm_configuration(self, dataset, status_update_fn: Callable) -> Optional[str]:
+    def confirm_configuration(self, dataset) -> Optional[str]:
         """Method to verify a configuration and optionally allow the user to confirm before proceeding
 
         Should return the desired confirmation message if there is one. If no confirmation is required/possible,
@@ -89,13 +89,12 @@ more, check out the docs here: [https://docs.gigantum.com](https://docs.gigantum
 
         return os.path.join(working_dir, 'local_data', data_dir)
 
-    def prepare_pull(self, dataset, objects: List[PullObject], status_update_fn: Callable) -> None:
+    def prepare_pull(self, dataset, objects: List[PullObject]) -> None:
         """Gigantum Object Service only requires that the user's tokens have been set
 
         Args:
             dataset: The current dataset instance
             objects: A list of PushObjects to be pulled
-            status_update_fn: A function to update status during pushing
 
         Returns:
             None
@@ -103,21 +102,21 @@ more, check out the docs here: [https://docs.gigantum.com](https://docs.gigantum
         if not self.is_configured:
             raise ValueError("Local filesystem backend must be fully configured before running pull.")
 
-        status_update_fn(f"Ready to link files for {dataset.namespace}/{dataset.name}")
-
-    def finalize_pull(self, dataset, status_update_fn: Callable) -> None:
+    def finalize_pull(self, dataset) -> None:
         pass
 
-    def pull_objects(self, dataset: Dataset, objects: List[PullObject], status_update_fn: Callable) -> PullResult:
+    def pull_objects(self, dataset: Dataset, objects: List[PullObject],
+                     progress_update_fn: Callable) -> PullResult:
         """High-level method to simply link files from the source dir to the object directory to the revision directory
 
         Args:
             dataset: The current dataset
             objects: A list of PullObjects the enumerate objects to push
-            status_update_fn: A callback to update status and provide feedback to the user
+            progress_update_fn: A callable with arg "completed_bytes" (int) indicating how many bytes have been
+                                downloaded in since last called
 
         Returns:
-            PushResult
+            PullResult
         """
         # Link from local data directory to the object directory
         for obj in objects:
@@ -125,6 +124,7 @@ more, check out the docs here: [https://docs.gigantum.com](https://docs.gigantum
                 # Re-link to make 100% sure all links are consistent if a link already exists
                 os.remove(obj.object_path)
             os.link(os.path.join(self._get_local_data_dir(), obj.dataset_path), obj.object_path)
+            progress_update_fn(os.path.getsize(obj.object_path))
 
         # link from object dir through to revision dir
         m = Manifest(dataset, self.configuration.get('username'))

@@ -52,8 +52,8 @@ const getSyncTooltip = (props, data) => {
   } = data;
   let syncTooltip = !hasWriteAccess ? 'Pull' : 'Sync';
   syncTooltip = props.isLocked ? `Cannot ${syncOrPublish} while Project is in use` : syncTooltip;
+  syncTooltip = !props.defaultRemote ? 'Click Publish to push branch to remote server' : syncTooltip;
   syncTooltip = (activeBranch.branchName !== 'master' && !props.defaultRemote) ? 'Must publish Master branch first' : syncTooltip;
-  syncTooltip = !props.defaultRemote ? 'Publish' : syncTooltip;
   syncTooltip = props.defaultRemote && !sectionCollabs ? 'Please wait while Project data is being fetched' : syncTooltip;
 
   return syncTooltip;
@@ -479,6 +479,19 @@ class BranchMenu extends Component {
     let syncOrPublish = props.defaultRemote ? 'Sync' : 'Publish';
     syncOrPublish = isPullOnly ? 'Pull' : syncOrPublish;
 
+    let createTooltip = state.isDataset ? defaultDatasetMessage : 'Create Branch';
+    createTooltip = props.isLocked ? 'Cannot Create Branch while Project is in use' : createTooltip;
+
+    let resetTooltip = 'Reset Branch to Remote';
+    resetTooltip = upToDate ? 'Branch up to date' : resetTooltip;
+    resetTooltip = activeBranch.commitsAhead === undefined ? 'Please wait while branch data is being fetched' : resetTooltip;
+    resetTooltip = !activeBranch.isRemote ? 'Cannot reset a branch until it has been published' : resetTooltip;
+    resetTooltip = (!activeBranch.isRemote && (activeBranch.branchName !== 'master')) ? 'The master branch must be published first' : resetTooltip;
+    resetTooltip = state.isLocked ? 'Cannot Reset Branch while Project is in use' : resetTooltip;
+    resetTooltip = state.isDataset ? defaultDatasetMessage : resetTooltip;
+    let switchTooltip = props.isLocked ? 'Cannot switch branches while Project is in use' : 'Switch Branches';
+    switchTooltip = state.isDataset ? defaultDatasetMessage : switchTooltip;
+
     const data = {
       defaultDatasetMessage,
       hasWriteAccess,
@@ -491,9 +504,9 @@ class BranchMenu extends Component {
     return {
       syncTooltip: getSyncTooltip(props, data),
       manageTooltip: getManagedToolip(props, data),
-      createTooltip: props.isLocked ? 'Cannot Create Branch while Project is in use' : state.isDataset ? defaultDatasetMessage : 'Create Branch',
-      resetTooltip: state.isDataset ? defaultDatasetMessage : props.isLocked ? 'Cannot Reset Branch while Project is in use' : !activeBranch.isRemote ? 'Branch must be remote' : activeBranch.commitsAhead === undefined ? 'Please wait while branch data is being fetched' : upToDate ? 'Branch up to date' : 'Reset Branch to Remote',
-      switchTooltip: props.isLocked ? 'Cannot switch branches while Project is in use' : state.isDataset ? defaultDatasetMessage : '',
+      createTooltip,
+      resetTooltip,
+      switchTooltip,
       commitTooltip: `${activeBranch.commitsBehind ? `${activeBranch.commitsBehind} Commits Behind, ` : ''} ${activeBranch.commitsAhead ? `${activeBranch.commitsAhead} Commits Ahead` : ''}`,
     };
   }

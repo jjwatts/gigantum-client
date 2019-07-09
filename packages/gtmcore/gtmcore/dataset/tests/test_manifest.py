@@ -242,13 +242,11 @@ class TestManifest(object):
         assert indexes == list(range(0, 6))
         assert file_info[3]['key'] == "test1.txt"
         assert file_info[3]['size'] == '8'
-        assert file_info[3]['is_favorite'] is False
         assert file_info[3]['is_local'] is True
         assert file_info[3]['is_dir'] is False
         assert 'modified_at' in file_info[3]
         assert file_info[0]['key'] == "other_dir/"
         assert file_info[0]['size'] == '4096'
-        assert file_info[0]['is_favorite'] is False
         assert file_info[0]['is_local'] is True
         assert file_info[0]['is_dir'] is True
         assert 'modified_at' in file_info[0]
@@ -288,7 +286,6 @@ class TestManifest(object):
         assert len(file_info) == 6
         assert file_info[3]['key'] == "test1.txt"
         assert file_info[3]['size'] == '8'
-        assert file_info[3]['is_favorite'] is False
         assert file_info[3]['is_local'] is False
         assert file_info[3]['is_dir'] is False
 
@@ -304,7 +301,6 @@ class TestManifest(object):
         file_info = manifest.get("test1.txt")
         assert file_info['key'] == "test1.txt"
         assert file_info['size'] == '8'
-        assert file_info['is_favorite'] is False
         assert file_info['is_local'] is True
         assert file_info['is_dir'] is False
         assert 'modified_at' in file_info
@@ -323,7 +319,6 @@ class TestManifest(object):
         file_info = manifest.gen_file_info("test1.txt")
         assert file_info['key'] == "test1.txt"
         assert file_info['size'] == '8'
-        assert file_info['is_favorite'] is False
         assert file_info['is_local'] is True
         assert file_info['is_dir'] is False
         assert 'modified_at' in file_info
@@ -331,7 +326,6 @@ class TestManifest(object):
         file_info = manifest.gen_file_info("other_dir/")
         assert file_info['key'] == "other_dir/"
         assert file_info['size'] == '0'
-        assert file_info['is_favorite'] is False
         assert file_info['is_local'] is True
         assert file_info['is_dir'] is True
         assert 'modified_at' in file_info

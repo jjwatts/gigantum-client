@@ -61,7 +61,7 @@ app)
 ```bash
 python -m venv gtm-env
 source gtm-env/bin/activate
-cd gtm && pip install -e . && cd ..
+( cd gtm && pip install -e . )
 ```
 
 `gtm` is a command line tool to help build and configure the Client. This is a Python 3 application, so you must have
@@ -195,4 +195,3 @@ to follow this code. Please report unacceptable behavior to conduct@gigantum.com
 The Gigantum Client is released under an [MIT license](LICENSE)
 
 [![FOSSA Status](https://app.fossa.io/api/projects/custom%2B6007%2FGigantum%20Client.svg?type=large)](https://app.fossa.io/projects/custom%2B6007%2FGigantum%20Client?ref=badge_large)
-

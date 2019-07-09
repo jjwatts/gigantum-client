@@ -48,7 +48,12 @@ class Environment extends Component {
   */
   _buildCallback = (callback) => {
     const { labbookName, owner } = this.state;
-
+    let buildData = false;
+    if (callback) {
+      buildData = {
+        hideFooter: true,
+      };
+    }
     setBuildingState(true);
     if (store.getState().containerStatus.status === 'Running') {
       StopContainerMutation(
@@ -62,7 +67,7 @@ class Environment extends Component {
             BuildImageMutation(
               owner,
               labbookName,
-              false,
+              buildData,
               (response, error, id) => {
                 if (error) {
                   setErrorMessage(`${labbookName} failed to build`, error);
@@ -81,7 +86,7 @@ class Environment extends Component {
       BuildImageMutation(
         owner,
         labbookName,
-        false,
+        buildData,
         (response, error, id) => {
           if (error) {
             setErrorMessage(`${labbookName} failed to build`, error);
@@ -120,6 +125,7 @@ class Environment extends Component {
             <Base
               ref="base"
               environment={environment}
+              baseLatestRevision={environment.baseLatestRevision}
               environmentId={environment.id}
               editVisible
               containerStatus={props.containerStatus}
@@ -129,6 +135,8 @@ class Environment extends Component {
               blockClass="Environment"
               base={base}
               isLocked={props.isLocked}
+              owner={props.owner}
+              name={props.name}
             />
           </ErrorBoundary>
           <ErrorBoundary type="packageDependenciesError" key="packageDependencies">
@@ -176,6 +184,7 @@ export default createFragmentContainer(
         packageManagers
       }
       dockerSnippet
+      baseLatestRevision
 
       ...Base_environment
       ...Packages_environment

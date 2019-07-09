@@ -23,6 +23,28 @@ class TestDataloaderPackage(object):
         assert pkg.docs_url == 'https://github.com/gigantum/gigantum-client'
         assert pkg.latest_version == '0.12.4'
 
+    def test_load_many_apt(self, build_image_for_jupyterlab):
+        lb, username = build_image_for_jupyterlab[0], build_image_for_jupyterlab[5]
+        keys = ["apt&curl", "apt&vim"]
+        loader = PackageDataloader(keys, lb, username)
+        promise1 = loader.load_many(keys)
+        assert isinstance(promise1, Promise)
+
+        version_list = promise1.get()
+        assert len(version_list) == 2
+        assert isinstance(version_list[0], PackageMetadata) is True
+        assert 'ubuntu' in version_list[0].latest_version
+        assert version_list[0].description == 'command line tool for transferring data with URL syntax'
+        assert version_list[0].docs_url is None
+        assert version_list[0].package == 'curl'
+        assert version_list[0].package_manager == 'apt'
+
+        assert 'ubuntu' in version_list[1].latest_version
+        assert version_list[1].description == 'Vi IMproved - enhanced vi editor'
+        assert version_list[1].docs_url is None
+        assert version_list[1].package == 'vim'
+        assert version_list[1].package_manager == 'apt'
+
     def test_load_many_pip(self, build_image_for_jupyterlab):
         """Test loading many labbooks"""
         lb, username = build_image_for_jupyterlab[0], build_image_for_jupyterlab[5]
@@ -102,7 +124,6 @@ class TestDataloaderPackage(object):
         loader = PackageDataloader(keys, lb, username)
         promise1 = loader.load_many(keys)
         assert isinstance(promise1, Promise)
-
 
         version_list = promise1.get()
         assert len(version_list) == 5

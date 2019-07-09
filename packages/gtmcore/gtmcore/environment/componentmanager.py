@@ -587,4 +587,12 @@ class ComponentManager(object):
         with open(base_yaml_file[0], 'rt') as bf:
             data = yaml.safe_load(bf)
 
+        if not data:
+            raise ValueError(f"Project misconfigured. Found empty base configuration.")
+
+        # Patch Legacy bases, renaming key from ###repository### to repository
+        if '###repository###' in data:
+            data['repository'] = data['###repository###']
+            del data['###repository###']
+
         return data

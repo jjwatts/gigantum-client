@@ -102,4 +102,8 @@
       border: 0px;
     }
   }
+  &:disabled, &:disabled:hover {
+    background: url(~Images/icons/form/checkbox/checkbox-disabled.svg) no-repeat center center;
+    background-size: 16px;
+  }
 }

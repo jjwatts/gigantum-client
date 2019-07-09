@@ -118,6 +118,7 @@ export default createPaginationContainer(
             latestVersion @skip(if: $skipPackages)
             version
             fromBase
+            docsUrl @skip(if: $skipPackages)
             description @skip(if: $skipPackages)
           }
           cursor

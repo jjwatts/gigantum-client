@@ -55,10 +55,6 @@
               background: url('~Images/icons/folder-add-dark.svg') no-repeat 50% 50%;
               background-size: 20px;
             }
-          &--favorite-off {
-              background: url('~Images/icons/star__off-dark.svg') no-repeat 50% 50%;
-              background-size: 20px;
-          }
         }
       }
 
@@ -77,7 +73,7 @@
 
         padding: 0 0 0 35px;
         line-height: 26px;
-
+        min-height: 20px;
         background: url(~Images/icons/database-filebrowser.svg) no-repeat 0% 50%;
         background-size: 20px;
     }

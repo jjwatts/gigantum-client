@@ -20,7 +20,6 @@
 import pytest
 import yaml
 import os
-import graphql
 from snapshottest import snapshot
 
 from gtmcore.environment import ComponentManager
@@ -43,8 +42,8 @@ class TestAddComponentMutations(object):
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-tester",
-            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]           
-            
+            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
@@ -55,7 +54,7 @@ class TestAddComponentMutations(object):
                   version
                   fromBase
                 }
-                cursor 
+                cursor
             }
           }
         }
@@ -76,8 +75,8 @@ class TestAddComponentMutations(object):
             owner: "default",
             labbookName: "catbook-package-tester-multi",
             packages: [{manager: "pip3", package: "gtmunit1", version: "0.12.4"},
-                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]           
-            
+                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
@@ -88,7 +87,7 @@ class TestAddComponentMutations(object):
                   version
                   fromBase
                 }
-                cursor 
+                cursor
             }
           }
         }
@@ -128,8 +127,8 @@ class TestAddComponentMutations(object):
             owner: "default",
             labbookName: "catbook-package-tester-mgr-errors",
             packages: [{manager: "pip3", package: "requests", version: "2.18.4"},
-                       {manager: "conda3", package: "responses", version: "1.4"}]           
-            
+                       {manager: "conda3", package: "responses", version: "1.4"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
@@ -140,7 +139,7 @@ class TestAddComponentMutations(object):
                   version
                   fromBase
                 }
-                cursor 
+                cursor
             }
           }
         }
@@ -161,8 +160,8 @@ class TestAddComponentMutations(object):
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-no-version",
-            packages: [{manager: "pip3", package: "gtmunit1"}]           
-            
+            packages: [{manager: "pip3", package: "gtmunit1"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
@@ -173,7 +172,7 @@ class TestAddComponentMutations(object):
                   version
                   fromBase
                 }
-                cursor 
+                cursor
             }
           }
         }
@@ -196,14 +195,14 @@ class TestAddComponentMutations(object):
             owner: "default",
             labbookName: "catbook-package-tester-remove",
             packages: [{manager: "pip3", package: "gtmunit1", version: "0.12.4"},
-                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]          
-            
+                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
                 node{
-                  id                
-                }                 
+                  id
+                }
             }
           }
         }
@@ -300,7 +299,7 @@ class TestAddComponentMutations(object):
             repository: "gigantum_base-images-testing",
             baseId: "quickstart-jupyterlab",
             revision: 2
-          }) 
+          })
           {
             labbook {
               environment {
@@ -342,7 +341,7 @@ class TestAddComponentMutations(object):
             repository: "gigantum_base-images-testing",
             baseId: "ut-busybox",
             revision: 0
-          }) 
+          })
           {
             labbook {
               environment {

@@ -27,6 +27,12 @@
             transform: translate(-50%, 0);
         }
     }
+    &--auto {
+      &:hover::after{
+        text-align: center;
+        width: auto;
+      }
+    }
     &--visible::after,
     &:hover::after{
       z-index: index($elements, popup);

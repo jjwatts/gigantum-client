@@ -35,7 +35,6 @@ class TestDatasetFilesQueries(object):
                             node {
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }
@@ -64,7 +63,6 @@ class TestDatasetFilesQueries(object):
                                    node {
                                      key
                                      isDir
-                                     isFavorite
                                      isLocal
                                      size
                                    }
@@ -93,7 +91,6 @@ class TestDatasetFilesQueries(object):
                                node {
                                  key
                                  isDir
-                                 isFavorite
                                  isLocal
                                  size
                                }
@@ -122,7 +119,6 @@ class TestDatasetFilesQueries(object):
                                node {
                                  key
                                  isDir
-                                 isFavorite
                                  isLocal
                                  size
                                }
@@ -152,7 +148,6 @@ class TestDatasetFilesQueries(object):
                             node {
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }
@@ -187,7 +182,6 @@ class TestDatasetFilesQueries(object):
                             node {
                               key
                               isDir
-                              isFavorite
                               isLocal
                               size
                             }

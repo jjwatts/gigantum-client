@@ -55,7 +55,7 @@
 }
 
 .bold {
-  font-weight: 400;
+  font-weight: 600 !important;
 }
 
 
@@ -295,4 +295,11 @@
 
 .keep-all {
   word-break: keep-all;
+}
+
+/*********************
+  white-space
+**********************/
+.no-wrap {
+  white-space: nowrap;
 }

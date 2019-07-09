@@ -25,6 +25,7 @@ export default (state = {
   viewHistory: false,
   helperVisible: false,
   uuid: '',
+  buildProgress: false,
 }, action) => {
   const checkHistoryStackLength = (messageStackHistory) => {
     if (messageStackHistory.length > 50) {
@@ -340,6 +341,7 @@ export default (state = {
       messageListOpen = action.payload.messageListOpen === undefined || action.payload.messageListOpen;
     }
 
+    const buildProgress = action.payload.buildProgress && (action.payload.message.indexOf('Using cached image') === -1);
     const message = {
       message: action.payload.message,
       id: action.payload.id,
@@ -353,6 +355,7 @@ export default (state = {
         : [],
       error: action.payload.error,
       messageBodyOpen,
+      buildProgress,
       dismissed: (doesHistoryMessageExist.length > 0) ? doesHistoryMessageExist[0].dismissed : false,
       date,
     };

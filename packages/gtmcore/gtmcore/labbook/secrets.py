@@ -178,6 +178,9 @@ def valid_token(token: str, extra_allowed_chars: str) -> bool:
 
 def path_on_disk(labbook: LabBook, username: str, key: Optional[str] = None) -> str:
     """Return the path (on host) for the secrets file."""
+    if not labbook.owner:
+        raise ValueError("Cannot retrieve absolute path to secret file if Project is not in working directory.")
+
     tokens = [labbook.client_config.app_workdir, '.labmanager',
               'secrets', username, labbook.owner, labbook.name]
     if key:

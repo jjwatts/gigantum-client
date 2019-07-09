@@ -55,7 +55,7 @@ export default function DownloadDatasetFilesMutation(
     variables,
     onCompleted: (response, error) => {
       if (error) {
-        setErrorMessage(error);
+        setErrorMessage('There was a problem downloading Dataset files', error);
         console.log(error);
       }
       const footerData = {

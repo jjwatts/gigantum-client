@@ -28,6 +28,7 @@ from lmsrvlabbook.api.objects.activity import ActivityDetailObject, ActivityReco
 from lmsrvlabbook.api.objects.packagecomponent import PackageComponent, PackageComponentInput
 from lmsrvlabbook.api.objects.dataset import Dataset
 from lmsrvlabbook.dataloader.package import PackageDataloader
+from lmsrvlabbook.dataloader.fetch import FetchLoader
 
 logger = LMLogger.get_logger()
 
@@ -280,7 +281,10 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
 
     def helper_resolve_branches(self, lb, kwargs):
         bm = BranchManager(lb)
-        return [Branch(owner=self.owner, name=self.name, branch_name=b)
+
+        fetcher = FetchLoader()
+
+        return [Branch(_fetch_loader=fetcher, owner=self.owner, name=self.name, branch_name=b)
                 for b in sorted(set(bm.branches_local + bm.branches_remote))]
 
     def resolve_branches(self, info, **kwargs):

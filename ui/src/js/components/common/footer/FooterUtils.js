@@ -11,7 +11,6 @@ import {
 // mutations
 import FetchLabbookEdgeMutation from 'Mutations/FetchLabbookEdgeMutation';
 import FetchDatasetEdgeMutation from 'Mutations/FetchDatasetEdgeMutation';
-import FetchCompleteDatasetEdgeMutation from 'Mutations/FetchCompleteDatasetEdgeMutation';
 import FetchDatasetFilesMutation from 'Mutations/FetchDatasetFilesMutation';
 import FetchLabbookDatasetFilesMutation from 'Mutations/FetchLabbookDatasetFilesMutation';
 
@@ -108,7 +107,7 @@ const FooterUtils = {
             const responseId = id || response.data.jobStatus.id;
             const { html, message } = messageParser(response);
             // executes while job status is still running, refetches until status is finished or failed
-            if (response.data.jobStatus.status === 'started') {
+            if (response.data.jobStatus.status === 'started' || response.data.jobStatus.status === 'queued') {
               if (html.length) {
                 const messageData = {
                   id: responseId,
@@ -117,6 +116,7 @@ const FooterUtils = {
                   error: false,
                   messageBody: [{ message: html }],
                   messageListOpen: !hideFooter,
+                  buildProgress: type === 'buildImage',
                 };
                 setMultiInfoMessage(messageData);
               }
@@ -130,6 +130,7 @@ const FooterUtils = {
                 isLast: true,
                 error: null,
                 messageBody: [{ message: html }],
+                buildProgress: type === 'buildImage',
               };
 
               setMultiInfoMessage(messageData);
@@ -169,6 +170,7 @@ const FooterUtils = {
                 isLast: true,
                 error: true,
                 messageBody: [{ message: errorHTML }],
+                buildProgress: type === 'buildImage',
               };
               setMultiInfoMessage(messageData);
             } else {
@@ -195,7 +197,7 @@ const FooterUtils = {
     *  updates footer with a message
     *  @return {}
     */
-  datasetUploadStatus: (mutationResponse, refetch) => {
+  datasetUploadStatus: (mutationResponse, finishedCallback) => {
     const {
       completeDatasetUploadTransaction,
     } = mutationResponse;
@@ -215,23 +217,32 @@ const FooterUtils = {
           const { jobStatus } = response.data;
           const metaData = JSON.parse(jobStatus.jobMetadata);
 
-          if (jobStatus.status === 'started') {
+          if (jobStatus.status === 'started' || jobStatus.status === 'queued') {
             setTimeout(() => {
               fetchStatus({ backgroundJobKey });
-              setUploadMessageUpdate(
-                metaData.feedback,
-                1,
-                parseFloat(metaData.percent_complete),
-              );
+
+              if (metaData.feedback === undefined) {
+                setUploadMessageUpdate(
+                  'Please wait while contents are analyzed.',
+                  1,
+                  0,
+                );
+              } else {
+                setUploadMessageUpdate(
+                  metaData.feedback,
+                  1,
+                  parseFloat(metaData.percent_complete),
+                );
+              }
             }, 1000);
           } else if ((jobStatus.status === 'finished') || (jobStatus.status === 'failed')) {
+            finishedCallback();
+
             setUploadMessageUpdate(
               metaData.feedback,
               1,
               parseFloat(metaData.percent_complete),
             );
-
-            refetch();
 
             setTimeout(() => {
               setUploadMessageRemove(metaData.feedback);

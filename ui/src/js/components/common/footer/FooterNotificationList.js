@@ -2,16 +2,33 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import Moment from 'moment';
+// components
+import BuildModal from 'Components/shared/modals/BuildModal';
 // store
-import { setUpdateHistoryView } from 'JS/redux/actions/footer';
+import store from 'JS/redux/store';
+import { setUpdateHistoryView, setToggleMessageList } from 'JS/redux/actions/footer';
 // assets
 import './FooterNotificationList.scss';
 
 export default class FooterNotificationList extends Component {
-  render() {
-    const { props } = this;
-    const messageList = props.parentState.viewHistory ? props.parentState.messageStackHistory : props.parentState.messageStack;
+  state = {
+    selectedBuildId: null,
+  }
 
+  /**
+  *  @param {Boolean} selectedBuildId
+  *  sets selectedBuildId in state
+  */
+  _setBuildId = (selectedBuildId) => {
+    this.setState({ selectedBuildId });
+    this.props.toggleMessageList();
+  }
+
+  render() {
+    const { props, state } = this;
+    const messageList = props.parentState.viewHistory ? props.parentState.messageStackHistory : props.parentState.messageStack;
+    // no other reference to owner and labbookname
+    const { owner, labbookName } = store.getState().routes;
     const messageListOpenItems = messageList.filter(message => message.messageBodyOpen);
 
     const footerMessageSectionClass = classNames({
@@ -50,12 +67,13 @@ export default class FooterNotificationList extends Component {
               messageList.map((messageItem, index) => {
                 const messageBodyClasses = classNames({
                   'Footer__message-body-content': true,
-                  hidden: !messageItem.messageBodyOpen,
+                  hidden: !messageItem.messageBodyOpen || messageItem.buildProgress,
                 });
 
                 const toggleButton = classNames({
                   'Btn Btn__toggle': true,
                   'Btn__toggle--open': messageItem.messageBodyOpen,
+                  hidden: messageItem.buildProgress,
                 });
 
                 const bodyCSS = classNames({
@@ -66,6 +84,7 @@ export default class FooterNotificationList extends Component {
                   'Footer__message-title': true,
                   'Footer__message-title--collapsed': !messageItem.messageBodyOpen,
                 });
+
                 return (
                   <li
                     key={messageItem.id + index}
@@ -91,8 +110,31 @@ export default class FooterNotificationList extends Component {
                           )
 
                         }
+                        {
+                          messageItem.buildProgress
+                          && (
+                            <button
+                              className="Btn Btn--inverted Btn--inverted--white no-wrap align-self--center"
+                              onClick={() => this._setBuildId(messageItem.id)}
+                              type="button"
+                            >
+                              View Build Output
+                            </button>
+                          )
+                        }
                       </div>
-
+                      {
+                        (state.selectedBuildId === messageItem.id)
+                        && (
+                          <BuildModal
+                            setBuildId={this._setBuildId}
+                            buildId={state.selectedBuildId}
+                            keepOpen={messageItem.isLast}
+                            owner={owner}
+                            name={labbookName}
+                          />
+                        )
+                      }
                       <div className={messageBodyClasses}>
 
                         <ul>

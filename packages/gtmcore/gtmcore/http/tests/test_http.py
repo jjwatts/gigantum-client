@@ -30,7 +30,10 @@ class TestAsyncHTTP(object):
         assert len(result) == 504
 
         print((t_stop - t_start))
-        assert (t_stop - t_start) < 18
+
+        # If the requests ran serially, it should take 70 seconds. If concurrent it should be faster.
+        # Check to make sure it's less than 30 seconds due to variability in httpstat.us when we slam it
+        assert (t_stop - t_start) < 30
 
         for r in result:
             assert r.status_code == 200

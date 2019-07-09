@@ -405,6 +405,22 @@ class TestComponentManager(object):
         assert base_data['os_class'] == 'ubuntu'
         assert base_data['schema'] == 1
 
+    def test_get_base_empty_error(self, mock_config_with_repo):
+        lb = create_tmp_labbook(mock_config_with_repo[0])
+        cm = ComponentManager(lb)
+
+        # mock_config_with_repo is a ComponentManager Instance
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-1", 0)
+
+        base_filename = f"gigantum_base-images-testing_ut-jupyterlab-1.yaml"
+        base_final_path = os.path.join(cm.env_dir, 'base', base_filename)
+
+        with open(base_final_path, 'wt') as cf:
+            cf.write(yaml.safe_dump({}, default_flow_style=False))
+
+        with pytest.raises(ValueError):
+            cm.base_fields
+
     def test_add_then_remove_custom_docker_snipper_with_valid_docker(self, mock_config_with_repo):
         lb = create_tmp_labbook(mock_config_with_repo[0])
         snippet = ["RUN true", "RUN touch /tmp/testfile", "RUN rm /tmp/testfile", "RUN echo 'done'"]
@@ -412,7 +428,6 @@ class TestComponentManager(object):
         cm = ComponentManager(lb)
         cm.add_docker_snippet("unittest-docker", docker_content=snippet,
                               description="yada yada's, \n\n **I'm putting in lots of apostrophę's**.")
-        #print(open(os.path.join(lb.root_dir, '.gigantum', 'env', 'docker', 'unittest-docker.yaml')).read(10000))
         c2 = lb.git.commit_hash
         assert c1 != c2
 

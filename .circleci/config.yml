@@ -3,7 +3,9 @@ version: 2.1
 executors:
   gig_client:
     docker:
-      - image: gigantum/circleci-client:e9d1f69a99-2019-06-11
+      - image: gigantum/circleci-client:616cd769fd-2019-06-28
+  test_harness_exec:
+    machine: true
 
 jobs:
   mypy-gtmcore:
@@ -117,14 +119,14 @@ jobs:
           name: Set authentication credentials
           command: bash /home/circleci/repo/.circleci/write_auth.sh
       - run:
-          name: Run background job tests
+          name: Run Dispatcher and background job tests
           command: |
             export PYTHONPATH=$PYTHONPATH:/home/circleci/repo/packages/gtmcore
             cd /home/circleci/repo
             redis-server > /dev/null 2> /dev/null &
             rqscheduler --interval=2 2> /dev/null &
             python3 /home/circleci/repo/packages/gtmcore/gtmcore/dispatcher/worker.py &
-            pytest --cov=gtmcore packages/gtmcore/gtmcore/dataset/tests/test_background_jobs.py
+            pytest --cov=gtmcore packages/gtmcore/gtmcore/dispatcher/tests
             codecov -F core
 
   test-ui-components:
@@ -146,6 +148,42 @@ jobs:
           command: |
             cd /home/circleci/repo/ui
             jest shared/fileBrowser activity dashboard -u
+
+  test-harness:
+    executor: test_harness_exec
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Build and start Gigantum client
+          command: |
+            bash testing/circleci/ubuntu1404-install.sh
+            python3.6 -m venv gtm-env
+            source gtm-env/bin/activate
+            cd gtm && pip install -e . && cd ..
+            gtm client build
+            gtm client start
+      - run:
+          name: Set up credentials.txt for test user (circleci)
+          command: |
+            echo $TEST_USERNAME > credentials.txt
+            echo $TEST_PASSWORD >> credentials.txt
+            echo $TEST_USERNAME_2 >> credentials.txt
+            echo $TEST_PASSWORD_2 >> credentials.txt
+      - run:
+          name: Run the setup and preparation script
+          command: |
+            cp credentials.txt testing/credentials.txt
+            cd testing
+            python3.6 -m venv test-env
+            source test-env/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: Run Tests
+          command: |
+            cd testing
+            source test-env/bin/activate
+            python3 driver.py test_graphql test_delete_project test_branching
 
   fossa:
     executor: gig_client
@@ -190,6 +228,10 @@ workflows:
           requires:
             - mypy-gtmcore
             - mypy-gtmapi
+      #- test-harness:
+      #    requires:
+      #      - mypy-gtmcore
+      #      - mypy-gtmapi
       - test-background-jobs:
           requires:
             - mypy-gtmcore
@@ -197,3 +239,4 @@ workflows:
       - fossa:
           requires:
             - test-confhttpproxy
+

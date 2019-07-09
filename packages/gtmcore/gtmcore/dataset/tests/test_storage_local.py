@@ -102,7 +102,7 @@ class TestStorageBackendLocalFilesystem(object):
         ds.backend.set_default_configuration('test', 'asdf', '1234')
 
         with pytest.raises(ValueError):
-            ds.backend.confirm_configuration(ds, updater)
+            ds.backend.confirm_configuration(ds)
 
         current_config = ds.backend_config
         current_config['Data Directory'] = "test_dir"
@@ -112,18 +112,18 @@ class TestStorageBackendLocalFilesystem(object):
         assert len(ds.backend.missing_configuration) == 0
 
         with pytest.raises(ValueError):
-            ds.backend.confirm_configuration(ds, updater)
+            ds.backend.confirm_configuration(ds)
 
         # Create test data dir
         os.makedirs(os.path.join(mock_dataset_with_cache_dir_local[1], "local_data", "test_dir"))
 
-        assert ds.backend.confirm_configuration(ds, updater) is None
+        assert ds.backend.confirm_configuration(ds) is None
 
     def test_prepare_pull_not_configured(self, mock_dataset_with_cache_dir_local):
         ds = mock_dataset_with_cache_dir_local[0]
 
         with pytest.raises(ValueError):
-            ds.backend.prepare_pull(ds, [], updater)
+            ds.backend.prepare_pull(ds, [])
 
     def test_update_from_remote(self, mock_dataset_with_local_dir):
         ds = mock_dataset_with_local_dir[0]
@@ -181,6 +181,11 @@ class TestStorageBackendLocalFilesystem(object):
             assert tf.read() == "This file got changed in the filesystem"
 
     def test_pull(self, mock_dataset_with_local_dir):
+        def chunk_update_callback(completed_bytes: int):
+            """Method to update the job's metadata and provide feedback to the UI"""
+            assert type(completed_bytes) == int
+            assert completed_bytes > 0
+
         ds = mock_dataset_with_local_dir[0]
         m = Manifest(ds, 'tester')
         assert len(m.manifest.keys()) == 0
@@ -207,13 +212,13 @@ class TestStorageBackendLocalFilesystem(object):
             assert os.path.isfile(m.dataset_to_object_path(key)) is False
 
         # Pull 1 File
-        ds.backend.pull_objects(ds, [pull_objects[0]], updater)
+        ds.backend.pull_objects(ds, [pull_objects[0]], chunk_update_callback)
         assert os.path.isdir(os.path.join(m.cache_mgr.cache_root, m.dataset_revision))
         assert os.path.isfile(os.path.join(m.cache_mgr.cache_root, m.dataset_revision, 'test1.txt')) is True
         assert os.path.isfile(m.dataset_to_object_path('test1.txt')) is True
 
         # Pull all Files
-        ds.backend.pull_objects(ds, pull_objects, updater)
+        ds.backend.pull_objects(ds, pull_objects, chunk_update_callback)
         assert os.path.isdir(os.path.join(m.cache_mgr.cache_root, m.dataset_revision))
         assert os.path.isfile(os.path.join(m.cache_mgr.cache_root, m.dataset_revision, 'test1.txt')) is True
         assert os.path.isfile(os.path.join(m.cache_mgr.cache_root, m.dataset_revision, 'test2.txt')) is True

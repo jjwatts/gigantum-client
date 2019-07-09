@@ -86,6 +86,8 @@ class ContainerStatus(graphene.Enum):
 
 class Environment(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepository)):
     """A type that represents the Environment for a LabBook"""
+    _base_component_data = None
+
     # The name of the current branch
     image_status = graphene.Field(ImageStatus)
 
@@ -94,6 +96,9 @@ class Environment(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
 
     # The LabBook's Base Component
     base = graphene.Field(BaseComponent)
+
+    # The LabBook's Base Component's latest revision
+    base_latest_revision = graphene.Int()
 
     # The LabBook's Package manager installed dependencies
     package_dependencies = graphene.ConnectionField(PackageComponentConnection)
@@ -188,27 +193,19 @@ class Environment(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
 
         return container_status.value
 
-    @staticmethod
-    def helper_resolve_base(labbook):
+    def helper_resolve_base(self, labbook):
         """Helper to resolve the base component object"""
         # Get base image data from the LabBook
-        cm = ComponentManager(labbook)
-        component_data = cm.base_fields
+        if not self._base_component_data:
+            cm = ComponentManager(labbook)
+            self._base_component_data = cm.base_fields
 
-        if component_data:
-            if '###repository###' in component_data:
-                # Legacy base
-                repo = component_data['###repository###']
-            else:
-                repo = component_data['repository']
-
-            return BaseComponent(id=f"{repo}&{component_data['id']}&{component_data['revision']}",
-                                 repository=repo,
-                                 component_id=component_data['id'],
-                                 revision=int(component_data['revision']),
-                                 _component_data=component_data)
-        else:
-            return None
+        return BaseComponent(id=f"{self._base_component_data['repository']}&{self._base_component_data['id']}&"
+                                f"{self._base_component_data['revision']}",
+                             repository=self._base_component_data['repository'],
+                             component_id=self._base_component_data['id'],
+                             revision=int(self._base_component_data['revision']),
+                             _component_data=self._base_component_data)
 
     def resolve_base(self, info):
         """Method to get the LabBook's base component
@@ -221,6 +218,30 @@ class Environment(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepos
         """
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
             lambda labbook: self.helper_resolve_base(labbook))
+
+    def helper_resolve_base_latest_revision(self, labbook) -> int:
+        """Helper to resolve the base component's latest revision"""
+        cm = ComponentManager(labbook)
+        if not self._base_component_data:
+            self._base_component_data = cm.base_fields
+
+        available_bases = cm.bases.get_base_versions(self._base_component_data['repository'],
+                                                     self._base_component_data['id'])
+        # The first item in the available bases list is the latest base. This is a list of tuples (revision, base data)
+        latest_revision, _ = available_bases[0]
+        return int(latest_revision)
+
+    def resolve_base_latest_revision(self, info):
+        """Method to get the LabBook's base component's latest revision
+
+        Args:
+            info:
+
+        Returns:
+
+        """
+        return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda labbook: self.helper_resolve_base_latest_revision(labbook))
 
     @staticmethod
     def helper_resolve_package_dependencies(labbook, kwargs):

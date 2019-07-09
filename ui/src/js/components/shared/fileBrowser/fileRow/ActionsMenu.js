@@ -30,26 +30,6 @@ export default class ActionsMenu extends Component {
   */
 
   /**
-  *  @param {}
-  *  triggers favoirte unfavorite mutation
-  *  @return{ }
-  */
-  _triggerFavoriteMutation() {
-    const data = {
-      key: this.props.edge.node.key,
-      edge: this.props.edge,
-    };
-
-    if (this.props.edge.node.isFavorite) {
-      this.props.mutations.removeFavorite(data, (response) => {
-      });
-    } else {
-      this.props.mutations.addFavorite(data, (response) => {
-      });
-    }
-  }
-
-  /**
   *  @param {Object} event
   *  closes popup when clicking
   *  @return {}
@@ -128,11 +108,6 @@ export default class ActionsMenu extends Component {
     const renameTooltip = disableButtons ? 'Must download before renaming' : 'Rename';
     const isUntrackedDirectory = (props.edge.node.key === 'untracked/') && props.folder && (props.section === 'output');
 
-    const favoriteCSS = classNames({
-      'ActionsMenu__item Btn Btn--fileBrowser Tooltip-data Tooltip-data--small Btn--round Btn--bordered': true,
-      'Btn__Favorite-on': props.edge.node.isFavorite,
-      'Btn__Favorite-off': !props.edge.node.isFavorite,
-    });
     const popupCSS = classNames({
       ActionsMenu__popup: true,
       hidden: !state.popupVisible,
@@ -198,17 +173,6 @@ export default class ActionsMenu extends Component {
                 data-tooltip={renameTooltip}
                 type="button"
               />
-              {
-                props.section !== 'data'
-                && (
-                <button
-                  onClick={() => { this._triggerFavoriteMutation(); }}
-                  className={favoriteCSS}
-                  data-tooltip="Favorite"
-                  type="button"
-                />
-                )
-              }
             </Fragment>
             )
           }

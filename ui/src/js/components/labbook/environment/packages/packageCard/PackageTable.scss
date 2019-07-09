@@ -75,3 +75,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.PackageRow__external {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  border-radius: 0;
+  background: url('~Images/icons/offsite-azure.svg') no-repeat center bottom;
+  background-size: 12px;
+}

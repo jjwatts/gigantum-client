@@ -3,7 +3,6 @@ from lmsrvlabbook.api.mutations.labbook import (CreateLabbook, DeleteLabbook,
                                                 SetLabbookDescription,
                                                 MakeLabbookDirectory,
                                                 AddLabbookFile, MoveLabbookFile, DeleteLabbookFiles,
-                                                AddLabbookFavorite, RemoveLabbookFavorite, UpdateLabbookFavorite,
                                                 WriteLabbookReadme, CompleteBatchUploadTransaction, FetchLabbookEdge)
 
 from lmsrvlabbook.api.mutations.migrations import MigrateLabbookSchema

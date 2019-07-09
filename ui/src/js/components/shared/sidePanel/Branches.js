@@ -221,6 +221,30 @@ class Branches extends Component {
   }
 
   /**
+  *  @param {Object} branch
+  *  @param {Boolean} upToDate
+  *  returns tooltip
+  *  @return {Object}
+  */
+  _getTooltip = (branch, upToDate) => {
+    const { props } = this;
+    let resetTooltip = upToDate ? 'Branch up to date' : 'Reset Branch to Remote';
+    resetTooltip = branch.isRemote ? 'Cannot reset a branch until it has been published' : resetTooltip;
+    resetTooltip = (branch.isRemote && branch.branchName !== 'master') ? 'The master branch must be published first' : resetTooltip;
+    const { syncTooltip } = props;
+    const mergeTooltip = branch.isActive ? 'Cannot merge active branch with itself' : 'Merge into active branch';
+    let deleteTooltip = branch.isActive ? 'Cannot delete Active branch' : 'Delete Branch';
+    deleteTooltip = branch.branchName === 'master' ? 'Cannot delete master branch' : deleteTooltip;
+
+    return {
+      resetTooltip,
+      syncTooltip,
+      mergeTooltip,
+      deleteTooltip,
+    };
+  }
+
+  /**
     @param {Object} branch
     @param {String} action
     renders JSX for modal
@@ -352,10 +376,13 @@ class Branches extends Component {
     const resetModalVisible = state.resetModalVisible === branch.branchName;
     const upToDate = (branch.commitsAhead === 0) && (branch.commitsBehind === 0);
     const syncDisabled = (props.showPullOnly && !props.allowSyncPull) || (!props.allowSync && !props.showPullOnly) || (!props.defaultRemote && !props.allowSync);
-    const resetTooltip = branch.isRemote ? upToDate ? 'Branch up to date' : 'Reset Branch to Remote' : 'Branch must be remote';
-    const syncTooltip = props.syncTooltip;
-    const mergeTooltip = branch.isActive ? 'Cannot merge active branch with itself' : 'Merge into active branch';
-    const deleteTooltip = branch.branchName === 'master' ? 'Cannot delete master branch' : branch.isActive ? 'Cannot delete Active branch' : 'Delete Branch';
+    const {
+      resetTooltip,
+      syncTooltip,
+      mergeTooltip,
+      deleteTooltip,
+    } = this._getTooltip(branch, upToDate);
+
     // declare css
     const mergeButtonCSS = classNames({
       Branches__btn: true,

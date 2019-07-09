@@ -16,7 +16,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 1'] = {
                         'cursor': 'MA==',
                         'node': {
                             'isDir': True,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/',
                             'size': '4096'
@@ -26,7 +25,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 1'] = {
                         'cursor': 'MQ==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test4.txt',
                             'size': '12'
@@ -36,7 +34,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 1'] = {
                         'cursor': 'Mg==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test5.txt',
                             'size': '9'
@@ -46,7 +43,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 1'] = {
                         'cursor': 'Mw==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test1.txt',
                             'size': '8'
@@ -56,7 +52,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 1'] = {
                         'cursor': 'NA==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test2.txt',
                             'size': '3'
@@ -66,7 +61,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 1'] = {
                         'cursor': 'NQ==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test3.txt',
                             'size': '3'
@@ -95,7 +89,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 2'] = {
                         'cursor': 'MA==',
                         'node': {
                             'isDir': True,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/',
                             'size': '4096'
@@ -105,7 +98,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 2'] = {
                         'cursor': 'MQ==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test4.txt',
                             'size': '12'
@@ -134,7 +126,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 3'] = {
                         'cursor': 'Mg==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test5.txt',
                             'size': '9'
@@ -163,7 +154,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 4'] = {
                         'cursor': 'Mg==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test5.txt',
                             'size': '9'
@@ -173,7 +163,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 4'] = {
                         'cursor': 'Mw==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test1.txt',
                             'size': '8'
@@ -183,7 +172,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 4'] = {
                         'cursor': 'NA==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test2.txt',
                             'size': '3'
@@ -193,7 +181,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files 4'] = {
                         'cursor': 'NQ==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test3.txt',
                             'size': '3'
@@ -222,7 +209,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 1'] = {
                         'cursor': 'MA==',
                         'node': {
                             'isDir': True,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/',
                             'size': '4096'
@@ -232,7 +218,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 1'] = {
                         'cursor': 'MQ==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test4.txt',
                             'size': '12'
@@ -242,7 +227,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 1'] = {
                         'cursor': 'Mg==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test5.txt',
                             'size': '9'
@@ -252,7 +236,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 1'] = {
                         'cursor': 'Mw==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test1.txt',
                             'size': '8'
@@ -262,7 +245,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 1'] = {
                         'cursor': 'NA==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test2.txt',
                             'size': '3'
@@ -272,7 +254,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 1'] = {
                         'cursor': 'NQ==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test3.txt',
                             'size': '3'
@@ -301,7 +282,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 2'] = {
                         'cursor': 'MA==',
                         'node': {
                             'isDir': True,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/',
                             'size': '4096'
@@ -311,7 +291,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 2'] = {
                         'cursor': 'MQ==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test4.txt',
                             'size': '12'
@@ -321,7 +300,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 2'] = {
                         'cursor': 'Mg==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'other_dir/test5.txt',
                             'size': '9'
@@ -331,7 +309,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 2'] = {
                         'cursor': 'Mw==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': False,
                             'key': 'test1.txt',
                             'size': '8'
@@ -341,7 +318,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 2'] = {
                         'cursor': 'NA==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': False,
                             'key': 'test2.txt',
                             'size': '3'
@@ -351,7 +327,6 @@ snapshots['TestDatasetFilesQueries.test_get_dataset_files_missing 2'] = {
                         'cursor': 'NQ==',
                         'node': {
                             'isDir': False,
-                            'isFavorite': False,
                             'isLocal': True,
                             'key': 'test3.txt',
                             'size': '3'

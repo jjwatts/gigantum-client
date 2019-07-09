@@ -9,7 +9,7 @@ const dragSource = {
 
   canDrag(props) {
     // You can disallow drag based on props
-    return props.lockFileBrowser;
+    return !props.lockFileBrowser;
   },
 
   isDragging(props, monitor) {
@@ -85,7 +85,6 @@ const dragSource = {
             const {
               parentId,
               connection,
-              favoriteConnection,
               section,
             } = props;
             const { owner, labbookName } = store.getState().routes;
@@ -95,7 +94,6 @@ const dragSource = {
               labbookName,
               parentId,
               connection,
-              favoriteConnection,
               section,
             };
 
@@ -125,7 +123,7 @@ const targetSource = {
     const item = monitor.getItem();
     const { uploading } = store.getState().fileBrowser;
     const mouseoverAllowed = !uploading && (!(props.section === 'data' && !item.isLocal) || (!item.fileData));
-    return monitor.isOver({ shallow: true }) && mouseoverAllowed;
+    return monitor.isOver({ shallow: true }) && mouseoverAllowed && !props.lockFileBrowser;
   },
   drop(props, monitor, component) {
     // TODO: clean up this code, some of this logic is being duplicated. make better use of functions
@@ -152,7 +150,6 @@ const targetSource = {
       const {
         parentId,
         connection,
-        favoriteConnection,
         section,
       } = props;
       const { owner, labbookName } = store.getState().routes;
@@ -162,7 +159,6 @@ const targetSource = {
         labbookName,
         parentId,
         connection,
-        favoriteConnection,
         section,
       };
       // uploads to root directory
@@ -219,7 +215,6 @@ const targetSource = {
             const {
               parentId,
               connection,
-              favoriteConnection,
               section,
             } = props;
             const { owner, labbookName } = store.getState().routes;
@@ -229,7 +224,6 @@ const targetSource = {
               labbookName,
               parentId,
               connection,
-              favoriteConnection,
               section,
             };
 
