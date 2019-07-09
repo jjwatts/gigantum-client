@@ -1,3 +1,4 @@
+import traceback
 import time
 import gzip
 
@@ -6,7 +7,6 @@ import json
 import pandas
 import redis
 from docker.errors import NotFound
-import mitmproxy
 import mitmproxy.io as mitmio
 import mitmproxy.flow
 from mitmproxy.exceptions import FlowReadException
@@ -327,7 +327,8 @@ class RStudioServerMonitor(ActivityMonitor):
                 time.sleep(1)
 
         except Exception as e:
-            logger.error(f"Fatal error in RStudio Server Activity Monitor: {e}")
+            # _, _, tb = sys.exc_info()
+            logger.error(f"Fatal error in RStudio Server Activity Monitor: {e}\n{traceback.print_exc()}")
             raise
         finally:
             # Delete the kernel monitor key so the dev env monitor will spin up a new process

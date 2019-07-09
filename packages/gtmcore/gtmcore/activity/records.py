@@ -239,6 +239,7 @@ class ActivityDetailRecord(object):
 
         # Base64 decode detail data
         for mime_type in obj_dict['d']:
+            logger.info('from_bytes in records.py')
             obj_dict['d'][mime_type] = base64.b64decode(obj_dict['d'][mime_type])
 
             # Optionally decompress
