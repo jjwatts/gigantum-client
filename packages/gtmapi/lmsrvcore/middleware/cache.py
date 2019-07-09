@@ -137,7 +137,7 @@ class RepoCacheEntry:
     def clear(self):
         """Remove this entry from the Redis cache. """
         logger.warning(f"Flushing cache entry for {self}")
-        self.db.hdel(self.key, 'creation_date', 'modified_on', 'last_cache_update')
+        self.db.hdel(self.key, 'creation_date', 'modified_on', 'last_cache_update', 'description')
 
 
 class RepoCacheController:

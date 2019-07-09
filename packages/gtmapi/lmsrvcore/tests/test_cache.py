@@ -1,7 +1,7 @@
+import datetime
 
 import gtmcore.configuration
 from lmsrvcore.middleware.cache import RepoCacheEntry, RepoCacheController
-from lmsrvcore.auth.user import get_logged_in_username
 
 from gtmcore.fixtures import mock_labbook
 
@@ -18,15 +18,20 @@ class TestRepoCacheMiddleware:
         r = RepoCacheController()
         r.clear_entry((username, lb.owner, lb.name))
         assert lb.description == r.cached_description((username, lb.owner, lb.name))
-        assert lb.creation_date == r.cached_created_time((username, lb.owner, lb.name))
-        assert lb.modified_on == r.cached_modified_on((username, lb.owner, lb.name))
+        assert lb.creation_date.utctimetuple() == r.cached_created_time((username, lb.owner, lb.name)).utctimetuple()
+        assert lb.modified_on.utctimetuple() == r.cached_modified_on((username, lb.owner, lb.name)).utctimetuple()
 
     def test_clear_cache(self, mock_labbook, monkeypatch):
+        """
+        Test that the clear_entry method works properly and deletes the cache entry from Redis.
+        """
         c, _, lb = mock_labbook
         username = 'test'
         monkeypatch.setattr(gtmcore.configuration.configuration.Configuration, 'find_default_config', lambda _: c)
         r = RepoCacheController()
         r.clear_entry((username, lb.owner, lb.name))
+
+        # Retrieve the values and put them in the cache
         r.cached_description((username, lb.owner, lb.name))
         r.cached_created_time((username, lb.owner, lb.name))
         r.cached_modified_on((username, lb.owner, lb.name))
