@@ -320,9 +320,8 @@ class ModifyDatasetLink(graphene.relay.ClientIDMutation):
                 ds = im.link_dataset_to_labbook(dataset_url, dataset_owner, dataset_name, lb)
                 ds.namespace = dataset_owner
 
-                # Preload the dataloaders
+                # Preload the dataloader
                 info.context.dataset_loader.prime(f"{get_logged_in_username()}&{dataset_owner}&{dataset_name}", ds)
-                info.context.labbook_loader.prime(f"{get_logged_in_username()}&{labbook_owner}&{labbook_name}", lb)
 
                 # Relink the revision
                 m = Manifest(ds, logged_in_username)
@@ -331,9 +330,16 @@ class ModifyDatasetLink(graphene.relay.ClientIDMutation):
                 im.unlink_dataset_from_labbook(dataset_owner, dataset_name, lb)
             elif action == 'update':
                 im.update_linked_dataset_reference(dataset_owner, dataset_name, lb)
+
+                # Prime dataloader so proper version of the dataset gets resolved
+                submodule_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
+                ds = im.load_dataset_from_directory(submodule_dir, author=lb.author)
+                ds.namespace = dataset_owner
+                info.context.dataset_loader.prime(f"{get_logged_in_username()}&{dataset_owner}&{dataset_name}", ds)
             else:
                 raise ValueError("Unsupported action. Use `link`, `unlink`, or `update`")
 
+            info.context.labbook_loader.prime(f"{get_logged_in_username()}&{labbook_owner}&{labbook_name}", lb)
             edge = LabbookConnection.Edge(node=Labbook(owner=labbook_owner, name=labbook_name),
                                           cursor=base64.b64encode(f"{0}".encode('utf-8')))
 
