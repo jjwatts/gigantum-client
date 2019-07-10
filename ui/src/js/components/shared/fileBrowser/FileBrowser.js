@@ -1149,6 +1149,7 @@ class FileBrowser extends Component {
                   updateChildState={this._updateChildState}
                   parentDownloading={parentDownloading}
                   rootFolder
+                  relay={props.relay}
                   fileSizePrompt={this._fileSizePrompt}
                   checkLocal={checkLocalIndividual}
                   containerStatus={props.containerStatus}
