@@ -10,8 +10,8 @@ export default class Datasets extends PureComponent {
     const { props } = this;
 
     return (
-      <div className="Datasets">
-        <div className="Datasets__header flex justify--space-between">
+      <div className="DatasetsBrowser">
+        <div className="DatasetsBrowser__header flex justify--space-between">
           <h4 className="margin--0">Datasets</h4>
           <button
             className="Btn Btn__FileBrowserAction Btn__FileBrowserAction--link"
