@@ -292,7 +292,7 @@ export default class DatasetCard extends Component {
                 this.state.tooltipShown
                 && (
                 <div className="InfoTooltip">
-                  {`Dataset link is ${props.dataset.comitsBehind} commits behind. Select "Update Dataset Link" to the latest dataset version. `}
+                  {`Dataset link is ${props.dataset.commitsBehind} commits behind. Select "Update Dataset Link" to the latest dataset version. `}
                   <a
                     target="_blank"
                     href="https://docs.gigantum.com/docs/"
