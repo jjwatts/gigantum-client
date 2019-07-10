@@ -83,13 +83,12 @@
 
     &--name {
         flex: 1;
-
         margin: 0 60px;
     }
 
     &--size {
         position: relative;
-
+        text-align: left;
         width: 100px;
         &:before {
           left: 75px !important;
@@ -98,7 +97,7 @@
 
     &--date {
         position: relative;
-
+        text-align: left;
         width: 140px;
         &:before {
           left: 120px !important;
@@ -327,9 +326,14 @@
 
   &:hover {
     .Btn__addFolder {
-      background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat left 4px top 2px;
+      background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat 4px top 2px;
       background-size: 18px;
     }
+  }
+
+  .Btn__addFolder:disabled {
+    background: url(~Images/icons/folder-add-new-silver.svg) no-repeat no-repeat 1px top -1px;
+    background-size: 18px;
   }
 }
 .FileBrowser__addDataset{

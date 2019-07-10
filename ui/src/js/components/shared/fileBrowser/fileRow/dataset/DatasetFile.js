@@ -3,8 +3,6 @@ import React, { Component } from 'react';
 import Moment from 'moment';
 import fileIconsJs from 'file-icons-js';
 import classNames from 'classnames';
-import { DragSource, DropTarget } from 'react-dnd';
-import { NativeTypes } from 'react-dnd-html5-backend';
 import TextTruncate from 'react-text-truncate';
 // config
 import config from 'JS/config';
@@ -14,9 +12,8 @@ import ActionsMenu from './DatasetActionsMenu';
 import './DatasetFile.scss';
 
 class File extends Component {
-
   render() {
-    const { props, state } = this;
+    const { props } = this;
     const { node } = props.fileData.edge;
     const { index } = props.fileData;
     const fileName = props.filename;
@@ -37,7 +34,6 @@ class File extends Component {
         style={props.style}
         className="File"
       >
-
         <div
           className={fileRowCSS}
           style={rowStyle}
@@ -49,16 +45,16 @@ class File extends Component {
 
             <div className="File__text">
               {
-                    this.props.expanded
-                    && (
-                    <TextTruncate
-                      className="File__paragragh"
-                      line={1}
-                      truncateText="…"
-                      text={fileName}
-                    />
-                    )
-                  }
+                props.expanded
+                && (
+                  <TextTruncate
+                    className="File__paragragh"
+                    line={1}
+                    truncateText="…"
+                    text={fileName}
+                  />
+                )
+               }
             </div>
 
           </div>

@@ -189,6 +189,7 @@ const handleCallback = (filesTemp, path, mutationData, component) => {
         };
 
         const finishedCallback = () => {
+          console.log('fires')
           window.removeEventListener('beforeunload', navigateConfirm);
           setFileBrowserLock(false);
         };

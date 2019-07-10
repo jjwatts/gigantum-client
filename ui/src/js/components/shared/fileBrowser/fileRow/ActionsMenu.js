@@ -131,6 +131,7 @@ export default class ActionsMenu extends Component {
         ref={this._setWrapperRef}
       >
         <button
+          disabled={props.edge.node.key === 'untracked/'}
           onClick={() => { props.folder && props.addFolderVisible(true); }}
           className={folderCSS}
           data-click-id="addFolder"

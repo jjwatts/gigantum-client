@@ -64,6 +64,8 @@ button {
     background: transparent;
     color: $jet;
     box-shadow: none !important;
+    margin: 0px;
+    padding: 0px;
   }
   &--inverted {
     background: transparent;
@@ -226,7 +228,16 @@ button {
     height: 22.4px;
     pointer-events: none;
     font-size: 15px;
-    padding-right: 15px;
+  }
+
+  &--fake-content {
+    @include flex(center, row);
+
+    .Icon--add {
+      width: 20px;
+      height: 20px;
+      background-size: 12px;
+    }
   }
 
   &--columns {
@@ -441,9 +452,15 @@ button {
    }
 
    &:disabled {
-     background: transparent url(~Images/icons/folder-add-new.svg) no-repeat left 4px top 2px !important;
+     background: transparent url(~Images/icons/folder-add-new-silver.svg) no-repeat left 1px top -1px !important;
      background-size: 18px;
    }
+ }
+
+ &__add {
+   background: $azure url(~Images/icons/add-white.svg) no-repeat calc(100% - 50px) center;
+   background-size: 12px;
+   padding: 7px 20px 7px 10px;
  }
 
  &__check {

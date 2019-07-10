@@ -438,15 +438,20 @@ class FileBrowser extends Component {
       }
     });
 
-    const multiSelect = (count === selectedCount) ? 'none' : 'all';
+    let multiSelect = (count === selectedCount) ? 'none' : 'all';
     const { childrenState } = this.state;
-
+    let isSelectedCount = 0;
     Object.keys(state.childrenState).forEach((key) => {
       if (childrenState[key]) {
-        childrenState[key].isSelected = (multiSelect === 'all');
-        count += 1;
+        const isSelected = (childrenState[key].edge.node.key !== 'untracked/') && (multiSelect === 'all');
+        childrenState[key].isSelected = isSelected;
+        if (isSelected) {
+          isSelectedCount += 1;
+        }
       }
     });
+
+    multiSelect = (isSelectedCount > 0) ? multiSelect : 'none';
     this.setState({ multiSelect, childrenState });
   }
 

@@ -22,8 +22,10 @@ export default class SecretsTable extends Component {
     * @return {}
   */
   _setTooltipVisible = (filename) => {
-    const { state } = this;
-    this.setState({ tooltipVisible: state.tooltipVisible === filename ? null : filename });
+    this.setState((state) => {
+      const tooltipVisible = (state.tooltipVisible === filename) ? null : filename;
+      return { tooltipVisible };
+    });
   }
 
   /**
@@ -93,13 +95,13 @@ export default class SecretsTable extends Component {
 
   render() {
     const { props, state } = this;
-    const secrets = props.secrets.edges;
+    const secrets = (props.secrets && props.secrets.edges) ? props.secrets.edges : [];
 
     return (
       <div className="Table Table--padded">
         <div className="Table__Header Table__Header--medium flex align-items--center">
-          <div className="SecretsTable__header-file">Source File</div>
-          <div className="SecretsTable__header-path flex-1">Destination Path</div>
+          <div className="SecretsTable__header-file flex-1">Source File</div>
+          <div className="SecretsTable__header-path flex-1">Destination Directory</div>
           <div className="SecretsTable__header-actions">Actions</div>
         </div>
         <div className="Table__Body">
@@ -107,7 +109,7 @@ export default class SecretsTable extends Component {
             secrets.map(({ node }) => {
               const isEditing = state.editedSecrets.has(node.filename);
               const nameCSS = classNames({
-                'SecretsTable__row-file': true,
+                'SecretsTable__row-file flex-1 break-word': true,
                 'SecretsTable__row-file--missing': !node.isPresent,
                 'SecretsTable__row-file--editing': isEditing,
               });
@@ -141,7 +143,7 @@ export default class SecretsTable extends Component {
                       )
                     }
                   </div>
-                  <div className="SecretsTable__row-path flex-1">
+                  <div className="SecretsTable__row-path flex-1 break-word">
                     {node.mountPath}
                   </div>
                   <div className="SecretsTable__row-actions">
@@ -155,6 +157,10 @@ export default class SecretsTable extends Component {
                 </div>
               );
             })
+
+          }
+          { (secrets.length === 0)
+            && <p className="text-center">No secrets have been added to this project</p>
           }
         </div>
       </div>

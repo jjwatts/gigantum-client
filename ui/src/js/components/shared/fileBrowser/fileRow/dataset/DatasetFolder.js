@@ -2,7 +2,6 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import Moment from 'moment';
-import uuidv4 from 'uuid/v4';
 // components
 import ActionsMenu from './DatasetActionsMenu';
 import File from './DatasetFile';
@@ -16,10 +15,17 @@ class Folder extends Component {
     this.state = {
       expanded: false,
       isDownloading: false,
+      renameEditMode: false,
     };
+  }
 
-    this._setState = this._setState.bind(this);
-    this._setFolderIsDownloading = this._setFolderIsDownloading.bind(this);
+  /**
+    *  @param {boolean} value
+    *  sets visibility of edit mode
+    *  @return {}
+    */
+  _renameEditMode(value) {
+    this.setState({ renameEditMode: value });
   }
 
   /**
@@ -28,7 +34,7 @@ class Folder extends Component {
     *  update state of component for a given key value pair
     *  @return {}
     */
-  _setState(key, value) {
+  _setState = (key, value) => {
     this.setState({ [key]: value });
   }
 
@@ -37,7 +43,7 @@ class Folder extends Component {
     *  sets parents element's isdownloading state
     *  @return {}
     */
-  _setFolderIsDownloading(isDownloading) {
+  _setFolderIsDownloading = (isDownloading) => {
     this.setState({ isDownloading });
   }
 
@@ -46,10 +52,14 @@ class Folder extends Component {
     *  sets item to expanded
     *  @return {}
     */
-  _expandSection(evt) {
-    if (!evt.target.classList.contains('Folder__btn') && !evt.target.classList.contains('ActionsMenu__item') && !evt.target.classList.contains('Btn--round') && !evt.target.classList.contains('DatasetActionsMenu__item')
+  _expandSection = (evt) => {
+    const { state } = this;
+    if (!evt.target.classList.contains('Folder__btn')
+      && !evt.target.classList.contains('ActionsMenu__item')
+      && !evt.target.classList.contains('Btn--round')
+      && !evt.target.classList.contains('DatasetActionsMenu__item')
       && !evt.target.classList.contains('File__btn--round')) {
-      this.setState({ expanded: !this.state.expanded });
+      this.setState({ expanded: !state.expanded });
     }
     if (evt.target.classList.contains('ActionsMenu__item--AddSubfolder')) {
       this.setState({ expanded: true });
@@ -65,7 +75,7 @@ class Folder extends Component {
     *  returns sorted children
     *  @return {}
     */
-  _childSort(array, type, reverse, children, section) {
+  _childSort = (array, type, reverse, children, section) => {
     array.sort((a, b) => {
       let lowerA;
 
@@ -95,69 +105,13 @@ class Folder extends Component {
   render() {
     const { props, state } = this;
     const isLocal = props.checkLocal(props.fileData);
-
     const { node } = props.fileData.edge;
-
-
     const { children, index } = props.fileData;
-
-
     const { isOver } = props;
-
-
     const splitKey = node.key.split('/');
-
-
     const folderName = props.filename;
-
-
-    const folderRowCSS = classNames({
-      Folder__row: true,
-      'Folder__row--expanded': state.expanded,
-      'Folder__row--hover': state.hover,
-    });
-
-
-    const buttonCSS = classNames({
-      CheckboxMultiselect: true,
-      CheckboxMultiselect__uncheck: !state.isSelected && !state.isIncomplete,
-      CheckboxMultiselect__check: state.isSelected && !state.isIncomplete,
-      CheckboxMultiselect__partial: state.isIncomplete,
-    });
-
-
-    const folderChildCSS = classNames({
-      Folder__child: true,
-      hidden: !state.expanded,
-    });
-
-
-    const folderNameCSS = classNames({
-      'Folder__cell Folder__cell--name': true,
-      'Folder__cell--open': state.expanded,
-      hidden: state.renameEditMode,
-    });
-
-
-    const folderCSS = classNames({
-      Folder: true,
-      'Folder--highlight': isOver,
-      'Folder--background': props.isDragging,
-    });
-
-
-    const renameCSS = classNames({
-      'File__cell File__cell--edit': true,
-      hidden: !state.renameEditMode,
-    });
-
-
     const paddingLeft = 40 * index;
-
-
     const rowStyle = { paddingLeft: `${paddingLeft}px` };
-
-
     const addRowStyle = {
       paddingLeft: `${paddingLeft + 120}px`,
       backgroundPositionX: `${99 + paddingLeft}px`,
@@ -167,6 +121,30 @@ class Folder extends Component {
     let fileKeys = children && Object.keys(children).filter(child => children[child].edge && !children[child].edge.node.isDir) || [];
     fileKeys = this._childSort(fileKeys, this.props.sort, this.props.reverse, children, 'files');
     const childrenKeys = folderKeys.concat(fileKeys);
+    // declare css here
+    const folderRowCSS = classNames({
+      Folder__row: true,
+      'Folder__row--expanded': state.expanded,
+      'Folder__row--hover': state.hover,
+    });
+    const folderChildCSS = classNames({
+      Folder__child: true,
+      hidden: !state.expanded,
+    });
+    const folderNameCSS = classNames({
+      'Folder__cell Folder__cell--name': true,
+      'Folder__cell--open': state.expanded,
+      hidden: state.renameEditMode,
+    });
+    const folderCSS = classNames({
+      Folder: true,
+      'Folder--highlight': isOver,
+      'Folder--background': props.isDragging,
+    });
+    const renameCSS = classNames({
+      'File__cell File__cell--edit': true,
+      hidden: !state.renameEditMode,
+    });
 
     return (
       <div
@@ -197,10 +175,12 @@ class Folder extends Component {
             </div>
             <div className="flex justify-space-around">
               <button
+                type="button"
                 className="File__btn--round File__btn--cancel"
                 onClick={() => { this._clearState(); }}
               />
               <button
+                type="button"
                 className="File__btn--round File__btn--add"
                 onClick={() => { this._triggerMutation(); }}
               />
@@ -226,68 +206,74 @@ class Folder extends Component {
           </div>
         </div>
         <div className={folderChildCSS}>
-          {
-                    state.expanded
-                      && childrenKeys.map((file, index) => {
-                        if ((children && children[file] && children[file].edge && children[file].edge.node.isDir)) {
-                          return (
-                            <Folder
-                              filename={file}
-                              index={index}
-                              key={children[file].edge.node.key}
-                              ref={children[file].edge.node.key}
-                              mutations={props.mutations}
-                              mutationData={props.mutationData}
-                              fileData={children[file]}
-                              isSelected={state.isSelected}
-                              multiSelect={props.multiSelect}
-                              setIncomplete={this._setIncomplete}
-                              checkParent={this._checkParent}
-                              setState={this._setState}
-                              setParentHoverState={this._setHoverState}
-                              expanded={state.expanded}
-                              setParentDragFalse={() => this.setState({ isDragging: false })}
-                              setParentDragTrue={this._checkHover}
-                              parentIsDragged={state.isDragging || props.parentIsDragged}
-                              childrenState={props.childrenState}
-                              listRef={props.listRef}
-                              updateChildState={props.updateChildState}
-                              isDownloading={state.isDownloading || props.isDownloading}
-                              codeDirUpload={props.codeDirUpload}
-                              checkLocal={props.checkLocal}
-                            />
-                          );
-                        } if ((children && children[file] && children[file].edge && !children[file].edge.node.isDir)) {
-                          return (
-                            <File
-                              filename={file}
-                              mutations={props.mutations}
-                              mutationData={props.mutationData}
-                              ref={children[file].edge.node.key}
-                              fileData={children[file]}
-                              key={children[file].edge.node.key}
-                              isSelected={state.isSelected}
-                              multiSelect={props.multiSelect}
-                              checkParent={this._checkParent}
-                              expanded={state.expanded}
-                              setParentHoverState={this._setHoverState}
-                              setParentDragFalse={(() => this.setState({ isDragging: false }))}
-                              setParentDragTrue={this._checkHover}
-                              isOverChildFile={state.isOverChildFile}
-                              updateParentDropZone={this._updateDropZone}
-                              isDownloading={state.isDownloading || props.isDownloading}
-                              childrenState={props.childrenState}
-                              updateChildState={props.updateChildState}
-                            />
-                          );
-                        } if (children[file]) {
-                          return (<div key={file + index} />);
-                        }
-                        return (<div key={file + index}>Loading</div>);
-                      })
-                  }
+          { state.expanded
+              && childrenKeys.map((file, fileIndex) => {
+                if ((children
+                  && children[file]
+                  && children[file].edge
+                  && children[file].edge.node.isDir)) {
+                  return (
+                    <Folder
+                      filename={file}
+                      index={fileIndex}
+                      key={children[file].edge.node.key}
+                      ref={children[file].edge.node.key}
+                      mutations={props.mutations}
+                      mutationData={props.mutationData}
+                      fileData={children[file]}
+                      isSelected={state.isSelected}
+                      multiSelect={props.multiSelect}
+                      setIncomplete={this._setIncomplete}
+                      checkParent={this._checkParent}
+                      setState={this._setState}
+                      setParentHoverState={this._setHoverState}
+                      expanded={state.expanded}
+                      setParentDragFalse={() => this.setState({ isDragging: false })}
+                      setParentDragTrue={this._checkHover}
+                      parentIsDragged={state.isDragging || props.parentIsDragged}
+                      childrenState={props.childrenState}
+                      listRef={props.listRef}
+                      updateChildState={props.updateChildState}
+                      isDownloading={state.isDownloading || props.isDownloading}
+                      codeDirUpload={props.codeDirUpload}
+                      checkLocal={props.checkLocal}
+                    />
+                  );
+                } if ((children
+                  && children[file]
+                  && children[file].edge
+                  && !children[file].edge.node.isDir)) {
+                  return (
+                    <File
+                      filename={file}
+                      mutations={props.mutations}
+                      mutationData={props.mutationData}
+                      ref={children[file].edge.node.key}
+                      fileData={children[file]}
+                      key={children[file].edge.node.key}
+                      isSelected={state.isSelected}
+                      multiSelect={props.multiSelect}
+                      checkParent={this._checkParent}
+                      expanded={state.expanded}
+                      setParentHoverState={this._setHoverState}
+                      setParentDragFalse={(() => this.setState({ isDragging: false }))}
+                      setParentDragTrue={this._checkHover}
+                      isOverChildFile={state.isOverChildFile}
+                      updateParentDropZone={this._updateDropZone}
+                      isDownloading={state.isDownloading || props.isDownloading}
+                      childrenState={props.childrenState}
+                      updateChildState={props.updateChildState}
+                    />
+                  );
+                } if (children[file]) {
+                  return (<div key={`${file}_empty`} />);
+                }
+                return (<div key={`${file}_loading`}>Loading</div>);
+              })
+          }
         </div>
-      </div>);
+      </div>
+    );
   }
 }
 

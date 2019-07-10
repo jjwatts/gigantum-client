@@ -12,36 +12,6 @@ import {
 // utils
 import MutlithreadUploader from 'JS/utils/MultithreadUploader';
 
-
-/**
-  * @param {array} files
-  * removes files not allowed for upload
-  * @return {array}
-*/
-const removeExcludedFiles = (files) => {
-  const filesNotAllowedList = [];
-  const newFileArray = files.filter((fileItem) => {
-    const extension = fileItem.file.name
-      ? fileItem.file.name.replace(/.*\./, '')
-      : fileItem.entry.fullPath.replace(/.*\./, '');
-    const fileAllowed = ((extension === 'txt'));
-
-    if (!fileAllowed) {
-      filesNotAllowedList.push(fileItem.file.name);
-    }
-
-    return fileAllowed;
-  });
-
-
-  if (filesNotAllowedList.length > 0) {
-    const filesNotAllowed = filesNotAllowedList.join(', ');
-    setWarningMessage(`The following files are not allowed ${filesNotAllowed}`);
-  }
-
-  return newFileArray;
-};
-
 /**
   * @param {object} file
   * @param {string} typeOfUpload
@@ -62,7 +32,7 @@ const prepareUpload = (mutationData, component) => {
     id,
     filename,
   } = mutationData;
-  const newFileArray = removeExcludedFiles([
+  const newFileArray = [
     {
       file,
       entry: {
@@ -70,7 +40,7 @@ const prepareUpload = (mutationData, component) => {
         name: file.name,
       },
     },
-  ]);
+  ];
 
 
   const uploadInstance = new MutlithreadUploader({

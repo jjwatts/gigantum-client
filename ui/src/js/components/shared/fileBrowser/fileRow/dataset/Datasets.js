@@ -1,15 +1,11 @@
 // vendor
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 // components
 import DatasetCard from './DatasetCard';
 // assets
 import './Datasets.scss';
 
-export default class Datasets extends Component {
-  state = {
-
-  }
-
+export default class Datasets extends PureComponent {
   render() {
     const { props } = this;
 
