@@ -130,7 +130,7 @@ class RStudioServerImageExtractorProcessor(ActivityProcessor):
                                                            action=ActivityAction.CREATE,
                                                            importance=max(255-result_cnt, 0))
 
-                            # All RStudio responses, even b64encoded data is represented as a string.
+                            # All RStudio responses should contain decoded strings, even b64encoded data
                             strdata = result_entry['data'][mime_type]
                             adr_img.add_value(mime_type, strdata)
 

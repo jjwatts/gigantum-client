@@ -179,6 +179,9 @@ class ActivityStore(object):
         # Write all ActivityDetailObjects to the datastore
         with record.inspect_detail_objects() as details:
             for idx, detail in enumerate(details):
+                # TODO DC: Do we want to try and put some error handling here to ignore individual detail records?
+                # E.g., set directive to 'ignore'?
+                # I think that an exception may result in a malformed detaildb / activity record
                 updated_detail = self.put_detail_record(detail)
                 record.update_detail_object(updated_detail, idx)
 
@@ -288,9 +291,11 @@ class ActivityStore(object):
             if detail_obj.data_size >= self.compress_min_bytes:
                 compress = True
 
+        bytes_record = detail_obj.to_bytes(compress)
+
         # Write record and store key
         detail_obj.key = self.detaildb.put(self._encode_write_options(compress=compress) +
-                                           detail_obj.to_bytes(compress))
+                                           bytes_record)
 
         logger.debug(f"Successfully wrote ActivityDetailRecord {detail_obj.key}")
         return detail_obj

@@ -61,11 +61,11 @@ def format_output(output: Dict):
                 return {'data': {'text/plain': json.dumps(output['output_val'])},
                         'tags': 'data.frame'}
         else:
-            logger.error(f"monitor_rserver: RStudio output with unknown metadata: {om}")
+            logger.error(f"RStudio output with unknown metadata: {om}")
             # TODO DC Probably we can return a better JSON object
             return None
     else:
-        logger.error(f"monitor_rserver: No metadata for chunk_output: {output}")
+        logger.error(f"No metadata for chunk_output: {output}")
         return None
 
 
@@ -209,19 +209,17 @@ class RStudioExchange:
             response_bytes = gzip.decompress(response_bytes)
 
         # Default response is empty string
-        response = ''
         if self.response_type == 'application/json':
             # strict=False allows control codes, as used in tidyverse output
-            response = json.loads(response_bytes.decode(), strict=False)
-        elif self.response_type == 'img/png':
-            response = base64.b64encode(response_bytes).decode('ascii')
+            self.response = json.loads(response_bytes.decode(), strict=False)
+        elif self.response_type == 'image/png':
+            self.response = base64.b64encode(response_bytes).decode('ascii')
             # if we actually wanted to work with the image, could do so like this:
             # img = Image.open(io.BytesIO(response_bytes))
+        elif response_bytes:
+            self.response = '**unsupported**'
         else:
-            if response_bytes:
-                response = '**unsupported**'
-
-        self.response: str = response
+            self.response = ''
 
 
 class RStudioServerMonitor(ActivityMonitor):
@@ -327,8 +325,9 @@ class RStudioServerMonitor(ActivityMonitor):
                 time.sleep(1)
 
         except Exception as e:
-            # _, _, tb = sys.exc_info()
-            logger.error(f"Fatal error in RStudio Server Activity Monitor: {e}\n{traceback.print_exc()}")
+            # This is rather verbose, but without the stack trace, it's almost completely useless as
+            # the Exception could have come from anywhere!
+            logger.error(f"Fatal error in RStudio Server Activity Monitor: {e}\n{traceback.format_exc()}")
             raise
         finally:
             # Delete the kernel monitor key so the dev env monitor will spin up a new process
@@ -358,12 +357,17 @@ class RStudioServerMonitor(ActivityMonitor):
             # Commit changes to the related Notebook file
             commit = self.commit_labbook()
 
-            # Create note record
-            activity_commit = self.store_activity_record(commit, activity_record)
-
-            logger.info(f"Created auto-generated activity record {activity_commit} in {time.time() - t_start} seconds")
-
-            self.completed_executions = []
+            try:
+                # Create note record
+                activity_commit = self.store_activity_record(commit, activity_record)
+                logger.info(f"Created auto-generated activity record {activity_commit} in {time.time() - t_start} seconds")
+            except Exception as e:
+                logger.error('Encountered fatal error generating activity record: {e}')
+            finally:
+                # This is critical - otherwise if we have an error, we'll keep spawning new activity monitors that die!
+                # TODO DC: This does not guarantee that the recorded actvity record is OK. I've experienced the
+                # Activity Feed being broken in the browser following (repeated) failed attempts here
+                self.completed_executions = []
 
     def _parse_backend_events(self, json_record: Dict) -> None:
         """Extract code and data from the record.
@@ -388,8 +392,6 @@ class RStudioServerMonitor(ActivityMonitor):
                 if console_id != self.active_console:
                     # Maybe we're onto a new, expected chunk...
                     self._new_execution(new_console=console_id)
-
-
 
             # XXX DC below here from Randal - still needs minor checking
             elif etype == 'chunk_output':
