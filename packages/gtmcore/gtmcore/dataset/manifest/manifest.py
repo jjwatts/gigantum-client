@@ -68,6 +68,19 @@ class Manifest(object):
         return self.dataset.git.repo.head.commit.hexsha
 
     @property
+    def current_revision_dir(self) -> str:
+        """Method to return the directory containing files for the current dataset revision. If the dir doesn't exist,
+        relink it (updates to a dataset will remove a revision dir, but linked datasets may still need old revisions)
+
+        Returns:
+            str
+        """
+        crd = self.cache_mgr.current_revision_dir
+        if not os.path.exists(crd):
+            self.link_revision()
+        return crd
+
+    @property
     def manifest(self) -> OrderedDict:
         """Property to get the current manifest as the union of all manifest files, with caching supported
 
@@ -522,6 +535,8 @@ class Manifest(object):
         relative_path = self.dataset.make_path_relative(path)
         new_directory_path = os.path.join(self.cache_mgr.cache_root, self.dataset_revision, relative_path)
 
+        previous_revision = self.dataset_revision
+
         if os.path.exists(new_directory_path):
             raise ValueError(f"Directory already exists: `{relative_path}`")
         else:
@@ -560,6 +575,8 @@ class Manifest(object):
 
             # Relink after the commit
             self.link_revision()
+            if os.path.isdir(os.path.join(self.cache_mgr.cache_root, previous_revision)):
+                shutil.rmtree(os.path.join(self.cache_mgr.cache_root, previous_revision))
 
             return self.gen_file_info(relative_path)
 
@@ -699,6 +716,8 @@ class Manifest(object):
         Returns:
 
         """
+        previous_revision = self.dataset_revision
+
         # If `status` is set, assume update() has been run already
         if not status:
             status = self.update()
@@ -708,3 +727,17 @@ class Manifest(object):
 
         # Re-link new revision
         self.link_revision()
+        if os.path.isdir(os.path.join(self.cache_mgr.cache_root, previous_revision)):
+            shutil.rmtree(os.path.join(self.cache_mgr.cache_root, previous_revision))
+
+    def force_reload(self) -> None:
+        """Method to force reloading manifest data from the filesystem
+
+        This is useful when an update to the manifest occurs, but within a checkout context. This can happen with
+        linked local datasets for example.
+
+        Returns:
+            None
+        """
+        self._manifest_io.evict()
+        _ = self.manifest

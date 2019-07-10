@@ -870,7 +870,7 @@ class InventoryManager(object):
         ars = ActivityStore(labbook)
         ars.create_activity_record(ar)
 
-    def update_linked_dataset_reference(self, dataset_namespace: str, dataset_name: str, labbook: LabBook) -> None:
+    def update_linked_dataset_reference(self, dataset_namespace: str, dataset_name: str, labbook: LabBook) -> Dataset:
         """Method to update a linked dataset reference to the latest revision
 
         Args:
@@ -909,6 +909,8 @@ class InventoryManager(object):
             ar.add_detail_object(adr)
             ars = ActivityStore(labbook)
             ars.create_activity_record(ar)
+
+        return ds
 
     def get_linked_datasets(self, labbook: LabBook) -> List[Dataset]:
         """Method to get all datasets linked to a project
