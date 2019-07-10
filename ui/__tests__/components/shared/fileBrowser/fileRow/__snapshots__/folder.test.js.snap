@@ -19,6 +19,7 @@ exports[`File component File Snapshot 1`] = `
   >
     <button
       className="CheckboxMultiselect CheckboxMultiselect__check"
+      disabled={false}
       onClick={[Function]}
       type="button"
     />
@@ -85,6 +86,7 @@ exports[`File component File Snapshot 1`] = `
           className="ActionsMenu__item Btn Btn--fileBrowser Tooltip-data Tooltip-data--small Btn--round Btn--bordered Btn__addFolder"
           data-click-id="addFolder"
           data-tooltip="Add Subfolder"
+          disabled={false}
           onClick={[Function]}
           type="button"
         />

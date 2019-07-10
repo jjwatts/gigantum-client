@@ -207,6 +207,7 @@ button {
     width: 25px;
     height: 25px;
     background-size: 18px !important;
+    background-color: $lightGrey !important;
   }
 
   &--background-left {
@@ -418,13 +419,13 @@ button {
     background-size: 21px !important;
 
     &:focus {
-      background: $azure url(~Images/icons/rename-white.svg) no-repeat center center;
+      background: $azure url(~Images/icons/rename-azure.svg) no-repeat center center;
       background-size: 21px !important;
 
     }
 
     &:hover {
-      background: $azure url(~Images/icons/rename-white.svg) no-repeat center center;
+      background: $azure url(~Images/icons/rename-azure.svg) no-repeat center center;
       background-size: 21px !important;
 
     }
@@ -437,23 +438,23 @@ button {
  }
 
  &__addFolder {
-  background: url(~Images/icons/folder-add-new-azure.svg) no-repeat left 4px top 2px;
-  background-size: 18px;
+  background: url(~Images/icons/new-folder-active.svg) no-repeat center center;
+  background-size: 28px !important;
 
   &:focus {
-    background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat left 4px top 2px;
-    background-size: 18px;
+    background: $azure url(~Images/icons/new-folder-active.svg) no-repeat center center;
+    background-size: 28px !important;
 
   }
 
     &:hover {
-      background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat left 4px top 2px;
-      background-size: 18px;
+      background: $azure url(~Images/icons/new-folder-active.svg) no-repeat center center;
+      background-size: 28px !important;
    }
 
    &:disabled {
      background: transparent url(~Images/icons/folder-add-new-silver.svg) no-repeat left 1px top -1px !important;
-     background-size: 18px;
+     background-size: 28px !important;
    }
  }
 
@@ -547,6 +548,10 @@ button {
 
  &__upArrow-white {
   background: url(~Images/icons/update-white.svg) no-repeat center center;
+  background-size: 22px;
+ }
+ &__download-white {
+  background: url(~Images/icons/download-arrow-white.svg) no-repeat center center;
   background-size: 22px;
  }
 
