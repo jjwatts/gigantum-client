@@ -10,6 +10,7 @@ import ModifyDatasetLinkMutation from 'Mutations/ModifyDatasetLinkMutation';
 import config from 'JS/config';
 // components
 import DatasetBody from './DatasetBody';
+import DatasetsCommits from './DatasetsCommits';
 // assets
 import './DatasetCard.scss';
 
@@ -109,7 +110,7 @@ export default class DatasetCard extends Component {
   *  triggers favoirte unfavorite mutation
   *  @return {}
   */
-  _togglePopup(evt, popupVisible, popupType) {
+  _togglePopup = (evt, popupVisible, popupType) => {
     if (!popupVisible) {
       evt.stopPropagation(); // only stop propagation when closing popup, other menus won't close on click if propagation is stopped
     }
@@ -118,8 +119,15 @@ export default class DatasetCard extends Component {
 
   render() {
     const { props, state } = this;
-    const numFilesText = `${props.dataset.overview.numFiles} file${(props.dataset.overview.numFiles === 1) ? '' : 's'}`
+    const numFilesText = `${props.dataset.overview.numFiles} file${(props.dataset.overview.numFiles === 1) ? '' : 's'}`;
     const sizeText = config.humanFileSize(props.dataset.overview.totalBytes);
+    const unlinkDisabled = props.isLocked || state.unlinkPending;
+    const downloadDisabled = props.isLocked || state.downloadPending || props.isLocal;
+    const onDiskBytes = props.dataset.overview.localBytes;
+    const onDiskFormatted = config.humanFileSize(onDiskBytes);
+    const toDownloadBytes = props.dataset.overview.totalBytes - props.dataset.overview.localBytes;
+    const toDownloadFormatted = config.humanFileSize(toDownloadBytes);
+
     const chevronCSS = classNames({
       DatasetCard__chevron: true,
       'DatasetCard__chevron--expanded': state.expanded,
@@ -149,13 +157,7 @@ export default class DatasetCard extends Component {
       'Btn__FileBrowserAction--loading': state.downloadPending,
       'Tooltip-data': props.isLocal,
     });
-    const unlinkDisabled = props.isLocked || state.unlinkPending;
-    const downloadDisabled = props.isLocked || state.downloadPending || props.isLocal;
-    const onDiskBytes = props.dataset.overview.localBytes;
-    const onDiskFormatted = config.humanFileSize(onDiskBytes);
-    const toDownloadBytes = props.dataset.overview.totalBytes - props.dataset.overview.localBytes;
-    const toDownloadFormatted = config.humanFileSize(toDownloadBytes);
-    console.log(props.dataset)
+
     return (
       <div className="DatasetCard Card">
         <div
@@ -248,63 +250,16 @@ export default class DatasetCard extends Component {
         {
           (props.dataset.commitsBehind > 0)
           && (
-          <div className="DatasetsCard__commitsContainer flex justify--left align-items--center">
-            <div
-              className={commitsCSS}
-            >
-              {
-                !state.commitsPending
-                && <div className="DatasetCard__commits--commits-behind">{props.dataset.commitsBehind}</div>
-              }
-            </div>
-            <div className="relative">
-              <button
-                className="Btn Btn--flat"
-                type="button"
-                onClick={(evt) => { this._togglePopup(evt, true, 'commits'); }}
-                disabled={state.commitsPending}
-              >
-                Link to Latest Version
-              </button>
-              <div className={commitsPopupCSS}>
-                <div className="Tooltip__pointer" />
-                <p className="margin-top--0">Are you sure?</p>
-                <div className="flex justify--space-around">
-                  <button
-                    className="File__btn--round File__btn--cancel"
-                    onClick={(evt) => { this._togglePopup(evt, false, 'commits'); }}
-                    type="button"
-                  />
-                  <button
-                    className="File__btn--round File__btn--add"
-                    onClick={evt => this._modifyDatasetLink(evt, 'update')}
-                    type="button"
-                  />
-                </div>
-              </div>
-            </div>
-            <button
-              className="DatasetCard__tooltip"
-              onClick={() => this.setState({ tooltipShown: !state.tooltipShown })}
-              type="button"
-            >
-              {
-                this.state.tooltipShown
-                && (
-                <div className="InfoTooltip">
-                  {`Dataset link is ${props.dataset.commitsBehind} commits behind. Select "Update Dataset Link" to the latest dataset version. `}
-                  <a
-                    target="_blank"
-                    href="https://docs.gigantum.com/docs/"
-                    rel="noopener noreferrer"
-                  >
-                    Learn more.
-                  </a>
-                </div>
-                )
-              }
-            </button>
-          </div>
+          <DatasetsCommits
+            commitsCSS={commitsCSS}
+            commitsPending={state.commitsPending}
+            commitsBehind={props.dataset.commitsBehind}
+            togglePopup={this._togglePopup}
+            commitsPopupCSS={commitsPopupCSS}
+            modifiyDatasetLink={this._modifyDatasetLink}
+            tooltipShown={state.tooltipShown}
+            toggleTooltip={() => this.setState({ tooltipShown: !state.tooltipShown })}
+          />
           )
         }
       </div>

@@ -87,6 +87,7 @@ class FileBrowser extends Component {
       showLinkModal: false,
       downloadingAll: false,
       isRefetching: false,
+      downloadingEdges: null,
     };
   }
 
@@ -420,6 +421,38 @@ class FileBrowser extends Component {
   }
 
   /**
+  *  @param {Array} toDownload
+  *  loops through selcted files and downloads them
+  *  @return {}
+  */
+  _downloadSelectedFiles = (toDownload) => {
+    const { state, props } = this;
+    const { owner } = props;
+    const datasetName = props.name;
+    const data = {
+      owner,
+      datasetName,
+      keys: toDownload,
+    };
+
+    data.successCall = () => {
+      this.setState({ downloadingEdges: null });
+    };
+    data.failureCall = () => {
+      this.setState({ downloadingEdges: null });
+    };
+
+    const callback = (response, error) => {
+      if (error) {
+        this.setState({ downloadingEdges: null });
+      }
+    };
+
+    this.setState({ downloadingEdges: new Set(toDownload) });
+    state.mutations.downloadDatasetFiles(data, callback);
+  }
+
+  /**
   *  @param {}
   *  selects all or unselects files
   *  @return {}
@@ -734,6 +767,14 @@ class FileBrowser extends Component {
     fileKeys = this._childSort(fileKeys, state.sort, state.reverse, files, 'files');
     const childrenKeys = folderKeys.concat(fileKeys);
     const readOnly = props.section === 'data' && !props.isManaged;
+    const toDownload = [];
+    if (props.section === 'data') {
+      Object.keys(state.childrenState).forEach((key) => {
+        if (state.childrenState[key].isSelected && !state.childrenState[key].edge.node.isLocal) {
+          toDownload.push(state.childrenState[key].edge.node.key);
+        }
+      });
+    }
     // declare css here
     const fileBrowserCSS = classNames({
       FileBrowser: true,
@@ -742,10 +783,6 @@ class FileBrowser extends Component {
       'FileBrowser--cursor-drop': isOver && canDrop,
       'FileBrowser--cursor-no-drop': isOver && !canDrop,
       'FileBrowser--dropzone': fileKeys.length === 0,
-    });
-    const deleteButtonCSS = classNames({
-      'Btn Btn--fileBrowser Btn--round Btn__delete Btn--action': true,
-      hidden: !isSelected,
     });
     const multiSelectButtonCSS = classNames({
       CheckboxMultiselect: true,
@@ -790,6 +827,7 @@ class FileBrowser extends Component {
       'Dropbox Dropbox--fileBrowser flex flex--column align-items--center': true,
       'Dropbox--hovered': isOver,
     });
+    const downloadDisabled = props.isLocked || state.downloadingEdges || state.downloadingAll;
     return (
       props.connectDropTarget(<div
         ref={ref => ref}
@@ -988,13 +1026,13 @@ class FileBrowser extends Component {
           </div>
           <div>
             {
-              (props.section === 'data')
+              ((props.section === 'data') && toDownload.length > 0)
               && (
               <button
-                className="Btn align-self--end Btn__upArrow-white Btn--background-left Btn--action Btn--padding-left"
+                className="Btn align-self--end Btn__download-white Btn--background-left Btn--action Btn--padding-left"
                 type="button"
-                disabled={props.isLocked}
-                // onClick={() => this._updatePackages(updateablePackages)}
+                disabled={downloadDisabled}
+                onClick={() => this._downloadSelectedFiles(toDownload)}
               >
                 Download
               </button>
@@ -1082,6 +1120,7 @@ class FileBrowser extends Component {
             const isDir = files[file] && files[file].edge && files[file].edge.node.isDir;
             const isFile = files[file] && files[file].edge && !files[file].edge.node.isDir;
             const isDataset = files[file] && files[file].edge && files[file].edge.node.isDataset;
+            const parentDownloading = state.downloadingAll || (state.downloadingEdges && state.downloadingEdges.has(files[file].edge.node.key))
 
             if (isDataset) {
               return (
@@ -1108,8 +1147,9 @@ class FileBrowser extends Component {
                   childrenState={state.childrenState}
                   section={props.section}
                   updateChildState={this._updateChildState}
-                  parentDownloading={state.downloadingAll}
+                  parentDownloading={parentDownloading}
                   rootFolder
+                  relay={props.relay}
                   fileSizePrompt={this._fileSizePrompt}
                   checkLocal={checkLocalIndividual}
                   containerStatus={props.containerStatus}
@@ -1133,7 +1173,7 @@ class FileBrowser extends Component {
                   section={props.section}
                   isOverChildFile={state.isOverChildFile}
                   updateParentDropZone={this._updateDropZone}
-                  parentDownloading={state.downloadingAll}
+                  parentDownloading={parentDownloading}
                   updateChildState={this._updateChildState}
                   checkLocal={checkLocalIndividual}
                   containerStatus={props.containerStatus}
