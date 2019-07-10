@@ -81,7 +81,7 @@ exports[`Dataset File component File Snapshot 1`] = `
         className="ActionsMenu"
       >
         <button
-          className="ActionsMenu__item Btn Btn--fileBrowser Tooltip-data Tooltip-data--small Btn--round Btn--bordered Btn__addFolder visibility-hidden"
+          className="ActionsMenu__item Btn Btn--fileBrowser Tooltip-data Tooltip-data--small Btn--round Btn__addFolder visibility-hidden"
           data-click-id="addFolder"
           data-tooltip="Add Subfolder"
           disabled={false}
@@ -92,7 +92,7 @@ exports[`Dataset File component File Snapshot 1`] = `
           className="relative"
         >
           <button
-            className="ActionsMenu__item Btn Btn--fileBrowser Btn__delete Btn--round Btn--bordered Tooltip-data Tooltip-data--small"
+            className="ActionsMenu__item Btn Btn--fileBrowser Btn__delete-secondary Btn--round Tooltip-data Tooltip-data--small"
             data-tooltip="Must download before deleting"
             disabled={true}
             onClick={[Function]}
@@ -124,7 +124,7 @@ exports[`Dataset File component File Snapshot 1`] = `
           </div>
         </div>
         <button
-          className="ActionsMenu__item Btn Btn--fileBrowser Btn__rename Tooltip-data Tooltip-data--small Btn--bordered Btn--round"
+          className="ActionsMenu__item Btn Btn--fileBrowser Btn__rename Tooltip-data Tooltip-data--small Btn--round"
           data-tooltip="Must download before renaming"
           disabled={true}
           onClick={[Function]}
