@@ -58,6 +58,7 @@ exports[`Project File component File Snapshot 1`] = `
         />
         <button
           className="File__btn--round File__btn--add File__btn--rename-add"
+          disabled={true}
           onClick={[Function]}
           type="button"
         />
@@ -66,7 +67,7 @@ exports[`Project File component File Snapshot 1`] = `
     <div
       className="File__cell File__cell--size"
     >
-      3.3 kB
+      3.3 KB
     </div>
     <div
       className="File__cell File__cell--date"

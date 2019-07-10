@@ -58,6 +58,7 @@ exports[`Dataset File component File Snapshot 1`] = `
         />
         <button
           className="File__btn--round File__btn--add File__btn--rename-add"
+          disabled={true}
           onClick={[Function]}
           type="button"
         />
@@ -133,10 +134,12 @@ exports[`Dataset File component File Snapshot 1`] = `
         className="DatasetActionsMenu"
       >
         <button
-          className="DatasetActionsMenu__item Btn--round Tooltip-data Tooltip-data--small Btn__download"
-          data-tooltip="Download"
+          className="Btn Btn__FileBrowserAction DatasetActionsMenu__item Btn__FileBrowserAction--download"
           onClick={[Function]}
-        />
+          type="button"
+        >
+          Download
+        </button>
       </div>
     </div>
   </div>

@@ -61,6 +61,7 @@ exports[`File component File Snapshot 1`] = `
         />
         <button
           className="File__btn--round File__btn--add File__input--rename-add"
+          disabled={true}
           onClick={[Function]}
           type="button"
         />
