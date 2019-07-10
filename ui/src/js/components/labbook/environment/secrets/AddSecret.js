@@ -57,11 +57,15 @@ export default class AddSecret extends Component {
   */
   _setFile(files) {
     const file = (files && files[0]) ? files[0] : null;
-    this.setState({
+    const newState = {
       file,
       error: null,
-      path: '~/',
-    });
+    };
+    if (files === null) {
+      newState.path = '~/';
+      document.getElementById('secret_path').value = '~/';
+    }
+    this.setState(newState);
     // need to reset value
     document.getElementById('add_secret').value = '';
   }
@@ -107,6 +111,7 @@ export default class AddSecret extends Component {
                 id="add_secret"
                 className="hidden"
                 type="file"
+                disabled={state.file}
                 onChange={evt => this._setFile(evt.target.files)}
               />
             </label>
@@ -123,6 +128,7 @@ export default class AddSecret extends Component {
               className="AddSecret__input"
               type="text"
               defaultValue="~/"
+              id="secret_path"
               onChange={evt => this._updatePath(evt)}
             />
           </div>
