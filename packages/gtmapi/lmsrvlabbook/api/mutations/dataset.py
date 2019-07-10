@@ -329,12 +329,14 @@ class ModifyDatasetLink(graphene.relay.ClientIDMutation):
             elif action == 'unlink':
                 im.unlink_dataset_from_labbook(dataset_owner, dataset_name, lb)
             elif action == 'update':
-                im.update_linked_dataset_reference(dataset_owner, dataset_name, lb)
+                ds = im.update_linked_dataset_reference(dataset_owner, dataset_name, lb)
+                m = Manifest(ds, logged_in_username)
+                m.force_reload()
 
                 # Prime dataloader so proper version of the dataset gets resolved
-                submodule_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
-                ds = im.load_dataset_from_directory(submodule_dir, author=lb.author)
-                ds.namespace = dataset_owner
+                # submodule_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
+                # ds = im.load_dataset_from_directory(submodule_dir, author=lb.author)
+                # ds.namespace = dataset_owner
                 info.context.dataset_loader.prime(f"{get_logged_in_username()}&{dataset_owner}&{dataset_name}", ds)
             else:
                 raise ValueError("Unsupported action. Use `link`, `unlink`, or `update`")

@@ -730,3 +730,14 @@ class Manifest(object):
         if os.path.isdir(os.path.join(self.cache_mgr.cache_root, previous_revision)):
             shutil.rmtree(os.path.join(self.cache_mgr.cache_root, previous_revision))
 
+    def force_reload(self) -> None:
+        """Method to force reloading manifest data from the filesystem
+
+        This is useful when an update to the manifest occurs, but within a checkout context. This can happen with
+        linked local datasets for example.
+
+        Returns:
+            None
+        """
+        self._manifest_io.evict()
+        _ = self.manifest
