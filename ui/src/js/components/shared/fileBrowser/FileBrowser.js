@@ -13,7 +13,6 @@ import Modal from 'Components/common/Modal';
 import LinkModal from './LinkModal';
 import File from './fileRow/File';
 import Folder from './fileRow/Folder';
-import Dataset from './fileRow/dataset/Dataset';
 import Datasets from './fileRow/dataset/Datasets';
 import AddSubfolder from './fileRow/AddSubfolder';
 // util
