@@ -22,9 +22,15 @@ const childSort = (array, type, reverse, children, section) => {
       lowerA = a.toLowerCase();
       lowerB = b.toLowerCase();
       if (type === 'size' || !reverse) {
-        return (lowerA < lowerB) ? -1 : (lowerA > lowerB) ? 1 : 0;
+        if (lowerA < lowerB) {
+          return -1;
+        }
+        return (lowerA > lowerB) ? 1 : 0;
       }
-      return (lowerA < lowerB) ? 1 : (lowerA > lowerB) ? -1 : 0;
+      if (lowerA < lowerB) {
+        return 1;
+      }
+      return (lowerA > lowerB) ? -1 : 0;
     } if (type === 'modified') {
       lowerA = children[a].edge.node.modifiedAt;
       lowerB = children[b].edge.node.modifiedAt;

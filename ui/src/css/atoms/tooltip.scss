@@ -143,9 +143,14 @@
   right: -100px;
   word-break: break-word;
   z-index: index($elements, popup);
+  text-align: left;
 
   a {
-    text-decoration: underline;
+    text-decoration: none;
+    color: $turquise;
+    &:hover {
+      text-decoration: underline;
+    }
   }
   &.summary {
     &:before {

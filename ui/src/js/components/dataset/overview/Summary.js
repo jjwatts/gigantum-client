@@ -45,8 +45,6 @@ export default class Summary extends Component {
 
   render() {
     const { props } = this;
-    // const mangagedType = props.isManaged ? 'Managed' : 'Unmanaged';
-    // const tooltipText = props.isManaged ? 'The contents of a Managed Dataset can be modified via file browser on the data tab.  ' : 'The contents of an Unmanaged Dataset are verified by the Gigantum Client, but managed externally.  ';
     const onDiskBytes = props.localBytes;
     const onDiskFormatted = config.humanFileSize(onDiskBytes);
     const toDownloadBytes = props.totalBytes - props.localBytes;
