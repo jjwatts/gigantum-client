@@ -49,7 +49,7 @@
 }
 
 .PackageRow__description{
-  margin: 10px 0;
+  margin: 10px 0 5px 0;
   font-size: 13px;
   // TODO remove webkit references, we have a polyfill in webpack for targetting specific browsers
   display: -webkit-box;
@@ -73,4 +73,19 @@
   border-radius: 0;
   background: url('~Images/icons/offsite-azure.svg') no-repeat center bottom;
   background-size: 12px;
+}
+
+.PackageRow.Table__Row:last-child {
+  .Tooltip-data {
+    &:before {
+      top: calc(50% - 7px);
+      left: -8px;
+
+      @include triangle('right', 7px, $slateBlue);
+    }
+    &:after {
+      top: calc(50% - 17px);
+      left: -168px;
+    }
+  }
 }
