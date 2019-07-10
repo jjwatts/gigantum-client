@@ -521,7 +521,6 @@ class Manifest(object):
         """
         relative_path = self.dataset.make_path_relative(path)
         new_directory_path = os.path.join(self.cache_mgr.cache_root, self.dataset_revision, relative_path)
-        previous_revision = self.dataset_revision
 
         if os.path.exists(new_directory_path):
             raise ValueError(f"Directory already exists: `{relative_path}`")
@@ -561,8 +560,6 @@ class Manifest(object):
 
             # Relink after the commit
             self.link_revision()
-            if os.path.isdir(os.path.join(self.cache_mgr.cache_root, previous_revision)):
-                shutil.rmtree(os.path.join(self.cache_mgr.cache_root, previous_revision))
 
             return self.gen_file_info(relative_path)
 
@@ -702,8 +699,6 @@ class Manifest(object):
         Returns:
 
         """
-        previous_revision = self.dataset_revision
-
         # If `status` is set, assume update() has been run already
         if not status:
             status = self.update()
@@ -711,7 +706,5 @@ class Manifest(object):
         # Update manifest
         self.create_update_activity_record(status, upload=upload, extra_msg=extra_msg)
 
-        # Re-link new revision, unlink old revision
+        # Re-link new revision
         self.link_revision()
-        if os.path.isdir(os.path.join(self.cache_mgr.cache_root, previous_revision)):
-            shutil.rmtree(os.path.join(self.cache_mgr.cache_root, previous_revision))
