@@ -343,7 +343,11 @@ class RStudioServerMonitor(ActivityMonitor):
         store_record() should be called after moving any data in self.active_execution to
         self.completed_executions. You should also check self.expected_images before calling this.
         """
-        if len(self.completed_executions) > 0:
+        if self.expected_images:
+            logger.error(f'Expected images: {", ".join(self.expected_images)}')
+            self.expected_images = []
+
+        if self.completed_executions:
             t_start = time.time()
 
             # Process collected data and create an activity record
@@ -404,17 +408,32 @@ class RStudioServerMonitor(ActivityMonitor):
 
                 oput = edata.get('chunk_output')
                 if oput:
-                    result = format_output(oput)
-                    if result:
-                        self.active_execution.result.append(result)
+                    output_val = oput['output_val']
+                    if type(output_val) is str and output_val.endswith('.png'):
+                        # This should look like: chunk_output/46E01830e058b169/C065EDF7/cln6e9n2q4150/000003.png
+                        # The actual http fetch will add an initial `/`
+                        self.expected_images.append('/' + oput['output_val'])
+                    else:
+                        result = format_output(oput)
+                        if result:
+                            self.active_execution.result.append(result)
+
+
 
 
             # this happens in both notebooks and console
-            #   ignore if no context (that's the R origination message
             elif etype == 'console_output':
                 self.active_execution.result.append({'data': {'text/plain': edata['text']}})
 
+            # handle report of figure -> expected
+            elif etype == 'plots_state_changed' and edata['filename'] != 'empty.png':
+                # This filename is now available at '/graphics/{filename}'
+                self.expected_images.append('/graphics/' + edata['filename'])
+
+            # TODO DC: clean up console vs. chunk output
             # TODO DC: handle etype of console_error?
+            # TODO DC: Note when chunk is completed (etype of chunk_output_finished),
+            #  or when console execution is finished (etype console_write prompt, edata of '> ')
 
     def _is_error(self, result: Dict) -> bool:
         """Check if there's an error in the message"""
@@ -513,6 +532,11 @@ class RStudioServerMonitor(ActivityMonitor):
         if exchange.path.startswith('/chunk_output/'):
             # This is from a document chunk execution, and looks like:
             # /chunk_output/46E01830e058b169/C065EDF7/cln6e9n2q4150/000003.png
+            try:
+                self.expected_images.remove(exchange.path)
+            except ValueError:
+                logger.error(f'found unexpected graphic during chunk execution')
+
             segments = exchange.path.split('/')
             chunk_id = segments[4]
             if chunk_id != self.active_console:
@@ -524,11 +548,16 @@ class RStudioServerMonitor(ActivityMonitor):
 
             self.active_execution.result.append({'data': {'image/png': exchange.response}})
         elif exchange.path.startswith("/graphics/"):
-            if self.active_doc_id != 'console':  # active_console would equivalently be ''
-                # Again, we don't let graphics override the document context...
-                logger.error(f'RStudioServerMonitor found unexpected graphic from console execution.')
             # This is from a script/console execution and looks like this (pretty sure a UUID):
             # /graphics/ce4c938e-15f3-4da8-b193-0e3bdae0cf7d.png
+            try:
+                self.expected_images.remove(exchange.path)
+            except ValueError:
+                logger.error(f'found unexpected graphic during console execution')
+
+            if self.active_doc_id != 'console':  # active_console would equivalently be ''
+                # Again, we don't let graphics override the document context...
+                logger.error(f'found graphic from console during chunk execution')
             self.active_execution.result.append({'data': {'image/png': exchange.response}})
         else:
             logger.error(f'Got image from unknown path {exchange.path}')
@@ -579,6 +608,7 @@ class RStudioServerMonitor(ActivityMonitor):
             except StopIteration:
                 break
             except FlowReadException as e:
+                # TODO DC: Currently, this could just keep hammering on a corrupted file!
                 logger.info("MITM Flow file corrupted: {}. Exiting.".format(e))
                 break
 
@@ -609,8 +639,9 @@ class RStudioServerMonitor(ActivityMonitor):
                 else:
                     self._update_doc_names(rstudio_exchange)
 
-        # This logic isn't air-tight, but should at worst simply split what should've been in one execution across
-        # two ActivityRecords
+        # TODO DC: This logic isn't air-tight, but should at worst simply split what should've been in one execution
+        #  across two ActivityRecords. Better logic would be to track both expected images and also the event indicating
+        #  that execution is complete.
         if not (self.expected_images or self.remaining_chunks):
             if not self.active_execution.is_empty():
                 self.completed_executions.append(self.active_execution)
