@@ -48,7 +48,10 @@ export default class Summary extends Component {
     // const mangagedType = props.isManaged ? 'Managed' : 'Unmanaged';
     // const tooltipText = props.isManaged ? 'The contents of a Managed Dataset can be modified via file browser on the data tab.  ' : 'The contents of an Unmanaged Dataset are verified by the Gigantum Client, but managed externally.  ';
     const onDiskBytes = props.localBytes;
+    const onDiskFormatted = config.humanFileSize(onDiskBytes);
     const toDownloadBytes = props.totalBytes - props.localBytes;
+    const toDownloadFormatted = config.humanFileSize(toDownloadBytes);
+
     return (
       <div className="Summary">
         <div className="Overview__container">
@@ -64,17 +67,25 @@ export default class Summary extends Component {
               <div className="Summary__content">{props.numFiles}</div>
             </div>
             <div className="Summary__size flex-1">
-              <div className="Summary__total-size">
+              <div className="Summary__total-size flex-1">
                 <div className="Summary__subheader">Total Size</div>
                 <div className="Summary__content">{config.humanFileSize(props.totalBytes)}</div>
               </div>
-              <div className="Summary__disk-size">
+              <div className="Summary__disk-size flex-1 flex flex--column">
                 <progress
-                  value={onDiskBytes / 2}
+                  value={onDiskBytes}
                   max={props.totalBytes}
                 />
-                {/* <div className="Summary__subheader">Size On-Disk</div>
-                <div className="Summary__content">{config.humanFileSize(props.localBytes)}</div> */}
+                <div className="flex justify--space-between">
+                  <div className="Summary__onDisk flex flex--column">
+                    <div className="Summary__onDisk--primary">{onDiskFormatted}</div>
+                    <div className="Summary__onDisk--secondary">on disk</div>
+                  </div>
+                  <div className="Summary__toDownload flex flex--column">
+                    <div className="Summary__toDownload--primary">{toDownloadFormatted}</div>
+                    <div className="Summary__toDownload--secondary">to download</div>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="Summary__file-type">
