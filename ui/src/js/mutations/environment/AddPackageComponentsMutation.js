@@ -4,6 +4,9 @@ import {
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
 import RelayRuntime from 'relay-runtime';
+import uuidv4 from 'uuid/v4';
+// redux store
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 let tempID = 0;
 const mutation = graphql`
@@ -33,7 +36,7 @@ function sharedUpdater(store, id, newEdge) {
   if (labbookProxy) {
     const conn = RelayRuntime.ConnectionHandler.getConnection(
       labbookProxy,
-      'PackageDependencies_packageDependencies',
+      'Packages_packageDependencies',
       [],
     );
 
@@ -48,7 +51,7 @@ function sharedDeleteUpdater(store, parentID, deletedId) {
   if (labbookProxy) {
     const conn = RelayRuntime.ConnectionHandler.getConnection(
       labbookProxy,
-      'PackageDependencies_packageDependencies',
+      'Packages_packageDependencies',
     );
 
     if (conn) {
@@ -80,13 +83,13 @@ function sharedDeleter(store, parentID, deletedIdArr, connectionKey) {
   }
 }
 
+let clientMutationId = tempID;
 export default function AddPackageComponentsMutation(
   labbookName,
   owner,
-  packages,
-  clientMutationId,
   environmentId,
-  connection,
+  packages,
+  addPackageObject,
   duplicates,
   callback,
 ) {
@@ -95,38 +98,19 @@ export default function AddPackageComponentsMutation(
       labbookName,
       owner,
       packages,
-      clientMutationId: tempID++,
+      clientMutationId: clientMutationId += 1,
     },
   };
-
-  const config = [{
-    type: 'RANGE_ADD',
-    parentID: environmentId,
-    connectionInfo: [{
-      key: 'PackageDependencies_packageDependencies',
-      rangeBehavior: 'prepend',
-    }],
-    edgeName: 'newPackageComponentEdge',
-  }];
-
-  if (duplicates.length) {
-    duplicates.forEach((id) => {
-      config.unshift({
-        type: 'NODE_DELETE',
-        deletedIDFieldName: id,
-      });
-    });
-  }
 
   commitMutation(
     environment,
     {
       mutation,
       variables,
-      config,
       onCompleted: (response, error) => {
         if (error) {
           console.log(error);
+          setErrorMessage('ERROR: Packages failed to delete', error);
         }
         callback(response, error);
       },
@@ -138,18 +122,20 @@ export default function AddPackageComponentsMutation(
           const newEdges = response.addPackageComponents.newPackageComponentEdges;
           newEdges.forEach((edge) => {
             const {
-              fromBase, id, manager, schema, version, latestVersion,
+              fromBase, id, manager, schema, version,
             } = edge.node;
             const pkg = edge.node.package;
             store.delete(id);
             const node = store.get(id) ? store.get(id) : store.create(id, 'package');
             if (node) {
+              const { description, latestVersion } = addPackageObject[manager][pkg];
               node.setValue(manager, 'manager');
               node.setValue(pkg, 'package');
               node.setValue(version, 'version');
               node.setValue(schema, 'schema');
               node.setValue(fromBase, 'fromBase');
-              node.setValue(null, 'latestVersion');
+              node.setValue(latestVersion, 'latestVersion');
+              node.setValue(description, 'description');
               node.setValue(id, 'id');
               tempID++;
               const newEdge = store.create(
@@ -158,7 +144,7 @@ export default function AddPackageComponentsMutation(
               );
 
               newEdge.setLinkedRecord(node, 'node');
-              sharedDeleter(store, environmentId, duplicates, 'PackageDependencies_packageDependencies');
+              sharedDeleter(store, environmentId, duplicates, 'Packages_packageDependencies');
               sharedUpdater(store, environmentId, newEdge);
             }
           });
@@ -172,11 +158,17 @@ export default function AddPackageComponentsMutation(
           packages.forEach((item) => {
             const { manager, version } = item;
             const pkg = item.package;
+
+            const { description, latestVersion } = addPackageObject[manager][pkg];
+            const tempId = uuidv4();
             node.setValue(manager, 'manager');
             node.setValue(pkg, 'package');
+            node.setValue(tempId, 'id');
             node.setValue(version, 'version');
             node.setValue(labbookName, 'labbookName');
             node.setValue(owner, 'owner');
+            node.setValue(latestVersion, 'latestVersion');
+            node.setValue(description, 'description');
           });
 
 
@@ -187,7 +179,7 @@ export default function AddPackageComponentsMutation(
           if (newEdge) {
             newEdge.setLinkedRecord(node, 'node');
           }
-          sharedDeleter(store, environmentId, duplicates, 'PackageDependencies_packageDependencies');
+          sharedDeleter(store, environmentId, duplicates, 'Packages_packageDependencies');
           sharedUpdater(store, environmentId, newEdge);
 
           const labbookProxy = store.get(environmentId);

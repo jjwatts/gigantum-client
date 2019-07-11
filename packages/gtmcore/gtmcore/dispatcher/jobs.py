@@ -1,28 +1,8 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import importlib
 import json
 import os
 import time
-from typing import Callable, Optional, List
-import sys
+from typing import Optional
 import shutil
 
 from rq import get_current_job
@@ -36,12 +16,10 @@ from gtmcore.inventory import Repository
 
 from gtmcore.logging import LMLogger
 from gtmcore.workflows import ZipExporter, LabbookWorkflow, DatasetWorkflow, MergeOverride
-from gtmcore.container.core import (build_docker_image as build_image,
-                                     start_labbook_container as start_container,
-                                     stop_labbook_container as stop_container)
+from gtmcore.container.core import (build_docker_image as build_image)
 
-from gtmcore.dataset.manifest import Manifest
-from gtmcore.dataset.io.manager import IOManager
+from gtmcore.dataset.storage.backend import UnmanagedStorageBackend
+
 
 # PLEASE NOTE -- No global variables!
 #
@@ -55,26 +33,37 @@ def publish_repository(repository: Repository, username: str, access_token: str,
     logger = LMLogger.get_logger()
     logger.info(f"(Job {p}) Starting publish_repository({str(repository)})")
 
-    def update_meta(msg):
-        job = get_current_job()
-        if not job:
+    def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                        percent_complete: Optional[float] = None):
+        """Method to update the job's metadata and provide feedback to the UI"""
+        current_job = get_current_job()
+        if not current_job:
             return
-        if 'feedback' not in job.meta:
-            job.meta['feedback'] = msg
-        else:
-            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
-        job.save_meta()
+        if has_failures:
+            current_job.meta['has_failures'] = has_failures
+        if failure_detail:
+            current_job.meta['failure_detail'] = failure_detail
+        if percent_complete:
+            current_job.meta['percent_complete'] = percent_complete
+
+        current_job.meta['feedback'] = msg
+        current_job.save_meta()
+
+    logger = LMLogger.get_logger()
 
     try:
+        update_feedback("Publish task in queue")
         with repository.lock():
             if isinstance(repository, LabBook):
                 wf = LabbookWorkflow(repository)
             else:
-                wf = DatasetWorkflow(repository) # type: ignore
+                wf = DatasetWorkflow(repository)  # type: ignore
             wf.publish(username=username, access_token=access_token, remote=remote or "origin",
-                       public=public, feedback_callback=update_meta, id_token=id_token)
+                       public=public, feedback_callback=update_feedback, id_token=id_token)
+    except IOError:
+        raise
     except Exception as e:
-        logger.exception(f"(Job {p}) Error on publish_repository: {e}")
+        logger.exception(e)
         raise Exception("Could not publish - try to log out and log in again.")
 
 
@@ -85,35 +74,41 @@ def sync_repository(repository: Repository, username: str, override: MergeOverri
     logger = LMLogger.get_logger()
     logger.info(f"(Job {p}) Starting sync_repository({str(repository)})")
 
-    def update_meta(msg):
-        job = get_current_job()
-        if not job:
+    def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                        percent_complete: Optional[float] = None):
+        """Method to update the job's metadata and provide feedback to the UI"""
+        current_job = get_current_job()
+        if not current_job:
             return
-        if msg is None or (not msg.strip()):
-            return
+        if has_failures:
+            current_job.meta['has_failures'] = has_failures
+        if failure_detail:
+            current_job.meta['failure_detail'] = failure_detail
+        if percent_complete:
+            current_job.meta['percent_complete'] = percent_complete
 
-        if 'feedback' not in job.meta:
-            job.meta['feedback'] = msg.strip()
-        else:
-            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg.strip()}'
-        job.save_meta()
+        current_job.meta['feedback'] = msg
+        current_job.save_meta()
 
     try:
+        update_feedback("Sync task in queue")
         with repository.lock():
             if isinstance(repository, LabBook):
                 wf = LabbookWorkflow(repository)
             else:
-                wf = DatasetWorkflow(repository) # type: ignore
+                wf = DatasetWorkflow(repository)  # type: ignore
             cnt = wf.sync(username=username, remote=remote, override=override,
-                          feedback_callback=update_meta, access_token=access_token,
+                          feedback_callback=update_feedback, access_token=access_token,
                           id_token=id_token, pull_only=pull_only)
         logger.info(f"(Job {p} Completed sync_repository with cnt={cnt}")
         return cnt
     except MergeConflict as me:
         logger.exception(f"(Job {p}) Merge conflict: {me}")
         raise
+    except IOError:
+        raise
     except Exception as e:
-        logger.exception(f"(Job {p}) Error on sync_repository: {e}")
+        logger.exception(e)
         raise Exception("Could not sync - try to log out and log in again.")
 
 
@@ -291,6 +286,7 @@ def build_labbook_image(path: str, username: str,
             except Exception as e:
                 logger.error(e)
 
+        save_metadata_callback("Build task in queue")
         image_id = build_image(path, override_image_tag=tag, nocache=nocache, username=username,
                                feedback_callback=save_metadata_callback)
 
@@ -298,57 +294,6 @@ def build_labbook_image(path: str, username: str,
         return image_id
     except Exception as e:
         logger.error(f"Error on build_labbook_image in pid {os.getpid()}: {e}")
-        raise
-
-
-def start_labbook_container(root: str, config_path: str, username: str,
-                            override_image_id: Optional[str] = None) -> str:
-    """Return the ID of the LabBook Docker container ID.
-
-    Args:
-        root: Root directory of labbook
-        config_path: Path to config file (labbook.client_config.config_file)
-        username: Username of active user
-        override_image_id: Force using this name of docker image (do not infer)
-
-    Returns:
-        Docker container ID
-    """
-
-    logger = LMLogger.get_logger()
-    logger.info(f"Starting start_labbook_container(root={root}, config_path={config_path}, username={username}, "
-                f"override_image_id={override_image_id}) in pid {os.getpid()}")
-
-    try:
-        c_id = start_container(labbook_root=root, config_path=config_path,
-                               override_image_id=override_image_id, username=username)
-        logger.info(f"Completed start_labbook_container in pid {os.getpid()}: {c_id}")
-        return c_id
-    except Exception as e:
-        logger.error("Error on launch_docker_container in pid {}: {}".format(os.getpid(), e))
-        raise
-
-
-def stop_labbook_container(container_id: str) -> int:
-    """Return a dictionary of metadata pertaining to the given task's Redis key.
-
-    TODO - Take labbook as argument rather than image tag.
-
-    Args:
-        container_id(str): Container to stop
-
-    Returns:
-        0 to indicate no failure
-    """
-
-    logger = LMLogger.get_logger()
-    logger.info(f"Starting stop_labbook_container({container_id}) in pid {os.getpid()}")
-
-    try:
-        stop_container(container_id)
-        return 0
-    except Exception as e:
-        logger.error("Error on stop_labbook_container in pid {}: {}".format(os.getpid(), e))
         raise
 
 
@@ -410,6 +355,209 @@ def start_and_run_activity_monitor(module_name, class_name, user, owner, labbook
         raise e
 
 
+def update_unmanaged_dataset_from_remote(logged_in_username: str, access_token: str, id_token: str,
+                                         dataset_owner: str, dataset_name: str) -> None:
+    """Method to update/populate an unmanaged dataset from its remote automatically
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+
+    Returns:
+
+    """
+    def update_meta(msg):
+        job = get_current_job()
+        if not job:
+            return
+        if 'feedback' not in job.meta:
+            job.meta['feedback'] = msg
+        else:
+            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
+        job.save_meta()
+
+    logger = LMLogger.get_logger()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting update_unmanaged_dataset_from_remote(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        im = InventoryManager()
+        ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+
+        if not isinstance(ds.backend, UnmanagedStorageBackend):
+            raise ValueError("Can only auto-update unmanaged dataset types")
+
+        if not ds.backend.can_update_from_remote:
+            raise ValueError("Storage backend cannot update automatically from remote.")
+
+        ds.backend.update_from_remote(ds, update_meta)
+
+    except Exception as err:
+        logger.exception(err)
+        raise
+
+
+def verify_dataset_contents(logged_in_username: str, access_token: str, id_token: str,
+                            dataset_owner: str, dataset_name: str,
+                            labbook_owner: Optional[str] = None, labbook_name: Optional[str] = None) -> None:
+    """Method to update/populate an unmanaged dataset from it local state
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+        labbook_owner: Owner of the labbook if this dataset is linked
+        labbook_name: Name of the labbook if this dataset is linked
+
+    Returns:
+        None
+    """
+    job = get_current_job()
+
+    def update_meta(msg):
+        if not job:
+            return
+        if 'feedback' not in job.meta:
+            job.meta['feedback'] = msg
+        else:
+            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
+        job.save_meta()
+
+    logger = LMLogger.get_logger()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting verify_dataset_contents(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name},"
+                    f"labbook_owner={labbook_owner}, labbook_name={labbook_name}")
+
+        im = InventoryManager()
+        if labbook_owner is not None and labbook_name is not None:
+            # This is a linked dataset, load repo from the Project
+            lb = im.load_labbook(logged_in_username, labbook_owner, labbook_name)
+            dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
+            ds = im.load_dataset_from_directory(dataset_dir)
+        else:
+            # this is a normal dataset. Load repo from working dir
+            ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+
+        result = ds.backend.verify_contents(ds, update_meta)
+        job.meta['modified_keys'] = result
+
+    except Exception as err:
+        logger.exception(err)
+        raise
+
+
+def update_unmanaged_dataset_from_local(logged_in_username: str, access_token: str, id_token: str,
+                                        dataset_owner: str, dataset_name: str) -> None:
+    """Method to update/populate an unmanaged dataset from it local state
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        access_token: bearer token
+        id_token: identity token
+        dataset_owner: Owner of the dataset containing the files to download
+        dataset_name: Name of the dataset containing the files to download
+
+    Returns:
+
+    """
+    def update_meta(msg):
+        job = get_current_job()
+        if not job:
+            return
+        if 'feedback' not in job.meta:
+            job.meta['feedback'] = msg
+        else:
+            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
+        job.save_meta()
+
+    logger = LMLogger.get_logger()
+
+    try:
+        p = os.getpid()
+        logger.info(f"(Job {p}) Starting update_unmanaged_dataset_from_local(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        im = InventoryManager()
+        ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+
+        ds.namespace = dataset_owner
+        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
+
+        if not isinstance(ds.backend, UnmanagedStorageBackend):
+            raise ValueError("Can only auto-update unmanaged dataset types")
+
+        ds.backend.update_from_local(ds, update_meta, verify_contents=True)
+
+    except Exception as err:
+        logger.exception(err)
+        raise
+
+
+def clean_dataset_file_cache(logged_in_username: str, dataset_owner: str, dataset_name: str,
+                             cache_location: str, config_file: str = None) -> None:
+    """Method to import a dataset from a zip file
+
+    Args:
+        logged_in_username: username for the currently logged in user
+        dataset_owner: Owner of the labbook if this dataset is linked
+        dataset_name: Name of the labbook if this dataset is linked
+        cache_location: Absolute path to the file cache (inside the container) for this dataset
+        config_file:
+
+    Returns:
+        None
+    """
+    logger = LMLogger.get_logger()
+
+    p = os.getpid()
+    try:
+        logger.info(f"(Job {p}) Starting clean_dataset_file_cache(logged_in_username={logged_in_username},"
+                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
+
+        im = InventoryManager(config_file=config_file)
+
+        # Check for dataset
+        try:
+            im.load_dataset(logged_in_username, dataset_owner, dataset_name)
+            logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} still exists. Skipping file cache clean.")
+            return
+        except InventoryException:
+            # Dataset not found, move along
+            pass
+
+        # Check for submodule references
+        for lb in im.list_labbooks(logged_in_username):
+            for ds in im.get_linked_datasets(lb):
+                if ds.namespace == dataset_owner and ds.name == dataset_name:
+                    logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} still referenced by {str(lb)}."
+                                f" Skipping file cache clean.")
+                    return
+
+        # If you get here the dataset no longer exists and is not used by any projects, clear files
+        shutil.rmtree(cache_location)
+
+    except Exception as err:
+        logger.error(f"(Job {p}) Error in clean_dataset_file_cache job")
+        logger.exception(err)
+        raise
+
+
 def index_labbook_filesystem():
     """To be implemented later. """
     raise NotImplemented
@@ -465,132 +613,4 @@ def test_incr(path):
             logger.info("Set amt = {} in {}".format(amt_dict['amt'], path))
     except Exception as e:
         logger.error("Error on test_incr in pid {}: {}".format(os.getpid(), e))
-        raise
-
-
-def download_dataset_files(logged_in_username: str, access_token: str, id_token: str,
-                           dataset_owner: str, dataset_name: str,
-                           labbook_owner: Optional[str] = None, labbook_name: Optional[str] = None,
-                           all_keys: Optional[bool] = False, keys: Optional[List[str]] = None):
-    """Method to import a dataset from a zip file
-
-    Args:
-        logged_in_username: username for the currently logged in user
-        access_token: bearer token
-        id_token: identity token
-        dataset_owner: Owner of the dataset containing the files to download
-        dataset_name: Name of the dataset containing the files to download
-        labbook_owner: Owner of the labbook if this dataset is linked
-        labbook_name: Name of the labbook if this dataset is linked
-        all_keys: Boolean indicating if all remaining files should be downloaded
-        keys: List if file keys to download
-
-    Returns:
-        str: directory path of imported labbook
-    """
-    def update_meta(msg):
-        job = get_current_job()
-        if not job:
-            return
-        if 'feedback' not in job.meta:
-            job.meta['feedback'] = msg
-        else:
-            job.meta['feedback'] = job.meta['feedback'] + f'\n{msg}'
-        job.save_meta()
-
-    logger = LMLogger.get_logger()
-
-    try:
-        p = os.getpid()
-        logger.info(f"(Job {p}) Starting download_dataset_files(logged_in_username={logged_in_username},"
-                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}, labbook_owner={labbook_owner},"
-                    f" labbook_name={labbook_name}, all_keys={all_keys}, keys={keys}")
-
-        im = InventoryManager()
-
-        if labbook_owner is not None and labbook_name is not None:
-            # This is a linked dataset, load repo from the Project
-            lb = im.load_labbook(logged_in_username, labbook_owner, labbook_name)
-            dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
-            ds = im.load_dataset_from_directory(dataset_dir)
-        else:
-            # this is a normal dataset. Load repo from working dir
-            ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
-
-        ds.namespace = dataset_owner
-        ds.backend.set_default_configuration(logged_in_username, access_token, id_token)
-        m = Manifest(ds, logged_in_username)
-        iom = IOManager(ds, m)
-
-        if all_keys:
-            result = iom.pull_all(status_update_fn=update_meta)
-        elif keys:
-            result = iom.pull_objects(keys=keys, status_update_fn=update_meta)
-        else:
-            raise ValueError("Must provide a list of keys or set all_keys=True")
-
-        # Save the Relay node IDs to the job metadata so the UI can re-fetch as needed
-        job = get_current_job()
-        if job:
-            job.meta['success_keys'] = [x.dataset_path for x in result.success]
-            job.meta['failure_keys'] = [x.dataset_path for x in result.failure]
-            job.save_meta()
-
-        if len(result.failure) > 0:
-            # If any downloads failed, exit non-zero to the UI knows there was an error
-            sys.exit(-1)
-
-    except Exception as err:
-        logger.exception(err)
-        raise
-
-
-def clean_dataset_file_cache(logged_in_username: str, dataset_owner: str, dataset_name: str,
-                             cache_location: str, config_file: str = None) -> None:
-    """Method to import a dataset from a zip file
-
-    Args:
-        logged_in_username: username for the currently logged in user
-        dataset_owner: Owner of the labbook if this dataset is linked
-        dataset_name: Name of the labbook if this dataset is linked
-        cache_location: Absolute path to the file cache (inside the container) for this dataset
-        config_file:
-
-    Returns:
-        None
-    """
-    logger = LMLogger.get_logger()
-
-    p = os.getpid()
-    try:
-        logger.info(f"(Job {p}) Starting clean_dataset_file_cache(logged_in_username={logged_in_username},"
-                    f"dataset_owner={dataset_owner}, dataset_name={dataset_name}")
-
-        im = InventoryManager(config_file=config_file)
-
-        # Check for dataset
-        try:
-            im.load_dataset(logged_in_username, dataset_owner, dataset_name)
-            logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} still exists. Skipping file cache clean.")
-            return
-        except InventoryException:
-            # Dataset not found, move along
-            pass
-
-        # Check for submodule references
-        for lb in im.list_labbooks(logged_in_username):
-            submodules = lb.git.list_submodules()
-            for submodule in submodules:
-                submodule_dataset_owner, submodule_dataset_name = submodule['name'].split("&")
-                if submodule_dataset_owner == dataset_owner and submodule_dataset_name == dataset_name:
-                    logger.info(f"{logged_in_username}/{dataset_owner}/{dataset_name} still referenced by {str(lb)}."
-                                f" Skipping file cache clean.")
-                    return
-
-        # If you get here the dataset no longer exists and is not used by any projects, clear files
-        shutil.rmtree(cache_location)
-
-    except Exception as err:
-        logger.error(f"(Job {p}) Error in clean_dataset_file_cache job")
-        logger.exception(err)
         raise

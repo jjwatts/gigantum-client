@@ -52,8 +52,8 @@ const getSyncTooltip = (props, data) => {
   } = data;
   let syncTooltip = !hasWriteAccess ? 'Pull' : 'Sync';
   syncTooltip = props.isLocked ? `Cannot ${syncOrPublish} while Project is in use` : syncTooltip;
+  syncTooltip = !props.defaultRemote ? 'Click Publish to push branch to remote server' : syncTooltip;
   syncTooltip = (activeBranch.branchName !== 'master' && !props.defaultRemote) ? 'Must publish Master branch first' : syncTooltip;
-  syncTooltip = !props.defaultRemote ? 'Publish' : syncTooltip;
   syncTooltip = props.defaultRemote && !sectionCollabs ? 'Please wait while Project data is being fetched' : syncTooltip;
 
   return syncTooltip;
@@ -386,28 +386,35 @@ class BranchMenu extends Component {
   */
   @boundMethod
   _handleSyncButton(pullOnly, allowSync, allowSyncPull, passedSuccessCall) {
+    const { props } = this;
     this.setState({ syncMenuVisible: false });
     if (allowSync || (pullOnly && allowSyncPull)) {
-      if (!this.props.defaultRemote) {
+      if (!props.defaultRemote) {
         this._togglePublishModal(!this.state.isDataset, false);
       } else {
         const self = this;
         const data = {
           successCall: () => {
-            this.props.setSyncingState(false);
-            if (this.props.sectionType === 'labbook') {
+            props.setSyncingState(false);
+            if (props.sectionType === 'labbook') {
               this.state.branchMutations.buildImage((response, error) => {
                 if (error) {
                   console.error(error);
-
-                  setMultiInfoMessage(id, `ERROR: Failed to build ${this.props.section.name}`, null, true, error);
+                  const messageData = {
+                    id,
+                    message: `ERROR: Failed to build ${props.section.name}`,
+                    isLast: null,
+                    error: true,
+                    messageBody: error,
+                  };
+                  setMultiInfoMessage(messageData);
                 }
               });
-              this.props.setBranchUptodate();
+              props.setBranchUptodate();
             }
           },
           failureCall: (errorMessage) => {
-            this.props.setSyncingState(false);
+            props.setSyncingState(false);
             if (errorMessage.indexOf('Merge conflict') > -1) {
               self._toggleSyncModal();
               this.setState({ pullOnly });
@@ -420,22 +427,22 @@ class BranchMenu extends Component {
           if (!navigator.onLine) {
             self.setState({ showLoginPrompt: true });
           } else if (!(response.data && response.data.userIdentity && response.data.userIdentity.isSessionValid)) {
-            this.props.auth.renewToken(true, () => {
+            props.auth.renewToken(true, () => {
               self.setState({ showLoginPrompt: true });
             }, () => {
               self.handleSyncButton(pullOnly, allowSync, allowSyncPull);
             });
-          } else if (this.props.sectionType !== 'labbook') {
+          } else if (props.sectionType !== 'labbook') {
             this.state.branchMutations.syncDataset(data, (response, error) => {
               if (error) {
                 data.failureCall(error);
               }
             });
           } else {
-            LinkedLocalDatasetsQuery.getLocalDatasets({ owner: this.props.section.owner, name: this.props.section.name }).then((res) => {
+            LinkedLocalDatasetsQuery.getLocalDatasets({ owner: props.section.owner, name: props.section.name }).then((res) => {
               const localDatasets = res.data && res.data.labbook.linkedDatasets.filter(linkedDataset => linkedDataset.defaultRemote && linkedDataset.defaultRemote.slice(0, 4) !== 'http');
               if ((localDatasets.length === 0) || pullOnly) {
-                this.props.setSyncingState(true);
+                props.setSyncingState(true);
 
                 this.state.branchMutations.syncLabbook(data, (response, error) => {
                   if (error) {
@@ -472,6 +479,19 @@ class BranchMenu extends Component {
     let syncOrPublish = props.defaultRemote ? 'Sync' : 'Publish';
     syncOrPublish = isPullOnly ? 'Pull' : syncOrPublish;
 
+    let createTooltip = state.isDataset ? defaultDatasetMessage : 'Create Branch';
+    createTooltip = props.isLocked ? 'Cannot Create Branch while Project is in use' : createTooltip;
+
+    let resetTooltip = 'Reset Branch to Remote';
+    resetTooltip = upToDate ? 'Branch up to date' : resetTooltip;
+    resetTooltip = activeBranch.commitsAhead === undefined ? 'Please wait while branch data is being fetched' : resetTooltip;
+    resetTooltip = !activeBranch.isRemote ? 'Cannot reset a branch until it has been published' : resetTooltip;
+    resetTooltip = (!activeBranch.isRemote && (activeBranch.branchName !== 'master')) ? 'The master branch must be published first' : resetTooltip;
+    resetTooltip = state.isLocked ? 'Cannot Reset Branch while Project is in use' : resetTooltip;
+    resetTooltip = state.isDataset ? defaultDatasetMessage : resetTooltip;
+    let switchTooltip = props.isLocked ? 'Cannot switch branches while Project is in use' : 'Switch Branches';
+    switchTooltip = state.isDataset ? defaultDatasetMessage : switchTooltip;
+
     const data = {
       defaultDatasetMessage,
       hasWriteAccess,
@@ -484,9 +504,9 @@ class BranchMenu extends Component {
     return {
       syncTooltip: getSyncTooltip(props, data),
       manageTooltip: getManagedToolip(props, data),
-      createTooltip: props.isLocked ? 'Cannot Create Branch while Project is in use' : state.isDataset ? defaultDatasetMessage : 'Create Branch',
-      resetTooltip: state.isDataset ? defaultDatasetMessage : props.isLocked ? 'Cannot Reset Branch while Project is in use' : !activeBranch.isRemote ? 'Branch must be remote' : activeBranch.commitsAhead === undefined ? 'Please wait while branch data is being fetched' : upToDate ? 'Branch up to date' : 'Reset Branch to Remote',
-      switchTooltip: props.isLocked ? 'Cannot switch branches while Project is in use' : state.isDataset ? defaultDatasetMessage : '',
+      createTooltip,
+      resetTooltip,
+      switchTooltip,
       commitTooltip: `${activeBranch.commitsBehind ? `${activeBranch.commitsBehind} Commits Behind, ` : ''} ${activeBranch.commitsAhead ? `${activeBranch.commitsAhead} Commits Ahead` : ''}`,
     };
   }

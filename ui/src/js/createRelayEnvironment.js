@@ -1,4 +1,3 @@
-import reduxStore from 'JS/redux/store';
 
 const {
   Environment, Network, RecordSource, Store, ConnectionHandler, ViewerHandler,
@@ -6,14 +5,8 @@ const {
 
 const parseParams = (str) => {
   const pieces = str.split('&');
-
-
   const data = {};
-
-
   let i;
-
-
   let parts;
   // process each query pair
   for (i = 0; i < pieces.length; i++) {
@@ -27,9 +20,9 @@ const parseParams = (str) => {
 };
 
 function fetchQuery(operation, variables, cacheConfig, uploadables) {
-  if (reduxStore.getState().login.logut && (operation.text.indexOf('RemoveUserIdentityMutation') === -1)) {
-    return;
-  }
+  /* eslint-disable */
+  const globalObject = self || window;
+  /* eslint-enable */
   const queryString = operation.params ? operation.params.text.replace(/(\r\n|\n|\r)/gm, '') : operation.text.replace(/(\r\n|\n|\r)/gm, '');
   let body;
   const headers = {
@@ -42,23 +35,22 @@ function fetchQuery(operation, variables, cacheConfig, uploadables) {
   }
   if (uploadables && uploadables[0]) {
     if (uploadables[1]) {
-      const idToken = localStorage.getItem('id_token');
       headers.authorization = `Bearer ${uploadables[1]}`;
-      headers.Identity = `${idToken}`;
+      headers.Identity = `${uploadables[2]}`;
     }
-  } else if (window.location.href.indexOf('access_token') > -1) {
-    const hashObj = parseParams(window.location.href.split('#')[1]);
+  } else if (globalObject.location.href.indexOf('access_token') > -1) {
+    const hashObj = parseParams(globalObject.location.href.split('#')[1]);
 
     headers.authorization = `Bearer ${hashObj.access_token}`;
     headers.Identity = `${hashObj.id_token}`;
 
-    localStorage.setItem('access_token', hashObj.access_token);
-    localStorage.setItem('id_token', hashObj.id_token);
+    globalObject.localStorage.setItem('access_token', hashObj.access_token);
+    globalObject.localStorage.setItem('id_token', hashObj.id_token);
 
-    window.location.hash = '';
-  } else if (localStorage.getItem('access_token')) {
-    const accessToken = localStorage.getItem('access_token');
-    const idToken = localStorage.getItem('id_token');
+    globalObject.location.hash = '';
+  } else if (globalObject.localStorage.getItem('access_token')) {
+    const accessToken = globalObject.localStorage.getItem('access_token');
+    const idToken = globalObject.localStorage.getItem('id_token');
     headers.authorization = `Bearer ${accessToken}`;
     headers.Identity = `${idToken}`;
   }
@@ -77,8 +69,8 @@ function fetchQuery(operation, variables, cacheConfig, uploadables) {
 
   const apiHost = process.env.NODE_ENV === 'development'
     ? 'localhost:10000'
-    : window.location.host;
-  const apiURL = `${window.location.protocol}//${apiHost}${process.env.GIGANTUM_API}`;
+    : globalObject.location.host;
+  const apiURL = `${globalObject.location.protocol}//${apiHost}${process.env.GIGANTUM_API}`;
   return fetch(apiURL, {
     method: 'POST',
     headers,

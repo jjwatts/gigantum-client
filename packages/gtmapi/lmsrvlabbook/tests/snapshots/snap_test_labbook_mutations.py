@@ -559,7 +559,7 @@ Data Science Quickstart using Jupyterlab, numpy, and Matplotlib. A great base fo
                             ],
                             'email': 'jane@doe.com',
                             'importance': 0,
-                            'message': 'Added base: quickstart-jupyterlab',
+                            'message': 'Added base: quickstart-jupyterlab r2',
                             'show': True,
                             'tags': [
                                 'environment',

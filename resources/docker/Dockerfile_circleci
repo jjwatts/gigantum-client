@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 LABEL maintainer="Gigantum <support@gigantum.com>"
 
 # Copy requirements.txt files
-COPY resources/awful-intersections-demo.lbk /opt/awful-intersections-demo.lbk
+COPY resources/my-first-project.zip /opt/my-first-project.zip
 COPY packages/gtmcore/requirements.txt /opt/gtmcore/requirements.txt
 COPY packages/gtmcore/requirements-testing.txt /opt/gtmcore/requirements-testing.txt
 COPY packages/gtmapi/requirements.txt /opt/gtmapi/requirements.txt

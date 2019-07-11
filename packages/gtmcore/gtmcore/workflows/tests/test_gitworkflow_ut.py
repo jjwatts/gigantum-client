@@ -1,41 +1,31 @@
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CO
+from typing import Optional
 import pytest
 import mock
 import tempfile
 import shutil
 import subprocess
-import subprocess
 import os
 from pkg_resources import resource_filename
-
+import time
+import glob
+from mock import patch
+from collections import namedtuple
 
 from gtmcore.configuration.utils import call_subprocess
-from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.inventory.inventory import InventoryManager, InventoryException
 from gtmcore.workflows import GitWorkflowException, LabbookWorkflow, DatasetWorkflow, MergeError, MergeOverride
 from gtmcore.fixtures import (_MOCK_create_remote_repo2 as _MOCK_create_remote_repo, mock_labbook_lfs_disabled,
                               mock_config_file)
 from gtmcore.inventory.branching import BranchManager, MergeConflict
 
+from gtmcore.dispatcher import Dispatcher
+import gtmcore.dispatcher.dataset_jobs
+from gtmcore.dataset.manifest import Manifest
+from gtmcore.fixtures.datasets import helper_append_file
+from gtmcore.dataset.io.manager import IOManager
+
 
 class TestGitWorkflowsMethods(object):
-
     @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
     def test_publish__simple(self, mock_labbook_lfs_disabled):
         """Test a simple publish and ensuring master is active branch. """
@@ -128,9 +118,250 @@ class TestGitWorkflowsMethods(object):
 
     @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
     def test_import_from_remote__dataset(self, mock_labbook_lfs_disabled, mock_config_file):
-        """ test import_from_remote method """
-        # TODO(billvb): Import remote dataset sets
-        assert True
+        """ test importing a published dataset """
+        username = 'testuser'
+        lb = mock_labbook_lfs_disabled[2]
+        im = InventoryManager(config_file=mock_labbook_lfs_disabled[0])
+        ds = im.create_dataset(username, username, 'test-ds', storage_type='gigantum_object_v1')
+
+        wf = DatasetWorkflow(ds)
+        wf.publish(username=username)
+
+        other_user = 'other-test-user2'
+        wf_other = DatasetWorkflow.import_from_remote(wf.remote, username=other_user,
+                                                      config_file=mock_config_file[0])
+
+        # The remotes must be the same, cause it's the same remote repo
+        assert wf_other.remote == wf.remote
+        # The actual path on disk will be different, though
+        assert wf_other.repository != wf.repository
+        # Check imported into namespace of original owner (testuser)
+        assert f'{other_user}/{username}/datasets/test-ds' in wf_other.repository.root_dir
+
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
+    def test_import_from_remote__linked_dataset(self, mock_labbook_lfs_disabled, mock_config_file):
+        """ test importing a project with a linked dataset"""
+        def dispatcher_mock(self, function_ref, kwargs, metadata):
+            assert kwargs['logged_in_username'] == 'other-test-user2'
+            assert kwargs['dataset_owner'] == 'testuser'
+            assert kwargs['dataset_name'] == 'test-ds'
+
+            # Inject mocked config file
+            kwargs['config_file'] = mock_config_file[0]
+
+            # Stop patching so job gets scheduled for real
+            dispatcher_patch.stop()
+
+            # Call same method as in mutation
+            d = Dispatcher()
+            res = d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
+                                  kwargs=kwargs, metadata=metadata)
+
+            return res
+
+        username = 'testuser'
+        lb = mock_labbook_lfs_disabled[2]
+        im = InventoryManager(config_file=mock_labbook_lfs_disabled[0])
+        ds = im.create_dataset(username, username, 'test-ds', storage_type='gigantum_object_v1')
+
+        # Publish dataset
+        dataset_wf = DatasetWorkflow(ds)
+        dataset_wf.publish(username=username)
+
+        # Link to project
+        im.link_dataset_to_labbook(dataset_wf.remote, username, username, lb)
+
+        # Publish project
+        labbook_wf = LabbookWorkflow(lb)
+        labbook_wf.publish(username=username)
+
+        # Patch dispatch_task so you can inject the mocked config file
+        dispatcher_patch = patch.object(Dispatcher, 'dispatch_task', dispatcher_mock)
+        dispatcher_patch.start()
+
+        # Import project, triggering an auto-import of the dataset
+        other_user = 'other-test-user2'
+        wf_other = LabbookWorkflow.import_from_remote(labbook_wf.remote, username=other_user,
+                                                      config_file=mock_config_file[0])
+
+        # The remotes must be the same, cause it's the same remote repo
+        assert wf_other.remote == labbook_wf.remote
+        # The actual path on disk will be different, though
+        assert wf_other.repository != labbook_wf.repository
+        # Check imported into namespace of original owner (testuser)
+        assert f'{other_user}/{username}/labbooks/labbook1' in wf_other.repository.root_dir
+
+        cnt = 0
+        while cnt < 20:
+            try:
+                im_other_user = InventoryManager(config_file=mock_config_file[0])
+                ds = im_other_user.load_dataset(other_user, username, 'test-ds')
+                break
+            except InventoryException:
+                cnt += 1
+                time.sleep(1)
+
+        assert cnt < 20
+        assert ds.name == 'test-ds'
+        assert ds.namespace == username
+        assert mock_config_file[1] in ds.root_dir
+
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
+    def test_sync__linked_dataset(self, mock_labbook_lfs_disabled, mock_config_file):
+        """ test syncing a project that pulls in a linked dataset"""
+        def dispatcher_mock(self, function_ref, kwargs, metadata):
+            assert kwargs['logged_in_username'] == 'other-test-user2'
+            assert kwargs['dataset_owner'] == 'testuser'
+            assert kwargs['dataset_name'] == 'test-ds'
+
+            # Inject mocked config file
+            kwargs['config_file'] = mock_config_file[0]
+
+            # Stop patching so job gets scheduled for real
+            dispatcher_patch.stop()
+
+            # Call same method as in mutation
+            d = Dispatcher()
+            res = d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
+                                  kwargs=kwargs, metadata=metadata)
+
+            return res
+
+        username = 'testuser'
+        lb = mock_labbook_lfs_disabled[2]
+        im = InventoryManager(config_file=mock_labbook_lfs_disabled[0])
+        ds = im.create_dataset(username, username, 'test-ds', storage_type='gigantum_object_v1')
+
+        # Publish dataset
+        dataset_wf = DatasetWorkflow(ds)
+        dataset_wf.publish(username=username)
+
+        # Publish project
+        labbook_wf = LabbookWorkflow(lb)
+        labbook_wf.publish(username=username)
+
+        # Import project
+        other_user = 'other-test-user2'
+        wf_other = LabbookWorkflow.import_from_remote(labbook_wf.remote, username=other_user,
+                                                      config_file=mock_config_file[0])
+
+        # The remotes must be the same, cause it's the same remote repo
+        assert wf_other.remote == labbook_wf.remote
+        assert wf_other.repository != labbook_wf.repository
+        assert f'{other_user}/{username}/labbooks/labbook1' in wf_other.repository.root_dir
+
+        with pytest.raises(InventoryException):
+            im_other_user = InventoryManager(config_file=mock_config_file[0])
+            ds = im_other_user.load_dataset(other_user, username, 'test-ds')
+
+        # Link to project
+        im.link_dataset_to_labbook(dataset_wf.remote, username, username, lb)
+
+        # Sync project with linked dataset
+        labbook_wf.sync(username=username)
+
+        # Patch dispatch_task so you can inject the mocked config file
+        dispatcher_patch = patch.object(Dispatcher, 'dispatch_task', dispatcher_mock)
+        dispatcher_patch.start()
+
+        # Sync on the other end, get the dataset!
+        wf_other.sync(username=other_user)
+
+        cnt = 0
+        while cnt < 20:
+            try:
+                im_other_user = InventoryManager(config_file=mock_config_file[0])
+                ds = im_other_user.load_dataset(other_user, username, 'test-ds')
+                break
+            except InventoryException:
+                cnt += 1
+                time.sleep(1)
+
+        assert cnt < 20
+        assert ds.name == 'test-ds'
+        assert ds.namespace == username
+        assert mock_config_file[1] in ds.root_dir
+
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
+    def test_checkout__linked_dataset(self, mock_labbook_lfs_disabled, mock_config_file):
+        """ test checking out a branch in a project that pulls in a linked dataset"""
+        def dispatcher_mock(self, function_ref, kwargs, metadata):
+            assert kwargs['logged_in_username'] == 'other-test-user2'
+            assert kwargs['dataset_owner'] == 'testuser'
+            assert kwargs['dataset_name'] == 'test-ds'
+
+            # Inject mocked config file
+            kwargs['config_file'] = mock_config_file[0]
+
+            # Stop patching so job gets scheduled for real
+            dispatcher_patch.stop()
+
+            # Call same method as in mutation
+            d = Dispatcher()
+            res = d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
+                                  kwargs=kwargs, metadata=metadata)
+
+            return res
+
+        username = 'testuser'
+        lb = mock_labbook_lfs_disabled[2]
+        im = InventoryManager(config_file=mock_labbook_lfs_disabled[0])
+        ds = im.create_dataset(username, username, 'test-ds', storage_type='gigantum_object_v1')
+
+        # Publish dataset
+        dataset_wf = DatasetWorkflow(ds)
+        dataset_wf.publish(username=username)
+
+        # Publish project
+        labbook_wf = LabbookWorkflow(lb)
+        labbook_wf.publish(username=username)
+
+        # Switch branches
+        labbook_wf.labbook.checkout_branch(branch_name="dataset-branch", new=True)
+
+        # Link to project
+        im.link_dataset_to_labbook(dataset_wf.remote, username, username, labbook_wf.labbook)
+
+        # Publish branch
+        labbook_wf.sync(username=username)
+
+        # Import project
+        other_user = 'other-test-user2'
+        wf_other = LabbookWorkflow.import_from_remote(labbook_wf.remote, username=other_user,
+                                                      config_file=mock_config_file[0])
+
+        # The remotes must be the same, cause it's the same remote repo
+        assert wf_other.remote == labbook_wf.remote
+        assert wf_other.repository != labbook_wf.repository
+        assert f'{other_user}/{username}/labbooks/labbook1' in wf_other.repository.root_dir
+
+        with pytest.raises(InventoryException):
+            im_other_user = InventoryManager(config_file=mock_config_file[0])
+            ds = im_other_user.load_dataset(other_user, username, 'test-ds')
+
+        # Patch dispatch_task so you can inject the mocked config file
+        dispatcher_patch = patch.object(Dispatcher, 'dispatch_task', dispatcher_mock)
+        dispatcher_patch.start()
+
+        # Checkout the branch
+        assert wf_other.labbook.active_branch == "master"
+        wf_other.checkout(username=other_user, branch_name="dataset-branch")
+
+        cnt = 0
+        while cnt < 20:
+            try:
+                im_other_user = InventoryManager(config_file=mock_config_file[0])
+                ds = im_other_user.load_dataset(other_user, username, 'test-ds')
+                break
+            except InventoryException:
+                cnt += 1
+                time.sleep(1)
+
+        assert cnt < 20
+        assert ds.name == 'test-ds'
+        assert ds.namespace == username
+        assert mock_config_file[1] in ds.root_dir
+        assert wf_other.labbook.active_branch == "dataset-branch"
 
     @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
     def test_sync___simple_push_to_master(self, mock_labbook_lfs_disabled, mock_config_file):
@@ -287,7 +518,7 @@ class TestGitWorkflowsMethods(object):
         wf.publish(username=username)
 
     @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
-    def test_reset__reset_local_change_same_owner(self, mock_labbook_lfs_disabled, mock_config_file):
+    def test_reset__reset_local_change_same_owner(self, mock_labbook_lfs_disabled):
         """ test reset performs no operation when there's nothing to do """
         username = 'test'
         lb = mock_labbook_lfs_disabled[2]
@@ -379,3 +610,72 @@ class TestGitWorkflowsMethods(object):
             wf.labbook.git.checkout('gm.workspace')
             assert wf.should_migrate() is False
 
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
+    def test_publish__dataset(self, mock_config_file):
+        def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                            percent_complete: Optional[float] = None):
+            """Method to update the job's metadata and provide feedback to the UI"""
+            assert has_failures is None or has_failures is False
+            assert failure_detail is None
+
+        def dispatch_query_mock(self, job_key):
+            JobStatus = namedtuple("JobStatus", ['status', 'meta'])
+            return JobStatus(status='finished', meta={'completed_bytes': '500'})
+
+        def dispatch_mock(self, method_reference, kwargs, metadata, persist):
+                return "afakejobkey"
+
+        username = 'test'
+        im = InventoryManager(mock_config_file[0])
+        ds = im.create_dataset(username, username, 'dataset-1', 'gigantum_object_v1')
+        m = Manifest(ds, username)
+        wf = DatasetWorkflow(ds)
+
+        # Put a file into the dataset that needs to be pushed
+        helper_append_file(m.cache_mgr.cache_root, m.dataset_revision, "test1.txt", "asdfadfsdf")
+        m.sweep_all_changes()
+
+        iom = IOManager(ds, m)
+        assert len(glob.glob(f'{iom.push_dir}/*')) == 1
+
+        with patch.object(Dispatcher, 'dispatch_task', dispatch_mock):
+            with patch.object(Dispatcher, 'query_task', dispatch_query_mock):
+                wf.publish(username=username, feedback_callback=update_feedback)
+                assert os.path.exists(wf.remote)
+                assert len(glob.glob(f'{iom.push_dir}/*')) == 0
+
+    @mock.patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo)
+    def test_sync__dataset(self, mock_config_file):
+        def update_feedback(msg: str, has_failures: Optional[bool] = None, failure_detail: Optional[str] = None,
+                            percent_complete: Optional[float] = None):
+            """Method to update the job's metadata and provide feedback to the UI"""
+            assert has_failures is None or has_failures is False
+            assert failure_detail is None
+
+        def dispatch_query_mock(self, job_key):
+            JobStatus = namedtuple("JobStatus", ['status', 'meta'])
+            return JobStatus(status='finished', meta={'completed_bytes': '100'})
+
+        def dispatch_mock(self, method_reference, kwargs, metadata, persist):
+                return "afakejobkey"
+
+        username = 'test'
+        im = InventoryManager(mock_config_file[0])
+        ds = im.create_dataset(username, username, 'dataset-1', 'gigantum_object_v1')
+        m = Manifest(ds, username)
+        wf = DatasetWorkflow(ds)
+
+        iom = IOManager(ds, m)
+        assert len(glob.glob(f'{iom.push_dir}/*')) == 0
+        wf.publish(username=username, feedback_callback=update_feedback)
+
+        # Put a file into the dataset that needs to be pushed
+        helper_append_file(m.cache_mgr.cache_root, m.dataset_revision, "test1.txt", "asdfadfsdf")
+        m.sweep_all_changes()
+
+        assert len(glob.glob(f'{iom.push_dir}/*')) == 1
+        with patch.object(Dispatcher, 'dispatch_task', dispatch_mock):
+            with patch.object(Dispatcher, 'query_task', dispatch_query_mock):
+                wf.sync(username=username, feedback_callback=update_feedback)
+                assert os.path.exists(wf.remote)
+                assert len(glob.glob(f'{iom.push_dir}/*')) == 0

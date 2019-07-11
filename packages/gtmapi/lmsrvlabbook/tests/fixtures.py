@@ -34,6 +34,7 @@ from graphene.test import Client
 from gtmcore.environment import RepositoryManager
 from gtmcore.configuration import Configuration, get_docker_client
 from gtmcore.auth.identity import get_identity_manager
+from gtmcore.environment.bundledapp import BundledAppManager
 
 from gtmcore.inventory.inventory import InventoryManager
 from lmsrvcore.middleware import DataloaderMiddleware, error_middleware
@@ -50,6 +51,26 @@ from lmsrvlabbook.api.mutation import LabbookMutations
 from gtmcore.fixtures.datasets import helper_append_file
 from gtmcore.dataset.cache import get_cache_manager_class
 from gtmcore.dataset import Manifest
+import gtmcore
+
+
+@pytest.fixture(scope='session')
+def mock_enable_unmanaged_for_testing():
+    """A pytest fixture that enables unmanaged datasets for testing. Until unmanaged datasets are completed, they
+    are disabled and dormant. We want to keep testing them and carry the code forward, but don't want them to be
+    used yet.
+
+    When running via a normal build, only "gigantum_object_v1" is available. To enable the others, you need to edit
+    gtmcore.dataset.storage.SUPPORTED_STORAGE_BACKENDS in gtmcore.dataset.storage.__init__.py
+
+    When this is done (unmanaged datasets are being re-activated) you should remove this fixture everywhere.
+    """
+    gtmcore.dataset.storage.SUPPORTED_STORAGE_BACKENDS = {
+        "gigantum_object_v1": ("gtmcore.dataset.storage.gigantum", "GigantumObjectStore"),
+        "local_filesystem": ("gtmcore.dataset.storage.local", "LocalFilesystem"),
+        "public_s3_bucket": ("gtmcore.dataset.storage.s3", "PublicS3Bucket")}
+
+    yield
 
 
 def _create_temp_work_dir(lfs_enabled: bool = True):
@@ -71,6 +92,10 @@ def _create_temp_work_dir(lfs_enabled: bool = True):
     config_file = os.path.join(temp_dir, "temp_config.yaml")
     config.save(config_file)
     os.environ['HOST_WORK_DIR'] = temp_dir
+
+    # Create upload folder
+    if not os.path.exists(config.upload_dir):
+        os.makedirs(config.upload_dir)
 
     return config_file, temp_dir
 
@@ -113,11 +138,19 @@ def fixture_working_dir():
 
             # Create a test client
             client = Client(schema, middleware=[DataloaderMiddleware()], context_value=ContextMock())
-
-            yield config_file, temp_dir, client, schema  # name of the config file, temporary working directory, the schema
+            # name of the config file, temporary working directory, the schema
+            yield config_file, temp_dir, client, schema
 
     # Remove the temp_dir
     shutil.rmtree(temp_dir)
+
+
+@pytest.fixture
+def fixture_working_dir_dataset_tests(fixture_working_dir, mock_enable_unmanaged_for_testing):
+    """A pytest fixture to enable all dataset types for testing only. This can be removed and should be replaced in all
+    test functions with `fixture_working_dir` once unmanaged datasets are truely enabled.
+    """
+    yield fixture_working_dir
 
 
 @pytest.fixture
@@ -415,6 +448,9 @@ def build_image_for_jupyterlab():
             cm.add_base(ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV)
             cm.add_packages("pip3", [{"manager": "pip3", "package": "requests", "version": "2.18.4"}])
 
+            bam = BundledAppManager(lb)
+            bam.add_bundled_app(9999, 'share', 'A bundled app for testing', "cd /mnt; python3 -m http.server 9999")
+
             ib = ImageBuilder(lb)
             ib.assemble_dockerfile(write=True)
             docker_client = get_docker_client()
@@ -499,7 +535,6 @@ def docker_socket_fixture():
         responses.add_passthru(
             f"{docker_host}/v{version}/containers/default-test-sample-repo-lb/json")
         responses.add_passthru(
-            #'http+docker://35.196.196.144:2376/v1.30/containers/default-test-sample-repo-lb/json')
             '{docker_host}/v{version}/containers/default-test-sample-repo-lb/json')
     else:
         responses.add_passthru(

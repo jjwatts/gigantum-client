@@ -5,6 +5,8 @@ import {
 import environment from 'JS/createRelayEnvironment';
 // utils
 import FooterUtils from 'Components/common/footer/FooterUtils';
+import footerCallback from 'Components/common/footer/utils/DownloadDatasetFiles';
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 const mutation = graphql`
 mutation DownloadDatasetFilesMutation($input: DownloadDatasetFilesInput!){
@@ -53,9 +55,19 @@ export default function DownloadDatasetFilesMutation(
     variables,
     onCompleted: (response, error) => {
       if (error) {
+        setErrorMessage('There was a problem downloading Dataset files', error);
         console.log(error);
       }
-      FooterUtils.getJobStatus(response, 'downloadDatasetFiles', 'backgroundJobKey', successCall, failureCall);
+      const footerData = {
+        result: response,
+        type: 'downloadDatasetFiles',
+        key: 'backgroundJobKey',
+        footerCallback,
+        successCall,
+        failureCall,
+      };
+
+      FooterUtils.getJobStatus(footerData);
 
       callback(error);
     },

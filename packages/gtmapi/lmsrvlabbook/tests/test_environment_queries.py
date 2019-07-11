@@ -1,30 +1,11 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import pytest
-
 import graphene
-import pprint
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.fixtures import ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
 from gtmcore.environment import ComponentManager
+from gtmcore.environment.bundledapp import BundledAppManager
+import gtmcore
 
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped, fixture_working_dir
 
@@ -136,16 +117,44 @@ class TestEnvironmentServiceQueries(object):
         # Add a base image
         cm = ComponentManager(lb)
         pkgs = [{"manager": "pip", "package": "requests", "version": "1.3"},
-                {"manager": "pip", "package": "numpy", "version": "1.12"}]
+                {"manager": "pip", "package": "numpy", "version": "1.12"},
+                {"manager": "pip", "package": "gtmunit1", "version": "0.2.4"}]
         cm.add_packages('pip', pkgs)
 
+        pkgs = [{"manager": "conda3", "package": "cdutil", "version": "8.1"},
+                {"manager": "conda3", "package": "nltk", "version": '3.2.5'}]
+        cm.add_packages('conda3', pkgs)
+
         # Add one package without a version, which should cause an error in the API since version is required
-        pkgs = [{"manager": "apt", "package": "docker", "version": ""},
-                {"manager": "apt", "package": "lxml", "version": "3.4"}]
+        pkgs = [{"manager": "apt", "package": "lxml", "version": "3.4"}]
         cm.add_packages('apt', pkgs)
 
-        # Test again
-        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+        query = """
+                   {
+                     labbook(owner: "default", name: "labbook4") {
+                       environment {
+                        packageDependencies {
+                            edges {
+                              node {
+                                id
+                                manager
+                                package
+                                version
+                                fromBase
+                              }
+                              cursor
+                            }
+                            pageInfo {
+                              hasNextPage
+                            }
+                          }
+                       }
+                     }
+                   }
+                   """
+        r1 = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r1
+        snapshot.assert_match(r1)
 
         query = """
                    {
@@ -174,6 +183,56 @@ class TestEnvironmentServiceQueries(object):
         assert 'errors' not in r1
         snapshot.assert_match(r1)
 
+    def test_get_package_manager_metadata(self, fixture_working_dir_env_repo_scoped, snapshot):
+        """Test getting the a LabBook's package manager dependencies"""
+        # Create labbook
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook4meta", description="my first asdf")
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook4meta") {
+                        environment {
+                         packageDependencies {
+                            edges {
+                              node {
+                                id
+                                manager
+                                package
+                                version
+                                fromBase
+                                description
+                                docsUrl
+                                latestVersion
+                              }
+                              cursor
+                            }
+                            pageInfo {
+                              hasNextPage
+                            }
+                          }
+                        }
+                      }
+                    }
+                    """
+        # should be null
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+        # Add a base image
+        cm = ComponentManager(lb)
+        pkgs = [{"manager": "pip", "package": "gtmunit3", "version": "5.0"},
+                {"manager": "pip", "package": "gtmunit2", "version": "12.2"},
+                {"manager": "pip", "package": "gtmunit1", "version": '0.2.1'}]
+        cm.add_packages('pip', pkgs)
+
+        pkgs = [{"manager": "conda3", "package": "cdutil", "version": "8.1"},
+                {"manager": "conda3", "package": "python-coveralls", "version": "2.5.0"}]
+        cm.add_packages('conda3', pkgs)
+
+        r1 = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r1
+        snapshot.assert_match(r1)
+
     def test_package_query_with_errors(self, snapshot, fixture_working_dir_env_repo_scoped):
         """Test querying for package info"""
         # Create labbook
@@ -184,7 +243,7 @@ class TestEnvironmentServiceQueries(object):
                     {
                       labbook(owner: "default", name: "labbook5"){
                         id
-                        packages(packageInput: [
+                        checkPackages(packageInput: [
                           {manager: "pip", package: "gtmunit1", version:"0.2.4"},
                           {manager: "pip", package: "gtmunit2", version:"100.00"},
                           {manager: "pip", package: "gtmunit3", version:""},
@@ -193,6 +252,71 @@ class TestEnvironmentServiceQueries(object):
                           manager 
                           package
                           version
+                          latestVersion
+                          description
+                          isValid     
+                        }
+                      }
+                    }
+                """
+
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+    def test_package_query_with_errors_conda(self, snapshot, fixture_working_dir_env_repo_scoped):
+        """Test querying for package info"""
+        # Create labbook
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook5conda", description="my first labbook10000")
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook5conda"){
+                        id
+                        checkPackages(packageInput: [
+                          {manager: "conda3", package: "cdutil", version:"8.1"},
+                          {manager: "conda3", package: "nltk", version:"100.00"},
+                          {manager: "conda3", package: "python-coveralls", version:""},
+                          {manager: "conda3", package: "thisshouldtotallyfail", version:"1.0"},
+                          {manager: "conda3", package: "notarealpackage", version:""}]){
+                          id
+                          manager 
+                          package
+                          version
+                          latestVersion
+                          description
+                          isValid     
+                        }
+                      }
+                    }
+                """
+
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+    def test_package_query_with_errors_apt(self, snapshot, fixture_working_dir_env_repo_scoped):
+        """Test querying for package info"""
+        # Create labbook
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook5apt", description="my first labbook10000")
+
+        # Create Component Manager
+        cm = ComponentManager(lb)
+
+        # Add a component
+        cm.add_base(ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV)
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook5apt"){
+                        id
+                        checkPackages(packageInput: [
+                          {manager: "apt", package: "curl", version:"8.1"},
+                          {manager: "apt", package: "notarealpackage", version:""}]){
+                          id
+                          manager 
+                          package
+                          version
+                          latestVersion
+                          description
                           isValid     
                         }
                       }
@@ -210,7 +334,7 @@ class TestEnvironmentServiceQueries(object):
                     {
                       labbook(owner: "default", name: "labbook6"){
                         id
-                        packages(packageInput: [
+                        checkPackages(packageInput: [
                           {manager: "pip", package: "gtmunit1", version:"0.2.4"},
                           {manager: "pip", package: "gtmunit2", version:""}]){
                           id
@@ -222,6 +346,154 @@ class TestEnvironmentServiceQueries(object):
                       }
                     }
                 """
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+    def test_package_query_no_version(self, snapshot, fixture_working_dir_env_repo_scoped):
+        """Test querying for package info"""
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook6noversion", description="my first labbook10000")
+
+        # Create Component Manager
+        cm = ComponentManager(lb)
+        cm.add_base(ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV)
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook6noversion"){
+                        id
+                        checkPackages(packageInput: [
+                          {manager: "pip", package: "gtmunit1"},
+                          {manager: "pip", package: "notarealpackage"}]){
+                          id
+                          manager 
+                          package
+                          version
+                          latestVersion
+                          description
+                          isValid     
+                        }
+                      }
+                    }
+                """
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook6noversion"){
+                        id
+                        checkPackages(packageInput: [                         
+                          {manager: "apt", package: "curl"},
+                          {manager: "apt", package: "notarealpackage"}]){
+                          id
+                          manager 
+                          package
+                          version
+                          latestVersion
+                          description
+                          isValid     
+                        }
+                      }
+                    }
+                """
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook6noversion"){
+                        id
+                        checkPackages(packageInput: [
+                          {manager: "conda3", package: "nltk"},
+                          {manager: "conda3", package: "notarealpackage"}]){
+                          id
+                          manager 
+                          package
+                          version
+                          latestVersion
+                          description
+                          isValid     
+                        }
+                      }
+                    }
+                """
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+    def test_bundle_app_query(self, snapshot, fixture_working_dir_env_repo_scoped):
+        """Test querying for bundled app info"""
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook("default", "default", "labbook-bundle", description="my first df")
+
+        query = """
+                    {
+                      labbook(owner: "default", name: "labbook-bundle"){
+                        id
+                        environment {
+                          bundledApps{
+                            id
+                            appName
+                            description
+                            port
+                            command
+                          }
+                        }
+                      }
+                    }
+                """
+        snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
+
+        bam = BundledAppManager(lb)
+        bam.add_bundled_app(8050, 'dash 1', 'a demo dash app 1', 'python app1.py')
+        bam.add_bundled_app(9000, 'dash 2', 'a demo dash app 2', 'python app2.py')
+        bam.add_bundled_app(9001, 'dash 3', 'a demo dash app 3', 'python app3.py')
 
         snapshot.assert_match(fixture_working_dir_env_repo_scoped[2].execute(query))
 
+    def test_base_update_available(self, fixture_working_dir_env_repo_scoped, snapshot):
+        """Test checking if the base is able to be updated"""
+        im = InventoryManager(fixture_working_dir_env_repo_scoped[0])
+        lb = im.create_labbook('default', 'default', 'labbook-base-test-update')
+
+        cm = ComponentManager(lb)
+
+        # Add an old base.
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 1)
+
+        query = """
+                {
+                  labbook(owner: "default", name: "labbook-base-test-update") {
+                    name
+                    description
+                    environment {
+                      base{                        
+                        id
+                        revision
+                      }
+                      baseLatestRevision
+                    }
+                  }
+                }
+        """
+        r = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['labbook']['environment']['base']['revision'] == 1
+        assert r['data']['labbook']['environment']['baseLatestRevision'] == 2
+
+        # We upgrade our base to the latest
+        cm.change_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 2)
+        r = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['labbook']['environment']['base']['revision'] == 2
+        assert r['data']['labbook']['environment']['baseLatestRevision'] == 2
+
+        query = """
+                {
+                  labbook(owner: "default", name: "labbook-base-test-update") {
+                    name                    
+                    environment {
+                      baseLatestRevision
+                    }
+                  }
+                }
+        """
+        r = fixture_working_dir_env_repo_scoped[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['labbook']['environment']['baseLatestRevision'] == 2

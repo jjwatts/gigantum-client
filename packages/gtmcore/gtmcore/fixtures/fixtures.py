@@ -60,6 +60,7 @@ def _create_temp_work_dir(override_dict: dict = None, lfs_enabled: bool = True):
     # Create a temporary working directory
     unit_test_working_dir = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex)
     os.makedirs(unit_test_working_dir)
+    os.makedirs(os.path.join(unit_test_working_dir, '.labmanager', 'upload'), exist_ok=True)
 
     default_override_config = {
         'core': {
@@ -157,6 +158,30 @@ def mock_config_file_team():
 def mock_config_file():
     """A pytest fixture that creates a temporary directory and a config file to match. Deletes directory after test"""
     conf_file, working_dir = _create_temp_work_dir()
+    yield conf_file, working_dir
+    shutil.rmtree(working_dir)
+
+
+@pytest.fixture()
+def mock_config_file_background_tests():
+    """A pytest fixture that creates a temporary directory and a config file to match. Deletes directory after test
+
+    For use primarily with background job tests
+    """
+    overrides = {"datasets": {
+        "cache_manager": "host",
+        "hash_cpu_limit": 2,
+        "download_cpu_limit": 2,
+        "upload_cpu_limit": 2,
+        "backends": {
+            "gigantum_object_v1": {
+                "upload_chunk_size": 4096,
+                "download_chunk_size": 4194304,
+                "num_workers": 10
+                }
+            }
+        }}
+    conf_file, working_dir = _create_temp_work_dir(override_dict=overrides)
     yield conf_file, working_dir
     shutil.rmtree(working_dir)
 
@@ -260,8 +285,7 @@ def mock_config_file_with_auth_first_login():
 @pytest.fixture()
 def cleanup_auto_import():
     """A pytest fixture that cleans up after the auto-import of the demo"""
-    demo_dir = os.path.join('/mnt', 'gigantum', "johndoe", "johndoe", "labbooks",
-                                           "awful-intersections-demo")
+    demo_dir = os.path.join('/mnt', 'gigantum', "johndoe", "johndoe", "labbooks", "my-first-project")
     if os.path.exists(demo_dir) is True:
         shutil.rmtree(demo_dir)
 
@@ -331,9 +355,14 @@ def mock_config_with_detaildb():
 
 @pytest.fixture()
 def mock_labbook():
-    """A pytest fixture that creates a temporary directory and a config file to match. Deletes directory after test"""
+    """A pytest fixture that creates a temporary directory and a config file to match.
+    Deletes directory after test"""
 
     conf_file, working_dir = _create_temp_work_dir()
+    erm = RepositoryManager(conf_file)
+    erm.update_repositories()
+    erm.index_repositories()
+
     im = InventoryManager(conf_file)
     # description was "my first labbook1"
     lb = im.create_labbook('test', 'test', 'labbook1', description="my test description")

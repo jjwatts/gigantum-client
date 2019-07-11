@@ -12,7 +12,7 @@ export default class PackageCount extends Component {
 
       <div className="PackageCount">
         <div className="PackageCount__dependencies">
-          <h6 className="Overview__header">Packages</h6>
+          <h6 className="Overview__header bold">Packages</h6>
           <ul className="flex flex--wrap">
             { (overview.numPipPackages > 0)
               && <li key="numPipPackages" className="PackageCount__item">{`${overview.numPipPackages} pip package(s)` }</li>

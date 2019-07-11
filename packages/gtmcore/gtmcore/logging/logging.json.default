@@ -3,7 +3,7 @@
   "loggers": {
     "labmanager": {
       "level": "INFO",
-      "handlers": ["fileHandler"],
+      "handlers": ["fileHandler", "consoleHandler"],
       "propagate": 0
     }
   },
@@ -11,7 +11,7 @@
     "consoleHandler": {
       "class": "logging.StreamHandler",
       "level": "DEBUG",
-      "formatter": "json",
+      "formatter": "labmanagerFormatter",
       "stream":  "ext://sys.stdout"
     },
     "fileHandler": {

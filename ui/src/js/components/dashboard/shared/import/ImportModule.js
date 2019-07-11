@@ -1,5 +1,5 @@
 // vendor
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import classNames from 'classnames';
 import uuidv4 from 'uuid/v4';
 // config
@@ -7,42 +7,57 @@ import config from 'JS/config';
 // queries
 import UserIdentity from 'JS/Auth/UserIdentity';
 // components
-import LoginPrompt from 'Components/shared/modals/LoginPrompt';
 import Tooltip from 'Components/common/Tooltip';
 import Modal from 'Components/common/Modal';
-import Loader from 'Components/common/Loader';
 // store
 import store from 'JS/redux/store';
-import { setUploadMessageRemove } from 'JS/redux/actions/footer';
 // mutations
 import ImportRemoteDatasetMutation from 'Mutations/ImportRemoteDatasetMutation';
 import ImportRemoteLabbookMutation from 'Mutations/ImportRemoteLabbookMutation';
 import BuildImageMutation from 'Mutations/container/BuildImageMutation';
 // utilities
-import JobStatus from 'JS/utils/JobStatus';
-import ChunkUploader from 'JS/utils/ChunkUploader';
-import ImportUtils from './ImportUtils';
+import prepareUpload from './PrepareUpload';
 // assets
 import './ImportModule.scss';
 
-let counter = 0;
 const dropZoneId = uuidv4();
+
+
+/**
+*  @param {String, String, String}
+*  trigers §
+*  @return {}
+*/
+const buildImage = (name, owner, id) => {
+  BuildImageMutation(owner, name, false, (response, error) => {
+    if (error) {
+      console.error(error);
+
+      store.dispatch({
+        type: 'MULTIPART_INFO_MESSAGE',
+        payload: {
+          id,
+          message: `ERROR: Failed to build ${name}`,
+          messsagesList: error,
+          error: true,
+        },
+      });
+    }
+  });
+};
+
 
 export default class ImportModule extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      show: false,
-      message: '',
       files: [],
-      type: 'info',
       error: false,
       isImporting: false,
-      stopPropagation: false,
-      importingScreen: false,
-      importTransition: null,
       remoteURL: '',
+      showImportModal: false,
+      ready: null,
     };
 
     this._getBlob = this._getBlob.bind(this);
@@ -50,22 +65,13 @@ export default class ImportModule extends Component {
     this._dropHandler = this._dropHandler.bind(this);
     this._dragendHandler = this._dragendHandler.bind(this);
     this._fileSelected = this._fileSelected.bind(this);
-    this._fileUpload = this._fileUpload.bind(this);
     this._importingState = this._importingState.bind(this);
     this._clearState = this._clearState.bind(this);
-    this._toggleImportScreen = this._toggleImportScreen.bind(this);
     this._closeLoginPromptModal = this._closeLoginPromptModal.bind(this);
     this._drop = this._drop.bind(this);
     this._dragover = this._dragover.bind(this);
     this._dragleave = this._dragleave.bind(this);
     this._dragenter = this._dragenter.bind(this);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('drop', this._drop);
-    window.removeEventListener('dragover', this._dragover);
-    window.removeEventListener('dragleave', this._dragleave);
-    window.removeEventListener('dragenter', this._dragenter);
   }
 
   componentDidMount() {
@@ -77,7 +83,16 @@ export default class ImportModule extends Component {
       };
     }
 
-    this.setState({ isImporting: false });
+    this.counter = 0;
+
+    this.setState({
+      files: [],
+      error: false,
+      isImporting: false,
+      remoteURL: '',
+      showImportModal: false,
+      ready: null,
+    });
 
     window.addEventListener('drop', this._drop);
     window.addEventListener('dragover', this._dragover);
@@ -85,21 +100,11 @@ export default class ImportModule extends Component {
     window.addEventListener('dragenter', this._dragenter);
   }
 
-  /**
-  *  @param {object}
-  *  detects when a file has been dropped
-  */
-  _drop(evt) {
-    if (document.getElementById('dropZone')) {
-      this._toggleImportScreen(false);
-      document.getElementById('dropZone').classList.remove('ImportModule__drop-area-highlight');
-    }
-
-    if (evt.target.classList.contains(dropZoneId)) {
-      evt.preventDefault();
-      evt.dataTransfer.effectAllowed = 'none';
-      evt.dataTransfer.dropEffect = 'none';
-    }
+  componentWillUnmount() {
+    window.removeEventListener('drop', this._drop);
+    window.removeEventListener('dragover', this._dragover);
+    window.removeEventListener('dragleave', this._dragleave);
+    window.removeEventListener('dragenter', this._dragenter);
   }
 
   /**
@@ -117,67 +122,10 @@ export default class ImportModule extends Component {
   }
 
   /**
-  *  @param {object}
-  *  detects when file has been dragged over the DOM
-  */
-  _dragover(evt) {
-    if (document.getElementById('dropZone')) {
-      this._toggleImportScreen(true);
-
-      document.getElementById('dropZone').classList.add('ImportModule__drop-area-highlight');
-    }
-
-    if (evt.target.classList.contains(dropZoneId) < 0) {
-      evt.preventDefault();
-      evt.dataTransfer.effectAllowed = 'none';
-      evt.dataTransfer.dropEffect = 'none';
-    }
-  }
-
-  /**
-  *  @param {object}
-  *  detects when file leaves dropzone
-  */
-  _dragleave(evt) {
-    counter--;
-
-    if (evt.target.classList && evt.target.classList.contains(dropZoneId) < 0) {
-      if (document.getElementById('dropZone')) {
-        if (counter === 0) {
-          this._toggleImportScreen(false);
-
-          document.getElementById('dropZone').classList.remove('ImportModule__drop-area-highlight');
-        }
-      }
-    }
-  }
-
-  /**
-  *  @param {object}
-  *  detects when file enters dropzone
-  */
-  _dragenter(evt) {
-    counter++;
-
-    if (document.getElementById('dropZone')) {
-      this._toggleImportScreen(true);
-
-      document.getElementById('dropZone').classList.add('ImportModule__drop-area-highlight');
-    }
-
-    if (evt.target.classList && evt.target.classList.contains(dropZoneId) < 0) {
-      evt.preventDefault();
-      evt.dataTransfer.effectAllowed = 'none';
-      evt.dataTransfer.dropEffect = 'none';
-    }
-  }
-
-  /**
   *  @param {String} filename
   *  returns corrected version of filename
   *  @return {}
   */
-
   _getFilename(filename) {
     const fileArray = filename.split('-');
     fileArray.pop();
@@ -191,64 +139,16 @@ export default class ImportModule extends Component {
   *  preventDefault on dragOver event
   */
   _getBlob = (dataTransfer) => {
-    const chunkSize = 1024;
-    let offset = 0;
-    const fileReader = new FileReader();
-    let file;
-    function seek() {
-      if (offset >= file.size) {
-        return;
-      }
-      const slice = file.slice(offset, offset + chunkSize);
-      fileReader.readAsArrayBuffer(slice);
-    }
-    const self = this;
-    for (let i = 0; i < dataTransfer.files.length; i++) {
-      file = dataTransfer.files[0];
-      if (file.name.slice(file.name.length - 4, file.name.length) !== '.lbk' && file.name.slice(file.name.length - 4, file.name.length) !== '.zip') {
-        this.setState({ error: true });
-
-        setTimeout(() => {
-          self.setState({ error: false });
-        }, 5000);
-      } else {
-        this.setState({ error: false });
-
-        fileReader.onloadend = function (evt) {
-          const arrayBuffer = evt.target.result;
-
-          const blob = new Blob([new Uint8Array(arrayBuffer)]);
-
-          self.setState({
-            files: [
-              {
-                blob,
-                file,
-                arrayBuffer,
-                filename: file.name,
-              },
-            ],
-            ready: {
-              name: self._getFilename(file.name),
-              owner: localStorage.getItem('username'),
-              method: 'local',
-            },
-          });
-        };
-
-        fileReader.onload = function () {
-          const view = new Uint8Array(fileReader.result);
-          for (let i = 0; i < view.length; ++i) {
-            if (view[i] === 10 || view[i] === 13) {
-              return;
-            }
-          }
-          offset += chunkSize;
-          seek();
-        };
-        seek();
-      }
-    }
+    const nameArray = dataTransfer.files[0].name.split('-');
+    nameArray.pop();
+    const name = nameArray.join('-');
+    this.setState({
+      files: dataTransfer.files,
+      ready: {
+        owner: localStorage.getItem('username'),
+        name,
+      },
+    });
   }
 
   /**
@@ -303,118 +203,6 @@ export default class ImportModule extends Component {
   */
   _fileSelected = (evt) => {
     this._getBlob(document.getElementById('file__input'));
-    this.setState({ stopPropagation: false });
-  }
-
-  /**
-  *  @param {Object}
-  *   trigger file upload
-  */
-  _fileUpload = () => { // this code is going to be moved to the footer to complete the progress bar
-    const { props } = this;
-    const self = this;
-
-    this._importingState();
-    const filepath = this.state.files[0].filename;
-
-    const data = {
-      file: this.state.files[0].file,
-      filepath,
-      username: localStorage.getItem('username'),
-      accessToken: localStorage.getItem('access_token'),
-      type: props.section,
-    };
-
-    // dispatch loading progress
-    store.dispatch({
-      type: 'UPLOAD_MESSAGE_SETTER',
-      payload: {
-        uploadMessage: 'Preparing Import ...',
-        totalBytes: this.state.files[0].file.size / 1000,
-        percentage: 0,
-        id: '',
-      },
-    });
-
-    const postMessage = (workerData) => {
-      if (workerData) {
-        const importObject = (props.section === 'labbook') ? workerData.importLabbook : workerData.importDataset;
-        if (importObject) {
-          store.dispatch({
-            type: 'UPLOAD_MESSAGE_UPDATE',
-            payload: {
-              uploadMessage: 'Upload Complete',
-              percentage: 100,
-              id: '',
-            },
-          });
-
-          JobStatus.getJobStatus(importObject.importJobKey).then((response) => {
-            store.dispatch({
-              type: 'UPLOAD_MESSAGE_UPDATE',
-              payload: {
-                uploadMessage: 'Unzipping Project',
-                percentage: 100,
-                id: '',
-              },
-            });
-
-            if (response.jobStatus.status === 'finished') {
-              self._clearState();
-              ImportUtils.dispatchFinishedStatus(response.jobStatus.result, self.props, self._buildImage);
-            } else if (response.jobStatus.status === 'failed') {
-              ImportUtils.dispatchFailedStatus();
-
-              self._clearState();
-            }
-          }).catch((error) => {
-            console.log(error);
-
-            store.dispatch({
-              type: 'UPLOAD_MESSAGE_UPDATE',
-              payload: {
-                uploadMessage: 'Import failed',
-                uploadError: true,
-                id: '',
-                percentage: 0,
-              },
-            });
-            self._clearState();
-          });
-        } else if (workerData.chunkSize) {
-          ImportUtils.dispatchLoadingProgress(workerData);
-        } else {
-          store.dispatch({
-            type: 'UPLOAD_MESSAGE_UPDATE',
-            payload: {
-              uploadMessage: workerData[0].message,
-              uploadError: true,
-              id: '',
-              percentage: 0,
-            },
-          });
-          self._clearState();
-        }
-      }
-    };
-
-    ChunkUploader.chunkFile(data, postMessage);
-  }
-
-  /**
-    @param {object} error
-    shows error message
-  * */
-  _showError(message) {
-    store.dispatch({
-      type: 'UPLOAD_MESSAGE_UPDATE',
-      payload: {
-        uploadMessage: message,
-        uploadError: true,
-        id: '',
-        percentage: 0,
-      },
-    });
   }
 
   /**
@@ -470,22 +258,16 @@ export default class ImportModule extends Component {
   *  @return {}
   */
   _closeImportModal = () => {
-    this.setState({ showImportModal: false, remoteUrl: '', readyLabbook: null });
+    this.setState({
+      files: [],
+      error: false,
+      isImporting: false,
+      remoteURL: '',
+      showImportModal: false,
+      ready: null,
+    });
   }
 
-  /**
-  *  @param {}
-  *  shows import screen
-  *  uses transition delay
-  *  @return {}
-  */
-  _toggleImportScreen(value) {
-    this.setState({ importTransition: value });
-
-    setTimeout(() => {
-      this.setState({ importingScreen: value });
-    }, 250);
-  }
 
   /**
   *  @param {Object} evt
@@ -509,25 +291,20 @@ export default class ImportModule extends Component {
   }
 
   /**
-  *  @param {Object} evt
   *  imports labbook from remote url, builds the image, and redirects to imported labbook
   *  @return {}
   */
-  _import = (evt) => {
+  _import = () => {
     const { props, state } = this;
-    if (!state.files[0]) {
-      const id = uuidv4();
+    const id = uuidv4();
+    const name = state.remoteURL.split('/')[state.remoteURL.split('/').length - 1];
+    const owner = state.remoteURL.split('/')[state.remoteURL.split('/').length - 2];
+    const remote = `https://repo.${config.domain}/${owner}/${name}.git`;
 
 
-      const name = state.remoteURL.split('/')[state.remoteURL.split('/').length - 1];
-
-
-      const owner = state.remoteURL.split('/')[state.remoteURL.split('/').length - 2];
-
-
-      const remote = `https://repo.${config.domain}/${owner}/${name}.git`;
-
+    if (state.files[0] !== undefined) {
       const self = this;
+
 
       UserIdentity.getUserIdentity().then((response) => {
         if (navigator.onLine) {
@@ -545,10 +322,14 @@ export default class ImportModule extends Component {
                 },
               });
               if (props.section === 'labbook') {
-                self._importRemoteProject(owner, name, remote, id);
+                prepareUpload(state.files[0], 'ImportLabbookMutation', buildImage, state, props.history);
               } else {
-                self._importRemoteDataset(owner, name, remote, id);
+                prepareUpload(state.files[0], 'ImportDatasetMutation', false, state, props.history);
               }
+
+              document.getElementById('modal__cover').classList.remove('hidden');
+              document.getElementById('loader').classList.remove('hidden');
+              this.setState({ showImportModal: false });
             } else {
               props.auth.renewToken(true, () => {
                 this.setState({ showLoginPrompt: true });
@@ -561,8 +342,81 @@ export default class ImportModule extends Component {
           this.setState({ showLoginPrompt: true });
         }
       });
-    } else {
-      this._fileUpload();
+    } else if (state.remoteURL) {
+      if (props.section === 'labbook') {
+        this._importRemoteProject(owner, name, remote, id);
+      } else {
+        this._importRemoteDataset(owner, name, remote, id);
+      }
+    }
+  }
+
+  /**
+  *  @param {object}
+  *  detects when a file has been dropped
+  */
+  _drop(evt) {
+    if (document.getElementById('dropZone')) {
+      document.getElementById('dropZone').classList.remove('ImportModule__drop-area-highlight');
+    }
+
+    if (evt.target.classList.contains(dropZoneId)) {
+      evt.preventDefault();
+      evt.dataTransfer.effectAllowed = 'none';
+      evt.dataTransfer.dropEffect = 'none';
+    }
+  }
+
+  /**
+  *  @param {object}
+  *  detects when file has been dragged over the DOM
+  */
+  _dragover(evt) {
+    if (document.getElementById('dropZone')) {
+
+      document.getElementById('dropZone').classList.add('ImportModule__drop-area-highlight');
+    }
+
+    if (evt.target.classList.contains(dropZoneId) < 0) {
+      evt.preventDefault();
+      evt.dataTransfer.effectAllowed = 'none';
+      evt.dataTransfer.dropEffect = 'none';
+    }
+  }
+
+  /**
+  *  @param {object}
+  *  detects when file leaves dropzone
+  */
+  _dragleave(evt) {
+    this.counter -= 1;
+
+    if (evt.target.classList && evt.target.classList.contains(dropZoneId) < 0) {
+      if (document.getElementById('dropZone')) {
+        if (this.counter === 0) {
+
+          document.getElementById('dropZone').classList.remove('ImportModule__drop-area-highlight');
+        }
+      }
+    }
+  }
+
+  /**
+  *  @param {object}
+  *  detects when file enters dropzone
+  */
+  _dragenter(evt) {
+    this.counter += 1;
+
+    if (document.getElementById('dropZone')) {
+
+      document.getElementById('dropZone').classList.add('ImportModule__drop-area-highlight');
+    }
+
+    if (evt.target.classList && evt.target.classList.contains(dropZoneId) < 0) {
+      evt.preventDefault();
+      evt.dataTransfer.effectAllowed = 'none';
+      evt.dataTransfer.dropEffect = 'none';
     }
   }
 
@@ -581,6 +435,7 @@ export default class ImportModule extends Component {
   */
   _importRemoteProject(owner, name, remote, id) {
     const self = this;
+    self._importingState();
     const sucessCall = () => {
       this._clearState();
       store.dispatch({
@@ -593,7 +448,7 @@ export default class ImportModule extends Component {
         },
       });
 
-      self._buildImage(name, owner, id);
+      buildImage(name, owner, id);
 
       self.props.history.replace(`/projects/${owner}/${name}`);
     };
@@ -625,7 +480,7 @@ export default class ImportModule extends Component {
   */
   _importRemoteDataset(owner, name, remote, id) {
     const self = this;
-
+    self._importingState();
     ImportRemoteDatasetMutation(owner, name, remote, (response, error) => {
       this._clearState();
       document.getElementById('modal__cover').classList.add('hidden');
@@ -656,34 +511,11 @@ export default class ImportModule extends Component {
     });
   }
 
-  /**
-  *  @param {String, String, String}
-  *  trigers §
-  *  @return {}
-  */
-  _buildImage(name, owner, id) {
-    BuildImageMutation(owner, name, false, (response, error) => {
-      if (error) {
-        console.error(error);
-
-        store.dispatch({
-          type: 'MULTIPART_INFO_MESSAGE',
-          payload: {
-            id,
-            message: `ERROR: Failed to build ${name}`,
-            messsagesList: error,
-            error: true,
-          },
-        });
-      }
-    });
-  }
-
   render() {
     const { props, state } = this;
     const loadingMaskCSS = classNames({
-      'ImportModule__loading-mask': this.state.isImporting,
-      hidden: !this.state.isImporting,
+      'ImportModule__loading-mask': state.isImporting,
+      hidden: !state.isImporting,
     });
 
     return (
@@ -703,42 +535,34 @@ export default class ImportModule extends Component {
           </div>
         </div>
 
-        <div
+        <button
+          type="button"
           className="btn--import"
           onClick={(evt) => { this._showModal(evt); }}
         >
           Create New
-        </div>
+        </button>
 
-        <div
+        <button
+          type="button"
           className="btn--import"
           onClick={(evt) => { this.setState({ showImportModal: true }); }}
         >
           Import Existing
-        </div>
+        </button>
 
         <Tooltip section="createLabbook" />
         <div className={loadingMaskCSS} />
-      </div>);
+      </div>
+    );
   }
 }
 
 const ImportModal = ({ self }) => {
-  let owner = '';
-  let name = '';
   const { props, state } = self;
-  const importCSS = classNames({
-    'btn--import': true,
-    'btn--expand': state.importTransition,
-    'btn--collapse': !state.importTransition && state.importTransition !== null,
-  });
-
+  const owner = state.ready ? state.ready.owner : '';
+  const name = state.ready ? state.ready.name : '';
   const section = props.section === 'labbook' ? 'Project' : 'Dataset';
-
-  if (state.ready) {
-    owner = state.ready.owner;
-    name = state.ready.name;
-  }
 
   return (
     <div className="Import__main">
@@ -788,17 +612,19 @@ const ImportModal = ({ self }) => {
 
             <div className="Import__buttonContainer">
               <button
+                type="button"
                 onClick={() => self._closeImportModal()}
                 className="Btn--flat"
               >
-                  Cancel
+                Cancel
               </button>
               <button
+                type="button"
                 onClick={() => { self._import(); }}
                 className="Btn--last"
                 disabled={!self.state.ready || self.state.isImporting}
               >
-                  Import
+                Import
               </button>
             </div>
           </div>
@@ -807,7 +633,6 @@ const ImportModal = ({ self }) => {
       />
       )
     }
-
     </div>
   );
 };

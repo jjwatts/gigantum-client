@@ -24,7 +24,6 @@ export default function CreateLabbookMutation(
   repository,
   baseId,
   revision,
-  isUntracked,
   callback,
 ) {
   const variables = {
@@ -34,7 +33,6 @@ export default function CreateLabbookMutation(
       repository,
       baseId,
       revision,
-      isUntracked,
       clientMutationId: tempID++,
     },
   };

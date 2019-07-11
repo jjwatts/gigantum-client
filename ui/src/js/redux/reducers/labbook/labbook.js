@@ -11,6 +11,7 @@ export default (
     isSyncing: false,
     isExporting: false,
     isPublishing: false,
+    isUploading: false,
     containerStatus: '',
     modalVisible: '',
     detailMode: false,
@@ -60,6 +61,11 @@ export default (
     return {
       ...state,
       isPublishing: action.payload.isPublishing,
+    };
+  } if (action.type === types.IS_UPLOADING) {
+    return {
+      ...state,
+      isUploading: action.payload.isUploading,
     };
   } if (action.type === types.SELECTED_COMPONENT) {
     return {

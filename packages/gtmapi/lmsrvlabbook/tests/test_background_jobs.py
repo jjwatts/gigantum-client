@@ -17,71 +17,20 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import multiprocessing
-import threading
-import pytest
 import time
 
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped
-from graphene.test import Client
-from mock import patch
-import redis
-import rq
-
 from gtmcore.dispatcher import Dispatcher, jobs
 
 
-@pytest.fixture()
-def temporary_worker():
-    """A pytest fixture that creates a temporary directory and a config file to match. Deletes directory after test"""
-    def run_worker():
-        with rq.Connection():
-            qs = 'labmanager_unittests'
-            w = rq.Worker(qs)
-            w.work()
-
-    # This task is used to kill the worker. Sometimes if tests fail the worker runs forever and
-    # holds up the entire process. This gives each test 25 seconds to run before killing the worker
-    # and forcing the test to fail.
-    def watch_proc(p):
-        count = 0
-        while count < 12:
-            count = count + 1
-            time.sleep(1)
-
-        try:
-            p.terminate()
-        except:
-            pass
-
-    r = redis.Redis()
-    r.flushall()
-
-    worker_proc = multiprocessing.Process(target=run_worker)
-    worker_proc.daemon = True
-    worker_proc.start()
-
-    watchdog_thread = threading.Thread(target=watch_proc, args=(worker_proc,))
-    watchdog_thread.daemon = True
-    watchdog_thread.start()
-
-    dispatcher = Dispatcher('labmanager_unittests')
-
-    assert worker_proc.is_alive()
-    yield worker_proc, dispatcher
-
-
 class TestBackgroundJobs(object):
-    def test_get_background_jobs_basics(self, temporary_worker, fixture_working_dir_env_repo_scoped):
+    def test_get_background_jobs_basics(self, fixture_working_dir_env_repo_scoped):
 
-        w, d = temporary_worker
-        assert w.is_alive()
-
+        d = Dispatcher()
         time.sleep(0.25)
-
         t1 = d.dispatch_task(jobs.test_exit_fail).key_str
         t2 = d.dispatch_task(jobs.test_exit_success).key_str
-        t3 = d.dispatch_task(jobs.test_sleep, args=(1,)).key_str
+        t3 = d.dispatch_task(jobs.test_sleep, args=(5,)).key_str
 
         query = """
                 {
@@ -100,7 +49,6 @@ class TestBackgroundJobs(object):
         """
         time.sleep(1)
         try:
-            assert w.is_alive()
             time1 = time.time()
             result = fixture_working_dir_env_repo_scoped[2].execute(query)
             time2 = time.time()
@@ -117,10 +65,5 @@ class TestBackgroundJobs(object):
             assert any([t3 == x['node']['jobKey'] and "started" == x['node']['status']
                         and x['node']['failureMessage'] is None
                         for x in result['data']['backgroundJobs']['edges']])
+        finally:
             time.sleep(2)
-        except:
-            time.sleep(2)
-            w.terminate()
-            raise
-
-        w.terminate()

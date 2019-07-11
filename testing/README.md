@@ -1,34 +1,74 @@
+# Gigantum Testing
 
-# Gigantum Client Test Harness
+Automation of Gigantum testing with Selenium.
 
-## Overview
 
-This test harness is meant to run GraphQL queries and mutations against a Gigantum client container.
-In the context of the test harness, this container is known as the "Container-Under-Test".
+## Installation
 
-This harness is incomplete and much work remains. In general, this harness aims to:
+First, create and activate a Python Virtual Environment for this project.
 
-1. Supplement unit tests inside the source for basic queries and mutations.
-2. Use actual dev/prod infrastructure in-the-loop to characterize peformance.
-3. Execute sequences/interactions to validate correctness and performance within designated bounds.
-4. Fill a "gap" between unit testing and end-to-end system testing.
+```bash
+$ cd testing
+$ python3 -m venv test-env
+$ source test-env/bin/activate
+$ pip3 install -r requirements.txt
+```
+
+Next, install the binary browser drivers, so that you can programmatically
+interact with the browser.
+
+```bash
+# Web driver for Chrome/Chromium
+$ brew install chromedriver
+
+# Web driver for Firefox
+$ brew install geckodriver
+```
+
+#### Starting Gigantum "Client-Under_test"
+
+Before running the harness, ensure the Gigantum client is installed and running
+
+```
+# Ensure you are in the root of the "gigantum-client" repository.
+
+$ gtm client build
+$ gtm client start
+# ...
+$ gtm client stop
+```
 
 ## Usage
 
-Ensure a client app instance is running, then run tests...
+To run ALL tests, using regular Chrome driver.
+Note, this may take a while.
 
 ```
-    $ (virtualenv) ./runtests.sh <your-username> <your-user-token> <your-access-token>
+# Make sure you are in the testing directory.
+$ cd testing
+
+# Put a valid username and password into the untracked credentials.txt
+$ echo -e "my_username\nmy_password" > credentials.txt
+
+# Now, run the driver!
+$ python3 driver.py
 ```
 
-Note! Retrieve your user token from your chrome cache (must login via web first).
+To run only example tests in headless mode.
 
-Copy the value for `user_token` and `access_token` respectively from the Chrome dev tools menu.
+```
+$ python3 driver.py test_examples --headless
+```
+
+To run ALL tests using the Firefox driver
+```
+$ python3 driver.py --firefox
+```
 
 
-## Warning
+## Organization
 
-This test harness will create a series of local and remote projects of the pattern `cli-XXXX` where
-XXXX is a 4-digit hex string.
-It will remove these locally and remotely after execution.
-Be advised that any projects whose names precisely match this pattern will be deleted.
+The file `driver.py` contains the main script to prepare, execute, and clean up test runs.
+
+The directory `gigantum_tests` contains Python files containing individual tests.
+Tests methods must be prefaced by `test_`, and should use the `assert` method for tests.

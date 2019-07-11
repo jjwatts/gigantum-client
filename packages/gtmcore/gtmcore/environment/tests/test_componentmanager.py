@@ -1,32 +1,17 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-import pytest
-import os
-import yaml
+from pathlib import Path
 import pprint
 import uuid
-from gtmcore.environment import ComponentManager, RepositoryManager
+import os
+
+import pytest
+import yaml
+
+from gtmcore.environment import ComponentManager
 from gtmcore.fixtures import mock_config_file, mock_labbook, mock_config_with_repo
-from gtmcore.labbook import LabBook
-from gtmcore.inventory.inventory  import InventoryManager
+from gtmcore.inventory.inventory import InventoryManager
 import gtmcore.fixtures
+
+from gtmcore.environment.tests import ENV_SKIP_MSG, ENV_SKIP_TEST
 
 
 def create_tmp_labbook(cfg_file):
@@ -36,6 +21,7 @@ def create_tmp_labbook(cfg_file):
     return lb
 
 
+@pytest.mark.skipif(ENV_SKIP_TEST, reason=ENV_SKIP_MSG)
 class TestComponentManager(object):
     def test_initalize_labbook(self, mock_config_with_repo):
         """Test preparing an empty labbook"""
@@ -203,6 +189,73 @@ class TestComponentManager(object):
             cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, gtmcore.fixtures.ENV_UNIT_TEST_BASE,
                         gtmcore.fixtures.ENV_UNIT_TEST_REV)
 
+    def test_change_base(self, mock_labbook):
+        """change_base is used both for updating versions and truly changing the base"""
+        conf_file, root_dir, lb = mock_labbook
+
+        # Initial configuration for the labbook - base config taken from `test_add_base` and package config from
+        # `test_add_package` - so we don't test assertions (again) on this part
+        cm = ComponentManager(lb)
+
+        # We "misconfigure" a package that is not part of the base as if it was from a base
+        # This shouldn't happen, but we address it just in case
+        pkgs = [{"manager": "pip3", "package": "gigantum", "version": "0.5"},
+                # pandas *is* part of the quickstart-juypter base, but we specify a different version here
+                {"package": "pandas", "version": "0.21"}]
+        cm.add_packages('pip3', pkgs, force=True, from_base=True)
+        packages = [p for p in cm.get_component_list('package_manager')]
+        assert(len(packages) == 2)
+        assert(all(p['from_base'] for p in packages))
+
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 1)
+
+        # After installing the base, we should have one version of matplotlib installed
+        packages = [p for p in cm.get_component_list('package_manager')
+                    if p['package'] == 'matplotlib']
+        assert(len(packages) == 1)
+        assert(packages[0]['version'] == '2.1.1')
+
+        # add_base() should have converted these to user-installed
+        packages = [p for p in cm.get_component_list('package_manager')
+                    if p['package'] in ['gigantum', 'pandas']]
+        # If we had redundancy from fake base-installed pandas plus real base-installed pandas, this would be 3
+        assert(len(packages) == 2)
+        for p in packages:
+            # Fake base-installed is converted to user ("not from_base") installed
+            assert(not p['from_base'])
+            if p['package'] == 'pandas':
+                # we should still have the fake base-installed version
+                assert(p['version'] == '0.21')
+
+
+        pkgs = [{"manager": "pip3", "package": "requests", "version": "2.18.2"},
+                # This will override an already installed package
+                {"manager": "pip3", "package": "matplotlib", "version": "2.2"}]
+        cm.add_packages('pip3', pkgs, force=True)
+
+        pkgs = [{"manager": "apt", "package": "ack", "version": "1.0"},
+                {"manager": "apt", "package": "docker", "version": "3.5"}]
+        cm.add_packages('apt', pkgs)
+
+        # Installing a customized version of matplotlib is a new package compared to other tests,
+        # and is a critical piece of testing cm.change_base
+        packages = [p for p in cm.get_component_list('package_manager')
+                    if p['package'] == 'matplotlib']
+        assert(len(packages) == 1)
+        assert(packages[0]['version'] == '2.2')
+
+        # We upgrade our base
+        cm.change_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, 'quickstart-jupyterlab', 2)
+
+        # matplotlib still set up per "user" update?
+        packages = [p for p in cm.get_component_list('package_manager')
+                    if p['package'] == 'matplotlib']
+        assert(len(packages) == 1)
+        assert(packages[0]['version'] == '2.2')
+
+        # Base revision now 2?
+        assert(cm.base_fields['revision'] == 2)
+
     def test_get_component_list_base(self, mock_config_with_repo):
         """Test listing base images added a to labbook"""
         lb = create_tmp_labbook(mock_config_with_repo[0])
@@ -317,14 +370,26 @@ class TestComponentManager(object):
             a = cm.base_fields
 
     def test_misconfigured_base_two_bases(self, mock_config_with_repo):
-        lb = create_tmp_labbook(mock_config_with_repo[0])
+        conf_file = mock_config_with_repo[0]
+        lb = create_tmp_labbook(conf_file)
         cm = ComponentManager(lb)
         # mock_config_with_repo is a ComponentManager Instance
         cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-1", 0)
-        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-2", 0)
+        # Updated logic to enable changing bases won't allow `add_base` again. Need to manually create a file
+        bad_base_config = Path(cm.env_dir, 'base', 'evil_repo_quantum-deathray.yaml')
+        bad_base_config.write_text("I'm gonna break you!")
 
         with pytest.raises(ValueError):
             a = cm.base_fields
+
+    def test_try_configuring_two_bases(self, mock_config_with_repo):
+        conf_file = mock_config_with_repo[0]
+        lb = create_tmp_labbook(conf_file)
+        cm = ComponentManager(lb)
+        # mock_config_with_repo is a ComponentManager Instance
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-1", 0)
+        with pytest.raises(ValueError):
+            cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-2", 0)
 
     def test_get_base(self, mock_config_with_repo):
         lb = create_tmp_labbook(mock_config_with_repo[0])
@@ -340,6 +405,22 @@ class TestComponentManager(object):
         assert base_data['os_class'] == 'ubuntu'
         assert base_data['schema'] == 1
 
+    def test_get_base_empty_error(self, mock_config_with_repo):
+        lb = create_tmp_labbook(mock_config_with_repo[0])
+        cm = ComponentManager(lb)
+
+        # mock_config_with_repo is a ComponentManager Instance
+        cm.add_base(gtmcore.fixtures.ENV_UNIT_TEST_REPO, "ut-jupyterlab-1", 0)
+
+        base_filename = f"gigantum_base-images-testing_ut-jupyterlab-1.yaml"
+        base_final_path = os.path.join(cm.env_dir, 'base', base_filename)
+
+        with open(base_final_path, 'wt') as cf:
+            cf.write(yaml.safe_dump({}, default_flow_style=False))
+
+        with pytest.raises(ValueError):
+            cm.base_fields
+
     def test_add_then_remove_custom_docker_snipper_with_valid_docker(self, mock_config_with_repo):
         lb = create_tmp_labbook(mock_config_with_repo[0])
         snippet = ["RUN true", "RUN touch /tmp/testfile", "RUN rm /tmp/testfile", "RUN echo 'done'"]
@@ -347,7 +428,6 @@ class TestComponentManager(object):
         cm = ComponentManager(lb)
         cm.add_docker_snippet("unittest-docker", docker_content=snippet,
                               description="yada yada's, \n\n **I'm putting in lots of apostrophę's**.")
-        #print(open(os.path.join(lb.root_dir, '.gigantum', 'env', 'docker', 'unittest-docker.yaml')).read(10000))
         c2 = lb.git.commit_hash
         assert c1 != c2
 

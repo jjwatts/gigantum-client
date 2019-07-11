@@ -70,7 +70,7 @@ class DevTools extends Component {
 
     let status = (containerStatus === 'RUNNING') ? 'Running' : containerStatus;
     status = (containerStatus === 'NOT_RUNNING') ? 'Stopped' : status;
-    status = (imageStatus === 'BUILD_IN_PROGRESS') ? 'Building' : status;
+    status = (imageStatus === 'BUILD_IN_PROGRESS' || imageStatus === 'BUILD_QUEUED') ? 'Building' : status;
     status = (imageStatus === 'BUILD_FAILED') ? 'Rebuild' : status;
     status = (imageStatus === 'DOES_NOT_EXIST') ? 'Rebuild' : status;
     status = ((imageStatus === 'DOES_NOT_EXIST') || (imageStatus === 'BUILD_IN_PROGRESS')) && (timeDifferenceMS < 15000) ? 'Building' : status;

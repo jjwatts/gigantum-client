@@ -123,68 +123,6 @@ class TestNodeQueries(object):
         assert r2['data']['node']['containerStatus'] == 'NOT_RUNNING'
         assert r2['data']['node']['imageStatus'] == 'DOES_NOT_EXIST'
 
-
-    def test_favorites_node(self, fixture_working_dir):
-        """Test listing labbook favorites"""
-
-        im = InventoryManager(fixture_working_dir[0])
-        lb = im.create_labbook("default", "default", "labbook1",
-                               description="my first labbook1")
-
-        # Setup some favorites in code
-        with open(os.path.join(lb.root_dir, 'code', 'test1.txt'), 'wt') as test_file:
-            test_file.write("blah1")
-
-        # Create favorites
-        lb.create_favorite("code", "test1.txt", description="My file with stuff 1")
-
-        # Test bad node that isn't a file
-        query = """
-                    {
-                        node(id: "TGFiYm9va0Zhdm9yaXRlOmRlZmF1bHQmbGFiYm9vazEmY29kZSZ0ZXN0MzMzLnR4dA==") {
-                            ... on LabbookFavorite {
-                                id
-                                key
-                                description
-                                isDir
-                                index
-                            }
-                        }
-                    }
-                    """
-        r = fixture_working_dir[2].execute(query)
-        # Assert that there ARE INDEED errors
-        assert 'errors' in r
-        # These are the fields with error and are therefore None
-        assert r['data']['node']['description'] is None
-        assert r['data']['node']['index'] is None
-        assert r['data']['node']['isDir'] is None
-
-        # The one field that is NOT in error
-        assert r['data']['node']['key'] == 'test333.txt'
-
-
-        # Get the actual item
-        query = """
-                    {
-                        node(id: "TGFiYm9va0Zhdm9yaXRlOmRlZmF1bHQmbGFiYm9vazEmY29kZSZ0ZXN0MS50eHQ=") {
-                            ... on LabbookFavorite {
-                                id
-                                key
-                                description
-                                isDir
-                                index
-                            }
-                        }
-                    }
-                    """
-        r2 = fixture_working_dir[2].execute(query)
-        assert 'errors' not in r2
-        assert r2['data']['node']['description'] == 'My file with stuff 1'
-        assert r2['data']['node']['index'] == 0
-        assert r2['data']['node']['isDir'] == False
-        assert r2['data']['node']['key'] == 'test1.txt'
-
     def test_file_node(self, fixture_working_dir):
         """Test listing labbook favorites"""
         im = InventoryManager(fixture_working_dir[0])
@@ -194,9 +132,6 @@ class TestNodeQueries(object):
         # Setup some favorites in code
         with open(os.path.join(lb.root_dir, 'code', 'test1.txt'), 'wt') as test_file:
             test_file.write("blah1")
-
-        # Create favorites
-        lb.create_favorite("code", "test1.txt", description="My file with stuff 1")
 
         query = """
                     {

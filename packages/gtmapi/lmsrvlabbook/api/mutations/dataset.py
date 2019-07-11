@@ -32,13 +32,16 @@ from gtmcore.dispatcher import (Dispatcher, jobs)
 
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 from lmsrvcore.auth.identity import parse_token
-from gtmcore.activity import ActivityStore, ActivityType, ActivityAction, ActivityDetailType, ActivityRecord, \
+from gtmcore.activity import ActivityStore, ActivityType, ActivityDetailType, ActivityRecord, \
     ActivityDetailRecord
 
 
 from lmsrvlabbook.api.objects.dataset import Dataset
 from gtmcore.dataset.manifest import Manifest
+from gtmcore.dispatcher import Dispatcher, jobs
+
 from lmsrvlabbook.api.connections.dataset import DatasetConnection
+from lmsrvlabbook.api.objects.dataset import DatasetConfigurationParameterInput
 from lmsrvlabbook.api.connections.labbook import Labbook, LabbookConnection
 
 
@@ -72,6 +75,172 @@ class CreateDataset(graphene.relay.ClientIDMutation):
                                              name=name, owner=username))
 
 
+class ConfigureDataset(graphene.relay.ClientIDMutation):
+    """Mutation to configure a dataset backend if needed.
+
+    Workflow to configure a dataset:
+    - TODO
+
+    """
+
+    class Input:
+        dataset_owner = graphene.String(required=True, description="Owner of the dataset to configure")
+        dataset_name = graphene.String(required=True, description="Name of the dataset to configure")
+        parameters = graphene.List(DatasetConfigurationParameterInput)
+        confirm = graphene.Boolean(description="Set to true so confirm the configuration and continue. "
+                                               "False will clear the configuration to start over")
+
+    dataset = graphene.Field(Dataset)
+    is_configured = graphene.Boolean(description="If true, all parameters a set and OK to continue")
+    should_confirm = graphene.Boolean(description="If true, should confirm configuration with the user "
+                                                  "and resubmit with confirm=True to finalize")
+    error_message = graphene.String(description="Configuration error message to display to the user")
+    confirm_message = graphene.String(description="Confirmation message to display to the user")
+    has_background_job = graphene.Boolean(description="If true, this backend type requires background work"
+                                                      " after confirmation. Check complete_background_key for key to "
+                                                      "provide user feedback.")
+    background_job_key = graphene.String(description="Background job key to query on for feedback if needed")
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, dataset_owner, dataset_name, parameters=None, confirm=None,
+                               client_mutation_id=None):
+        logged_in_username = get_logged_in_username()
+        im = InventoryManager()
+        ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name, get_logged_in_author())
+        ds.backend.set_default_configuration(logged_in_username,
+                                             bearer_token=flask.g.access_token,
+                                             id_token=flask.g.id_token)
+
+        should_confirm = False
+        error_message = None
+        confirm_message = None
+        background_job_key = None
+        is_configured = None
+
+        if confirm is None:
+            if parameters:
+                # Update the configuration
+                current_config = ds.backend_config
+                for param in parameters:
+                    current_config[param.parameter] = param.value
+                ds.backend_config = current_config
+
+            # Validate the configuration
+            try:
+                confirm_message = ds.backend.confirm_configuration(ds)
+                if confirm_message is not None:
+                    should_confirm = True
+            except ValueError as err:
+                error_message = f"{err}"
+                is_configured = False
+        else:
+            if confirm is False:
+                # Clear configuration
+                current_config = ds.backend_config
+                for param in parameters:
+                    current_config[param.parameter] = None
+                ds.backend_config = current_config
+
+            else:
+                if ds.backend.can_update_from_remote:
+                    d = Dispatcher()
+                    kwargs = {
+                        'logged_in_username': logged_in_username,
+                        'access_token': flask.g.access_token,
+                        'id_token': flask.g.id_token,
+                        'dataset_owner': dataset_owner,
+                        'dataset_name': dataset_name,
+                    }
+
+                    # Gen unique keys for tracking jobs
+                    metadata = {'dataset': f"{logged_in_username}|{dataset_owner}|{dataset_name}",
+                                'method': 'update_unmanaged_dataset_from_remote'}
+                    job_response = d.dispatch_task(jobs.update_unmanaged_dataset_from_remote,
+                                                   kwargs=kwargs, metadata=metadata)
+
+                    background_job_key = job_response.key_str
+
+        if is_configured is None:
+            is_configured = ds.backend.is_configured
+
+        return ConfigureDataset(dataset=Dataset(id="{}&{}".format(dataset_owner, dataset_name),
+                                                name=dataset_name, owner=dataset_owner),
+                                is_configured=is_configured,
+                                should_confirm=should_confirm,
+                                confirm_message=confirm_message,
+                                error_message=error_message,
+                                has_background_job=ds.backend.can_update_from_remote,
+                                background_job_key=background_job_key)
+
+
+class UpdateUnmanagedDataset(graphene.relay.ClientIDMutation):
+    """Mutation to update the manifest for a local dataset based on changes either locally or via the remote the
+    dataset is linked to
+    """
+
+    class Input:
+        dataset_owner = graphene.String(required=True, description="Owner of the dataset to configure")
+        dataset_name = graphene.String(required=True, description="Name of the dataset to configure")
+        from_local = graphene.Boolean(description="If true, update the dataset based on local state of the dataset")
+        from_remote = graphene.Boolean(description="If true, update the dataset based on remote state of the dataset."
+                                                   " This effectivelly also updates the local state, so the"
+                                                   " `fromLocal` argument is ignored")
+
+    dataset = graphene.Field(Dataset)
+    background_job_key = graphene.String(description="Background job key to query on for feedback if needed")
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, dataset_owner, dataset_name, from_local=False, from_remote=False,
+                               client_mutation_id=None):
+        logged_in_username = get_logged_in_username()
+        im = InventoryManager()
+        ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name, get_logged_in_author())
+        ds.backend.set_default_configuration(logged_in_username,
+                                             bearer_token=flask.g.access_token,
+                                             id_token=flask.g.id_token)
+
+        if not ds.backend.is_configured:
+            raise ValueError("Dataset is not fully configured. Cannot update.")
+
+        d = Dispatcher()
+        kwargs = {
+            'logged_in_username': logged_in_username,
+            'access_token': flask.g.access_token,
+            'id_token': flask.g.id_token,
+            'dataset_owner': dataset_owner,
+            'dataset_name': dataset_name,
+        }
+
+        background_job_key = None
+
+        if from_remote is True:
+            if ds.backend.can_update_from_remote:
+                # Gen unique keys for tracking jobs
+                metadata = {'dataset': f"{logged_in_username}|{dataset_owner}|{dataset_name}",
+                            'method': 'update_unmanaged_dataset_from_remote'}
+
+                job_response = d.dispatch_task(jobs.update_unmanaged_dataset_from_remote,
+                                               kwargs=kwargs, metadata=metadata)
+                background_job_key = job_response.key_str
+            else:
+                raise ValueError("This dataset type does not support automatic update via querying its remote")
+
+        elif from_local is True:
+            # Gen unique keys for tracking jobs
+            metadata = {'dataset': f"{logged_in_username}|{dataset_owner}|{dataset_name}",
+                        'method': 'update_unmanaged_dataset_from_local'}
+
+            job_response = d.dispatch_task(jobs.update_unmanaged_dataset_from_local,
+                                           kwargs=kwargs, metadata=metadata)
+            background_job_key = job_response.key_str
+        else:
+            ValueError("Either `fromRemote` or `fromLocal` must be True.")
+
+        return UpdateUnmanagedDataset(dataset=Dataset(id="{}&{}".format(dataset_owner, dataset_name),
+                                                      name=dataset_name, owner=dataset_owner),
+                                      background_job_key=background_job_key)
+
+
 class FetchDatasetEdge(graphene.relay.ClientIDMutation):
     class Input:
         owner = graphene.String(required=True)
@@ -96,7 +265,7 @@ class ModifyDatasetLink(graphene.relay.ClientIDMutation):
         labbook_name = graphene.String(required=True, description="Name of the labbook")
         dataset_owner = graphene.String(required=True, description="Owner of the dataset to link")
         dataset_name = graphene.String(required=True, description="Name of the dataset to link")
-        action = graphene.String(required=True, description="Action to perform, either `link` or `unlink`")
+        action = graphene.String(required=True, description="Action to perform, either `link`, `unlink`, or `update`")
         dataset_url = graphene.String(description="URL to the Dataset to link. Only required when `action=link`")
 
     new_labbook_edge = graphene.Field(LabbookConnection.Edge)
@@ -160,8 +329,10 @@ class ModifyDatasetLink(graphene.relay.ClientIDMutation):
                 m.link_revision()
             elif action == 'unlink':
                 im.unlink_dataset_from_labbook(dataset_owner, dataset_name, lb)
+            elif action == 'update':
+                im.update_linked_dataset_reference(dataset_owner, dataset_name, lb)
             else:
-                raise ValueError("Unsupported action. Use `link` or `unlink`")
+                raise ValueError("Unsupported action. Use `link`, `unlink`, or `update`")
 
             edge = LabbookConnection.Edge(node=Labbook(owner=labbook_owner, name=labbook_name),
                                           cursor=base64.b64encode(f"{0}".encode('utf-8')))
@@ -314,3 +485,40 @@ class WriteDatasetReadme(graphene.relay.ClientIDMutation):
             ds.write_readme(content)
 
         return WriteDatasetReadme(updated_dataset=Dataset(owner=owner, name=dataset_name))
+
+
+class VerifyDataset(graphene.ClientIDMutation):
+    """Verify the contents of a dataset, returning a job key. The 'modified_keys' value in the metadata indicates
+    which files have changed, once the job is complete."""
+
+    class Input:
+        dataset_owner = graphene.String(required=True)
+        dataset_name = graphene.String(required=True)
+        labbook_owner = graphene.String(required=False, description="Optional arg if dataset is linked")
+        labbook_name = graphene.String(required=False, description="Optional arg if dataset is linked")
+
+    background_job_key = graphene.String()
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, dataset_owner, dataset_name, labbook_owner=None, labbook_name=None,
+                               client_mutation_id=None):
+        logged_in_user = get_logged_in_username()
+
+        # Schedule Job to clear file cache if dataset is no longer in use
+        job_metadata = {'method': 'verify_dataset_contents'}
+        job_kwargs = {
+            'logged_in_username': logged_in_user,
+            'access_token': flask.g.access_token,
+            'id_token': flask.g.id_token,
+            'dataset_owner': dataset_owner,
+            'dataset_name': dataset_name,
+            'labbook_owner': labbook_owner,
+            'labbook_name': labbook_name
+        }
+
+        dispatcher = Dispatcher()
+        job_key = dispatcher.dispatch_task(jobs.verify_dataset_contents, metadata=job_metadata,
+                                           kwargs=job_kwargs)
+        logger.info(f"Dispatched verify_dataset_contents({dataset_owner}/{dataset_name}) to Job {job_key}")
+
+        return VerifyDataset(background_job_key=job_key)

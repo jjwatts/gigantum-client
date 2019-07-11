@@ -65,6 +65,10 @@ input[type="text"].full--border:focus {
       padding-right: 84px !important;
     }
   }
+  &--smallText {
+    font-size: 14px !important;
+    padding: 0 5px !important;
+  }
 }
 
 textarea {

@@ -30,6 +30,7 @@ class TestEnvironmentBaseImageQueries(object):
                     edges {
                       node {
                         id
+                        revision
                         schema
                         componentId
                         name

@@ -27,6 +27,7 @@ export const LinkModalQuery = graphql`
                 name
                 description
                 owner
+                backendIsConfigured
                 createdOnUtc
                 modifiedOnUtc
                 defaultRemote
@@ -191,7 +192,8 @@ export default class LinkModal extends Component {
                   console.log(error);
                 } else if (props) {
                   const existingDatasets = this.props.linkedDatasets.map(dataset => dataset.name);
-                  const localDatasetEdges = this._filterDatasets(props.datasetList.localDatasets.edges.filter(dataset => existingDatasets.indexOf(dataset.node.name) === -1));
+                  const filteredDatasets = props.datasetList.localDatasets.edges.filter(dataset => existingDatasets.indexOf(dataset.node.name) === -1 && dataset.node.backendIsConfigured);
+                  const localDatasetEdges = this._filterDatasets(filteredDatasets);
                   const filterCategories = this._createFilters(localDatasetEdges);
                   const messageCSS = classNames({
                     LinkModal__message: true,

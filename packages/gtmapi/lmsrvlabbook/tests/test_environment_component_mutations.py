@@ -20,9 +20,9 @@
 import pytest
 import yaml
 import os
-import graphql
 from snapshottest import snapshot
 
+from gtmcore.environment import ComponentManager
 from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped
 
 from gtmcore.inventory.inventory import InventoryManager
@@ -42,8 +42,8 @@ class TestAddComponentMutations(object):
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-tester",
-            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]           
-            
+            packages: [{manager: "conda3", package: "python-coveralls", version: "2.9.1"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
@@ -54,7 +54,7 @@ class TestAddComponentMutations(object):
                   version
                   fromBase
                 }
-                cursor 
+                cursor
             }
           }
         }
@@ -75,8 +75,8 @@ class TestAddComponentMutations(object):
             owner: "default",
             labbookName: "catbook-package-tester-multi",
             packages: [{manager: "pip3", package: "gtmunit1", version: "0.12.4"},
-                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]           
-            
+                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
@@ -87,7 +87,7 @@ class TestAddComponentMutations(object):
                   version
                   fromBase
                 }
-                cursor 
+                cursor
             }
           }
         }
@@ -127,8 +127,8 @@ class TestAddComponentMutations(object):
             owner: "default",
             labbookName: "catbook-package-tester-mgr-errors",
             packages: [{manager: "pip3", package: "requests", version: "2.18.4"},
-                       {manager: "conda3", package: "responses", version: "1.4"}]           
-            
+                       {manager: "conda3", package: "responses", version: "1.4"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
@@ -139,7 +139,7 @@ class TestAddComponentMutations(object):
                   version
                   fromBase
                 }
-                cursor 
+                cursor
             }
           }
         }
@@ -160,8 +160,8 @@ class TestAddComponentMutations(object):
           addPackageComponents (input: {
             owner: "default",
             labbookName: "catbook-package-no-version",
-            packages: [{manager: "pip3", package: "gtmunit1"}]           
-            
+            packages: [{manager: "pip3", package: "gtmunit1"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
@@ -172,7 +172,7 @@ class TestAddComponentMutations(object):
                   version
                   fromBase
                 }
-                cursor 
+                cursor
             }
           }
         }
@@ -195,14 +195,14 @@ class TestAddComponentMutations(object):
             owner: "default",
             labbookName: "catbook-package-tester-remove",
             packages: [{manager: "pip3", package: "gtmunit1", version: "0.12.4"},
-                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]          
-            
+                       {manager: "pip3", package: "gtmunit2", version: "1.14.1"}]
+
           }) {
             clientMutationId
             newPackageComponentEdges {
                 node{
-                  id                
-                }                 
+                  id
+                }
             }
           }
         }
@@ -277,3 +277,87 @@ class TestAddComponentMutations(object):
         r = client.execute(remove_query, variable_values=vars)
         assert 'errors' not in r
         assert r['data']['removeCustomDocker']['updatedEnvironment']['dockerSnippet'] == ""
+
+    def test_update_base(self, fixture_working_dir_env_repo_scoped, snapshot):
+        """Test changing the revision of a base"""
+        config_file = fixture_working_dir_env_repo_scoped[0]
+        gql_client = fixture_working_dir_env_repo_scoped[2]
+        im = InventoryManager(config_file)
+        lb = im.create_labbook('default', 'default', 'catbook-update-base-tester',
+                               description="LB to test package mutation")
+
+        # Add an (old) base image
+        cm = ComponentManager(lb)
+        cm.add_base('gigantum_base-images-testing', 'quickstart-jupyterlab', 1)
+
+        # Change to the most recent version of the base image
+        pkg_query = """
+        mutation myBaseMutation {
+          changeLabbookBase (input: {
+            owner: "default",
+            labbookName: "catbook-update-base-tester",
+            repository: "gigantum_base-images-testing",
+            baseId: "quickstart-jupyterlab",
+            revision: 2
+          })
+          {
+            labbook {
+              environment {
+                base {
+                  repository
+                  componentId
+                  revision
+                  name
+                }
+              }
+            }
+          }
+        }
+        """
+        result = gql_client.execute(pkg_query)
+        # The critical thing here is that the revision is updated to 2
+        base = result['data']['changeLabbookBase']['labbook']['environment']['base']
+        assert base['revision'] == 2
+        assert base['componentId'] == 'quickstart-jupyterlab'
+
+    def test_change_base(self, fixture_working_dir_env_repo_scoped, snapshot):
+        """Test changing to a different base"""
+        config_file = fixture_working_dir_env_repo_scoped[0]
+        gql_client = fixture_working_dir_env_repo_scoped[2]
+        im = InventoryManager(config_file)
+        lb = im.create_labbook('default', 'default', 'catbook-change-base-tester',
+                               description="LB to test package mutation")
+
+        # Add an (old) base image
+        cm = ComponentManager(lb)
+        cm.add_base('gigantum_base-images-testing', 'quickstart-jupyterlab', 1)
+
+        # Change to the most recent version of the base image
+        pkg_query = """
+        mutation myBaseMutation {
+          changeLabbookBase (input: {
+            owner: "default",
+            labbookName: "catbook-change-base-tester",
+            repository: "gigantum_base-images-testing",
+            baseId: "ut-busybox",
+            revision: 0
+          })
+          {
+            labbook {
+              environment {
+                base {
+                  repository
+                  componentId
+                  revision
+                  name
+                }
+              }
+            }
+          }
+        }
+        """
+        result = gql_client.execute(pkg_query)
+        # The critical thing here is that the base (component)Id is changed to ut-busybox
+        base = result['data']['changeLabbookBase']['labbook']['environment']['base']
+        assert base['componentId'] == 'ut-busybox'
+        assert base['revision'] == 0

@@ -201,6 +201,10 @@
       background: url(~Images/icons/check-selected.svg) no-repeat center center;
       background-size: 30px;
     }
+    &:disabled {
+      background: url(~Images/icons/check-selected-disabled.svg) no-repeat center center !important;
+      background-size: 30px !important;
+    }
   }
 
   &--cancel {

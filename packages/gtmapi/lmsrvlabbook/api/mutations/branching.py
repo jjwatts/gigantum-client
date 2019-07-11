@@ -1,23 +1,3 @@
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-import os
 import graphene
 
 from gtmcore.logging import LMLogger
@@ -26,6 +6,7 @@ from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.inventory.branching import BranchManager
 from gtmcore.activity import ActivityStore, ActivityDetailRecord, ActivityDetailType, ActivityRecord, ActivityType
 from gtmcore.workflows import LabbookWorkflow, MergeOverride
+from gtmcore.labbook import LabBook
 
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 from lmsrvlabbook.api.objects.labbook import Labbook
@@ -46,7 +27,7 @@ class CreateExperimentalBranch(graphene.relay.ClientIDMutation):
     labbook = graphene.Field(Labbook)
 
     @classmethod
-    def _update_branch_description(cls, lb: Labbook, description: str):
+    def _update_branch_description(cls, lb: LabBook, description: str):
         # Update the description on branch creation
         lb.description = description
         lb.git.add(lb.config_path)
@@ -73,6 +54,7 @@ class CreateExperimentalBranch(graphene.relay.ClientIDMutation):
             bm = BranchManager(lb, username=username)
             full_branch_title = bm.create_branch(title=branch_name,
                                                  revision=revision)
+
             logger.info(f"In {str(lb)} created new experimental feature branch: "
                         f"{full_branch_title}")
 
@@ -80,7 +62,7 @@ class CreateExperimentalBranch(graphene.relay.ClientIDMutation):
                 cls._update_branch_description(lb, description)
 
         return CreateExperimentalBranch(Labbook(id="{}&{}".format(owner, labbook_name),
-                                                        name=labbook_name, owner=owner))
+                                                name=labbook_name, owner=owner))
 
 
 class DeleteExperimentalBranch(graphene.relay.ClientIDMutation):
@@ -127,12 +109,11 @@ class WorkonBranch(graphene.relay.ClientIDMutation):
         username = get_logged_in_username()
         lb = InventoryManager().load_labbook(username, owner, labbook_name,
                                              author=get_logged_in_author())
-        # TODO - fail fast if already locked.
         with lb.lock():
-            bm = BranchManager(lb, username=username)
-            bm.workon_branch(branch_name=branch_name)
+            wf = LabbookWorkflow(lb)
+            wf.checkout(username, branch_name)
         return WorkonBranch(Labbook(id="{}&{}".format(owner, labbook_name),
-                                            name=labbook_name, owner=owner))
+                                    name=labbook_name, owner=owner))
 
 
 class ResetBranchToRemote(graphene.relay.ClientIDMutation):
@@ -187,6 +168,10 @@ class MergeFromBranch(graphene.relay.ClientIDMutation):
                 bm.merge_use_theirs(other_branch=other_branch_name)
             else:
                 raise ValueError(f"Unknown override method {override}")
+
+            # Run update_linked_datasets() to initialize and cleanup dataset submodules. You don't need to schedule
+            # auto-import jobs because the user will have switched to the branch to pull it before merging.
+            InventoryManager().update_linked_datasets(lb, username)
 
         return MergeFromBranch(Labbook(id="{}&{}".format(owner, labbook_name),
                                                name=labbook_name, owner=owner))

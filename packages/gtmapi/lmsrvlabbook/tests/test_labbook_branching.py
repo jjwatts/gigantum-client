@@ -1,22 +1,3 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
 import pytest
 import shutil
@@ -26,6 +7,7 @@ import graphene
 import pprint
 from graphene.test import Client
 from mock import patch
+import responses
 
 from gtmcore.auth.identity import get_identity_manager
 from gtmcore.configuration import Configuration
@@ -35,9 +17,12 @@ from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.files import FileOperations
 
 from lmsrvcore.middleware import DataloaderMiddleware, error_middleware
-from lmsrvlabbook.tests.fixtures import ContextMock, fixture_working_dir, _create_temp_work_dir
+from lmsrvlabbook.tests.fixtures import ContextMock, fixture_working_dir, _create_temp_work_dir, \
+    fixture_working_dir_lfs_disabled
+from gtmcore.fixtures import _MOCK_create_remote_repo2
 from lmsrvlabbook.api.query import LabbookQuery
 from lmsrvlabbook.api.mutation import LabbookMutations
+from gtmcore.workflows import LabbookWorkflow
 
 UT_USERNAME = "default"
 UT_LBNAME = "unittest-workflow-branch-1"
@@ -173,7 +158,6 @@ class TestWorkflowsBranching(object):
         assert branches[1]['isMergeable'] is True
         assert branches[2]['branchName'] == 'tester2'
         assert branches[2]['isMergeable'] is False
-
 
     def test_create_feature_branch_bad_name_fail(self, mock_create_labbooks):
         lb, client = mock_create_labbooks[0], mock_create_labbooks[1]
@@ -600,3 +584,139 @@ class TestWorkflowsBranching(object):
         assert r['data']['mergeFromBranch']['labbook']['activeBranchName'] == 'master'
         assert not os.path.exists(os.path.join(lb.root_dir, 'code', 's1.txt'))
 
+    def test_create_rollback_branch_remove_linked_dataset(self, mock_create_labbooks):
+        """ test creating a rollback branch that removes a linked dataset"""
+        lb, client = mock_create_labbooks[0], mock_create_labbooks[1]
+
+        im = InventoryManager(config_file=lb.client_config.config_file)
+        ds = im.create_dataset(UT_USERNAME, UT_USERNAME, 'test-ds', storage_type='gigantum_object_v1')
+
+        rollback_to = lb.git.commit_hash
+
+        # Link dataset to project
+        im.link_dataset_to_labbook(f"{ds.root_dir}/.git", UT_USERNAME, ds.name, lb)
+        dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', UT_USERNAME, 'test-ds')
+        assert os.path.exists(dataset_dir) is True
+
+        q = f"""
+        mutation makeFeatureBranch {{
+            createExperimentalBranch(input: {{
+                owner: "{UT_USERNAME}",
+                labbookName: "{UT_LBNAME}",
+                branchName: "rollback-branch",
+                revision: "{rollback_to}",
+                description: "testing rollback",
+            }}) {{
+                labbook{{
+                    name
+                    activeBranchName
+                    description
+                    branches {{
+                        branchName
+                    }}
+                    linkedDatasets{{
+                        name
+                    }}
+                }}
+            }}
+        }}
+        """
+        r = client.execute(q)
+        assert 'errors' not in r
+        assert r['data']['createExperimentalBranch']['labbook']['activeBranchName'] == 'rollback-branch'
+        assert r['data']['createExperimentalBranch']['labbook']['description'] == "testing rollback"
+        assert r['data']['createExperimentalBranch']['labbook']['linkedDatasets'] == []
+
+        assert lb.is_repo_clean
+
+        assert os.path.exists(dataset_dir) is False
+
+    @patch('gtmcore.workflows.gitworkflows_utils.create_remote_gitlab_repo', new=_MOCK_create_remote_repo2)
+    def test_commits_ahead_behind(self, fixture_working_dir_lfs_disabled):
+        with responses.RequestsMock() as rsps:
+            rsps.add(responses.GET, 'https://usersrv.gigantum.io/key',
+                          json={'key': 'afaketoken'}, status=200)
+
+            config_file, client = fixture_working_dir_lfs_disabled[0], \
+                                     fixture_working_dir_lfs_disabled[2]
+
+            im = InventoryManager(config_file)
+            lb = im.create_labbook(UT_USERNAME, UT_USERNAME, UT_LBNAME, description="tester")
+            bm = BranchManager(lb, username=UT_USERNAME)
+            bm.create_branch('new-branch-1')
+            bm.create_branch('new-branch-2')
+            bm.workon_branch('master')
+
+            q = f"""
+            {{
+                labbook(name: "{UT_LBNAME}", owner: "{UT_USERNAME}") {{
+                    branches {{
+                        branchName
+                        isLocal
+                        isRemote
+                        isActive
+                        commitsAhead
+                        commitsBehind
+                    }}
+                }}
+            }}
+            """
+
+            r = client.execute(q)
+            assert 'errors' not in r
+            assert len(r['data']['labbook']['branches']) == 3
+            assert r['data']['labbook']['branches'][0]['branchName'] == 'master'
+            assert r['data']['labbook']['branches'][0]['isLocal'] is True, "Should be local"
+            assert r['data']['labbook']['branches'][0]['isRemote'] is False, "not published yet"
+            assert r['data']['labbook']['branches'][0]['isActive'] is True
+            assert r['data']['labbook']['branches'][0]['commitsAhead'] == 0
+            assert r['data']['labbook']['branches'][0]['commitsBehind'] == 0
+
+            # Make a remote change!
+            username = 'default'
+            wf = LabbookWorkflow(lb)
+            wf.publish(username=username)
+
+            other_user = 'other-test-user'
+            wf_other = LabbookWorkflow.import_from_remote(remote_url=wf.remote, username=other_user,
+                                                          config_file=lb.client_config.config_file)
+            with open(os.path.join(wf_other.repository.root_dir, 'testfile'), 'w') as f:
+                f.write('filedata')
+            wf_other.repository.sweep_uncommitted_changes()
+
+            wf_other.sync(username=other_user)
+
+            r = client.execute(q)
+            assert 'errors' not in r
+            assert len(r['data']['labbook']['branches']) == 3
+            assert r['data']['labbook']['branches'][0]['branchName'] == 'master'
+            assert r['data']['labbook']['branches'][0]['isLocal'] is True, "Should be local"
+            assert r['data']['labbook']['branches'][0]['isRemote'] is True, "There should be a remote"
+            assert r['data']['labbook']['branches'][0]['isActive'] is True
+            assert r['data']['labbook']['branches'][0]['commitsAhead'] == 0
+            assert r['data']['labbook']['branches'][0]['commitsBehind'] == 1
+
+            # Make a local change!
+            lb.write_readme("blah")
+
+            r = client.execute(q)
+            assert 'errors' not in r
+            assert len(r['data']['labbook']['branches']) == 3
+            assert r['data']['labbook']['branches'][0]['branchName'] == 'master'
+            assert r['data']['labbook']['branches'][0]['isLocal'] is True, "Should be local"
+            assert r['data']['labbook']['branches'][0]['isRemote'] is True, "There should be a remote"
+            assert r['data']['labbook']['branches'][0]['isActive'] is True
+            assert r['data']['labbook']['branches'][0]['commitsAhead'] == 1
+            assert r['data']['labbook']['branches'][0]['commitsBehind'] == 1
+
+            # Sync
+            wf.sync(username=username)
+            r = client.execute(q)
+            assert 'errors' not in r
+            assert len(r['data']['labbook']['branches']) == 3
+            assert r['data']['labbook']['branches'][0]['branchName'] == 'master'
+            assert r['data']['labbook']['branches'][0]['isLocal'] is True, "Should be local"
+            assert r['data']['labbook']['branches'][0]['isRemote'] is True, "There should be a remote"
+            assert r['data']['labbook']['branches'][0]['isActive'] is True
+            assert r['data']['labbook']['branches'][0]['commitsAhead'] == 0
+            assert r['data']['labbook']['branches'][0]['commitsBehind'] == 0

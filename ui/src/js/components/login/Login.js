@@ -34,8 +34,8 @@ export default class Login extends Component {
 
   render() {
     const { props } = this;
-    const errorType = sessionStorage.getItem('LOGIN_ERROR_TYPE');
-    const errorDescription = sessionStorage.getItem('LOGIN_ERROR_DESCRIPTION');
+    const errorType = window.sessionStorage.getItem('LOGIN_ERROR_TYPE');
+    const errorDescription = window.sessionStorage.getItem('LOGIN_ERROR_DESCRIPTION');
     return (
       <div className="Login">
         { props.userIdentityReturned

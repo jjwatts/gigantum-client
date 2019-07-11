@@ -4,7 +4,9 @@ import aiofiles
 from typing import List, Optional
 import pickle
 import os
+from gtmcore.logging import LMLogger
 
+logger = LMLogger.get_logger()
 
 class SmartHash(object):
     """Class to handle file hashing that is operationally optimized for Gigantum"""
@@ -20,7 +22,10 @@ class SmartHash(object):
 
     @property
     def fast_hash_file(self):
-        return os.path.join(self.file_cache_root, self.current_revision, ".smarthash")
+        hash_file_dir = os.path.join(self.file_cache_root, self.current_revision)
+        if os.path.isdir(hash_file_dir) is False:
+            os.makedirs(hash_file_dir)
+        return os.path.join(hash_file_dir, ".smarthash")
 
     def _load_fast_hash_file(self) -> dict:
         """Method to load the cached fast hash file
@@ -151,7 +156,7 @@ class SmartHash(object):
 
         return fast_hash_result
 
-    async def compute_file_hash(self, path: str, blocksize: int = 4096) -> str:
+    async def compute_file_hash(self, path: str, blocksize: int = 4096) -> Optional[str]:
         """Method to compute the black2b hash for the provided file
 
         Args:
@@ -162,21 +167,26 @@ class SmartHash(object):
             str
         """
         h = blake2b()
-
-        abs_path = self.get_abs_path(path)
-        if os.path.isfile(abs_path):
-            async with aiofiles.open(abs_path, 'rb') as fh:
-                chunk = await fh.read(blocksize)
-                while chunk:
-                    h.update(chunk)
+        try:
+            abs_path = self.get_abs_path(path)
+            if os.path.isfile(abs_path):
+                async with aiofiles.open(abs_path, 'rb') as fh:
                     chunk = await fh.read(blocksize)
-        else:
-            # If a directory, just hash the path as an alternative
-            h.update(abs_path.encode('utf-8'))
+                    while chunk:
+                        h.update(chunk)
+                        chunk = await fh.read(blocksize)
+            elif os.path.isdir(abs_path):
+                # If a directory, just hash the path as an alternative
+                h.update(abs_path.encode('utf-8'))
+            else:
+                return None
+        except Exception as err:
+            logger.exception(err)
+            return None
 
         return h.hexdigest()
 
-    async def hash(self, path_list: List[str]) -> List[str]:
+    async def hash(self, path_list: List[str]) -> List[Optional[str]]:
         """Method to compute the blake2b hash of a file's contents.
 
         Args:
@@ -185,7 +195,7 @@ class SmartHash(object):
         Returns:
             list
         """
-        hash_result_list: List[str] = [await self.compute_file_hash(path,
-                                                                    self.hashing_block_size) for path in path_list]
+        hash_result_list: List[Optional[str]] = [await self.compute_file_hash(path,
+                                                 self.hashing_block_size) for path in path_list]
 
         return hash_result_list

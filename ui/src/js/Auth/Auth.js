@@ -55,13 +55,13 @@ export default class Auth {
     this.auth0.parseHash((err, authResult) => {
       if (authResult && authResult.accessToken && authResult.idToken) {
         this.setSession(authResult);
-        sessionStorage.removeItem('LOGIN_ERROR_DESCRIPTION');
-        sessionStorage.removeItem('LOGIN_ERROR_TYPE');
+        window.sessionStorage.removeItem('LOGIN_ERROR_DESCRIPTION');
+        window.sessionStorage.removeItem('LOGIN_ERROR_TYPE');
       } else if (err) {
         history.replace('/login');
         setLoginError(err);
-        sessionStorage.setItem('LOGIN_ERROR_TYPE', err.error);
-        sessionStorage.setItem('LOGIN_ERROR_DESCRIPTION', err.errorDescription);
+        window.sessionStorage.setItem('LOGIN_ERROR_TYPE', err.error);
+        window.sessionStorage.setItem('LOGIN_ERROR_DESCRIPTION', err.errorDescription);
         //  alert(`Error: ${err.error}. Check the console for further details.`); TODO make this a modal or redirect to login failure page
       }
     });
@@ -78,8 +78,8 @@ export default class Auth {
     localStorage.setItem('email', authResult.idTokenPayload.email);
     localStorage.setItem('username', authResult.idTokenPayload.nickname);
     // redirect to labbooks when user logs in
-    let route = sessionStorage.getItem('CALLBACK_ROUTE')
-      ? sessionStorage.getItem('CALLBACK_ROUTE')
+    let route = window.sessionStorage.getItem('CALLBACK_ROUTE')
+      ? window.sessionStorage.getItem('CALLBACK_ROUTE')
       : '/projects';
 
     route = route === ''
@@ -103,7 +103,7 @@ export default class Auth {
       localStorage.removeItem('given_name');
       localStorage.removeItem('email');
       localStorage.removeItem('username');
-      sessionStorage.removeItem('CALLBACK_ROUTE');
+      window.sessionStorage.removeItem('CALLBACK_ROUTE');
 
       history.replace('/');
     });

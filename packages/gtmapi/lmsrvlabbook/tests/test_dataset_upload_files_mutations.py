@@ -1,17 +1,21 @@
-
 import os
 import io
 import math
 import tempfile
+import time
+from mock import patch
 import pytest
+import json
 from graphene.test import Client
 from werkzeug.datastructures import FileStorage
 
+import gtmcore.dispatcher.dataset_jobs
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.dataset.cache.filesystem import HostFilesystemCache
 from gtmcore.dataset.manifest import Manifest
 from lmsrvcore.middleware import DataloaderMiddleware
 from lmsrvlabbook.tests.fixtures import fixture_working_dir
+from gtmcore.dispatcher import Dispatcher, jobs
 
 
 @pytest.fixture()
@@ -27,12 +31,33 @@ def mock_create_dataset(fixture_working_dir):
 
 class TestDatasetUploadFilesMutations(object):
     def test_add_file(self, mock_create_dataset):
-        """Test adding a new file to a labbook"""
+        """Test adding a new file to a dataset"""
 
         class DummyContext(object):
             def __init__(self, file_handle):
                 self.dataset_loader = None
+                self.labbook_loader = None
                 self.files = {'uploadChunk': file_handle}
+
+        def dispatcher_mock(self, function_ref, kwargs, metadata):
+            assert kwargs['logged_in_username'] == 'default'
+            assert kwargs['logged_in_email'] == 'jane@doe.com'
+            assert kwargs['dataset_owner'] == 'default'
+            assert kwargs['dataset_name'] == 'dataset1'
+
+            # Inject mocked config file
+            kwargs['config_file'] = mock_create_dataset[0]
+
+            # Stop patching so job gets scheduled for real
+            dispatcher_patch.stop()
+
+            # Call same method as in mutation
+            d = Dispatcher()
+            kwargs['dispatcher'] = Dispatcher
+            res = d.dispatch_task(gtmcore.dispatcher.dataset_jobs.complete_dataset_upload_transaction,
+                                  kwargs=kwargs, metadata=metadata)
+
+            return res
 
         client = Client(mock_create_dataset[3], middleware=[DataloaderMiddleware()])
 
@@ -96,7 +121,7 @@ class TestDatasetUploadFilesMutations(object):
                             }}
                             """
                 r = client.execute(query, context_value=DummyContext(file))
-        assert 'errors' not in r
+                assert 'errors' not in r
 
         # So, these will only be populated once the last chunk is uploaded. Will be None otherwise.
         assert r['data']['addDatasetFile']['newDatasetFileEdge']['node']['isDir'] is False
@@ -113,13 +138,47 @@ class TestDatasetUploadFilesMutations(object):
                 datasetName: "dataset1",
                 transactionId: "{txid}"
             }}) {{
-                success
+                backgroundJobKey
             }}
         }}
         """
-        r = client.execute(complete_query, context_value=DummyContext(file))
+
+        # Patch dispatch_task so you can inject the mocked config file
+        dispatcher_patch = patch.object(Dispatcher, 'dispatch_task', dispatcher_mock)
+        dispatcher_patch.start()
+
+        r = client.execute(complete_query, context_value=DummyContext(None))
         assert 'errors' not in r
 
+        job_query = f"""
+                       {{
+                           jobStatus(jobId: "{r['data']['completeDatasetUploadTransaction']['backgroundJobKey']}")
+                            {{                                
+                                status
+                                result
+                                status
+                                jobMetadata
+                                failureMessage
+                                startedAt
+                                finishedAt
+                            }}
+                       }}
+                       """
+
+        cnt = 0
+        while cnt < 20:
+            job_result = client.execute(job_query, context_value=DummyContext(None))
+            assert 'errors' not in job_result
+            if job_result['data']['jobStatus']['status'] == 'finished':
+                break
+            time.sleep(.25)
+
+        assert cnt < 20
+        metadata = json.loads(job_result['data']['jobStatus']['jobMetadata'])
+        assert metadata['percent_complete'] == 100
+        assert metadata['feedback'] == 'Please wait while file contents are analyzed. 9 MB of 9 MB complete...'
+
+        # Verify file was added and repo is clean
         m = Manifest(ds, 'default')
         status = m.status()
         assert len(status.created) == 0

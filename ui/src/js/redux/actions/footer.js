@@ -12,22 +12,8 @@ export const setErrorMessage = (
 export const setWarningMessage = message => dispatcher(types.WARNING_MESSAGE, { message });
 export const setInfoMessage = message => dispatcher(types.INFO_MESSAGE, { message });
 
-export const setMultiInfoMessage = (
-  id,
-  message,
-  isLast,
-  error,
-  messageBody,
-) => dispatcher(
-  types.MULTIPART_INFO_MESSAGE,
-  {
-    id,
-    message,
-    isLast,
-    error,
-    messageBody,
-  },
-);
+export const setMultiInfoMessage = messageData => dispatcher(types.MULTIPART_INFO_MESSAGE, messageData);
+
 // upload bar
 export const setUploadMessageSetter = (
   uploadMessage,

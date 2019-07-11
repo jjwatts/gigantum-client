@@ -37,11 +37,10 @@ from gtmcore.environment import ComponentManager
 from lmsrvcore.api.mutations import ChunkUploadMutation, ChunkUploadInput
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 
-from lmsrvlabbook.api.connections.labbookfileconnection import LabbookFavoriteConnection
 from lmsrvlabbook.api.connections.labbookfileconnection import LabbookFileConnection
 from lmsrvlabbook.api.connections.labbook import LabbookConnection
 from lmsrvlabbook.api.objects.labbook import Labbook
-from lmsrvlabbook.api.objects.labbookfile import LabbookFavorite, LabbookFile
+from lmsrvlabbook.api.objects.labbookfile import LabbookFile
 from lmsrvlabbook.dataloader.labbook import LabBookLoader
 
 logger = LMLogger.get_logger()
@@ -66,28 +65,11 @@ class CreateLabbook(graphene.relay.ClientIDMutation):
                                is_untracked=False, client_mutation_id=None):
         username = get_logged_in_username()
         inv_manager = InventoryManager()
-        if is_untracked:
-            lb = inv_manager.create_labbook_disabled_lfs(username=username,
-                                                         owner=username,
-                                                         labbook_name=name,
-                                                         description=description,
-                                                         author=get_logged_in_author())
-        else:
-            lb = inv_manager.create_labbook(username=username,
-                                            owner=username,
-                                            labbook_name=name,
-                                            description=description,
-                                            author=get_logged_in_author())
-
-        if is_untracked:
-            FileOperations.set_untracked(lb, 'input')
-            FileOperations.set_untracked(lb, 'output')
-            input_set = FileOperations.is_set_untracked(lb, 'input')
-            output_set = FileOperations.is_set_untracked(lb, 'output')
-            if not (input_set and output_set):
-                raise ValueError(f'{str(lb)} untracking for input/output in malformed state')
-            if not lb.is_repo_clean:
-                raise ValueError(f'{str(lb)} should have clean Git state after setting for untracked')
+        lb = inv_manager.create_labbook(username=username,
+                                        owner=username,
+                                        labbook_name=name,
+                                        description=description,
+                                        author=get_logged_in_author())
 
         adr = ActivityDetailRecord(ActivityDetailType.LABBOOK, show=False, importance=0)
         adr.add_value('text/plain', f"Created new LabBook: {username}/{name}")
@@ -161,6 +143,31 @@ class DeleteLabbook(graphene.ClientIDMutation):
         else:
             logger.info(f"Dry run in deleting {str(lb)} -- not deleted.")
             return DeleteLabbook(success=False)
+
+
+class ChangeLabbookBase(graphene.relay.ClientIDMutation):
+    class Input:
+        owner = graphene.String(required=True)
+        labbook_name = graphene.String(required=True)
+        repository = graphene.String(required=True)
+        base_id = graphene.String(required=True)
+        revision = graphene.Int(required=True)
+
+    # Return the LabBook instance
+    labbook = graphene.Field(lambda: Labbook)
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, owner, labbook_name, repository, base_id, revision,
+                               client_mutation_id=None):
+        username = get_logged_in_username()
+
+        lb = InventoryManager().load_labbook(username, owner, labbook_name,
+                                             author=get_logged_in_author())
+
+        cm = ComponentManager(lb)
+        cm.change_base(repository, base_id, revision)
+
+        return ChangeLabbookBase(labbook=Labbook(owner=owner, name=lb.name))
 
 
 class SetLabbookDescription(graphene.relay.ClientIDMutation):
@@ -330,7 +337,6 @@ class MoveLabbookFile(graphene.ClientIDMutation):
                                           section=section,
                                           key=file_dict['key'],
                                           is_dir=file_dict['is_dir'],
-                                          is_favorite=file_dict['is_favorite'],
                                           modified_at=file_dict['modified_at'],
                                           size=str(file_dict['size'])))
 
@@ -380,114 +386,6 @@ class MakeLabbookDirectory(graphene.ClientIDMutation):
                 node=LabbookFile(**create_data),
                 cursor=cursor))
 
-
-class AddLabbookFavorite(graphene.relay.ClientIDMutation):
-    class Input:
-        owner = graphene.String(required=True)
-        labbook_name = graphene.String(required=True)
-        section = graphene.String(required=True)
-        key = graphene.String(required=True)
-        description = graphene.String(required=False)
-        is_dir = graphene.Boolean(required=False)
-
-    new_favorite_edge = graphene.Field(LabbookFavoriteConnection.Edge)
-
-    @classmethod
-    def mutate_and_get_payload(cls, root, info, owner, labbook_name, section, key, description=None, is_dir=False,
-                               client_mutation_id=None):
-        username = get_logged_in_username()
-        lb = InventoryManager().load_labbook(username, owner, labbook_name,
-                                             author=get_logged_in_author())
-
-        # Add Favorite
-        if is_dir:
-            is_dir = is_dir
-
-            # Make sure trailing slashes are always present when favoriting a dir
-            if key[-1] != "/":
-                key = f"{key}/"
-
-        with lb.lock():
-            new_favorite = lb.create_favorite(section, key, description=description, is_dir=is_dir)
-
-        # Create data to populate edge
-        create_data = {"id": f"{owner}&{labbook_name}&{section}&{key}",
-                       "owner": owner,
-                       "section": section,
-                       "name": labbook_name,
-                       "key": key,
-                       "index": new_favorite['index'],
-                       "_favorite_data": new_favorite}
-
-        # Create cursor
-        cursor = base64.b64encode(f"{str(new_favorite['index'])}".encode('utf-8'))
-
-        return AddLabbookFavorite(new_favorite_edge=LabbookFavoriteConnection.Edge(node=LabbookFavorite(**create_data),
-                                                                                   cursor=cursor))
-
-
-class UpdateLabbookFavorite(graphene.relay.ClientIDMutation):
-    class Input:
-        owner = graphene.String(required=True)
-        labbook_name = graphene.String(required=True)
-        section = graphene.String(required=True)
-        key = graphene.String(required=True)
-        updated_index = graphene.Int(required=False)
-        updated_description = graphene.String(required=False)
-
-    updated_favorite_edge = graphene.Field(LabbookFavoriteConnection.Edge)
-
-    @classmethod
-    def mutate_and_get_payload(cls, root, info, owner, labbook_name, section, key, updated_index=None,
-                               updated_description=None, client_mutation_id=None):
-        username = get_logged_in_username()
-        lb = InventoryManager().load_labbook(username, owner, labbook_name,
-                                             author=get_logged_in_author())
-
-        with lb.lock():
-            new_favorite = lb.update_favorite(section, key,
-                                              new_description=updated_description,
-                                              new_index=updated_index)
-
-        # Create data to populate edge
-        create_data = {"id": f"{owner}&{labbook_name}&{section}&{key}",
-                       "owner": owner,
-                       "section": section,
-                       "key": key,
-                       "_favorite_data": new_favorite}
-
-        # Create dummy cursor
-        cursor = base64.b64encode(f"{str(new_favorite['index'])}".encode('utf-8'))
-
-        return UpdateLabbookFavorite(updated_favorite_edge=LabbookFavoriteConnection.Edge(node=LabbookFavorite(**create_data),
-                                                                                          cursor=cursor))
-
-
-class RemoveLabbookFavorite(graphene.ClientIDMutation):
-    class Input:
-        owner = graphene.String(required=True)
-        labbook_name = graphene.String(required=True)
-        section = graphene.String(required=True)
-        key = graphene.String(required=True)
-
-    success = graphene.Boolean()
-    removed_node_id = graphene.String()
-
-    @classmethod
-    def mutate_and_get_payload(cls, root, info, owner, labbook_name, section, key, client_mutation_id=None):
-        username = get_logged_in_username()
-        lb = InventoryManager().load_labbook(username, owner, labbook_name,
-                                             author=get_logged_in_author())
-
-        # Manually generate the Node ID for now. This simplifies the connection between the file browser and favorites
-        # widgets in the UI
-        favorite_node_id = f"LabbookFavorite:{owner}&{labbook_name}&{section}&{key}"
-        favorite_node_id = base64.b64encode(favorite_node_id.encode()).decode()
-
-        with lb.lock():
-            lb.remove_favorite(section, key)
-
-        return RemoveLabbookFavorite(success=True, removed_node_id=favorite_node_id)
 
 class WriteLabbookReadme(graphene.relay.ClientIDMutation):
     class Input:

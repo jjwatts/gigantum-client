@@ -38,7 +38,7 @@ export default class LocalLabbookPanel extends Component {
       const { containerStatus, imageStatus } = environment;
       let status = 'Running';
       status = (containerStatus === 'NOT_RUNNING') ? 'Stopped' : status;
-      status = (imageStatus === 'BUILD_IN_PROGRESS') ? 'Building' : status;
+      status = (imageStatus === 'BUILD_IN_PROGRESS' || imageStatus === 'BUILD_QUEUED') ? 'Building' : status;
       status = (imageStatus === 'BUILD_FAILED') ? 'Rebuild' : status;
       status = (imageStatus === 'DOES_NOT_EXIST') ? 'Rebuild' : status;
 

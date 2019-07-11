@@ -5,12 +5,12 @@
     left: 140px;
     bottom: 0;
     right: 0;
-    width: 100%;
+    width: calc(100% - 140px);
     height: 40px;
 
     text-align: center;
 
-    background: $grey;
+    background: $slateBlue;
   }
 
   &--error {
@@ -62,8 +62,12 @@
   width: 0%;
   height: 100%;
 
-  transition: width 1s, opacity 1s;
+
 
   color: $white !important;
   background-color: $turquise;
+
+  &--animation {
+     transition: width 1s, opacity 1s; 
+  }
 }

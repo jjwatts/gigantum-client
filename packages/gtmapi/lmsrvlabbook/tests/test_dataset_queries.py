@@ -404,4 +404,4 @@ class TestDatasetQueries(object):
         r = fixture_working_dir[2].execute(query)
         assert 'errors' not in r
         assert r['data']['labbook']['linkedDatasets'][0]['name'] == 'test-ds'
-        assert r['data']['labbook']['linkedDatasets'][0]['commitsBehind'] == 2
+        assert r['data']['labbook']['linkedDatasets'][0]['commitsBehind'] == 1

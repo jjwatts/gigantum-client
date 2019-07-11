@@ -98,9 +98,26 @@ proxy:
 # Datasets configuration
 datasets:
   cache_manager: "host"
+  hash_cpu_limit: "auto"
+  download_cpu_limit: "auto"
+  upload_cpu_limit: "auto"
   backends:
     gigantum_object_v1:
-      upload_chunk_size: 4096
+      # File size in bytes that will trigger a multipart vs. traditional upload.
+      # Also used as the size of each part (48 MiB)
+      multipart_chunk_size: 50331648
+      # Number of bytes to read and send during a PUT request (4 MiB)
+      upload_chunk_size: 4194304
+      # Maximum number of bytes to download from the stream at a time before writing to disk (4 MiB)
       download_chunk_size: 4194304
       num_workers: 10
+    public_s3_bucket:
+      # 4 MiB
+      download_chunk_size: 4194304
 
+# Dispatcher and permitted number of workers -
+# NOTE! Only the default queue is burstable
+dispatcher:
+  gigantum_default_queue: 7
+  gigantum_build_queue: 1
+  gigantum_publish_queue: 4

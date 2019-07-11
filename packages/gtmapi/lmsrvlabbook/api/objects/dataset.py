@@ -1,6 +1,6 @@
 import graphene
 import base64
-
+import flask
 from gtmcore.activity import ActivityStore
 
 from lmsrvcore.auth.identity import parse_token
@@ -10,7 +10,10 @@ from lmsrvcore.api.interfaces import GitRepository
 from gtmcore.dataset.manifest import Manifest
 from gtmcore.workflows.gitlab import GitLabManager, ProjectPermissions, GitLabException
 from gtmcore.inventory.inventory import InventoryManager
+from gtmcore.logging import LMLogger
+
 from gtmcore.inventory.branching import BranchManager
+
 
 from lmsrvlabbook.api.objects.datasettype import DatasetType
 from lmsrvlabbook.api.objects.collaborator import Collaborator
@@ -21,6 +24,23 @@ from lmsrvlabbook.api.objects.overview import DatasetOverview
 
 from gtmcore.logging import LMLogger
 logger = LMLogger.get_logger()
+
+
+logger = LMLogger.get_logger()
+
+
+class DatasetConfigurationParameter(graphene.ObjectType):
+    """A simple type that represents a Dataset configuration parameter from a storage backend class"""
+    parameter = graphene.String()
+    description = graphene.String()
+    parameter_type = graphene.String()
+    value = graphene.String()
+
+
+class DatasetConfigurationParameterInput(graphene.InputObjectType):
+    parameter = graphene.String(required=True)
+    parameter_type = graphene.String(required=True)
+    value = graphene.String(required=True)
 
 
 class Dataset(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepository)):
@@ -71,6 +91,18 @@ class Dataset(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
 
     # Overview Information
     overview = graphene.Field(DatasetOverview)
+
+    # Boolean indicating if dataset backend is fully configured
+    backend_is_configured = graphene.Boolean()
+
+    # List of DatasetConfigurationParameter objects with the current configuration (excluding default config)
+    backend_configuration = graphene.List(DatasetConfigurationParameter)
+
+    # List of file keys for files that don't match hash values.
+    # Managed datasets should always return 0 files.
+    # Unmanaged datasets may return files, which indicates they most likely changed in the backend and the dataset
+    # must be "updated" to include the new hashes as a new version
+    content_hash_mismatches = graphene.List(graphene.String)
 
     # Temporary commits behind field before full branching is supported to indicate if a dataset is out of date
     commits_behind = graphene.Int()
@@ -446,8 +478,40 @@ class Dataset(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             lambda dataset: self.helper_resolve_default_remote(dataset))
 
     @staticmethod
-    def helper_resolve_commits_behind(dataset):
-        """Temporary Helper to get the commits behind for a dataset. Used for linked datasets to see if
+    def _helper_configure_default_parameters(dataset):
+        """Helper to load the default configuration at runtime"""
+        dataset.backend.set_default_configuration(get_logged_in_username(),
+                                                  flask.g.get('access_token', None),
+                                                  flask.g.get('id_token', None))
+        return dataset
+
+    def resolve_backend_is_configured(self, info):
+        """Field to check if a dataset backend is fully configured"""
+        return info.context.dataset_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda dataset: self._helper_configure_default_parameters(dataset).backend.is_configured)
+
+    def helper_resolve_backend_configuration(self, dataset):
+        """Helper populate backend configuration fields"""
+        dataset = self._helper_configure_default_parameters(dataset)
+        missing_config = list()
+        for item in dataset.backend.safe_current_configuration:
+            missing_config.append(DatasetConfigurationParameter(parameter=item['parameter'],
+                                                                description=item['description'],
+                                                                parameter_type=item['type']))
+        return missing_config
+
+    def resolve_backend_configuration(self, info):
+        """Field to get current configuration. If values are None, still needs to be set."""
+        return info.context.dataset_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda dataset: self.helper_resolve_backend_configuration(dataset))
+
+    def resolve_content_hash_mismatches(self, info):
+        """Field to look up any content hash mismatches. Note this can be slow for big datasets!"""
+        return info.context.dataset_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
+            lambda dataset: dataset.backend.verify_contents(dataset, logger.info))
+
+    def helper_resolve_commits_behind(self, dataset):
+        """Helper to get the commits behind for a dataset. Used for linked datasets to see if
         they are out of date"""
         bm = BranchManager(dataset)
         bm.fetch()

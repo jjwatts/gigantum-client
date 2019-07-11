@@ -32,3 +32,4 @@ class PackageComponentConnection(graphene.relay.Connection):
     """A Connection for paging through Package components"""
     class Meta:
         node = PackageComponent
+

@@ -1,30 +1,13 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import pytest
 import re
-import getpass
+import os
 
 from gtmcore.environment.apt import AptPackageManager
 from gtmcore.fixtures.container import build_lb_image_for_env, mock_config_with_repo
+from gtmcore.environment.tests import ENV_SKIP_MSG, ENV_SKIP_TEST
 
 
+@pytest.mark.skipif(ENV_SKIP_TEST, reason=ENV_SKIP_MSG)
 class TestAptPackageManager(object):
     def test_search(self, build_lb_image_for_env):
         """Test search command"""
@@ -47,17 +30,6 @@ class TestAptPackageManager(object):
         # assert result == "4.0.9-5"
         assert re.match('\d.\d.\d-\d', result[0])
 
-    def test_latest_version(self, build_lb_image_for_env):
-        """Test latest_version command"""
-        mrg = AptPackageManager()
-        lb = build_lb_image_for_env[0]
-        username = build_lb_image_for_env[1]
-
-        result = mrg.latest_version("libtiff5", lb, username)
-
-        # assert result == "4.0.9-5"
-        assert re.match('\d.\d.\d-\d', result)
-
     def test_list_installed_packages(self, build_lb_image_for_env):
         """Test list_installed_packages command
 
@@ -74,28 +46,6 @@ class TestAptPackageManager(object):
         assert type(result[0]) == dict
         assert type(result[0]['name']) == str
         assert type(result[0]['version']) == str
-
-    @pytest.mark.skip(reason="Cannot test for updates yet.")
-    def test_list_available_updates(self, build_lb_image_for_env):
-        """Test list_available_updates command
-
-        Note, if the contents of the container change, this test will break and need to be updated. Because of this,
-        only limited asserts are made to make sure things are coming back in a reasonable format
-        """
-        mrg = AptPackageManager()
-        lb = build_lb_image_for_env[0]
-        username = build_lb_image_for_env[1]
-        result = mrg.list_available_updates(lb, username)
-
-        assert type(result) == list
-        assert len(result) < len(mrg.list_installed_packages(lb, username))
-        assert type(result[0]) == dict
-        assert type(result[0]['name']) == str
-        assert type(result[0]['version']) == str
-        assert type(result[0]['latest_version']) == str
-        assert result[0]['name'] == "zlib1g"
-        assert result[0]['version'] == '1:1.2.8.dfsg-2ubuntu4'
-        assert result[0]['latest_version'] == '1:1.2.8.dfsg-2ubuntu4.1'
 
     def test_generate_docker_install_snippet_single(self):
         """Test generate_docker_install_snippet command
@@ -150,4 +100,25 @@ class TestAptPackageManager(object):
         assert result[1].package == "afdgfdgshfdg"
         assert result[1].version == ""
         assert result[1].error is True
+
+    def test_extract_metadata(self, build_lb_image_for_env):
+        """Test list_versions command"""
+        mrg = AptPackageManager()
+        lb = build_lb_image_for_env[0]
+        username = build_lb_image_for_env[1]
+        result = mrg.get_packages_metadata(['libtiff5', 'gzip', 'curl', 'gfkljhgdfskjhfdghkjfgds'], lb, username)
+
+        assert len(result) == 4
+        assert result[0].description == 'Tag Image File Format (TIFF) library'
+        assert result[0].docs_url is None
+        assert isinstance(result[0].latest_version, str) is True
+        assert result[1].description == 'GNU compression utilities'
+        assert result[1].docs_url is None
+        assert isinstance(result[1].latest_version, str) is True
+        assert result[2].description == 'command line tool for transferring data with URL syntax'
+        assert result[2].docs_url is None
+        assert isinstance(result[2].latest_version, str) is True
+        assert result[3].description is None
+        assert result[3].docs_url is None
+        assert result[3].latest_version is None
 

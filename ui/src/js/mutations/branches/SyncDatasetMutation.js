@@ -6,6 +6,7 @@ import environment from 'JS/createRelayEnvironment';
 import uuidv4 from 'uuid/v4';
 import { setMultiInfoMessage } from 'JS/redux/actions/footer';
 import FooterUtils from 'Components/common/footer/FooterUtils';
+import footerCallback from 'Components/common/footer/utils/SyncDataset';
 
 const mutation = graphql`
   mutation SyncDatasetMutation($input: SyncDatasetInput!){
@@ -40,7 +41,14 @@ export default function SyncDatasetMutation(
   };
   const id = uuidv4();
   const startMessage = `Preparing to ${pullOnly ? 'pull' : 'sync'} Dataset...`;
-  setMultiInfoMessage(id, startMessage, false, false, [{ message: startMessage }]);
+  const messageData = {
+    id,
+    message: startMessage,
+    isLast: false,
+    error: false,
+    messageBody: [{ message: startMessage }],
+  };
+  setMultiInfoMessage(messageData);
   if (overrideMethod) {
     variables.input.overrideMethod = overrideMethod;
   }
@@ -59,7 +67,16 @@ export default function SyncDatasetMutation(
       onError: (err) => { console.error(err); },
       updater: (store, response) => {
         if (response) {
-          FooterUtils.getJobStatus(response, 'syncDataset', 'jobKey', successCall, failureCall, id);
+          const footerData = {
+            result: response,
+            type: 'syncDataset',
+            key: 'jobKey',
+            footerCallback,
+            successCall,
+            failureCall,
+            id,
+          };
+          FooterUtils.getJobStatus(footerData);
         }
       },
     },

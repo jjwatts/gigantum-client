@@ -1,0 +1,39 @@
+@import '~Styles/_imports.scss';
+
+.AddPackages {
+  height: 100%;
+}
+
+.AddPackages__body {
+  height: 426px;
+  border-top: 2px solid $grey-border;
+}
+
+.AddPackages__entry {
+  background: $lightGrey;
+  height: 100%;
+  width: 580px;
+  border-right: 3px solid $grey-border;
+}
+
+.AddPackages__header {
+  text-align: center;
+  border-bottom: 2px solid $grey-border;
+  &--top {
+    text-align: center;
+  }
+  &-title {
+    padding: 1.2rem 0 1rem 0;
+    margin: 0;
+    color: $romanSilver;
+    &:hover {
+      color: $azure;
+      border-bottom: 3px solid $azure;
+      cursor: pointer;
+    }
+  }
+  &--selected {
+    color: $azure;
+    border-bottom: 3px solid $azure;
+  }
+}

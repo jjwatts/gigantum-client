@@ -45,11 +45,24 @@ export default class RemoteDatasetPanel extends Component {
 
         if (error) {
           console.error(error);
-          setMultiInfoMessage(id, 'ERROR: Could not import remote Dataset', null, true, error);
+          const messageData = {
+            id,
+            message: 'ERROR: Could not import remote Dataset',
+            isLast: null,
+            error: true,
+            messageBody: error,
+          };
+          setMultiInfoMessage(messageData);
         } else if (response) {
           const { newDatasetEdge } = response.importRemoteDataset;
           const { name } = newDatasetEdge.node;
-          setMultiInfoMessage(id, `Successfully imported remote Dataset ${name}`, true, false);
+          const messageData = {
+            id,
+            message: `Successfully imported remote Dataset ${name}`,
+            isLast: true,
+            error: false,
+          };
+          setMultiInfoMessage(messageData);
 
           props.history.replace(`/datasets/${owner}/${name}`);
         }
@@ -73,7 +86,13 @@ export default class RemoteDatasetPanel extends Component {
         if (response.data) {
           if (response.data.userIdentity.isSessionValid) {
             this._importingState();
-            setMultiInfoMessage(id, 'Importing Dataset please wait', false, false);
+            const messageData = {
+              id,
+              message: 'Importing Dataset please wait',
+              isLast: false,
+              error: false,
+            };
+            setMultiInfoMessage(messageData);
             this._handleImportDataset(owner, datasetName, remote);
           } else {
             props.auth.renewToken(true, () => {

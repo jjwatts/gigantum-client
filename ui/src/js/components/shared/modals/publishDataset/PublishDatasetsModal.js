@@ -90,8 +90,13 @@ export default class PublishDatasetsModal extends Component {
     if (isPublishing) {
       props.setPublishingState(false);
       props.resetPublishState(false);
-
-      setMultiInfoMessage(id, `Added remote https://gigantum.com/${owner}/${labbookName}`, true, false);
+      const messageData = {
+        id,
+        message: `Added remote https://gigantum.com/${owner}/${labbookName}`,
+        isLast: true,
+        error: false,
+      };
+      setMultiInfoMessage(messageData);
 
       props.setRemoteSession();
     } else {
@@ -350,7 +355,14 @@ export default class PublishDatasetsModal extends Component {
     state.mutations._buildImage(data, (response, error) => {
       if (error) {
         console.error(error);
-        setMultiInfoMessage(id, `ERROR: Failed to build ${labbookName}`, null, true, error);
+        const messageData = {
+          id,
+          message: `ERROR: Failed to build ${labbookName}`,
+          isLast: null,
+          error: true,
+          messageBody: error,
+        };
+        setMultiInfoMessage(messageData);
       }
     });
 

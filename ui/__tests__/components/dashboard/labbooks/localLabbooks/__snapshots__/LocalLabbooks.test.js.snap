@@ -33,18 +33,20 @@ exports[`LocalLabbooks LocalLabbooks snapshot 1`] = `
           </h2>
         </div>
       </div>
-      <div
+      <button
         className="btn--import"
         onClick={[Function]}
+        type="button"
       >
         Create New
-      </div>
-      <div
+      </button>
+      <button
         className="btn--import"
         onClick={[Function]}
+        type="button"
       >
         Import Existing
-      </div>
+      </button>
       <div
         className="hidden createLabbook"
       >

@@ -4,7 +4,8 @@ import store from 'JS/redux/store';
 import { DropTarget } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
 import classNames from 'classnames';
-import shallowCompare from 'react-addons-shallow-compare'; // ES6
+import isEqual from 'react-fast-compare';
+import { boundMethod } from 'autobind-decorator';
 // assets
 import './FileBrowser.scss';
 // components
@@ -15,7 +16,7 @@ import Folder from './fileRow/Folder';
 import Dataset from './fileRow/dataset/Dataset';
 import AddSubfolder from './fileRow/AddSubfolder';
 // util
-import CreateFiles from './utilities/CreateFiles';
+import prepareUpload from './utilities/PrepareUpload';
 import FileBrowserMutations from './utilities/FileBrowserMutations';
 import Connectors from './utilities/Connectors';
 import FileFormatter, { fileHandler } from './utilities/FileFormatter';
@@ -82,23 +83,14 @@ class FileBrowser extends Component {
       fileSizePromptVisible: false,
       showLinkModal: false,
       downloadingAll: false,
+      isRefetching: false,
     };
-
-    this._deleteSelectedFiles = this._deleteSelectedFiles.bind(this);
-    this._setState = this._setState.bind(this);
-    this._updateChildState = this._updateChildState.bind(this);
-    this._checkChildState = this._checkChildState.bind(this);
-    this._updateDropZone = this._updateDropZone.bind(this);
-    this._userAcceptsUpload = this._userAcceptsUpload.bind(this);
-    this._userRejectsUpload = this._userRejectsUpload.bind(this);
-    this._codeFilesUpload = this._codeFilesUpload.bind(this);
-    this._codeDirUpload = this._codeDirUpload.bind(this);
   }
 
   static getDerivedStateFromProps(props, state) {
     const previousCount = state.count;
     const count = props.files.edges.length;
-    const childrenState = {};
+    const childrenState = state.isFetching ? state.childrenState : {};
 
 
     const files = props.files.edges;
@@ -124,6 +116,7 @@ class FileBrowser extends Component {
           splitKey.forEach((key, index) => {
             if (index !== splitKey.length) {
               const tempKey = `${splitKey.slice(0, index).join('/')}/`;
+
               if (!childrenState[tempKey] && tempKey !== '/') {
                 childrenState[tempKey] = {
                   isSelected: (state.childrenState && state.childrenState[tempKey])
@@ -137,7 +130,6 @@ class FileBrowser extends Component {
                   edge: {
                     node: {
                       isDir: true,
-                      isFavorite: false,
                       key: tempKey,
                       modifiedAt: Math.floor(Date.now() / 1000),
                       id: tempKey,
@@ -162,35 +154,44 @@ class FileBrowser extends Component {
       });
     };
     processChildState(files);
+
     if (props.linkedDatasets) {
-      props.linkedDatasets.forEach(dataset => processChildState(dataset.allFiles.edges, dataset.name));
+      props.linkedDatasets.forEach(
+        dataset => processChildState(
+          dataset.allFiles.edges,
+          dataset.name,
+        ),
+      );
     }
 
     return {
       ...state,
       childrenState,
+      isRefetching: false,
       search: count === previousCount ? state.search : '',
       count,
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return shallowCompare(this, nextProps, nextState);
+  /**
+   sets worker
+  */
+  componentDidMount() {
+    const { props } = this;
+    const files = props.files.edges;
+    const { linkedDatasets } = props;
+    this.fileHandler = new FileFormatter(fileHandler);
+    this.fileHandler.postMessage({
+      files,
+      linkedDatasets,
+      search: this.state.search,
+    });
+
+    this.fileHandler.addEventListener('message', this._fileHandlerMessage);
   }
 
-  /**
-      sets worker
-    */
-  componentDidMount() {
-    this.fileHandler = new FileFormatter(fileHandler);
-    const files = this.props.files.edges;
-    const linkedDatasets = this.props.linkedDatasets;
-    this.fileHandler.postMessage({ files, search: this.state.search, linkedDatasets });
-    this.fileHandler.addEventListener('message', (evt) => {
-      if (this.state.fileHash !== evt.data.hash) {
-        this.setState({ fileHash: evt.data.hash, files: evt.data.files });
-      }
-    });
+  shouldComponentUpdate(nextProps, nextState) {
+    return !isEqual(this.props, nextProps) || !isEqual(this.state, nextState);
   }
 
   /*
@@ -206,8 +207,53 @@ class FileBrowser extends Component {
       element.value = '';
     }
     const files = this.props.files.edges;
-    const linkedDatasets = this.props.linkedDatasets;
-    this.fileHandler.postMessage({ files, search: this.state.search, linkedDatasets });
+    const { linkedDatasets } = this.props;
+    this.fileHandler.postMessage({
+      files,
+      linkedDatasets,
+      search: this.state.search,
+    });
+  }
+
+  componentWillUnmount() {
+    this.fileHandler.removeEventListener('message', this._fileHandlerMessage);
+    this.fileHandler.terminate();
+    delete this.fildHandler;
+  }
+
+  /**
+    *  @param {Object} evt
+    *  sets state of fileHash and files when computed by
+    *  the worker
+    *  @return {}
+    */
+  _fileHandlerMessage = (evt) => {
+    const { state } = this;
+    if (state.fileHash !== evt.data.hash) {
+      this.setState({ fileHash: evt.data.hash, files: evt.data.files });
+    }
+  }
+
+  /**
+    *  @param {} -
+    *  refetches relay connection
+    *  @return {}
+    */
+  @boundMethod
+  _refetch() {
+    const { relay } = this.props;
+    this.setState({ isRefetching: true })
+    relay.refetchConnection(
+      100,
+      (response, error) => {
+
+        if (error) {
+          console.log(error);
+        }
+
+        this.props.loadMore();
+      },
+    );
   }
 
   /**
@@ -248,6 +294,7 @@ class FileBrowser extends Component {
     *  @param {boolean} isAddingFolder - update if the value is incomplete
     *  @return {}
     */
+  @boundMethod
   _updateChildState(key, isSelected, isIncomplete, isExpanded, isAddingFolder) {
     let isChildSelected = false;
     let count = 0;
@@ -279,6 +326,7 @@ class FileBrowser extends Component {
     *  update state of component for a given key value pair
     *  @return {}
     */
+  @boundMethod
   _setState(key, value) {
     this.setState({ [key]: value });
   }
@@ -292,8 +340,6 @@ class FileBrowser extends Component {
     const {
       parentId,
       connection,
-      favoriteConnection,
-      mostRecentConnection,
       section,
     } = this.props;
     const { owner, labbookName } = store.getState().routes;
@@ -303,7 +349,6 @@ class FileBrowser extends Component {
       labbookName,
       parentId,
       connection,
-      favoriteConnection,
       section,
     };
   }
@@ -322,19 +367,22 @@ class FileBrowser extends Component {
   *  loops through selcted files and deletes them
   *  @return {}
   */
-  _deleteSelectedFiles() {
-    const self = this;
+  _deleteSelectedFiles = () => {
+    const { state } = this;
     const filePaths = [];
     const dirList = [];
     const comparePaths = [];
     const edges = [];
     const deletedKeys = [];
 
-    for (const key in this.state.childrenState) {
-      if (this.state.childrenState[key].isSelected) {
+    Object.keys(state.childrenState).forEach((key) => {
+
+      if (state.childrenState[key].isSelected) {
         const { edge } = this.state.childrenState[key];
         delete this.state.childrenState[key];
-        edge.node.isDir && deletedKeys.push(key);
+        if (edge.node.isDir) {
+          deletedKeys.push(key);
+        }
         comparePaths.push(edge.node.key);
         filePaths.push(edge.node.key);
         edges.push(edge);
@@ -342,11 +390,13 @@ class FileBrowser extends Component {
           dirList.push(edge.node.key);
         }
       }
-    }
+    });
+
     Object.keys(this.state.childrenState).forEach((key) => {
       deletedKeys.forEach((deletedKey) => {
         if (key.startsWith(deletedKey) && this.state.childrenState[key]) {
           const { edge } = this.state.childrenState[key];
+
           delete this.state.childrenState[key];
           comparePaths.push(edge.node.key);
           filePaths.push(edge.node.key);
@@ -359,14 +409,11 @@ class FileBrowser extends Component {
     });
 
     const filteredPaths = filePaths.filter((key) => {
-      let folderKey = key.substr(0, key.lastIndexOf('/'));
-      folderKey = `${folderKey}/`;
-
       const hasDir = dirList.some(dir => ((key.indexOf(dir) > -1) && (dir !== key)));
       return !hasDir;
     });
-    self._togglePopup(false);
-    self._deleteMutation(filteredPaths, edges);
+    this._togglePopup(false);
+    this._deleteMutation(filteredPaths, edges);
   }
 
   /**
@@ -375,29 +422,28 @@ class FileBrowser extends Component {
   *  @return {}
   */
   _selectFiles() {
-    let isSelected = false;
+    const { state } = this;
     let count = 0;
     let selectedCount = 0;
 
-    for (const key in this.state.childrenState) {
+    Object.keys(state.childrenState).forEach((key) => {
       if (this.state.childrenState[key]) {
         if (this.state.childrenState[key].isSelected) {
-          isSelected = true;
-          selectedCount++;
+          selectedCount += 1;
         }
-        count++;
+        count += 1;
       }
-    }
-    const multiSelect = (count === selectedCount) ? 'none' : 'all';
+    });
 
+    const multiSelect = (count === selectedCount) ? 'none' : 'all';
     const { childrenState } = this.state;
 
-    for (const key in childrenState) {
+    Object.keys(state.childrenState).forEach((key) => {
       if (childrenState[key]) {
         childrenState[key].isSelected = (multiSelect === 'all');
-        count++;
+        count += 1;
       }
-    }
+    });
     this.setState({ multiSelect, childrenState });
   }
 
@@ -408,12 +454,13 @@ class FileBrowser extends Component {
   *  @return {}
   */
   _deleteMutation(filePaths, edges) {
+    const { state } = this;
     const data = {
       filePaths,
       edges,
     };
     this.setState({ multiSelect: 'none' });
-    this.state.mutations.deleteLabbookFiles(data, (response) => {});
+    state.mutations.deleteLabbookFiles(data, () => {});
   }
 
   /**
@@ -431,14 +478,16 @@ class FileBrowser extends Component {
   *  checks if folder refs has props.isOver === true
   *  @return {boolean} isSelected - returns true if a child has been selected
   */
+  @boundMethod
   _checkChildState() {
+    const { state } = this;
     let isSelected = false;
 
-    for (const key in this.state.childrenState) {
-      if (this.state.childrenState[key].isSelected) {
+    Object.keys(state.childrenState).forEach((key) => {
+      if (state.childrenState[key].isSelected) {
         isSelected = true;
       }
-    }
+    });
 
     return { isSelected };
   }
@@ -457,6 +506,7 @@ class FileBrowser extends Component {
   *  update state to update drop zone
   *  @return {}
   */
+  @boundMethod
   _updateDropZone(isOverChildFile) {
     this.setState({ isOverChildFile });
   }
@@ -505,8 +555,9 @@ class FileBrowser extends Component {
   *  @return {}
   */
   _handleSort(type) {
-    if (type === this.state.sort) {
-      this.setState({ reverse: !this.state.reverse });
+    const { state } = this
+    if (type === state.sort) {
+      this.setState({ reverse: !state.reverse });
     } else {
       this.setState({ sort: type, reverse: false });
     }
@@ -517,28 +568,32 @@ class FileBrowser extends Component {
   *  show modal to prompt user to continue upload or not
   *  @return {}
   */
+  @boundMethod
   _promptUserToAcceptUpload() {
     this.setState({ fileSizePromptVisible: true });
   }
 
   /**
+  *  set computed connector data into state to be triggered after user makes its decision
+  *  show modal to prompt user to continue upload or not
   *  @param {object} dndItem - prop passed from react dnd that contains files and dirContent
   *  @param {object} props - props from the component triggering the upload process
-  *  @param {object} mutationData - mutation data from the component triggering the upload process
-  *  @param {object} uploadDirContent - function in Connectors.js that will kick off the upload process once the users decision has been made
-  *  @param {object} fileSizeData - object with 2 arrays, fileSizeNotAllowed files that are too big for the code section, fileSizePrompt files that are between 10MB and 100MB and require the user to confirm
-  *  set computed connector data into state to be triggered after user makes its decision
-  *  show modal to prompt user to continue upload or not
+  *  @param {object} mutationData - mutation data from the component
+  *                                 triggering the upload process
+  *  @param {object} uploadCallback - function in Connectors.js that will kick
+  *                                   off the upload process once the users
+  *                                   decision has been made
+  *  @param {object} fileSizeData - object with 2 arrays, fileSizeNotAllowed files
+  *                                 that are too big for the code section,
+  *                                 fileSizePrompt files that are between
+  *                                 10MB and 100MB and require the user to confirm
   *  @return {}
   */
-  _codeDirUpload(dndItem, props, mutationData, uploadDirContent, fileSizeData) {
+  @boundMethod
+  _fileSizePrompt(fileSizeData, uploadCallback) {
     this.setState({
       uploadData: {
-        type: 'dir',
-        dndItem,
-        props,
-        mutationData,
-        uploadDirContent,
+        uploadCallback,
         fileSizeData,
       },
     });
@@ -547,61 +602,21 @@ class FileBrowser extends Component {
   }
 
   /**
-  *  @param {object} files - list of files to be uploaded
-  *  @param {object} props - props from the component triggering the upload process
-  *  @param {object} mutationData - mutation data from the component triggering the upload process
-  *  @param {object} createFiles - function in Connectors.js that will kick off the upload process once the users decision has been made
-  *  @param {object} fileSizeData - object with 2 arrays, fileSizeNotAllowed files that are too big for the code section, fileSizePrompt files that are between 10MB and 100MB and require the user to confirm
-  *  set computed connector data into state to be triggered after user makes its decision
-  *  show modal to prompt user to continue upload or not
-  *  @return {}
-  */
-  _codeFilesUpload(files, props, mutationData, createFiles, fileSizeData) {
-    this.setState({
-      uploadData: {
-        type: 'files',
-        files,
-        mutationData,
-        props,
-        createFiles,
-        fileSizeData,
-      },
-    });
-
-    this._promptUserToAcceptUpload();
-  }
-
-  /**
-  *  @param {}
+  *  @param {} -
   *  creates a file using AddLabbookFileMutation by passing a blob
   *  set state of user prompt modal
   */
+  @boundMethod
   _userAcceptsUpload() {
     const {
-      files,
-      prefix,
       fileSizeData,
+      uploadCallback,
     } = this.state.uploadData;
+    const files = fileSizeData.filesAllowed.concat(fileSizeData.fileSizePrompt);
+    fileSizeData.filesAllowed = files;
+    fileSizeData.fileSizePrompt = [];
 
-    if (this.state.uploadData.type === 'dir') {
-      const {
-        uploadDirContent,
-        dndItem,
-        props,
-        mutationData,
-        fileSizeData,
-      } = this.state.uploadData;
-
-      uploadDirContent(dndItem, props, mutationData, fileSizeData);
-    } else {
-      const {
-        item,
-        component,
-        props,
-        fileSizeData,
-      } = this.state.uploadData;
-      createFiles(item.files, '', component.state.mutationData, props, fileSizeData);
-    }
+    uploadCallback(fileSizeData);
 
     this.setState({ fileSizePromptVisible: false });
   }
@@ -611,37 +626,17 @@ class FileBrowser extends Component {
   *  creates a file using AddLabbookFileMutation by passing a blob
   *  set state of user prompt modal
   */
+  @boundMethod
   _userRejectsUpload() {
     const {
-      files,
-      prefix,
+      fileSizeData,
+      uploadCallback,
     } = this.state.uploadData;
-
-    const fileSizeData = this.state.uploadData.fileSizeData;
     const fileSizeNotAllowed = fileSizeData.fileSizeNotAllowed.concat(fileSizeData.fileSizePrompt);
-
+    fileSizeData.fileSizePrompt = [];
     fileSizeData.fileSizeNotAllowed = fileSizeNotAllowed;
 
-    if (this.state.uploadData.type === 'dir') {
-      const {
-        uploadDirContent,
-        dndItem,
-        props,
-        mutationData,
-        fileSizeData,
-      } = this.state.uploadData;
-
-      uploadDirContent(dndItem, props, mutationData, fileSizeData);
-    } else {
-      const {
-        item,
-        component,
-        props,
-        fileSizeData,
-      } = this.state.uploadData;
-
-      createFiles(item.files, '', component.state.mutationData, props, fileSizeData);
-    }
+    uploadCallback(fileSizeData);
 
     this.setState({ fileSizePromptVisible: false });
   }
@@ -661,39 +656,73 @@ class FileBrowser extends Component {
   */
   _getFilePromptText() {
     const { props } = this;
-    const section = props.section.charAt(0).toUpperCase() + props.section.substr(1, props.section.length - 1);
+    const firstChar = props.section.charAt(0).toUpperCase();
+    const allOtherChars = props.section.substr(1, props.section.length - 1);
+    const section = `${firstChar}/${allOtherChars}`;
+
     const text = (props.section === 'code')
-      ? "You're uploading some large files to the Code Section, are you sure you don't want to place these in the Input Section? Note, putting large files in the Code Section can hurt performance"
+      ? "You're uploading some large files to the Code Section, are you sure you don't want to place these in the Input Section? Note, putting large files in the Code Section can hurt performance."
       : `You're uploading some large files to the ${section} Section, are you sure you don't want to place these in a Dataset?`;
     return text;
   }
 
+  /**
+  *  @param {Array} files
+  *  sends file selection upload to be prepared for upload
+  *  @return {string}
+  */
   _uploadFiles(files) {
     const { props, state } = this;
-    const promptType = props.section ? props.section : ((state.mutationData) && (state.mutationData.section)) ? state.mutationData.section : '';
-    const fileSizeData = Connectors.checkFileSize(files, promptType);
+    prepareUpload(
+      files,
+      props,
+      false,
+      state.mutationData,
+      this, // component
+    );
+  }
 
-    CreateFiles.createFiles(files, '', state.mutationData, props, fileSizeData);
+  /**
+  *  @param {} -
+  *  fires updateUnmanagedDataset mutation
+  *  @return {}
+  */
+  _updateUnmanagedDatasetMutation() {
+    const { state } = this;
+
+    state.mutations.updateUnmanagedDataset(
+      {
+        fromRemote: true,
+        fromLocal: false,
+      },
+      () => {
+        this.setState({ confirmUpdateVisible: false });
+      },
+    );
   }
 
   render() {
     const { props, state } = this;
-    const files = this.state.files;
-    const { mutationData } = this.state;
-    const { isOver } = this.props;
+    const { files, mutationData } = state;
+    const { isOver, canDrop } = props;
+    const { isSelected } = this._checkChildState();
+    const allFilesLocal = checkLocalAll(files);
+    const uploadPromptText = this._getFilePromptText();
+    // TODO move this to a function
     let folderKeys = files && Object.keys(files).filter(child => files[child].edge && files[child].edge.node.isDir) || [];
     folderKeys = this._childSort(folderKeys, state.sort, state.reverse, files, 'folder');
     let fileKeys = files && Object.keys(files).filter(child => files[child].edge && !files[child].edge.node.isDir) || [];
     fileKeys = this._childSort(fileKeys, state.sort, state.reverse, files, 'files');
     const childrenKeys = folderKeys.concat(fileKeys);
-    const { isSelected } = this._checkChildState();
-    const allFilesLocal = checkLocalAll(files);
-    const uploadPromptText = this._getFilePromptText();
+    const readOnly = props.section === 'data' && !props.isManaged;
 
+    // declare css here
     const fileBrowserCSS = classNames({
       FileBrowser: true,
       'FileBrowser--linkVisible': state.showLinkModal,
       'FileBrowser--highlight': isOver,
+      'FileBrowser--cursor-drop': isOver && canDrop,
+      'FileBrowser--cursor-no-drop': isOver && !canDrop,
       'FileBrowser--dropzone': fileKeys.length === 0,
     });
     const deleteButtonCSS = classNames({
@@ -735,6 +764,10 @@ class FileBrowser extends Component {
       'FileBrowser__button--download-all': !state.downloadingAll && !allFilesLocal,
       'FileBrowser__button--downloaded': !state.downloadingAll && allFilesLocal,
       'FileBrowser__button--downloading': state.downloadingAll,
+    });
+    const updateCSS = classNames({
+      'FileBrowser__update-modal': true,
+      hidden: !state.confirmUpdateVisible,
     });
 
     return (
@@ -798,33 +831,88 @@ class FileBrowser extends Component {
         <div className="FileBrowser__menu">
           <h5>Files</h5>
           <div className="FileBrowser__menu-buttons">
-            <label
-              htmlFor="browser_upload"
-              className="FileBrowser__upload-label"
-            >
-              <div className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow inline-block Btn" />
-              <span>Upload Files</span>
-              <input
-                id="browser_upload"
-                className="hidden"
-                type="file"
-                multiple
-                onChange={evt => this._uploadFiles(Array.prototype.slice.call(evt.target.files))}
-              />
-            </label>
-            <button
-              className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
-              data-click-id="addFolder"
-              onClick={() => this.setState({ addFolderVisible: !state.addFolderVisible })}
-              type="button"
-            >
-              <div
-                className="Btn--fileBrowser Btn--round Btn--bordered Btn__addFolder Btn"
-                data-click-id="addFolder"
-              />
-              New Folder
-            </button>
-            { props.section === 'input'
+            {
+              !readOnly
+              && (
+                <div className="flex">
+                  <label
+                    htmlFor="browser_upload"
+                    className="FileBrowser__upload-label"
+                  >
+                    <div className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow inline-block Btn" />
+                    <span>Upload Files</span>
+                    <input
+                      id="browser_upload"
+                      className="hidden"
+                      type="file"
+                      multiple
+                      onChange={evt => this._uploadFiles(Array.prototype.slice.call(evt.target.files))}
+                    />
+                  </label>
+                  <button
+                    className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
+                    data-click-id="addFolder"
+                    onClick={() => this.setState({ addFolderVisible: !state.addFolderVisible })}
+                    type="button"
+                  >
+                    <div
+                      className="Btn--fileBrowser Btn--round Btn--bordered Btn__addFolder Btn"
+                      data-click-id="addFolder"
+                    />
+                    New Folder
+                  </button>
+                </div>
+              )
+            }
+            {
+              readOnly
+              && (
+              <div className="flex">
+                <button
+                  className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
+                  onClick={() => { state.mutations.verifyDataset({}, () => {}) }}
+                  type="button"
+                >
+                  <div
+                    className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow Btn"
+                  />
+                  Verify Dataset
+                </button>
+                <div>
+                  <button
+                    className="Btn Btn__menuButton Btn--noShadow FileBrowser__newFolder"
+                    onClick={() => this.setState({ confirmUpdateVisible: !state.confirmUpdateVisible })}
+                    type="button"
+                  >
+                    <div
+                      className="Btn--fileBrowser Btn--round Btn--bordered Btn__upArrow Btn"
+                    />
+                    Update from Remote
+                  </button>
+                  <div className={updateCSS}>
+                    <p>This will update the Dataset with the external source. Do you wish to continue?</p>
+                    <div className="flex">
+                      <button
+                        type="button"
+                        className="Btn--flat"
+                        onClick={() => this.setState({ confirmUpdateVisible: false })}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => this._updateUnmanagedDatasetMutation}
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              )
+            }
+            {
+              (props.section === 'input')
               && (
                 <button
                   className="Btn Btn__menuButton Btn--noShadow FileBrowser__addDataset"
@@ -853,35 +941,40 @@ class FileBrowser extends Component {
           </div>
         </div>
         <div className="FileBrowser__header">
-          <div className={multiSelectCSS}>
-            <button
-              className={multiSelectButtonCSS}
-              onClick={() => { this._selectFiles(); }}
-              type="button"
-            />
-            <button
-              className={deleteButtonCSS}
-              onClick={() => { this._togglePopup(true); }}
-              type="button"
-            />
+          {
+            !readOnly
+            && (
+              <div className={multiSelectCSS}>
+                <button
+                  className={multiSelectButtonCSS}
+                  onClick={() => { this._selectFiles(); }}
+                  type="button"
+                />
+                <button
+                  className={deleteButtonCSS}
+                  onClick={() => { this._togglePopup(true); }}
+                  type="button"
+                />
 
-            <div className={popupCSS}>
-              <div className="Tooltip__pointer" />
-              <p>Are you sure?</p>
-              <div className="flex justify--space-around">
-                <button
-                  className="File__btn--round File__btn--cancel File__btn--delete"
-                  onClick={() => { this._togglePopup(false); }}
-                  type="button"
-                />
-                <button
-                  className="File__btn--round File__btn--add File__btn--delete-files"
-                  onClick={() => { this._deleteSelectedFiles(); }}
-                  type="button"
-                />
+                <div className={popupCSS}>
+                  <div className="Tooltip__pointer" />
+                  <p>Are you sure?</p>
+                  <div className="flex justify--space-around">
+                    <button
+                      className="File__btn--round File__btn--cancel File__btn--delete"
+                      onClick={() => { this._togglePopup(false); }}
+                      type="button"
+                    />
+                    <button
+                      className="File__btn--round File__btn--add File__btn--delete-files"
+                      onClick={() => { this._deleteSelectedFiles(); }}
+                      type="button"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            )
+          }
           <button
             className={nameHeaderCSS}
             onClick={() => this._handleSort('az')}
@@ -941,6 +1034,8 @@ class FileBrowser extends Component {
             if (isDataset) {
               const currentDataset = props.linkedDatasets.filter(dataset => dataset.name === file)[0];
               const commitsBehind = currentDataset && currentDataset.commitsBehind;
+
+
               return (
                 <Dataset
                   ref={file}
@@ -957,7 +1052,7 @@ class FileBrowser extends Component {
                   reverse={state.reverse}
                   childrenState={state.childrenState}
                   updateChildState={this._updateChildState}
-                  codeDirUpload={this._codeDirUpload}
+                  fileSizePrompt={this._fileSizePrompt}
                   commitsBehind={commitsBehind}
                   checkLocal={checkLocalIndividual}
                 />
@@ -967,6 +1062,7 @@ class FileBrowser extends Component {
                 <Folder
                   ref={file}
                   filename={file}
+                  readOnly={readOnly}
                   key={files[file].edge.node.key}
                   multiSelect={state.multiSelect}
                   mutationData={mutationData}
@@ -982,9 +1078,10 @@ class FileBrowser extends Component {
                   updateChildState={this._updateChildState}
                   parentDownloading={state.downloadingAll}
                   rootFolder
-                  codeDirUpload={this._codeDirUpload}
+                  fileSizePrompt={this._fileSizePrompt}
                   checkLocal={checkLocalIndividual}
                   containerStatus={props.containerStatus}
+                  refetch={this._refetch}
                 />
               );
             } if (isFile) {
@@ -992,6 +1089,7 @@ class FileBrowser extends Component {
                 <File
                   ref={file}
                   filename={file}
+                  readOnly={readOnly}
                   key={files[file].edge.node.key}
                   multiSelect={state.multiSelect}
                   mutationData={mutationData}
@@ -1029,9 +1127,9 @@ class FileBrowser extends Component {
             </div>
             )
           }
-          { props.isProcessing
+          { (props.isProcessing || props.lockFileBrowser)
             && (
-            <div className="FileBrowser__veil">
+            <div className="FileBrowser__lock">
               <span />
             </div>
             )

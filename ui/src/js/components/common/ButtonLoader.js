@@ -43,6 +43,7 @@ export default class ButtonLoader extends Component {
       <button
         type="submit"
         disabled={buttonState !== '' || buttonDisabled}
+        data-tooltip={props['data-tooltip']}
         className={buttonLoaderCSS}
         onClick={evt => props.clicked(evt, props)}
       >

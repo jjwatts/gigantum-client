@@ -54,8 +54,21 @@
 
   &--large{
     padding: 0 60px 20px 60px;
-
     @include modal(500px, 960px);
+  }
+  &--large-full {
+    border-top: 7px solid $azure !important;
+    border-bottom: 7px solid $azure !important;
+    padding: 0;
+    @include modal(500px, 960px);
+    .Modal__container {
+      height: 100%;
+      padding: 0;
+    }
+    .Modal__sub-container {
+      height: 100%;
+      padding: 0;
+    }
   }
 
   &--large-long{
@@ -164,6 +177,13 @@
   &--add {
     background: $azure url('~Images/icons/add-white.svg') no-repeat center center;
     background-size: 34px;
+
+    border-radius: 50px;
+  }
+
+  &--change {
+    background: url('~Images/icons/cogwheel.svg') no-repeat center center;
+    background-size: 70px;
 
     border-radius: 50px;
   }

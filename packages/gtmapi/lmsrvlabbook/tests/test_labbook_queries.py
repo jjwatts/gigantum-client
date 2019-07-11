@@ -1,27 +1,11 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
 import time
+import responses
+import flask
+
 from snapshottest import snapshot
 from lmsrvlabbook.tests.fixtures import fixture_working_dir, fixture_working_dir_populated_scoped, fixture_test_file
-from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped
+from lmsrvlabbook.tests.fixtures import fixture_working_dir_env_repo_scoped, property_mocks_fixture
 from gtmcore.files import FileOperations
 from gtmcore.fixtures import ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
 import datetime
@@ -764,308 +748,40 @@ class TestLabBookServiceQueries(object):
         r = fixture_working_dir[2].execute(query)
         snapshot.assert_match(r)
 
-    def test_list_favorites(self, fixture_working_dir, snapshot):
-        """Test listing labbook favorites"""
+    def test_list_files(self, fixture_working_dir, snapshot):
+        """Test listing labbook files"""
 
         im = InventoryManager(fixture_working_dir[0])
         lb = im.create_labbook('default', 'default', 'labbook1', description="my first labbook1")
 
-        has_no_favs_query = """
+        # Setup some favorites in code
+        with open(os.path.join(lb.root_dir, 'code', 'test1.txt'), 'wt') as test_file:
+            test_file.write("blah1")
+        with open(os.path.join(lb.root_dir, 'code', 'test2.txt'), 'wt') as test_file:
+            test_file.write("blah2")
+
+        # Setup a favorite dir in input
+        os.makedirs(os.path.join(lb.root_dir, 'code', 'blah'))
+
+        # Get LabBooks for the "logged in user" - Currently just "default"
+        query = """
         {
             labbook(name: "labbook1", owner: "default") {
                 name
                 code {
-                    hasFavorites
+                    files {
+                        edges {
+                            node {
+                                id
+                                key
+                                size
+                                isDir
+                            }
+                        }
+                    }
                 }
             }
-        }
-        """
-        resp = fixture_working_dir[2].execute(has_no_favs_query)
-        assert 'errors' not in resp
-        assert resp['data']['labbook']['code']['hasFavorites'] is False
-
-        # Setup some favorites in code
-        with open(os.path.join(lb.root_dir, 'code', 'test1.txt'), 'wt') as test_file:
-            test_file.write("blah1")
-        with open(os.path.join(lb.root_dir, 'code', 'test2.txt'), 'wt') as test_file:
-            test_file.write("blah2")
-
-        # Setup a favorite dir in input
-        os.makedirs(os.path.join(lb.root_dir, 'code', 'blah'))
-        os.makedirs(os.path.join(lb.root_dir, 'input', 'data1'))
-        os.makedirs(os.path.join(lb.root_dir, 'output', 'data2'))
-
-        # Create favorites
-        lb.create_favorite("code", "test1.txt", description="My file with stuff 1")
-        lb.create_favorite("code", "test2.txt", description="My file with stuff 2")
-        lb.create_favorite("code", "blah/", description="testing", is_dir=True)
-        lb.create_favorite("input", "data1/", description="Data dir 1", is_dir=True)
-        lb.create_favorite("output", "data2/", description="Data dir 2", is_dir=True)
-
-        # Get LabBooks for the "logged in user" - Currently just "default"
-        query = """
-                    {
-                      labbook(name: "labbook1", owner: "default") {
-                        name
-                        code{
-                            favorites{
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                        associatedLabbookFileId
-                                    }
-                                }
-                            }
-                            hasFavorites
-                        }
-                      }
-                    }
-                    """
-        resp = fixture_working_dir[2].execute(query)
-        assert 'errors' not in resp
-        assert resp['data']['labbook']['code']['hasFavorites'] is True
-        snapshot.assert_match(resp)
-
-        # Get input favorites
-        query = """
-                    {
-                      labbook(name: "labbook1", owner: "default") {
-                        name
-                        input{
-                            favorites{
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                        associatedLabbookFileId
-                                    }
-                                }
-                            }
-                        }
-                      }
-                    }
-                    """
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
-
-        # Get output favorites
-        query = """
-                    {
-                      labbook(name: "labbook1", owner: "default") {
-                        name
-                        output{
-                            favorites{
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                        associatedLabbookFileId
-                                    }
-                                }
-                            }
-                        }
-                      }
-                    }
-                    """
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
-
-        # Get all favorites
-        query = """
-                    {
-                      labbook(name: "labbook1", owner: "default") {
-                        name
-                        code{
-                            favorites{
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                        associatedLabbookFileId
-                                    }
-                                }
-                            }
-                        }
-                        input{
-                            favorites{
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                        associatedLabbookFileId
-                                    }
-                                }
-                            }
-                        }
-                        output{
-                            favorites{
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                        associatedLabbookFileId
-                                    }
-                                }
-                            }
-                        }
-                      }
-                    }
-                    """
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
-
-    def test_page_favorites(self, fixture_working_dir, snapshot):
-        """Test listing labbook favorites"""
-        im = InventoryManager(fixture_working_dir[0])
-        lb = im.create_labbook('default', 'default', 'labbook1', description="my first labbook1")
-
-        # Setup some favorites in code
-        with open(os.path.join(lb.root_dir, 'code', 'test1.txt'), 'wt') as test_file:
-            test_file.write("blah1")
-        with open(os.path.join(lb.root_dir, 'code', 'test2.txt'), 'wt') as test_file:
-            test_file.write("blah2")
-
-        # Setup a favorite dir in input
-        os.makedirs(os.path.join(lb.root_dir, 'code', 'blah'))
-        os.makedirs(os.path.join(lb.root_dir, 'input', 'data1'))
-        os.makedirs(os.path.join(lb.root_dir, 'output', 'data2'))
-
-        # Create favorites
-        lb.create_favorite("code", "test1.txt", description="My file with stuff 1")
-        lb.create_favorite("code", "test2.txt", description="My file with stuff 2")
-        lb.create_favorite("code", "blah/", description="testing", is_dir=True)
-        lb.create_favorite("input", "data1/", description="Data dir 1", is_dir=True)
-        lb.create_favorite("output", "data2/", description="Data dir 2", is_dir=True)
-
-        # Get 2 only
-        query = """
-                    {
-                      labbook(name: "labbook1", owner: "default") {
-                        name
-                        code{
-                            favorites(first: 2){
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                        associatedLabbookFileId
-                                    }
-                                    cursor
-                                }                                                   
-                                pageInfo{
-                                    startCursor
-                                    hasNextPage
-                                    hasPreviousPage
-                                    endCursor
-                                }
-                            }
-                        }
-                      }
-                    }
-                    """
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
-
-        # Get last page
-        query = """
-                    {
-                      labbook(name: "labbook1", owner: "default") {
-                        name
-                        code{
-                            favorites(first: 2, after: "MQ=="){
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                        associatedLabbookFileId
-                                    }
-                                    cursor
-                                }                                                   
-                                pageInfo{
-                                    startCursor
-                                    hasNextPage
-                                    hasPreviousPage
-                                    endCursor
-                                }
-                            }
-                        }
-                      }
-                    }
-                    """
-
-        snapshot.assert_match(fixture_working_dir[2].execute(query))
-
-    def test_list_favorite_and_files(self, fixture_working_dir, snapshot):
-        """Test listing labbook favorites"""
-
-        im = InventoryManager(fixture_working_dir[0])
-        lb = im.create_labbook('default', 'default', 'labbook1', description="my first labbook1")
-
-        # Setup some favorites in code
-        with open(os.path.join(lb.root_dir, 'code', 'test1.txt'), 'wt') as test_file:
-            test_file.write("blah1")
-        with open(os.path.join(lb.root_dir, 'code', 'test2.txt'), 'wt') as test_file:
-            test_file.write("blah2")
-
-        # Setup a favorite dir in input
-        os.makedirs(os.path.join(lb.root_dir, 'code', 'blah'))
-
-        # Create favorites
-        lb.create_favorite("code", "test2.txt", description="My file with stuff 2")
-        lb.create_favorite("code", "blah/", description="testing", is_dir=True)
-
-        # Get LabBooks for the "logged in user" - Currently just "default"
-        query = """
-                    {
-                      labbook(name: "labbook1", owner: "default") {
-                        name
-                        code{
-                            favorites{
-                                edges {
-                                    node {
-                                        id
-                                        index
-                                        key
-                                        description
-                                        isDir
-                                    }
-                                }
-                            }                                
-                            files {
-                                edges {
-                                    node {
-                                        id
-                                        key
-                                        size
-                                        isDir
-                                    }
-                                }
-                            }
-                        }
-                      }
-                    }
-                    """
+        }"""
         snapshot.assert_match(fixture_working_dir[2].execute(query))
 
     def test_list_all_files_many(self, fixture_working_dir, snapshot):
@@ -1734,4 +1450,59 @@ class TestLabBookServiceQueries(object):
         assert (datetime.datetime.now(datetime.timezone.utc) - modified_on_1).total_seconds() < 30
         assert (datetime.datetime.now(datetime.timezone.utc) - modified_on_2).total_seconds() < 30
         assert modified_on_2 > modified_on_1
+
+    @responses.activate
+    def test_repository_name_is_available(self, fixture_working_dir, property_mocks_fixture):
+        # Create repositories
+        im = InventoryManager(fixture_working_dir[0])
+        im.create_labbook('default', 'default', 'project-1', description="a project that exists")
+        im.create_dataset('default', 'default', 'dataset-1', storage_type="gigantum_object_v1",
+                          description="a project that exists")
+        flask.g.access_token = "afaketoken"
+
+        responses.add(responses.GET, 'https://repo.gigantum.io/api/v4/projects/default%2Fremote-project',
+                      json=[{
+                          "id": 26,
+                          "description": "",
+                      }],
+                      status=200)
+
+        responses.add(responses.GET, 'https://repo.gigantum.io/api/v4/projects/default%2Funique-name',
+                      status=404)
+
+        query = """
+        {
+          repositoryNameIsAvailable(name: "project-1")
+        }
+        """
+        r = fixture_working_dir[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['repositoryNameIsAvailable'] is False
+
+        query = """
+        {
+          repositoryNameIsAvailable(name: "dataset-1")
+        }
+        """
+        r = fixture_working_dir[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['repositoryNameIsAvailable'] is False
+
+        query = """
+        {
+          repositoryNameIsAvailable(name: "remote-project")
+        }
+        """
+        r = fixture_working_dir[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['repositoryNameIsAvailable'] is False
+
+        query = """
+        {
+          repositoryNameIsAvailable(name: "unique-name")
+        }
+        """
+        r = fixture_working_dir[2].execute(query)
+        assert 'errors' not in r
+        assert r['data']['repositoryNameIsAvailable'] is True
 

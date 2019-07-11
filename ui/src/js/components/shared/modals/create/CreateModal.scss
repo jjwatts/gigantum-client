@@ -1,0 +1,74 @@
+@import '~Styles/_imports.scss';
+
+.CreateModal {
+  height: 100%;
+}
+
+.CreateModal__actions {
+  @include flex(flex-end, row);
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.CreateModal__buttons {
+  @include flex(flex-end, row);
+  width: 400px;
+}
+
+.CreateModal__modalWrap-enter {
+  opacity: 0.01;
+}
+
+.CreateModal__modalWrap-enter.CreateModal__modalWrap-enter-active {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
+
+
+.CreateModal__modal-inner-container {
+    height: calc(100% - 40px);
+    padding: 20px;
+}
+
+.CreateModal__title {
+  color: $jet;
+  text-align: center;
+}
+
+.CreateModal__modal-close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+  @include close();
+}
+
+.CreateModal__progress{
+    margin-top: 25px;
+    width: 100%;
+}
+
+.CreateModal__progress-bar {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    li{
+      flex: 1 0 auto;
+      border-top: 2px solid $azure;
+      text-align: center;
+      padding: 2px;
+      height: 4px;
+      margin: 0 2px;
+      font-size: 12px;
+    }
+
+    li.selected {
+      border-top: 6px solid $azure;
+    }
+}
+
+.CreateModal__progress-button {
+  margin: 0 10px;
+}

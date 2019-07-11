@@ -136,8 +136,13 @@ export default class PublishModal extends Component {
                   props.setPublishingState(false);
                   props.resetPublishState(false);
                   // self.props.remountCollab();
-
-                  setMultiInfoMessage(id, `Added remote https://gigantum.com/${props.owner}/${props.labbookName}`, true, false);
+                  const messageData = {
+                    id,
+                    message: `Added remote https://gigantum.com/${props.owner}/${props.labbookName}`,
+                    isLast: true,
+                    error: false,
+                  };
+                  setMultiInfoMessage(messageData);
 
                   props.setRemoteSession();
                 };

@@ -12,6 +12,7 @@ const paths = require('./paths');
 const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
+const WorkerPlugin = require('worker-plugin');
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
@@ -42,7 +43,7 @@ module.exports = {
   // This means they will be the "root" imports that are included in JS bundle.
   // The first two entry points enable "hot" CSS and auto-refreshes for JS.
 
-  entry: [
+  entry: {
     // Include an alternative client for WebpackDevServer. A client's job is to
     // connect to WebpackDevServer by a socket and get notified about changes.
     // When you save a file, the client will either apply hot updates (in case
@@ -53,22 +54,23 @@ module.exports = {
     // the line below with these two lines if you prefer the stock client:
     // require.resolve('webpack-dev-server/client') + '?/',
     // require.resolve('webpack/hot/dev-server'),
-    require.resolve('react-dev-utils/webpackHotDevClient'),
+    devUtils: require.resolve('react-dev-utils/webpackHotDevClient'),
     // We ship a few polyfills by default:
-    require.resolve('./polyfills'),
+    polyfill: require.resolve('./polyfills'),
     // Errors should be considered fatal in development
-    require.resolve('react-error-overlay'),
+    overlay: require.resolve('react-error-overlay'),
     // Finally, this is your app's code:
-    paths.appIndexJs,
-    paths.dahshboardJs,
-    paths.labbookJs,
-    paths.labbookActivityJs,
-    paths.labbookEnvironmentJs,
-    paths.labbookOverviewJs,
+    appIndexJs: paths.appIndexJs,
+    // dahshboardJs: paths.dahshboardJs,
+    // labbookJs: paths.labbookJs,
+    // labbookActivityJs: paths.labbookActivityJs,
+    // labbookEnvironmentJs: paths.labbookEnvironmentJs,
+    // labbookOverviewJs: paths.labbookOverviewJs,
+    // uploadWorker: paths.uploadWorker,
     // We include the app code last so that if there is a runtime error during
     // initialization, it doesn't blow up the WebpackDevServer client, and
     // changing JS code would still trigger a refresh.
-  ],
+  },
 
 
   // entry: {
@@ -80,14 +82,14 @@ module.exports = {
   //   Overview: paths.labbookOverviewJs,
   // },
   output: {
-    // Next line is not used in dev but WebpackDevServer crashes without it:
+    globalObject: 'this',   // Next line is not used in dev but WebpackDevServer crashes without it:
     path: paths.appBuild,
     // Add /* filename */ comments to generated require()s in the output.
     pathinfo: true,
     // This does not produce a real file. It's just the virtual path that is
     // served by WebpackDevServer in development. This is the JS bundle
     // containing code from all our entry points, and the Webpack runtime.
-    filename: 'static/js/bundle.js',
+    filename: 'static/js/[name].bundle.js',
     // There are also additional JS chunk files if you use code splitting.
     chunkFilename: 'static/js/[name].chunk.js',
     // This is the URL that app is served from. We use "/" in development.
@@ -183,7 +185,7 @@ module.exports = {
       // smaller than specified limit in bytes as data URLs to avoid requests.
       // A missing `test` is equivalent to a match.
       {
-        test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.svg$/ ],
+        test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.svg$/, ],
         loader: require.resolve('url-loader'),
         options: {
           limit: 10000,
@@ -212,6 +214,16 @@ module.exports = {
           // It enables caching results in ./node_modules/.cache/babel-loader/
           // directory for faster rebuilds.
           cacheDirectory: true,
+        },
+      },
+
+      {
+        test: /\.worker\.js$/,
+        use: {
+          loader: 'worker-loader',
+          options: {
+            name: '[name].[hash].worker.js',
+          },
         },
       },
       // "postcss" loader applies autoprefixer to our CSS.
@@ -243,6 +255,7 @@ module.exports = {
       chunks: 'all',
       maxInitialRequests: Infinity,
       minSize: 0,
+      maxSize: 5000000,
       cacheGroups: {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
@@ -311,6 +324,7 @@ module.exports = {
     // You can remove this if you don't use Moment.js:
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new webpack.HashedModuleIdsPlugin(),
+    new WorkerPlugin({globalObject: 'this'}),
     // new HardSourceWebpackPlugin({
     //   // Either an absolute path or relative to webpack's options.context.
     //   cacheDirectory: 'node_modules/.cache/hard-source/[confighash]',

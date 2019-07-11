@@ -56,12 +56,13 @@ def mocky(self):
 def invoker():
     return SampleMockObject().method_to_mock()
 
+
 @pytest.fixture(scope="session")
 def pause():
     time.sleep(3)
 
-class TestLabbookMutation(object):
 
+class TestLabbookMutation(object):
     def test_mocking_in_subprocess(self):
         # This test should remain to validate that mocking applies to classes
         # loaded by a sub-process of this pytest process.
@@ -78,7 +79,6 @@ class TestLabbookMutation(object):
             assert not os.path.exists('/tmp/cats')
             assert os.path.exists('/tmp/dogs')
 
-
     def test_launch_api_server(self, pause, fixture_working_dir_env_repo_scoped):
         proc = multiprocessing.Process(target=service.main, kwargs={'debug': False})
         proc.daemon = True
@@ -87,7 +87,6 @@ class TestLabbookMutation(object):
         time.sleep(4)
         assert proc.is_alive()
         proc.terminate()
-
 
     def test_insert_file(self, fixture_working_dir_env_repo_scoped):
         # TODO - Pending on integration tests working.

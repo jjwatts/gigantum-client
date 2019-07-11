@@ -4,8 +4,9 @@ import {
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
 import uuidv4 from 'uuid/v4';
-import { setMultiInfoMessage } from 'JS/redux/actions/footer';
+import { setMultiInfoMessage, setErrorMessage } from 'JS/redux/actions/footer';
 import FooterUtils from 'Components/common/footer/FooterUtils';
+import footerCallback from 'Components/common/footer/utils/PublishDataset';
 
 const mutation = graphql`
   mutation PublishDatasetMutation($input: PublishDatasetInput!){
@@ -36,7 +37,14 @@ export default function PublishDatasetMutation(
   };
   const id = uuidv4();
   const startMessage = 'Preparing to publish Dataset...';
-  setMultiInfoMessage(id, startMessage, false, false, [{ message: startMessage }]);
+  const messageData = {
+    id,
+    message: startMessage,
+    isLast: false,
+    error: false,
+    messageBody: [{ message: startMessage }],
+  };
+  setMultiInfoMessage(messageData);
   commitMutation(
     environment,
     {
@@ -44,6 +52,7 @@ export default function PublishDatasetMutation(
       variables,
       onCompleted: (response, error) => {
         if (error) {
+          setErrorMessage('An error occurred while publishing this Dataset', error);
           console.log(error);
         }
 
@@ -52,7 +61,16 @@ export default function PublishDatasetMutation(
       onError: (err) => { console.error(err); },
       updater: (store, response) => {
         if (response) {
-          FooterUtils.getJobStatus(response, 'publishDataset', 'jobKey', successCall, failureCall, id);
+          const footerData = {
+            result: response,
+            type: 'publishDataset',
+            key: 'jobKey',
+            footerCallback,
+            successCall,
+            failureCall,
+            id,
+          };
+          FooterUtils.getJobStatus(footerData);
         }
       },
     },

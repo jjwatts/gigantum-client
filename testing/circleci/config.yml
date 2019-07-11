@@ -1,0 +1,28 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Set up credentials.txt for test user (circleci)
+          command: |
+            echo $TEST_USERNAME > credentials.txt
+            echo $TEST_PASSWORD >> credentials.txt
+            echo $TEST_USERNAME_2 >> credentials.txt
+            echo $TEST_PASSWORD_2 >> credentials.txt
+
+      - run:
+          name: Run the setup and preparation script
+          command: |
+            bash .circleci/ubuntu1404-install.sh
+
+      - run:
+          name: Run Tests
+          command: |
+            python3.6 -m venv test-env
+            source test-env/bin/activate
+            pip install -r requirements.txt
+            sleep 10
+            python3 driver.py test_examples
+

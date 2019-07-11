@@ -71,11 +71,22 @@ export default class RemoteLabbookPanel extends Component {
         if (response.data) {
           if (response.data.userIdentity.isSessionValid) {
             this._importingState();
-            setMultiInfoMessage(id, 'Importing Project please wait', false, false);
+            const messageData = {
+              id,
+              message: 'Importing Project please wait',
+              isLast: false,
+              error: false,
+            };
+            setMultiInfoMessage(messageData);
             const successCall = () => {
               this._clearState();
-
-              setMultiInfoMessage(id, `Successfully imported remote Project ${labbookName}`, true, false);
+              const messageData = {
+                id,
+                message: `Successfully imported remote Project ${labbookName}`,
+                isLast: true,
+                error: false,
+              };
+              setMultiInfoMessage(messageData);
 
 
               BuildImageMutation(
@@ -85,7 +96,14 @@ export default class RemoteLabbookPanel extends Component {
                 (response, error) => {
                   if (error) {
                     console.error(error);
-                    setMultiInfoMessage(id, `ERROR: Failed to build ${labbookName}`, null, true, error);
+                    const messageData = {
+                      id,
+                      message: `ERROR: Failed to build ${labbookName}`,
+                      isLast: null,
+                      error: true,
+                      messageBody: error,
+                    };
+                    setMultiInfoMessage(messageData);
                   }
                 },
               );
@@ -94,7 +112,14 @@ export default class RemoteLabbookPanel extends Component {
             };
             const failureCall = (error) => {
               this._clearState();
-              setMultiInfoMessage(id, 'ERROR: Could not import remote Project', null, true, error);
+              const messageData = {
+                id,
+                message: 'ERROR: Could not import remote Project',
+                isLast: null,
+                error: true,
+                messageBody: error,
+              };
+              setMultiInfoMessage(messageData);
             };
             self.setState({ isImporting: true });
 

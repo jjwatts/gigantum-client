@@ -35,6 +35,7 @@ class LabbookQueryContainer extends Component {
             inputSkip: true,
             outputSkip: true,
             codeSkip: true,
+            skipPackages: true,
           }
         }
         render={({ error, props }) => {
@@ -72,7 +73,7 @@ class LabbookQueryContainer extends Component {
 
 // labbook query with notes fragment
 export const LabbookQuery = graphql`
-  query LabbookQueryContainerQuery($name: String!, $owner: String!, $first: Int!, $cursor: String, $hasNext: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
+  query LabbookQueryContainerQuery($name: String!, $owner: String!, $first: Int!, $cursor: String, $skipPackages: Boolean!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
     labbook(name: $name, owner: $owner){
       id
       description

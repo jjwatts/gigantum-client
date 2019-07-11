@@ -10,11 +10,7 @@ export default createFragmentContainer(
         output @skip (if: $outputSkip){
           id
           hasFiles
-          hasFavorites
           ...OutputBrowser_output
-          ...OutputFavorites_output
-          ...MostRecentOutput_output
-          isUntracked
         }
       }
     `,

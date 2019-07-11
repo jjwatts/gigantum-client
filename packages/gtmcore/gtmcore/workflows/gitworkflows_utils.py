@@ -1,26 +1,9 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import subprocess
 import time
 import os
-from typing import Optional, Callable
+import shutil
+import uuid
+from typing import Any, Optional, Callable
 
 from gtmcore.workflows.gitlab import GitLabManager
 from gtmcore.activity import ActivityStore, ActivityType, ActivityRecord, \
@@ -35,6 +18,9 @@ from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.logging import LMLogger
 from gtmcore.configuration.utils import call_subprocess
 from gtmcore.inventory.branching import BranchManager, MergeConflict
+from gtmcore.configuration import Configuration
+from gtmcore.dispatcher import Dispatcher
+import gtmcore.dispatcher.dataset_jobs
 
 
 logger = LMLogger.get_logger()
@@ -57,8 +43,6 @@ def git_garbage_collect(repository: Repository) -> None:
     even on large repos.
 
     Note!! This method assumes the subject repository has already been locked!
-
-    TODO(billvb): Refactor into BranchManager
 
     Args:
         repository: Subject Repository
@@ -151,10 +135,6 @@ def _pull(repository: Repository, branch_name: str, override: str, feedback_cb: 
     cp = repository.git.commit_hash
     try:
         call_subprocess(f'git pull'.split(), cwd=repository.root_dir)
-        if isinstance(repository, LabBook):
-            if not username:
-                raise ValueError("Current logged in username required to checkout a Project with a linked dataset")
-            InventoryManager().update_linked_dataset(repository, username, init=True)
 
     except subprocess.CalledProcessError as cp_error:
         if 'Automatic merge failed' in cp_error.stdout.decode():
@@ -270,3 +250,86 @@ def migrate_labbook_branches(labbook: LabBook) -> None:
         bm.remove_branch(master_branch)
 
     bm.create_branch(master_branch)
+
+
+def _clone(remote_url: str, working_dir: str) -> str:
+
+    clone_tokens = f"git clone {remote_url}".split()
+    call_subprocess(clone_tokens, cwd=working_dir)
+
+    # Affirm there is only one directory created
+    dirs = os.listdir(working_dir)
+    if len(dirs) != 1:
+        raise GigantumException('Git clone produced extra directories')
+
+    p = os.path.join(working_dir, dirs[0])
+    if not os.path.exists(p):
+        raise GigantumException('Could not find expected path of repo after clone')
+
+    try:
+        # This is for backward compatibility -- old projects will clone to
+        # branch "gm.workspace" by default -- even if it has already been migrated.
+        # This will therefore set the user to the proper branch if the project has been
+        # migrated, and will have no affect if it hasn't
+        r = call_subprocess("git checkout master".split(), cwd=p)
+    except Exception as e:
+        logger.error(e)
+
+    return p
+
+
+def clone_repo(remote_url: str, username: str, owner: str,
+               load_repository: Callable[[str], Any],
+               put_repository: Callable[[str, str, str], Any],
+               make_owner: bool = False) -> Repository:
+
+    # Clone into a temporary directory, such that if anything
+    # gets messed up, then this directory will be cleaned up.
+    tempdir = os.path.join(Configuration().upload_dir, f"{username}_{owner}_clone_{uuid.uuid4().hex[0:10]}")
+    os.makedirs(tempdir)
+    path = _clone(remote_url=remote_url, working_dir=tempdir)
+    candidate_repo = load_repository(path)
+
+    if os.environ.get('WINDOWS_HOST'):
+        logger.warning("Imported on Windows host - set fileMode to false")
+        call_subprocess("git config core.fileMode false".split(),
+                        cwd=candidate_repo.root_dir)
+
+    repository = put_repository(candidate_repo.root_dir, username, owner)
+    shutil.rmtree(tempdir)
+
+    return repository
+
+
+def process_linked_datasets(labbook: LabBook, logged_in_username: str) -> None:
+    """Method to update or init any linked dataset submodule references, clean up lingering files, and schedule
+    jobs to auto-import if needed
+
+    Args:
+        labbook: the labbook to analyze
+        logged_in_username: the current logged in username
+
+    Returns:
+
+    """
+    im = InventoryManager(config_file=labbook.client_config.config_file)
+
+    # Update linked datasets inside the Project or clean them out if needed
+    im.update_linked_datasets(labbook, logged_in_username, init=True)
+
+    # Check for linked datasets, and schedule auto-imports
+    d = Dispatcher()
+    datasets = im.get_linked_datasets(labbook)
+    for ds in datasets:
+        kwargs = {
+            'logged_in_username': logged_in_username,
+            'dataset_owner': ds.namespace,
+            'dataset_name': ds.name,
+            'remote_url': ds.remote,
+        }
+        metadata = {'dataset': f"{logged_in_username}|{ds.namespace}|{ds.name}",
+                    'method': 'dataset_jobs.check_and_import_dataset'}
+
+        d.dispatch_task(gtmcore.dispatcher.dataset_jobs.check_and_import_dataset,
+                        kwargs=kwargs,
+                        metadata=metadata)

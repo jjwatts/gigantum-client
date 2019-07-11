@@ -1,25 +1,6 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 from typing import (List, Dict, Optional)
 
-from gtmcore.environment.packagemanager import PackageManager, PackageResult
+from gtmcore.environment.packagemanager import PackageManager, PackageResult, PackageMetadata
 from gtmcore.container.container import ContainerOperations
 from gtmcore.labbook import LabBook
 from gtmcore.logging import LMLogger
@@ -83,36 +64,6 @@ class AptPackageManager(PackageManager):
 
         return package_versions
 
-    def latest_version(self, package_name: str, labbook: LabBook, username: str) -> str:
-        """Method to get the latest version string for a package
-
-        Args:
-            package_name: Name of the package to query
-            labbook: Subject LabBook
-            username: username of current user
-
-        Returns:
-            str: latest version string
-        """
-        versions = self.list_versions(package_name, labbook, username)
-        if versions:
-            return versions[0]
-        else:
-            raise ValueError("Could not retrieve version list for provided package name")
-
-    def latest_versions(self, package_names: List[str], labbook: LabBook, username: str) -> List[str]:
-        """Method to get the latest version string for a list of packages
-
-        Args:
-            package_names: list of names of the packages to query
-            labbook: Subject LabBook
-            username: username of current user
-
-        Returns:
-            list: latest version strings
-        """
-        return [self.latest_version(pkg, labbook, username) for pkg in package_names]
-
     def list_installed_packages(self, labbook: LabBook, username: str) -> List[Dict[str, str]]:
         """Method to get a list of all packages that are currently installed
 
@@ -139,33 +90,6 @@ class AptPackageManager(PackageManager):
 
         return packages
 
-    def list_available_updates(self, labbook: LabBook, username: str) -> List[Dict[str, str]]:
-        """Method to get a list of all installed packages that could be updated and the new version string
-
-        Note, this will return results for the computer/container in which it is executed. To get the properties of
-        a LabBook container, a docker exec command would be needed from the Gigantum application container.
-
-        return format is a list of dicts with the format
-         {name: <package name>, version: <currently installed version string>, latest_version: <latest version string>}
-
-        Returns:
-            list
-        """
-        result = ContainerOperations.run_command("apt list --upgradable", labbook, username,
-                                                 fallback_image=self.fallback_image(labbook))
-
-        packages = []
-        if result:
-            lines = result.decode('utf-8').split('\n')
-            for line in lines:
-                if line is not None and line != "Listing..." and "/" in line:
-                    package_name, version_info_t = line.split("/")
-                    version_info = version_info_t.split(' ')
-                    packages.append({'name': package_name, 'latest_version': version_info[1],
-                                     'version': version_info[5][:-1]})
-
-        return packages
-
     def validate_packages(self, package_list: List[Dict[str, str]], labbook: LabBook, username: str) \
             -> List[PackageResult]:
         """Method to validate a list of packages, and if needed fill in any missing versions
@@ -183,7 +107,7 @@ class AptPackageManager(PackageManager):
         """
         result = list()
         for package in package_list:
-            pkg_result = PackageResult(package=package['package'], version=package['version'], error=True)
+            pkg_result = PackageResult(package=package['package'], version=package.get('version'), error=True)
 
             try:
                 version_list = self.list_versions(package['package'], labbook, username)
@@ -195,28 +119,63 @@ class AptPackageManager(PackageManager):
                 # If here, no versions found for the package...so invalid
                 result.append(pkg_result)
             else:
-                if package['version']:
-                    if package['version'] in version_list:
+                if package.get('version'):
+                    if package.get('version') in version_list:
                         # Both package name and version are valid
-                        pkg_result = pkg_result._replace(error=False)
-                        result.append(pkg_result)
+                        result.append(PackageResult(package=package['package'],
+                                                    version=package.get('version'),
+                                                    error=False))
 
                     else:
                         # The package version is not in the list, so invalid
                         result.append(pkg_result)
 
                 else:
-                    # You need to look up the version and then add
-                    try:
-                        pkg_result = pkg_result._replace(version=self.latest_version(package['package'],
-                                                                                     labbook,
-                                                                                     username))
-                        pkg_result = pkg_result._replace(error=False)
-                        result.append(pkg_result)
-                    except ValueError:
-                        result.append(pkg_result)
-
+                    # You need to set the latest version
+                    result.append(PackageResult(package=package['package'],
+                                                version=version_list[0],
+                                                error=False))
         return result
+
+    def get_packages_metadata(self, package_list: List[str], labbook: LabBook, username: str) -> List[PackageMetadata]:
+        """Method to get package metadata
+
+        Args:
+            package_list: List of package names
+            labbook(str): The labbook instance
+            username(str): The username for the logged in user
+
+        Returns:
+            list
+        """
+        results = list()
+        for package in package_list:
+            result = ContainerOperations.run_command(f"apt-cache search {package}", labbook, username,
+                                                     fallback_image=self.fallback_image(labbook))
+            description = None
+            latest_version = None
+            if result:
+                lines = result.decode('utf-8').split('\n')
+                for l in lines:
+                    if l:
+                        pkg_name, pkg_description = l.split(" - ", 1)
+                        if pkg_name == package:
+                            description = pkg_description.strip()
+                            break
+
+            # Get the latest version of the package
+            try:
+                versions = self.list_versions(package, labbook, username)
+                if versions:
+                    latest_version = versions[0]
+            except ValueError:
+                # If package isn't found, just set to None
+                pass
+
+            results.append(PackageMetadata(package_manager="apt", package=package, latest_version=latest_version,
+                                           description=description, docs_url=None))
+
+        return results
 
     def generate_docker_install_snippet(self, packages: List[Dict[str, str]], single_line: bool = False) -> List[str]:
         """Method to generate a docker snippet to install 1 or more packages

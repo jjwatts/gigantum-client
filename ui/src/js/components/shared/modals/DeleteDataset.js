@@ -49,7 +49,14 @@ export default class DeleteDataset extends Component {
       (response, error) => {
         if (error) {
           console.error(error);
-          setMultiInfoMessage(state.id, 'ERROR: Could not delete remote Dataset', null, true, error);
+          const messageData = {
+            id: state.id,
+            message: 'ERROR: Could not delete remote Dataset',
+            isLast: null,
+            error: true,
+            messageBody: error,
+          };
+          setMultiInfoMessage(messageData);
         } else if (response) {
           callback();
         }

@@ -1,5 +1,5 @@
 import subprocess
-
+import math
 from gtmcore.labbook import LabBook
 from typing import Optional, List, Tuple
 
@@ -116,6 +116,12 @@ class BranchManager(object):
             logger.info(f"Creating rollback branch from revision {revision} in {str(self.repository)}")
             r = subprocess.check_output(f'git checkout {revision}', cwd=self.repository.root_dir, shell=True)
             logger.info(r)
+            # If you are creating a branch via rollback, this is the only place to you cleanup linked datasets that have
+            # been removed during the rollback process due to the repo being detached and another checkout occurring
+            if isinstance(self.repository, LabBook):
+                if not self.username:
+                    raise ValueError("Username is required when creating a new branch at a specific revision")
+                InventoryManager().update_linked_datasets(self.repository, self.username)
         self.repository.checkout_branch(branch_name=title, new=True)
         logger.info(f'Activated new branch {self.active_branch} in {str(self.repository)}')
 
@@ -165,7 +171,7 @@ class BranchManager(object):
         if isinstance(self.repository, LabBook):
             if not self.username:
                 raise ValueError("Current logged in username required to checkout a Project with a linked dataset")
-            InventoryManager().update_linked_dataset(self.repository, self.username, init=True)
+            InventoryManager().update_linked_datasets(self.repository, self.username, init=True)
         logger.info(f'Checked out branch {self.active_branch} in {str(self.repository)}')
 
     def workon_branch(self, branch_name: str) -> None:
@@ -238,14 +244,15 @@ class BranchManager(object):
         git_cmd = f'git rev-list {remote_name}/{bname}..{bname} --count'
         result = call_subprocess(git_cmd.split(), cwd=self.repository.root_dir).strip()
         if result.isdigit():
-            return int(result)
+            return int(math.ceil(float(result)/2.0))
         else:
             raise BranchException(f"Unclear commits_ahead result: {result}")
 
     def get_commits_behind(self, branch_name: Optional[str] = None, remote_name: str = "origin") -> int:
         """Return to number of local commits not present in remote branch.
 
-        Note! It is important to call fetch to ensure correct behavior here."""
+        Note! It is important to call fetch to ensure correct behavior here. This is done via the FetchLoader so
+        one fetch per branch occurs in the API"""
         if not self.repository.remote:
             return 0
 
@@ -256,6 +263,6 @@ class BranchManager(object):
         git_cmd = f'git rev-list {bname}..{remote_name}/{bname} --count'
         result = call_subprocess(git_cmd.split(), cwd=self.repository.root_dir).strip()
         if result.isdigit():
-            return int(result)
+            return int(math.ceil(float(result)/2.0))
         else:
             raise BranchException(f"Unclear commits_behind result: {result}")

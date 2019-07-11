@@ -22,6 +22,10 @@ import { getFilesFromDragEvent } from 'JS/utils/html-dir-content';
 import BranchMutations from 'Components/shared/utils/BranchMutations';
 // config
 import Config from 'JS/config';
+// mutations
+import LabbookContainerStatusMutation from 'Mutations/LabbookContainerStatusMutation';
+import LabbookLookupMutation from 'Mutations/LabbookLookupMutation';
+import MigrateProjectMutation from 'Mutations/MigrateProjectMutation';
 // components
 import Login from 'Components/login/Login';
 import Loader from 'Components/common/Loader';
@@ -29,48 +33,20 @@ import ErrorBoundary from 'Components/common/ErrorBoundary';
 import Header from 'Components/shared/header/Header';
 import ButtonLoader from 'Components/common/ButtonLoader';
 import Modal from 'Components/common/Modal';
-// mutations
-import LabbookContainerStatusMutation from 'Mutations/LabbookContainerStatusMutation';
-import LabbookLookupMutation from 'Mutations/LabbookLookupMutation';
-import MigrateProjectMutation from 'Mutations/MigrateProjectMutation';
+import Activity from './activity/LabbookActivityContainer';
+import Overview from './overview/LabbookOverviewContainer';
+import Environment from './environment/Environment';
+import Code from './code/Code';
+import InputData from './inputData/Input';
+import OutputData from './outputData/Output';
 // query
 import fetchMigrationInfoQuery from './queries/fetchMigrationInfoQuery';
-import fetchPackageLatestVersion from './queries/fetchPackageLatestVersionQuery';
 // assets
 import './Labbook.scss';
 
 let count = 0;
 
 const Loading = () => <Loader />;
-
-/*
- * Code splitting imports intended to boost initial load speed
-*/
-
-const Overview = Loadable({
-  loader: () => import('./overview/LabbookOverviewContainer'),
-  loading: Loading,
-});
-const Activity = Loadable({
-  loader: () => import('./activity/LabbookActivityContainer'),
-  loading: Loading,
-});
-const Code = Loadable({
-  loader: () => import('./code/Code'),
-  loading: Loading,
-});
-const InputData = Loadable({
-  loader: () => import('./inputData/Input'),
-  loading: Loading,
-});
-const OutputData = Loadable({
-  loader: () => import('./outputData/Output'),
-  loading: Loading,
-});
-const Environment = Loadable({
-  loader: () => import('./environment/Environment'),
-  loading: Loading,
-});
 
 class Labbook extends Component {
   constructor(props) {
@@ -176,8 +152,6 @@ class Labbook extends Component {
 
     this._fetchMigrationInfo();
 
-    this._fetchPackageVersion();
-
     this._setStickHeader();
     this._fetchStatus(true);
 
@@ -191,8 +165,6 @@ class Labbook extends Component {
 
     if (activeBranchName !== state.activeBranchName) {
       this.setState({ activeBranchName });
-
-      this._fetchPackageVersion();
     }
   }
 
@@ -209,6 +181,36 @@ class Labbook extends Component {
 
   /**
    @param {}
+   refetch packages
+   */
+  @boundMethod
+  _packageLatestRefetch() {
+    const { props } = this;
+    const queryVariables = {
+      labbookID: props.labbook.id,
+      skipPackages: false,
+      environmentSkip: false,
+      first: 1000,
+    }
+    const renderVariables = {
+      labbookID: props.labbook.id,
+      overviewSkip: false,
+      activitySkip: false,
+      environmentSkip: false,
+      inputSkip: false,
+      outputSkip: false,
+      codeSkip: false,
+      labbookSkip: false,
+      skipPackages: false,
+    };
+    const options = {
+      force: true,
+    }
+    props.relay.refetch(queryVariables, renderVariables, () => {}, options);
+  }
+
+  /**
+   @param {String} section
    refetch labbook
    */
   @boundMethod
@@ -232,6 +234,7 @@ class Labbook extends Component {
       labbookID: props.labbook.id,
       ...currentState,
       [currentSection]: false,
+      skipPackages: false,
     };
     const remainingQueryVariables = {
       labbookID: props.labbook.id,
@@ -240,6 +243,7 @@ class Labbook extends Component {
     const remainingRenderVariables = {
       labbookID: props.labbook.id,
       labbookSkip: false,
+      skipPackages: false,
     };
     const newState = {
       labbookSkip: true,
@@ -272,47 +276,6 @@ class Labbook extends Component {
 
     if (state[currentSection]) {
       props.relay.refetch(queryVariables, renderVariables, refetchCallback, options);
-    }
-  }
-
-  /**
-    @param {}
-    gets latest version for packages
-  */
-  @boundMethod
-  _fetchPackageVersion() {
-    const { props, state } = this;
-    const { owner, name } = props.labbook;
-    const currentTimestamp = new Date().getTime();
-    const timestamp = localStorage.getItem('latestVersionTimestamp');
-    const delayRefetch = timestamp && ((currentTimestamp - timestamp) < 120000);
-
-    if (!state.isFetchingPackages && !delayRefetch) {
-      this.setState({ isFetchingPackages: true });
-      const date = new Date();
-      localStorage.setItem('latestVersionTimestamp', date.getTime());
-
-      fetchPackageLatestVersion.getPackageVersions(owner, name, 1000, null).then((response, error) => {
-        if (response && response.labbook) {
-          const packageLatestVersions = response.labbook.environment.packageDependencies.edges;
-          this.setState({ packageLatestVersions });
-        }
-        localStorage.setItem('latestVersionTimestamp', 0);
-        if (state.queuePackageFetch) {
-          this.setState({
-            isFetchingPackages: false,
-            queuePackageFetch: false,
-          });
-          this._fetchPackageVersion();
-        } else {
-          this.setState({
-            isFetchingPackages: false,
-            queuePackageFetch: false,
-          });
-        }
-      });
-    } else {
-      this.setState({ queuePackageFetch: true });
     }
   }
 
@@ -502,7 +465,8 @@ class Labbook extends Component {
   }
 
   /**
-    @param {boolean, boolean}
+    @param {boolean} branchesOpen
+    @param {boolean} mergeFilter
     updates branchOpen state
   */
   @boundMethod
@@ -561,7 +525,11 @@ class Labbook extends Component {
 
   render() {
     const { props, state } = this;
-    const isLocked = props.isBuilding || props.isSyncing || props.isPublishing || state.isLocked;
+    const isLocked = props.isBuilding
+      || props.isSyncing
+      || props.isPublishing
+      || state.isLocked;
+
     if (props.labbook) {
       const { labbook, branchesOpen } = props;
       const sidePanelVisible = !isLocked && props.sidePanelVisible;
@@ -748,6 +716,7 @@ class Labbook extends Component {
             }
             <Header
               {...props}
+              ref={header => header }
               description={labbook.description}
               toggleBranchesView={this._toggleBranchesView}
               sectionType="labbook"
@@ -853,13 +822,15 @@ class Labbook extends Component {
                           <Environment
                             key={`${props.labbookName}_environment`}
                             labbook={labbook}
+                            owner={labbook.owner}
+                            name={labbook.name}
                             labbookId={labbook.id}
                             refetch={this._refetchSection}
                             containerStatus={this.refs.ContainerStatus}
                             overview={labbook.overview}
                             isLocked={isLocked}
                             packageLatestVersions={state.packageLatestVersions}
-                            fetchPackageVersion={this._fetchPackageVersion}
+                            packageLatestRefetch={this._packageLatestRefetch}
                             {...props}
                           />
                         </ErrorBoundary>)}
@@ -880,6 +851,7 @@ class Labbook extends Component {
                             isLocked={isLocked}
                             containerStatus={containerStatus}
                             section="code"
+                            lockFileBrowser={props.isUploading}
                           />
 
                         </ErrorBoundary>)}
@@ -898,6 +870,7 @@ class Labbook extends Component {
                             isLocked={isLocked}
                             refetch={this._refetchSection}
                             containerStatus={containerStatus}
+                            lockFileBrowser={props.isUploading}
                             section="input"
                           />
                         </ErrorBoundary>)}
@@ -916,6 +889,7 @@ class Labbook extends Component {
                             isLocked={isLocked}
                             refetch={this._refetchSection}
                             containerStatus={containerStatus}
+                            lockFileBrowser={props.isUploading}
                             section="output"
                           />
                         </ErrorBoundary>)}
@@ -990,7 +964,7 @@ const LabbookFragmentContainer = createRefetchContainer(
       }`,
   },
   graphql`
-  query LabbookRefetchQuery($first: Int!, $cursor: String, $hasNext: Boolean!, $labbookID: ID!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
+  query LabbookRefetchQuery($first: Int!, $cursor: String, $skipPackages: Boolean!, $labbookID: ID!, $environmentSkip: Boolean!, $overviewSkip: Boolean!, $activitySkip: Boolean!, $codeSkip: Boolean!, $inputSkip: Boolean!, $outputSkip: Boolean!, $labbookSkip: Boolean!){
     labbook: node(id: $labbookID){
       ... on Labbook {
         visibility @skip(if: $labbookSkip)

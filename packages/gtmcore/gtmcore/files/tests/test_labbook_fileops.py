@@ -29,6 +29,14 @@ from gtmcore.fixtures import mock_config_file, mock_labbook, remote_labbook_repo
 
 
 class TestLabbookFileOperations(object):
+    def test_labbook_content_size_simply(self, mock_labbook):
+        x, y, lb = mock_labbook
+
+        lb_size = FO.content_size(lb)
+        # Make sure the new LB is about 10-30kB. This is about reasonable for a new, emtpy LB.
+        assert lb_size > 10000
+        assert lb_size < 30000
+
     def test_insert_file_success_1(self, mock_labbook, sample_src_file):
         lb = mock_labbook[2]
         new_file_data = FO.insert_file(lb, "code", sample_src_file)
@@ -36,7 +44,6 @@ class TestLabbookFileOperations(object):
         assert os.path.exists(os.path.join(lb.root_dir, 'code', base_name))
         assert new_file_data['key'] == f'{base_name}'
         assert new_file_data['is_dir'] is False
-        assert new_file_data['is_favorite'] is False
 
     def test_insert_file_upload_id(self, mock_labbook):
         lb = mock_labbook[2]
@@ -81,7 +88,7 @@ class TestLabbookFileOperations(object):
 
         git_hash_2 = lb.git.commit_hash
         with pytest.raises(Exception):
-            r = lb.insert_file('input', src_file=sample_f.name, dst_dir='')
+            r = lb.insert_file('input', src_file=sample_f.name)
 
         # Make sure no commits were made
         assert git_hash_1 == git_hash_2
@@ -354,53 +361,3 @@ class TestLabbookFileOperations(object):
         lb = mock_labbook[2]
         with pytest.raises(ValueError):
             FO.listdir(lb, "code", base_path='blah')
-
-    def test_walkdir_with_favorites(self, mock_labbook, sample_src_file):
-        lb = mock_labbook[2]
-        dirs = ["code/cat_dir", "code/dog_dir"]
-        for d in dirs:
-            FO.makedir(lb, d)
-
-        sfile = '/tmp/testwalkdirwithfavorites.file'
-        for d in ['', 'dog_dir', 'cat_dir']:
-            open(sfile, 'w').write('xxx')
-            FO.insert_file(lb, 'code', sfile, d)
-
-        sample_filename = os.path.basename(sfile)
-
-        # Since the file is in a hidden directory, it should not be found.
-        dir_walks = FO.walkdir(lb, 'code')
-        # Spot check some entries
-        assert len(dir_walks) == 5
-        assert dir_walks[0]['key'] == 'cat_dir/'
-        assert dir_walks[0]['is_dir'] is True
-        assert dir_walks[0]['is_favorite'] is False
-        assert dir_walks[1]['key'] == 'dog_dir/'
-        assert dir_walks[1]['is_dir'] is True
-        assert dir_walks[1]['is_favorite'] is False
-        assert dir_walks[2]['is_favorite'] is False
-        assert dir_walks[2]['is_dir'] is False
-        assert dir_walks[3]['is_favorite'] is False
-        assert dir_walks[3]['is_dir'] is False
-        assert dir_walks[4]['is_favorite'] is False
-        assert dir_walks[4]['is_dir'] is False
-
-        lb.create_favorite("code", sample_filename, description="Fav 1")
-        lb.create_favorite("code", f"dog_dir/{sample_filename}", description="Fav 2")
-        lb.create_favorite("code", f"cat_dir/", description="Fav 3", is_dir=True)
-
-        dir_walks = FO.walkdir(lb, 'code')
-        # Spot check some entries
-        assert len(dir_walks) == 5
-        assert dir_walks[0]['key'] == 'cat_dir/'
-        assert dir_walks[0]['is_dir'] is True
-        assert dir_walks[0]['is_favorite'] is True
-        assert dir_walks[1]['key'] == 'dog_dir/'
-        assert dir_walks[1]['is_dir'] is True
-        assert dir_walks[1]['is_favorite'] is False
-        assert dir_walks[2]['is_favorite'] is True
-        assert dir_walks[2]['is_dir'] is False
-        assert dir_walks[3]['is_favorite'] is False
-        assert dir_walks[3]['is_dir'] is False
-        assert dir_walks[4]['is_favorite'] is True
-        assert dir_walks[4]['is_dir'] is False

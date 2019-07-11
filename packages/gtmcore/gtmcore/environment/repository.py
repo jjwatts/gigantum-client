@@ -1,25 +1,7 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 import os
 import pickle
 from typing import (Any, List, Dict)
+from operator import itemgetter
 
 from gtmcore.configuration import Configuration
 
@@ -87,7 +69,8 @@ class BaseRepository(object):
         if base not in index_data[repository]:
             raise ValueError("Base `{}` not found in repository `{}`.".format(base, repository))
 
-        return list(index_data[repository][base].items())
+        data = list(index_data[repository][base].items())
+        return sorted(data, key=itemgetter(0), reverse=True)
 
     def get_base(self, repository: str, base: str, revision: int) -> Dict[str, Any]:
         """Method to get a details for a version of a base

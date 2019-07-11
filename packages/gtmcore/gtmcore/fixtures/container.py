@@ -14,6 +14,20 @@ from gtmcore.imagebuilder import ImageBuilder
 from gtmcore.fixtures.fixtures import mock_config_with_repo, ENV_UNIT_TEST_REPO, ENV_UNIT_TEST_BASE, ENV_UNIT_TEST_REV
 
 
+class ContainerFixture(object):
+    """ Convenient namespace object for the unwieldy build_lb_image_for_jupyterlab
+    fixture. """
+    def __init__(self, fixture_data):
+        # yield lb, ib, client, docker_image_id, container_id, None, 'unittester'
+        self.labbook = fixture_data[0]
+        self.imagebuilder = fixture_data[1]
+        self.docker_client = fixture_data[2]
+        self.docker_image_id = fixture_data[3]
+        self.docker_container_id = fixture_data[4]
+        self._ = fixture_data[5]
+        self.username = fixture_data[6]
+
+
 @pytest.fixture(scope='function')
 def build_lb_image_for_jupyterlab(mock_config_with_repo):
     with patch.object(Configuration, 'find_default_config', lambda self: mock_config_with_repo[0]):

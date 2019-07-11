@@ -1,100 +1,57 @@
-# Copyright (c) 2017 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-from typing import List
+from typing import List, Tuple, Dict
 
 from promise import Promise
 from promise.dataloader import DataLoader
 from gtmcore.environment.utils import get_package_manager
+from gtmcore.environment.packagemanager import PackageMetadata
 from gtmcore.labbook import LabBook
 from gtmcore.logging import LMLogger
 
 logger = LMLogger.get_logger()
 
 
-class PackageLatestVersionLoader(DataLoader):
-    """Dataloader for PackageComponent instances
+class PackageDataloader(DataLoader):
+    """Dataloader to manage running package latest version and metadata queries
 
-    Primary advantage is that with conda managed packages, we can coalesce latest version queries to boost performance
-
-    The key for this object is  manager&package
+    The key for this dataloader is  manager&package
     """
     def __init__(self, keys: List[str], labbook: LabBook, username: str) -> None:
         DataLoader.__init__(self)
         self.keys = keys
-        self.latest_versions: dict = dict()
+        self.results: Dict[str, PackageMetadata] = dict()
         self.labbook = labbook
         self.username = username
 
-    def populate_latest_versions(self):
-        conda3_pkgs: list = list()
-        conda2_pkgs: list = list()
-        normal_pkgs: list = list()
+    def populate_results(self) -> None:
+        # Repack key data
+        packages: Dict[str, List[Tuple[str, str, str]]] = {'conda2': list(),
+                                                           'conda3': list(),
+                                                           'pip': list(),
+                                                           'apt': list()}
         for key in self.keys:
-            # Repack key data
             manager, package = key.split('&')
-            if manager == 'conda2':
-                conda2_pkgs.append([package, key])
-            elif manager == 'conda3':
-                conda3_pkgs.append([package, key])
-            else:
-                normal_pkgs.append([manager, package, key])
+            packages[manager].append((manager, package, key))
 
-        if conda2_pkgs:
-            # load all versions at once
-            all_pkgs = [x[0] for x in conda2_pkgs]
-            mgr = get_package_manager('conda2')
-            try:
-                versions = mgr.latest_versions(all_pkgs, labbook=self.labbook, username=self.username)
+        for manager in packages.keys():
+            package_names = [x[1] for x in packages[manager]]
+            if package_names:
+                mgr = get_package_manager(manager)
 
-                # save
-                for version, pkg in zip(versions, conda2_pkgs):
-                    self.latest_versions[pkg[1]] = version
+                try:
+                    metadata = mgr.get_packages_metadata(package_names, labbook=self.labbook, username=self.username)
 
-            except ValueError as err:
-                logger.warning(f"An error occurred while looking up conda2 latest versions: {err}")
+                    # save
+                    for pkg_input, metadata in zip(packages[manager], metadata):
+                        self.results[pkg_input[2]] = metadata
 
-        if conda3_pkgs:
-            # load all versions at once
-            all_pkgs = [x[0] for x in conda3_pkgs]
-            mgr = get_package_manager('conda3')
-            try:
-                versions = mgr.latest_versions(all_pkgs, labbook=self.labbook, username=self.username)
+                except ValueError as err:
+                    logger.warning(f"An error occurred while looking up {manager} latest versions and metadata: {err}")
 
-                # save
-                for version, pkg in zip(versions, conda3_pkgs):
-                    self.latest_versions[pkg[1]] = version
+    def get_data(self, key: str) -> PackageMetadata:
+        if not self.results:
+            self.populate_results()
 
-            except ValueError as err:
-                logger.warning(f"An error occurred while looking up conda3 latest versions: {err}")
-
-        if normal_pkgs:
-            # For these package managers, look up each latest version individually
-            for pkg in normal_pkgs:
-                mgr = get_package_manager(pkg[0])
-                self.latest_versions[pkg[2]] = mgr.latest_version(pkg[1], labbook=self.labbook, username=self.username)
-
-    def get_version(self, key: str):
-        if not self.latest_versions:
-            self.populate_latest_versions()
-
-        return self.latest_versions[key]
+        return self.results[key]
 
     def batch_load_fn(self, keys: List[str]):
         """Method to load labbook objects based on a list of unique keys
@@ -106,77 +63,4 @@ class PackageLatestVersionLoader(DataLoader):
 
         """
         # Resolve objects
-        return Promise.resolve([self.get_version(key) for key in keys])
-
-
-class PackageValidator(DataLoader):
-    """Dataloader for validating packages
-
-    Primary advantage is that with conda managed packages, we can coalesce latest version queries to boost performance
-
-    The key for this object is  manager&package
-    """
-    def __init__(self, keys: List[str], labbook: LabBook, username: str) -> None:
-        DataLoader.__init__(self)
-        self.keys = keys
-        self.latest_versions: dict = dict()
-        self.labbook = labbook
-        self.username = username
-
-    def populate_latest_versions(self):
-        conda3_pkgs = list()
-        conda2_pkgs = list()
-        normal_pkgs = list()
-        for key in self.keys:
-            # Repack key data
-            manager, package = key.split('&')
-            if manager == 'conda2':
-                conda2_pkgs.append([package, key])
-            elif manager == 'conda3':
-                conda3_pkgs.append([package, key])
-            else:
-                normal_pkgs.append([manager, package, key])
-
-        if conda2_pkgs:
-            # load all versions at once
-            all_pkgs = [x[0] for x in conda2_pkgs]
-            mgr = get_package_manager('conda2')
-            versions = mgr.latest_versions(all_pkgs, labbook=self.labbook, username=self.username)
-
-            # save
-            for version, pkg in zip(versions, conda2_pkgs):
-                self.latest_versions[pkg[1]] = version
-
-        if conda3_pkgs:
-            # load all versions at once
-            all_pkgs = [x[0] for x in conda3_pkgs]
-            mgr = get_package_manager('conda3')
-            versions = mgr.latest_versions(all_pkgs, labbook=self.labbook, username=self.username)
-
-            # save
-            for version, pkg in zip(versions, conda3_pkgs):
-                self.latest_versions[pkg[1]] = version
-
-        if normal_pkgs:
-            # For these package managers, look up each latest version individually
-            for pkg in normal_pkgs:
-                mgr = get_package_manager(pkg[0])
-                self.latest_versions[pkg[2]] = mgr.latest_version(pkg[1], labbook=self.labbook, username=self.username)
-
-    def get_version(self, key: str):
-        if not self.latest_versions:
-            self.populate_latest_versions()
-
-        return self.latest_versions[key]
-
-    def batch_load_fn(self, keys: List[str]):
-        """Method to load labbook objects based on a list of unique keys
-
-        Args:
-            keys(list(str)): Unique key to identify the labbook
-
-        Returns:
-
-        """
-        # Resolve objects
-        return Promise.resolve([self.get_version(key) for key in keys])
+        return Promise.resolve([self.get_data(key) for key in keys])

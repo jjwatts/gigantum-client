@@ -1,4 +1,7 @@
+from typing import Callable, List, Dict, Any, Tuple, Optional, TYPE_CHECKING
+import pickle
 from typing import List, Dict, Any, Tuple, Optional
+
 import os
 from enum import Enum
 import shutil
@@ -11,12 +14,14 @@ from stat import S_ISDIR
 
 from gtmcore.activity import ActivityStore, ActivityRecord, ActivityDetailType, ActivityType,\
     ActivityAction, ActivityDetailRecord
-from gtmcore.dataset.dataset import Dataset
 from gtmcore.dataset.manifest.hash import SmartHash
 from gtmcore.dataset.manifest.file import ManifestFileCache
 from gtmcore.dataset.cache import get_cache_manager_class, CacheManager
 from gtmcore.dataset.manifest.eventloop import get_event_loop
 from gtmcore.logging import LMLogger
+
+if TYPE_CHECKING:
+    from gtmcore.dataset import Dataset
 
 logger = LMLogger.get_logger()
 
@@ -35,7 +40,7 @@ StatusResult = namedtuple('StatusResult', ['created', 'modified', 'deleted'])
 class Manifest(object):
     """Class to handle file file manifest"""
 
-    def __init__(self, dataset: Dataset, logged_in_username: Optional[str] = None) -> None:
+    def __init__(self, dataset: 'Dataset', logged_in_username: Optional[str] = None) -> None:
         self.dataset = dataset
         self.logged_in_username = logged_in_username
 
@@ -82,6 +87,21 @@ class Manifest(object):
 
         """
         return object_id[0:8], object_id[8:16]
+
+    def get_num_hashing_cpus(self) -> int:
+        """
+
+        Returns:
+
+        """
+        config_val = self.dataset.client_config.config['datasets']['hash_cpu_limit']
+        if config_val == 'auto':
+            num_cpus = os.cpu_count()
+            if not num_cpus:
+                num_cpus = 1
+            return num_cpus
+        else:
+            return int(config_val)
 
     def dataset_to_object_path(self, dataset_path: str) -> str:
         """Helper method to compute the absolute object path from the relative dataset path
@@ -237,7 +257,10 @@ class Manifest(object):
             # Move file to new object
             shutil.move(source, destination)
         # Link object back
-        os.link(destination, source)
+        try:
+            os.link(destination, source)
+        except PermissionError:
+            os.symlink(destination, source)
 
     async def _move_to_object_cache(self, relative_path, hash_str):
         """Method to move a file to the object cache
@@ -269,6 +292,31 @@ class Manifest(object):
 
         return destination
 
+    def hash_files(self, update_files: List[str]) -> Tuple[List[Optional[str]], List[Optional[str]]]:
+        """Method to run the update process on the manifest based on change status (optionally computing changes if
+        status is not set)
+
+        Args:
+            update_files: The current change status of the dataset, of omitted, it will be computed
+
+        Returns:
+            StatusResult
+        """
+        # Hash Files
+        loop = get_event_loop()
+        hash_task = asyncio.ensure_future(self.hasher.hash(update_files))
+        loop.run_until_complete(asyncio.gather(hash_task))
+
+        # Move files into object cache and link back to the revision directory
+        hash_result = hash_task.result()
+        tasks = [asyncio.ensure_future(self._move_to_object_cache(f, h)) for f, h in zip(update_files, hash_result)]
+        loop.run_until_complete(asyncio.gather(*tasks))
+
+        # Update fast hash after objects have been moved/relinked
+        fast_hash_result = self.hasher.fast_hash(update_files, save=True)
+
+        return hash_result, fast_hash_result
+
     def update(self, status: StatusResult = None) -> StatusResult:
         """Method to run the update process on the manifest based on change status (optionally computing changes if
         status is not set)
@@ -286,22 +334,11 @@ class Manifest(object):
         update_files.extend(status.modified)
 
         if update_files:
-            # Hash Files
-            loop = get_event_loop()
-            hash_task = asyncio.ensure_future(self.hasher.hash(update_files))
-            loop.run_until_complete(asyncio.gather(hash_task))
-
-            # Move files into object cache and link back to the revision directory
-            hash_result = hash_task.result()
-            tasks = [asyncio.ensure_future(self._move_to_object_cache(f, h)) for f, h in zip(update_files, hash_result)]
-            loop.run_until_complete(asyncio.gather(*tasks))
-
-            # Update fast hash after objects have been moved/relinked
-            fast_hash_result = self.hasher.fast_hash(update_files, save=True)
+            hash_result, fast_hash_result = self.hash_files(update_files)
 
             # Update manifest file
             for f, h, fh in zip(update_files, hash_result, fast_hash_result):
-                if not fh:
+                if not fh or not h:
                     raise ValueError(f"Failed to update manifest for {f}. File not found.")
 
                 _, file_bytes, mtime = fh.split("||")
@@ -326,11 +363,9 @@ class Manifest(object):
         Returns:
             dict
         """
-        # TODO: Support favorites
         abs_path = os.path.join(self.cache_mgr.cache_root, self.dataset_revision, key)
         return {'key': key,
                 'size': item.get('b'),
-                'is_favorite': False,
                 'is_local': os.path.exists(abs_path),
                 'is_dir': True if abs_path[-1] == "/" else False,
                 'modified_at': float(item.get('m'))}
@@ -344,14 +379,12 @@ class Manifest(object):
         Returns:
             dict
         """
-        # TODO: Support favorites
         abs_path = self.get_abs_path(key)
         stat = os.stat(abs_path)
         is_dir = True if S_ISDIR(stat.st_mode) else False
 
         return {'key': key,
                 'size': str(stat.st_size) if not is_dir else '0',
-                'is_favorite': False,
                 'is_local': True,
                 'is_dir': is_dir,
                 'modified_at': stat.st_mtime}
@@ -581,26 +614,22 @@ class Manifest(object):
         self.hasher.fast_hash_data = dict()
         self.hasher.fast_hash(list(self.manifest.keys()))
 
-    def sweep_all_changes(self, upload: bool = False, extra_msg: str = None) -> None:
-        """Method to sweep all changes in a dataset up into a commit and create an activity record
+    def create_update_activity_record(self, status: StatusResult, upload: bool = False, extra_msg: str = None) -> None:
+        """
 
         Args:
-            upload: If part of an upload, set to true
-            extra_msg: A string with an extra message you want to put into the activity record
+            status(StatusResult): a StatusResult object after updating the manifest
+            upload(bool): flag indicating if this is a record for an upload
+            extra_msg(str): any extra string to add to the activity record
 
         Returns:
-
+            None
         """
         def _item_type(key):
             if key[-1] == os.path.sep:
                 return 'directory'
             else:
                 return 'file'
-
-        previous_revision = self.dataset_revision
-
-        # Update manifest
-        status = self.update()
 
         if len(status.deleted) > 0 or len(status.created) > 0 or len(status.modified) > 0:
             # commit changed manifest file
@@ -613,8 +642,6 @@ class Manifest(object):
                                 importance=255,
                                 linked_commit=self.dataset.git.commit_hash,
                                 tags=[])
-            if upload:
-                ar.tags.append('upload')
 
             for cnt, f in enumerate(status.created):
                 adr = ActivityDetailRecord(ActivityDetailType.DATASET, show=False, importance=max(255 - cnt, 0),
@@ -640,16 +667,49 @@ class Manifest(object):
                 adr.add_value('text/markdown', msg)
                 ar.add_detail_object(adr)
 
-            nmsg = f"{len(status.created)} new file(s). " if len(status.created) > 0 else ""
-            mmsg = f"{len(status.modified)} modified file(s). " if len(status.modified) > 0 else ""
-            dmsg = f"{len(status.deleted)} deleted file(s). " if len(status.deleted) > 0 else ""
+            num_files_created = sum([_item_type(x) == "file" for x in status.created])
+            num_files_modified = sum([_item_type(x) == "file" for x in status.modified])
+            num_files_deleted = sum([_item_type(x) == "file" for x in status.deleted])
+            upload_str = "Uploaded" if upload else ''
+            nmsg = f"{upload_str} {num_files_created} new file(s). " if num_files_created > 0 else ""
+            mmsg = f"{upload_str} {num_files_modified} modified file(s). " if num_files_modified > 0 else ""
+            dmsg = f"{num_files_deleted} deleted file(s). " if num_files_deleted > 0 else ""
+
+            if not nmsg and not mmsg and not dmsg:
+                # You didn't edit any files, only an empty directory
+                num_dirs_created = sum([_item_type(x) == "directory" for x in status.created])
+                num_dirs_modified = sum([_item_type(x) == "directory" for x in status.modified])
+                num_dirs_deleted = sum([_item_type(x) == "directory" for x in status.deleted])
+                nmsg = f"{num_dirs_created} new folder(s). " if num_dirs_created > 0 else ""
+                mmsg = f"{num_dirs_modified} modified folder(s). " if num_dirs_modified > 0 else ""
+                dmsg = f"{num_dirs_deleted} deleted folder(s). " if num_dirs_deleted > 0 else ""
 
             ar.message = f"{extra_msg if extra_msg else ''}" \
-                         f"{'Uploaded ' if upload else ''}" \
                          f"{nmsg}{mmsg}{dmsg}"
 
             ars = ActivityStore(self.dataset)
             ars.create_activity_record(ar)
+
+    def sweep_all_changes(self, upload: bool = False, extra_msg: str = None,
+                          status: Optional[StatusResult] = None) -> None:
+        """
+
+        Args:
+            upload(bool): flag indicating if this is a record for an upload
+            extra_msg(str): any extra string to add to the activity record
+            status(StatusResult): a StatusResult object after updating the manifest
+
+        Returns:
+
+        """
+        previous_revision = self.dataset_revision
+
+        # If `status` is set, assume update() has been run already
+        if not status:
+            status = self.update()
+
+        # Update manifest
+        self.create_update_activity_record(status, upload=upload, extra_msg=extra_msg)
 
         # Re-link new revision, unlink old revision
         self.link_revision()

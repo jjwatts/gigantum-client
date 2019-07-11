@@ -28,7 +28,7 @@ class File extends Component {
     super(props);
     this.state = {
       isDragging: props.isDragging,
-      isSelected: (props.isSelected || this.props.childrenState[this.props.fileData.edge.node.key].isSelected) || false,
+      isSelected: (props.isSelected || (this.props.childrenState[this.props.fileData.edge.node.key] && this.props.childrenState[this.props.fileData.edge.node.key].isSelected)) || false,
       stateSwitch: false,
       newFileName: props.filename,
       renameEditMode: false,
@@ -199,8 +199,8 @@ class File extends Component {
   *  sets dragging state
   *  @return {}
   */
-  _submitRename(evt) {
-    if (evt.key === 'Enter') {
+  _submitRename(evt, fileName) {
+    if (evt.key === 'Enter' && this.state.newFileName !== fileName) {
       this._triggerMutation();
     }
 
@@ -327,12 +327,16 @@ class File extends Component {
           className={fileRowCSS}
           style={rowStyle}
         >
-          <button
-            type="button"
-            className={buttonCSS}
-            onClick={(evt) => { this._setSelected(evt, !this.state.isSelected); }}
-          />
-
+          {
+            !props.readOnly
+            && (
+            <button
+              type="button"
+              className={buttonCSS}
+              onClick={(evt) => { this._setSelected(evt, !this.state.isSelected); }}
+            />
+            )
+          }
           <div className={textIconsCSS}>
 
             <div className={`File__icon ${fileIconsJs.getClass(fileName)}`} />
@@ -368,7 +372,7 @@ class File extends Component {
                 onClick={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
                 onDragStart={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
                 onChange={(evt) => { this._updateFileName(evt); }}
-                onKeyDown={(evt) => { this._submitRename(evt); }}
+                onKeyDown={(evt) => { this._submitRename(evt, fileName); }}
               />
             </div>
             <div className="flex justify-space-around">
@@ -380,6 +384,7 @@ class File extends Component {
               <button
                 type="button"
                 className="File__btn--round File__btn--add File__btn--rename-add"
+                disabled={this.state.newFileName === fileName}
                 onClick={() => { this._triggerMutation(); }}
               />
             </div>
@@ -394,38 +399,47 @@ class File extends Component {
           </div>
 
           <div className="File__cell File__cell--menu">
-            <ActionsMenu
-              edge={props.fileData.edge}
-              mutationData={props.mutationData}
-              mutations={props.mutations}
-              renameEditMode={this._renameEditMode}
-              section={props.section}
-            />
-            { (props.section === 'data')
+            {
+              !props.readOnly
               && (
-              <DatasetActionsMenu
+              <ActionsMenu
                 edge={props.fileData.edge}
-                section={props.section}
                 mutationData={props.mutationData}
                 mutations={props.mutations}
                 renameEditMode={this._renameEditMode}
-                isDownloading={props.isDownloading}
-                parentDownloading={props.parentDownloading}
-                setFolderIsDownloading={props.setFolderIsDownloading}
-                isLocal={props.fileData.edge.node.isLocal}
-                isDragging={props.isDragging}
+                section={props.section}
               />
               )
             }
+            {
+                    (props.section === 'data')
+                    && (
+                    <DatasetActionsMenu
+                      edge={props.fileData.edge}
+                      section={props.section}
+                      mutationData={props.mutationData}
+                      mutations={props.mutations}
+                      renameEditMode={this._renameEditMode}
+                      isDownloading={props.isDownloading}
+                      parentDownloading={props.parentDownloading}
+                      setFolderIsDownloading={props.setFolderIsDownloading}
+                      isLocal={props.fileData.edge.node.isLocal}
+                      isDragging={props.isDragging}
+                    />
+                    )
+                  }
           </div>
 
         </div>
       </div>
     );
 
-    return (
-      props.connectDragSource(file)
-    );
+    if (!props.readOnly) {
+      return (
+        props.connectDragSource(file)
+      );
+    }
+    return file;
   }
 }
 

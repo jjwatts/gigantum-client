@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import Moment from 'moment';
 import { DragSource, DropTarget } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
+import { boundMethod } from 'autobind-decorator';
 // components
 import ActionsMenu from './ActionsMenu';
 import File from './File';
@@ -80,6 +81,17 @@ class Folder extends Component {
     */
   _setState(key, value) {
     this.setState({ [key]: value });
+  }
+
+  /**
+    *  @param {} -
+    *  calls parent refetch method
+    *  @return {boolean}
+    */
+  @boundMethod
+  _refetch() {
+    const { props } = this;
+    props.refetch();
   }
 
   /**
@@ -225,7 +237,7 @@ class Folder extends Component {
   connectDND(render) {
     let renderType;
     const { props, state } = this;
-    if ((state.isDragging || props.parentIsDragged)) {
+    if ((state.isDragging || props.parentIsDragged) && !props.readOnly) {
       renderType = props.connectDragSource(render);
     } else {
       renderType = props.connectDropTarget(render);
@@ -345,8 +357,9 @@ class Folder extends Component {
     *  sumbit or clear
     *  @return {}
     */
-  _submitCancel(evt) {
-    if (evt.key === 'Enter') {
+  _submitCancel(evt, folderName) {
+    const { state } = this;
+    if (evt.key === 'Enter' && state.renameValue !== folderName) {
       this._triggerMutation();
     }
 
@@ -533,11 +546,16 @@ class Folder extends Component {
           style={rowStyle}
           onClick={evt => this._expandSection(evt)}
         >
-          <button
-            type="button"
-            className={buttonCSS}
-            onClick={evt => this._setSelected(evt, !state.isSelected)}
-          />
+          {
+            !props.readOnly
+            && (
+            <button
+              type="button"
+              className={buttonCSS}
+              onClick={evt => this._setSelected(evt, !state.isSelected)}
+            />
+            )
+          }
           <div className={folderNameCSS}>
             <div className="Folder__icon" />
             <div className="Folder__name">
@@ -564,7 +582,7 @@ class Folder extends Component {
                 value={state.renameValue}
                 onDragStart={(evt) => { evt.preventDefault(); evt.stopPropagation(); }}
                 onChange={(evt) => { this._updateFileName(evt); }}
-                onKeyDown={(evt) => { this._submitCancel(evt); }}
+                onKeyDown={(evt) => { this._submitCancel(evt, folderName); }}
               />
             </div>
             <div className="flex justify-space-around">
@@ -576,6 +594,7 @@ class Folder extends Component {
               <button
                 type="button"
                 className="File__btn--round File__btn--add File__input--rename-add"
+                disabled={state.renameValue === folderName}
                 onClick={() => { this._triggerMutation(); }}
               />
             </div>
@@ -585,17 +604,22 @@ class Folder extends Component {
             {Moment((node.modifiedAt * 1000), 'x').fromNow()}
           </div>
           <div className="Folder__cell Folder__cell--menu">
-            <ActionsMenu
-              edge={props.fileData.edge}
-              mutationData={props.mutationData}
-              mutations={props.mutations}
-              addFolderVisible={this._addFolderVisible}
-              fileData={props.fileData}
-              section={props.section}
-              isLocal={isLocal}
-              folder
-              renameEditMode={this._renameEditMode}
-            />
+            {
+              !props.readOnly
+              && (
+                <ActionsMenu
+                  edge={props.fileData.edge}
+                  mutationData={props.mutationData}
+                  mutations={props.mutations}
+                  addFolderVisible={this._addFolderVisible}
+                  fileData={props.fileData}
+                  section={props.section}
+                  isLocal={isLocal}
+                  folder
+                  renameEditMode={this._renameEditMode}
+                />
+              )
+            }
             { (props.section === 'data')
               && (
               <DatasetActionsMenu
@@ -638,6 +662,7 @@ class Folder extends Component {
                   <FolderDND
                     filename={file}
                     index={index}
+                    readOnly={props.readOnly}
                     key={children[file].edge.node.key}
                     ref={children[file].edge.node.key}
                     mutations={props.mutations}
@@ -660,15 +685,17 @@ class Folder extends Component {
                     parentDownloading={state.downloadingAll}
                     section={props.section}
                     isDownloading={state.isDownloading || props.isDownloading}
-                    codeDirUpload={props.codeDirUpload}
+                    fileSizePrompt={props.fileSizePrompt}
                     checkLocal={props.checkLocal}
                     containerStatus={props.containerStatus}
+                    refetch={props.refetch}
                   />
                 );
               } if ((children && children[file] && children[file].edge && !children[file].edge.node.isDir)) {
                 return (
                   <File
                     filename={file}
+                    readOnly={props.readOnly}
                     isLocal={props.checkLocal(children[file])}
                     mutations={props.mutations}
                     mutationData={props.mutationData}

@@ -26,49 +26,6 @@ const mutation = graphql`
   }
 `;
 
-
-function sharedUpdater(store, datasetId, data, node) {
-  const datasetProxy = store.get(datasetId);
-  if (datasetProxy) {
-    const conn = RelayRuntime.ConnectionHandler.getConnection(
-      datasetProxy,
-      data,
-    );
-
-    if (conn) {
-      const newEdge = RelayRuntime.ConnectionHandler.createEdge(
-        store,
-        conn,
-        node,
-        'newDatasetFileEdge',
-      );
-
-      RelayRuntime.ConnectionHandler.insertEdgeAfter(
-        conn,
-        newEdge,
-      );
-    }
-  }
-}
-
-
-function deleteEdge(store, datasetID, deletedID, data) {
-  const datasetProxy = store.get(datasetID);
-  if (datasetProxy) {
-    const conn = RelayRuntime.ConnectionHandler.getConnection(
-      datasetProxy,
-      data,
-    );
-
-    if (conn) {
-      RelayRuntime.ConnectionHandler.deleteNode(
-        conn,
-        deletedID,
-      );
-    }
-  }
-}
-
 export default function AddDatasetFileMutation(
   connectionKey,
   owner,
@@ -77,14 +34,12 @@ export default function AddDatasetFileMutation(
   filePath,
   chunk,
   accessToken,
+  idToken,
   transactionId,
   callback,
 ) {
-  const uploadables = [chunk.blob, accessToken];
-  const date = new Date();
-  const modifiedAt = (date.getTime() / 1000);
+  const uploadables = [chunk.blob, accessToken, idToken];
   const id = uuidv4();
-  const optimisticId = uuidv4();
 
   const variables = {
     input: {
@@ -110,15 +65,6 @@ export default function AddDatasetFileMutation(
       mutation,
       variables,
       uploadables,
-      configs: [{ // commented out until nodes are returned
-        type: 'RANGE_ADD',
-        parentID: datasetId,
-        connectionInfo: [{
-          key: connectionKey,
-          rangeBehavior: 'append',
-        }],
-        edgeName: 'newDatasetFileEdge',
-      }],
       onCompleted: (response, error) => {
         if (error) {
           console.log(error);
@@ -126,60 +72,6 @@ export default function AddDatasetFileMutation(
         callback(response, error);
       },
       onError: err => console.error(err),
-      optimisticUpdater: (store) => {
-        const node = store.create(optimisticId, 'DatasetFile');
-        const chunkSize = chunk.chunkSize === 48000000 ? (chunk.fileSizeKb * 1000) : chunk.chunkSize;
-        node.setValue(optimisticId, 'id');
-        node.setValue(false, 'isDir');
-        node.setValue(filePath, 'key');
-        node.setValue(modifiedAt, 'modifiedAt');
-        node.setValue(chunkSize, 'size');
-
-        sharedUpdater(store, datasetId, connectionKey, node);
-      },
-      updater: (store, response) => {
-        deleteEdge(store, datasetId, optimisticId, connectionKey);
-
-        if (response.addDatasetFile && response.addDatasetFile.newDatasetFileEdge && response.addDatasetFile.newDatasetFileEdge.node) {
-          const { id } = response.addDatasetFile.newDatasetFileEdge.node;
-
-          const nodeExists = store.get(id);
-
-          const responseKey = response.addDatasetFile.newDatasetFileEdge.node.key;
-          const responseKeyArr = responseKey.split('/');
-          let temp = '';
-
-          responseKeyArr.forEach((key, index) => {
-            if (!nodeExists || index !== responseKeyArr.length - 1) {
-              let node;
-
-              if (index === responseKeyArr.length - 1) {
-                temp += key;
-              } else {
-                temp = `${temp + key}/`;
-              }
-
-              if (index === responseKeyArr.length - 1) {
-                node = store.create(id, 'DatasetFile');
-                node.setValue(response.addDatasetFile.newDatasetFileEdge.node.size, 'size');
-                node.setValue(false, 'isDir');
-                node.setValue(response.addDatasetFile.newDatasetFileEdge.node.id, 'id');
-                node.setValue(response.addDatasetFile.newDatasetFileEdge.node.key, 'key');
-                node.setValue(response.addDatasetFile.newDatasetFileEdge.node.modifiedAt, 'modifiedAt');
-                sharedUpdater(store, datasetId, connectionKey, node);
-              } else if (!store.get(temp)) {
-                node = store.create(temp, 'DatasetFile');
-                node.setValue(temp, 'id');
-                node.setValue(true, 'isDir');
-                node.setValue(temp, 'key');
-                node.setValue(0, 'size');
-                node.setValue(response.addDatasetFile.newDatasetFileEdge.node.modifiedAt, 'modifiedAt');
-                sharedUpdater(store, datasetId, connectionKey, node);
-              }
-            }
-          });
-        }
-      },
     },
   );
 }

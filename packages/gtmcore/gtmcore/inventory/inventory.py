@@ -7,9 +7,7 @@ from pkg_resources import resource_filename
 import pathlib
 import subprocess
 import glob
-from typing import NamedTuple
-
-from typing import Optional, List, Tuple, Dict
+from typing import Any, NamedTuple, Optional, Callable, List, Tuple, Dict
 
 from gtmcore.exceptions import GigantumException
 from gtmcore.labbook.schemas import CURRENT_SCHEMA as LABBOOK_CURRENT_SCHEMA
@@ -18,10 +16,11 @@ from gtmcore.gitlib import GitAuthor
 from gtmcore.logging import LMLogger
 from gtmcore.configuration import Configuration
 from gtmcore.configuration.utils import call_subprocess
+from gtmcore.labbook import SecretStore
 from gtmcore.labbook.labbook import LabBook
 from gtmcore.dataset.dataset import Dataset
 from gtmcore.inventory import Repository
-from gtmcore.dataset.storage import SUPPORTED_STORAGE_BACKENDS
+from gtmcore.dataset import storage
 from gtmcore.activity import ActivityStore, ActivityDetailRecord, ActivityDetailType, ActivityRecord, ActivityType, \
     ActivityAction
 from gtmcore.dataset import Manifest
@@ -76,6 +75,31 @@ class InventoryManager(object):
             raise InventoryException(f'Unexpected root in {str(dataset)}')
         return tokens[-2]
 
+    def repository_exists(self, username: str, owner: str, repository_name: str) -> bool:
+        """Method indicating if a repository (project or dataset) exists locally
+
+        Args:
+            username: currently logged in user
+            owner: the owner of the project/dataset
+            repository_name: the name of the project/dataset
+
+        Returns:
+            bool
+        """
+        # Check if Project exists locally
+        labbooks = self.list_repository_ids(username, 'labbook')
+        for l in labbooks:
+            if l[1] == owner and l[2] == repository_name:
+                return True
+
+        # Check if Dataset exists locally
+        datasets = self.list_repository_ids(username, 'dataset')
+        for d in datasets:
+            if d[1] == owner and d[2] == repository_name:
+                return True
+
+        return False
+
     def _put_labbook(self, path: str, username: str, owner: str) -> LabBook:
         # Validate that given path contains labbook
         temp_lb = self.load_labbook_from_directory(path)
@@ -99,16 +123,18 @@ class InventoryManager(object):
         return lb
 
     @staticmethod
-    def update_linked_dataset(labbook: LabBook, username: str, init: bool = False) -> None:
-        """
+    def update_linked_datasets(labbook: LabBook, username: str, init: bool = False) -> None:
+        """Method to initialize or update all git submodule references for linked datasets.
+
+        This is used when loading and initializing linked datasets
 
         Args:
-            labbook:
-            username:
-            init:
+            labbook: The labbook instance to inspect
+            username: the current logged in username
+            init: a flag indicating if the `git submodule init` command should be run
 
         Returns:
-
+            None
         """
         # List all existing linked datasets IN this repository
         existing_dataset_abs_paths = glob.glob(os.path.join(labbook.root_dir, '.gigantum', 'datasets', "*/*"))
@@ -161,9 +187,6 @@ class InventoryManager(object):
         """
         try:
             lb = self._put_labbook(path, username, owner)
-
-            # Init dataset submodules if present
-            self.update_linked_dataset(lb, username, init=True)
 
             return lb
         except Exception as e:
@@ -221,7 +244,7 @@ class InventoryManager(object):
             repository_type(str): type of repository to list (labbook or dataset)
 
         Returns:
-            List of 3-tuples containing (username, owner, labook-name)
+            List of 3-tuples containing (username, owner, labbook-name)
         """
         if repository_type not in ["labbook", "dataset"]:
             raise ValueError(f"Unsupported repository type: {repository_type}")
@@ -261,22 +284,31 @@ class InventoryManager(object):
         Returns:
             Sorted list of LabBook objects
         """
+        if sort_mode == "name":
+            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.name)
+            sorted_list = natsorted(local_labbooks, key=lambda tup: tup[1])
+        elif sort_mode == 'modified_on':
+            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.modified_on)
+            sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
+        elif sort_mode == 'created_on':
+            local_labbooks = self._safe_load(username, key_f=lambda lb: lb.creation_date)
+            sorted_list = sorted(local_labbooks, key=lambda tup: tup[1])
+        else:
+            raise InventoryException(f"Invalid sort mode {sort_mode}")
+
+        return [lb for (lb, key) in sorted_list]
+
+    def _safe_load(self, username, key_f: Callable) -> List[Tuple[LabBook, Any]]:
+        """Helper method to prevent loading corrupt LabBooks into the list of local labbooks."""
         local_labbooks = []
         for username, owner, lbname in self.list_repository_ids(username, 'labbook'):
             try:
                 labbook = self.load_labbook(username, owner, lbname)
-                local_labbooks.append(labbook)
+                key = key_f(labbook)
+                local_labbooks.append((labbook, key))
             except Exception as e:
                 logger.error(e)
-
-        if sort_mode == "name":
-            return natsorted(local_labbooks, key=lambda lb: lb.name)
-        elif sort_mode == 'modified_on':
-            return sorted(local_labbooks, key=lambda lb: lb.modified_on)
-        elif sort_mode == 'created_on':
-            return sorted(local_labbooks, key=lambda lb: lb.creation_date)
-        else:
-            raise InventoryException(f"Invalid sort mode {sort_mode}")
+        return local_labbooks
 
     def create_labbook_disabled_lfs(self, username: str, owner: str, labbook_name: str,
                                     description: Optional[str] = None,
@@ -442,24 +474,23 @@ class InventoryManager(object):
         lb = self.load_labbook(username, owner, labbook_name)
 
         # Get list of datasets and cache roots to schedule for cleanup
-        submodules = lb.git.list_submodules()
+        datasets = self.get_linked_datasets(lb)
         datasets_to_schedule = list()
-        for submodule in submodules:
+        for ds in datasets:
             try:
-                submodule_dataset_owner, submodule_dataset_name = submodule['name'].split("&")
-                rel_submodule_dir = os.path.join('.gigantum', 'datasets',
-                                                 submodule_dataset_owner, submodule_dataset_name)
-                submodule_dir = os.path.join(lb.root_dir, rel_submodule_dir)
-                ds = self.load_dataset_from_directory(submodule_dir)
-                ds.namespace = self.query_owner_of_linked_dataset(ds)
                 m = Manifest(ds, username)
-                datasets_to_schedule.append(DatasetCleanupJob(namespace=submodule_dataset_owner,
-                                                              name=submodule_dataset_name,
+                if not ds.namespace:
+                    raise ValueError("Dataset namespace required to schedule for cleanup")
+                datasets_to_schedule.append(DatasetCleanupJob(namespace=ds.namespace,
+                                                              name=ds.name,
                                                               cache_root=m.cache_mgr.cache_root))
             except Exception as err:
                 # Skip errors
                 logger.warning(f"Error occurred and ignored while processing submodules during Project delete: {err}")
                 continue
+
+        # Delete all secrets pertaining to this project.
+        SecretStore(lb, username).clear_files()
 
         # Remove labbook contents
         shutil.rmtree(lb.root_dir, ignore_errors=True)
@@ -484,7 +515,7 @@ class InventoryManager(object):
         """
         dataset = Dataset(config_file=self.config_file, author=author, namespace=owner)
 
-        if storage_type not in SUPPORTED_STORAGE_BACKENDS:
+        if storage_type not in storage.SUPPORTED_STORAGE_BACKENDS:
             raise ValueError(f"Unsupported Dataset storage type: {storage_type}")
 
         try:
@@ -540,7 +571,6 @@ class InventoryManager(object):
             # Create Directory Structure
             dirs = [
                 'manifest', 'metadata', '.gigantum',
-                os.path.join('.gigantum', 'favorites'),
                 os.path.join('.gigantum', 'activity'),
                 os.path.join('.gigantum', 'activity', 'log')
             ]
@@ -615,7 +645,7 @@ class InventoryManager(object):
         try:
             return self._put_dataset(path, username, owner)
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
             raise InventoryException(e)
 
     def _put_dataset(self, path: str, username: str, owner: str) -> Dataset:
@@ -839,3 +869,66 @@ class InventoryManager(object):
         ar.add_detail_object(adr)
         ars = ActivityStore(labbook)
         ars.create_activity_record(ar)
+
+    def update_linked_dataset_reference(self, dataset_namespace: str, dataset_name: str, labbook: LabBook) -> None:
+        """Method to update a linked dataset reference to the latest revision
+
+        Args:
+            dataset_namespace: owner (namespace) of the dateset
+            dataset_name: name of the dataset
+            labbook: labbook instance to which the dataset is linked
+
+        Returns:
+            none1
+        """
+        # Load dataset from inside Project directory
+        submodule_dir = os.path.join(labbook.root_dir, '.gigantum', 'datasets', dataset_namespace, dataset_name)
+        ds = self.load_dataset_from_directory(submodule_dir, author=labbook.author)
+        ds.namespace = dataset_namespace
+
+        # Update the submodule reference with the latest changes
+        original_revision = ds.git.repo.head.object.hexsha
+        ds.git.pull()
+        revision = ds.git.repo.head.object.hexsha
+
+        # If the submodule has changed, commit the changes.
+        if original_revision != revision:
+            labbook.git.add_all()
+            commit = labbook.git.commit("Updating submodule ref")
+
+            # Add Activity Record
+            adr = ActivityDetailRecord(ActivityDetailType.DATASET, show=False, action=ActivityAction.DELETE)
+            adr.add_value('text/markdown',
+                          f"Updated Dataset `{dataset_namespace}/{dataset_name}` link to {revision}")
+            msg = f"Updated Dataset `{dataset_namespace}/{dataset_name}` link to version {revision[0:8]}"
+            ar = ActivityRecord(ActivityType.DATASET,
+                                message=msg,
+                                linked_commit=commit.hexsha,
+                                tags=["dataset"],
+                                show=True)
+            ar.add_detail_object(adr)
+            ars = ActivityStore(labbook)
+            ars.create_activity_record(ar)
+
+    def get_linked_datasets(self, labbook: LabBook) -> List[Dataset]:
+        """Method to get all datasets linked to a project
+
+        Args:
+            labbook:
+
+        Returns:
+
+        """
+        submodules = labbook.git.list_submodules()
+        datasets = list()
+        for submodule in submodules:
+            try:
+                namespace, dataset_name = submodule['name'].split("&")
+                submodule_dir = os.path.join(labbook.root_dir, '.gigantum', 'datasets', namespace, dataset_name)
+                ds = self.load_dataset_from_directory(submodule_dir, author=labbook.author)
+                ds.namespace = namespace
+                datasets.append(ds)
+            except InventoryException:
+                continue
+
+        return datasets

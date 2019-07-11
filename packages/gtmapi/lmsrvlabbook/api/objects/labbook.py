@@ -27,6 +27,8 @@ from lmsrvlabbook.api.connections.activity import ActivityConnection
 from lmsrvlabbook.api.objects.activity import ActivityDetailObject, ActivityRecordObject
 from lmsrvlabbook.api.objects.packagecomponent import PackageComponent, PackageComponentInput
 from lmsrvlabbook.api.objects.dataset import Dataset
+from lmsrvlabbook.dataloader.package import PackageDataloader
+from lmsrvlabbook.dataloader.fetch import FetchLoader
 
 logger = LMLogger.get_logger()
 
@@ -104,10 +106,11 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
     background_jobs = graphene.List(JobStatus)
 
     # Package Query for validating packages and getting PackageComponents by attributes
-    packages = graphene.List(PackageComponent, package_input=graphene.List(PackageComponentInput))
+    check_packages = graphene.List(PackageComponent, package_input=graphene.List(PackageComponentInput))
 
     visibility = graphene.String()
 
+    # List of Datasets that are linked to this Labbook
     linked_datasets = graphene.List(Dataset)
 
     @classmethod
@@ -278,7 +281,10 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
 
     def helper_resolve_branches(self, lb, kwargs):
         bm = BranchManager(lb)
-        return [Branch(owner=self.owner, name=self.name, branch_name=b)
+
+        fetcher = FetchLoader()
+
+        return [Branch(_fetch_loader=fetcher, owner=self.owner, name=self.name, branch_name=b)
                 for b in sorted(set(bm.branches_local + bm.branches_remote))]
 
     def resolve_branches(self, info, **kwargs):
@@ -509,8 +515,8 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             lambda labbook: self.helper_resolve_background_jobs(labbook))
 
     @staticmethod
-    def helper_resolve_packages(labbook, package_input):
-        """Helper to return a PackageComponent object"""
+    def helper_resolve_check_packages(labbook, package_input):
+        """Helper to return a list of PackageComponent objects that have been validated"""
         manager = list(set([x['manager'] for x in package_input]))
 
         if len(manager) > 1:
@@ -522,13 +528,18 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
         # Validate packages
         pkg_result = mgr.validate_packages(package_input, labbook, get_logged_in_username())
 
+        # Create dataloader
+        keys = [f"{manager[0]}&{pkg.package}" for pkg in pkg_result]
+        vd = PackageDataloader(keys, labbook, get_logged_in_username())
+
         # Return object
-        return [PackageComponent(manager=manager[0],
+        return [PackageComponent(_dataloader=vd,
+                                 manager=manager[0],
                                  package=pkg.package,
                                  version=pkg.version,
                                  is_valid=not pkg.error) for pkg in pkg_result]
 
-    def resolve_packages(self, info, package_input):
+    def resolve_check_packages(self, info, package_input):
         """Method to retrieve package component. Errors can be used to validate if a package name and version
         are correct
 
@@ -536,7 +547,7 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
             list(PackageComponent)
         """
         return info.context.labbook_loader.load(f"{get_logged_in_username()}&{self.owner}&{self.name}").then(
-            lambda labbook: self.helper_resolve_packages(labbook, package_input))
+            lambda labbook: self.helper_resolve_check_packages(labbook, package_input))
 
     @staticmethod
     def helper_resolve_visibility(labbook, info):
@@ -573,17 +584,14 @@ class Labbook(graphene.ObjectType, interfaces=(graphene.relay.Node, GitRepositor
 
     @staticmethod
     def helper_resolve_linked_datasets(labbook, info):
-        submodules = labbook.git.list_submodules()
+        dataset_objs = InventoryManager().get_linked_datasets(labbook)
         datasets = list()
-        for submodule in submodules:
+        for ds in dataset_objs:
             try:
-                namespace, dataset_name = submodule['name'].split("&")
-                submodule_dir = os.path.join(labbook.root_dir, '.gigantum', 'datasets', namespace, dataset_name)
-                ds = InventoryManager().load_dataset_from_directory(submodule_dir, author=get_logged_in_author())
-                ds.namespace = namespace
-                info.context.dataset_loader.prime(f"{get_logged_in_username()}&{namespace}&{dataset_name}", ds)
-
-                datasets.append(Dataset(owner=namespace, name=dataset_name))
+                # Prime the dataset loader, so when fields are resolved they resolve from these LINKED dataset
+                # directories inside the project, and not the normal location
+                info.context.dataset_loader.prime(f"{get_logged_in_username()}&{ds.namespace}&{ds.name}", ds)
+                datasets.append(Dataset(owner=ds.namespace, name=ds.name))
             except InventoryException:
                 continue
 

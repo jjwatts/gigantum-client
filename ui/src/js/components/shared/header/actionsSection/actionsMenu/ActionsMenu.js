@@ -165,7 +165,8 @@ class ActionsMenu extends Component {
   *  @return {string}
   */
   _sync(pullOnly) {
-    if (this.props.isExporting) {
+    const { props } = this;
+    if (props.isExporting) {
       this.setState({ syncWarningVisible: true });
     } else {
       const status = store.getState().containerStatus.status;
@@ -174,7 +175,7 @@ class ActionsMenu extends Component {
         this.setState({ menuOpen: false });
       }
 
-      if ((status === 'Stopped') || (status === 'Rebuild') || this.props.sectionType !== 'labbook') {
+      if ((status === 'Stopped') || (status === 'Rebuild') || props.sectionType !== 'labbook') {
         const id = uuidv4();
         const self = this;
 
@@ -183,15 +184,15 @@ class ActionsMenu extends Component {
             if (response.data && response.data.userIdentity) {
               if (response.data.userIdentity.isSessionValid) {
                 const failureCall = (errorMessage) => {
-                  this.props.setSyncingState(false);
+                  props.setSyncingState(false);
                   if (errorMessage.indexOf('Merge conflict') > -1) {
                     self._toggleSyncModal();
                   }
                 };
 
                 const successCall = () => {
-                  this.props.setSyncingState(false);
-                  if (this.props.sectionType === 'labbook') {
+                  props.setSyncingState(false);
+                  if (props.sectionType === 'labbook') {
                     BuildImageMutation(
                       this.state.owner,
                       this.state.labbookName,
@@ -199,8 +200,14 @@ class ActionsMenu extends Component {
                       (response, error) => {
                         if (error) {
                           console.error(error);
-
-                          setMultiInfoMessage(id, `ERROR: Failed to build ${this.state.labookName}`, null, true, error);
+                          const messageData = {
+                            id,
+                            message: `ERROR: Failed to build ${this.state.labookName}`,
+                            isLast: null,
+                            error: true,
+                            messageBody: error,
+                          };
+                          setMultiInfoMessage(messageData);
                         }
                       },
                     );
@@ -208,11 +215,11 @@ class ActionsMenu extends Component {
 
                   setContainerMenuVisibility(false);
                 };
-                if (this.props.sectionType === 'labbook') {
+                if (props.sectionType === 'labbook') {
                   LinkedLocalDatasetsQuery.getLocalDatasets({ owner: this.state.owner, name: this.state.labbookName }).then((res) => {
                     const localDatasets = res.data && res.data.labbook.linkedDatasets.filter(linkedDataset => linkedDataset.defaultRemote && linkedDataset.defaultRemote.slice(0, 4) !== 'http');
                     if (localDatasets.length === 0) {
-                      this.props.setSyncingState(true);
+                      props.setSyncingState(true);
 
                       this._showContainerMenuMessage('syncing');
                       SyncLabbookMutation(
@@ -233,7 +240,7 @@ class ActionsMenu extends Component {
                     }
                   });
                 } else {
-                  this.props.setSyncingState(true);
+                  props.setSyncingState(true);
 
                   this._showContainerMenuMessage('syncing');
                   SyncDatasetMutation(
@@ -250,7 +257,7 @@ class ActionsMenu extends Component {
                   );
                 }
               } else {
-                this.props.auth.renewToken(true, () => {
+                props.auth.renewToken(true, () => {
                   self.setState({ showLoginPrompt: true });
                 }, () => {
                   self._sync(pullOnly);
@@ -264,7 +271,7 @@ class ActionsMenu extends Component {
       } else {
         this.setState({ menuOpen: false });
 
-        this.props.setContainerMenuWarningMessage('Stop Project before syncing. \n Be sure to save your changes.');
+        props.setContainerMenuWarningMessage('Stop Project before syncing. \n Be sure to save your changes.');
       }
     }
   }

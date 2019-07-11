@@ -28,7 +28,7 @@ import os
 
 
 @pytest.fixture(scope="module")
-def mock_config_file():
+def mock_config_file_logging():
     with tempfile.NamedTemporaryFile(mode="wt", suffix=".log") as log_file:
         with tempfile.NamedTemporaryFile(mode="wt") as fp:
             # Write a temporary config file
@@ -75,12 +75,12 @@ def mock_config_file():
 
 
 class TestLogging(object):
-    def test_init(self, mock_config_file):
+    def test_init(self, mock_config_file_logging):
         """Test loading a config file explicitly"""
-        lmlog = LMLogger(mock_config_file)
+        lmlog = LMLogger(mock_config_file_logging)
 
         assert type(lmlog) is LMLogger
-        assert lmlog.config_file is mock_config_file
+        assert lmlog.config_file is mock_config_file_logging
         assert type(lmlog.logger) is logging.Logger
 
     def test_init_load_from_package(self):
@@ -96,24 +96,24 @@ class TestLogging(object):
 
         assert type(lmlog.logger) is logging.Logger
 
-    def test_init_load_from_install(self, mock_config_file):
+    def test_init_load_from_install(self, mock_config_file_logging):
         """Test loading the default file from the installed location"""
         with patch('gtmcore.logging.LMLogger.CONFIG_INSTALLED_LOCATION', new_callable=PropertyMock,
-                   return_value=mock_config_file):
+                   return_value=mock_config_file_logging):
             lmlog = LMLogger()
 
         assert type(lmlog) is LMLogger
-        assert lmlog.config_file is mock_config_file
+        assert lmlog.config_file is mock_config_file_logging
         assert type(lmlog.logger) is logging.Logger
 
-    def test_log(self, mock_config_file):
+    def test_log(self, mock_config_file_logging):
         """Test logging"""
         with patch('gtmcore.logging.LMLogger.CONFIG_INSTALLED_LOCATION', new_callable=PropertyMock,
-                   return_value=mock_config_file):
+                   return_value=mock_config_file_logging):
             lmlog = LMLogger()
 
         assert type(lmlog) is LMLogger
-        assert lmlog.config_file is mock_config_file
+        assert lmlog.config_file is mock_config_file_logging
         assert type(lmlog.logger) is logging.Logger
 
         logger = lmlog.logger
@@ -135,10 +135,10 @@ class TestLogging(object):
             assert "##ER_ROR##" in data[2]['message']
             assert "ERROR" == data[2]['levelname']
 
-    def test_load_logger_by_name(self, mock_config_file):
+    def test_load_logger_by_name(self, mock_config_file_logging):
         """Test loading the logger by name rather than by LMLogger.logger. """
         with patch('gtmcore.logging.LMLogger.CONFIG_INSTALLED_LOCATION', new_callable=PropertyMock,
-                   return_value=mock_config_file):
+                   return_value=mock_config_file_logging):
             lmlog = LMLogger()
 
         logger = logging.getLogger("labmanager")
@@ -152,10 +152,10 @@ class TestLogging(object):
 
             assert any(['test_load_logger_by_name' in d for d in data])
 
-    def test_log_exception(self, mock_config_file):
+    def test_log_exception(self, mock_config_file_logging):
         """Test that the logging of exceptions appear as expected. """
         with patch('gtmcore.logging.LMLogger.CONFIG_INSTALLED_LOCATION', new_callable=PropertyMock,
-                   return_value=mock_config_file):
+                   return_value=mock_config_file_logging):
             # NOTE!! This should be the standard way to load the logger in each package.
             # Do NOT use LMLogger().logger because you will lose the stack context and knowledge
             # of source package, method, and line.
@@ -175,10 +175,10 @@ class TestLogging(object):
             # Note sometimes 'exec_info' returns None so we have to do (... or "") to make it an iterable.
             assert any(['Traceback (most recent call last)' in (d.get('exc_info') or "") for d in [json.loads(x) for x in data if x]])
 
-    def test_log_exception_using_error_to_log(self, mock_config_file):
+    def test_log_exception_using_error_to_log(self, mock_config_file_logging):
         """Test that the logging of exceptions appear as expected. """
         with patch('gtmcore.logging.LMLogger.CONFIG_INSTALLED_LOCATION', new_callable=PropertyMock,
-                   return_value=mock_config_file):
+                   return_value=mock_config_file_logging):
             lmlog = LMLogger()
             logger = LMLogger.get_logger()
 

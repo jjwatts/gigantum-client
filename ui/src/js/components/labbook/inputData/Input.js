@@ -10,11 +10,7 @@ export default createFragmentContainer(
         input @skip (if: $inputSkip){
           id
           hasFiles
-          hasFavorites
           ...InputBrowser_input
-          ...InputFavorites_input
-          ...MostRecentInput_input
-          isUntracked
         }
         linkedDatasets @skip (if: $inputSkip){
           name
@@ -28,7 +24,6 @@ export default createFragmentContainer(
                 name
                 key
                 isDir
-                isFavorite
                 isLocal
                 modifiedAt
                 size

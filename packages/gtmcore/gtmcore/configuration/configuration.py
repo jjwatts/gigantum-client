@@ -13,7 +13,7 @@ class Configuration(object):
     """Class to interact with LabManager configuration files    
     """
     INSTALLED_LOCATION = "/etc/gigantum/labmanager.yaml"
-    USER_LOCATION = os.path.expanduser("~/user-config.yaml")
+    USER_LOCATION = "/mnt/gigantum/.labmanager/config.yaml"
 
     def __init__(self, config_file: Optional[str] = None) -> None:
         """
@@ -28,10 +28,8 @@ class Configuration(object):
 
         self.config = self.load(self.config_file)
 
-        # If a user config exists, take fields from that to override
-        # the default config. However, do NOT load user config if a path
-        # to a config file was explicitly given in the constructor.
-        if os.path.exists(self.USER_LOCATION) and not config_file:
+        # If a user config exists, take fields from that to override the default config.
+        if os.path.exists(self.USER_LOCATION):
             self.config.update(self.user_config)
 
     @staticmethod
@@ -47,6 +45,54 @@ class Configuration(object):
         else:
             # Load default file out of python package
             return os.path.join(resource_filename("gtmcore", "configuration/config"), "labmanager.yaml.default")
+
+    @property
+    def app_workdir(self) -> str:
+        """Return the Gigantum Client working directory INSIDE the container.
+
+        Note: In a normally built container for actual use (not just testing), this would be `/mnt/gigantum`
+        """
+        return os.path.expanduser(self.config['git']['working_directory'])
+
+    @property
+    def upload_dir(self) -> str:
+        """Return the location to write temporary data for uploads. It should be within the workdir so copies
+        across filesystems can be avoided.
+
+        """
+        return os.path.join(self.app_workdir, '.labmanager', 'upload')
+
+    @property
+    def download_cpu_limit(self) -> int:
+        """Return the max number of CPUs to use (i.e. concurrent jobs) when downloading dataset files
+
+        Returns:
+            int
+        """
+        config_val = self.config['datasets']['download_cpu_limit']
+        if config_val == 'auto':
+            num_cpus = os.cpu_count()
+            if not num_cpus:
+                num_cpus = 1
+            return num_cpus
+        else:
+            return int(config_val)
+
+    @property
+    def upload_cpu_limit(self) -> int:
+        """Return the max number of CPUs to use (i.e. concurrent jobs) when uploading dataset files
+
+        Returns:
+            int
+        """
+        config_val = self.config['datasets']['upload_cpu_limit']
+        if config_val == 'auto':
+            num_cpus = os.cpu_count()
+            if not num_cpus:
+                num_cpus = 1
+            return num_cpus
+        else:
+            return int(config_val)
 
     @property
     def user_config(self) -> Dict[str, Any]:
@@ -94,10 +140,10 @@ class Configuration(object):
 
     def load(self, config_file: str = None) -> Dict[str, Any]:
         """Method to load a config file
-        
+
         Args:
             config_file(str): Absolute path to a configuration file
-        
+
         Returns:
             (dict)
         """

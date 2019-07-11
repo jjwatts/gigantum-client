@@ -1,0 +1,62 @@
+@import '~Styles/_imports.scss';
+
+.PackageQueue {
+  width: 378px;
+  padding-bottom: 20px;
+  text-align: center;
+  &:before {
+    content: '';
+    @include triangle('right', 15px, $grey-border);
+    position: absolute;
+    top: calc(50% - 15px);
+  }
+  &__container {
+    text-align: left;
+    margin: 0 25px;
+    &--empty{
+      font-size: 24px;
+      color: $mineShaft;
+      align-self: center;
+      width: 285px;
+      height: 230px;
+      line-height: 1.67;
+    }
+  }
+  &__tableHeader {
+   border-bottom: 2px solid $grey-row;
+   padding: 5px 0;
+  }
+  &__row {
+    height: 60px;
+    border-bottom: 1px solid $grey-row;
+    &:last-child {
+      border-bottom: 2px solid $grey-row;
+    }
+  }
+  &__manager{
+    width: 60px;
+  }
+  &__name{
+    width: 75px;
+    margin-left: 15px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+  }
+  &__version{
+    width: 60px;
+    margin: 0 15px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+  }
+  &__status{
+    width: 50px;
+
+  }
+}
+
+.PackageQueue__row-container{
+  height: 180px;
+  overflow: auto;
+}

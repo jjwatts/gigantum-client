@@ -44,6 +44,7 @@ export const INITIALIZE = 'INITIALIZE';
 export const RESET_LABBOOK_STORE = 'RESET_LABBOOK_STORE';
 export const IS_BUILDING = 'IS_BUILDING';
 export const IS_SYNCING = 'IS_SYNCING';
+export const IS_UPLOADING = 'IS_UPLOADING';
 export const IS_EXPORTING = 'IS_EXPORTING';
 export const IS_PUBLISHING = 'IS_PUBLISHING';
 export const MODAL_VISIBLE = 'MODAL_VISIBLE';

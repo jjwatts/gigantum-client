@@ -5,7 +5,7 @@ import { WithContext, WithOutContext } from 'react-tag-input';
 // assets
 import './AdvancedSearch.scss';
 
-export default class Modal extends Component {
+export default class AdvancedSearch extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -29,20 +29,6 @@ export default class Modal extends Component {
   */
   componentWillUnmount() {
     window.removeEventListener('click', this._resetSelectedFilter);
-  }
-
-  /**
-   *  @param {event} evt
-   *  resets expanded index state
-   *
-  */
-  _resetSelectedFilter(evt) {
-    if (evt.target.className.indexOf('AdvancedSearch__filter-section') === -1) {
-      this.setState({ expandedIndex: null });
-    }
-    if (evt.target.className.indexOf('AdvancedSearch__info') === -1) {
-      this.setState({ tooltipShown: false });
-    }
   }
 
   /**
@@ -71,12 +57,38 @@ export default class Modal extends Component {
     this.props.setTags(tags);
   }
 
+  /**
+   *  @param {event} evt
+   *  resets expanded index state
+   *
+  */
+  _resetSelectedFilter(evt) {
+    if (evt.target.getAttribute('data-resetselectedfilter-id') !== 'AdvancedSearch__filter-section') {
+      this.setState({ expandedIndex: null });
+    }
+    if (evt.target.getAttribute('data-resetselectedfilter-id') !== 'AdvancedSearch__info') {
+      this.setState({ tooltipShown: false });
+    }
+
+    // ReactTags class comes from react-tag-input library
+    if (evt.target.getAttribute('data-resetselectedfilter-id') !== 'AdvancedSearch'
+    && evt.target.getAttribute('data-resetselectedfilter-id') !== 'AdvancedSearch__filter-section'
+    && evt.target.className.indexOf('ReactTags') === -1) {
+      this.setState({ focused: false });
+    }
+  }
+
   render() {
-    const { tags, withoutContext } = this.props;
+    const {
+      tags,
+      withoutContext,
+      customStyle,
+      autoHide,
+    } = this.props;
+    const { state } = this;
     const suggestions = [];
     const rawKeys = [];
     const Component = withoutContext ? WithOutContext : WithContext;
-
     Object.keys(this.props.filterCategories).forEach((category) => {
       this.props.filterCategories[category].forEach((key) => {
         if (rawKeys.indexOf(key) === -1) {
@@ -88,21 +100,32 @@ export default class Modal extends Component {
 
     const advancedSearchCSS = classNames({
       AdvancedSearch: true,
+      'AdvancedSearch--packages': customStyle === 'packages',
       'AdvancedSearch--tagsExist': tags.length,
+    });
+    const filterCSS = classNames({
+      AdvancedSearch__filters: true,
+      'AdvancedSearch__filters--dropdown': autoHide,
+      hidden: autoHide && !state.focused,
     });
 
     return (
-      <div className={advancedSearchCSS}>
+      <div
+        className={advancedSearchCSS}
+      >
         <Component
           id="AdvancedSearch"
           tags={tags}
           autocomplete
+          autofocus={false}
           suggestions={suggestions}
           placeholder="Search by keyword, tags or filters"
+          data-resetselectedfilter-id="AdvancedSearch"
           handleDelete={(index) => { this._handleDelete(index); }}
           handleAddition={(tag) => { this._handleAddition(tag); }}
+          handleInputFocus={() => this.setState({ focused: true })}
         />
-        <div className="AdvancedSearch__filters">
+        <div className={filterCSS}>
           {
           Object.keys(this.props.filterCategories).map((category, index) => (
             <div
@@ -113,6 +136,8 @@ export default class Modal extends Component {
                 className={`AdvancedSearch__filter-section ${this.state.expandedIndex === index ? 'selected' : ''}`}
                 onClick={() => this.setState({ expandedIndex: this.state.expandedIndex === index ? null : index })}
                 key={category}
+                data-resetselectedfilter-id="AdvancedSearch__filter-section"
+
               >
                 {category}
               </div>
@@ -121,6 +146,7 @@ export default class Modal extends Component {
               && (
               <div
                 className="AdvancedSearch__info"
+                data-resetselectedfilter-id="AdvancedSearch__info"
                 onClick={() => this.setState({ tooltipShown: !this.state.tooltipShown })}
               >
                 {

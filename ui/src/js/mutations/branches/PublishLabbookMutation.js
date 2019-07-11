@@ -5,7 +5,8 @@ import {
 import environment from 'JS/createRelayEnvironment';
 import uuidv4 from 'uuid/v4';
 import FooterUtils from 'Components/common/footer/FooterUtils';
-import { setMultiInfoMessage } from 'JS/redux/actions/footer';
+import { setMultiInfoMessage, setErrorMessage } from 'JS/redux/actions/footer';
+import footerCallback from 'Components/common/footer/utils/PublishLabbook';
 
 const mutation = graphql`
   mutation PublishLabbookMutation($input: PublishLabbookInput!){
@@ -37,7 +38,14 @@ export default function PublishLabbookMutation(
   };
   const id = uuidv4();
   const startMessage = 'Preparing to publish Project...';
-  setMultiInfoMessage(id, startMessage, false, false, [{ message: startMessage }]);
+  const messageData = {
+    id,
+    message: startMessage,
+    isLast: false,
+    error: false,
+    messageBody: [{ message: startMessage }],
+  };
+  setMultiInfoMessage(messageData);
   commitMutation(
     environment,
     {
@@ -45,6 +53,7 @@ export default function PublishLabbookMutation(
       variables,
       onCompleted: (response, error) => {
         if (error) {
+          setErrorMessage('An error occurred while publishing this Project', error);
           console.log(error);
         }
 
@@ -53,7 +62,16 @@ export default function PublishLabbookMutation(
       onError: (err) => { console.error(err); },
       updater: (store, response) => {
         if (response) {
-          FooterUtils.getJobStatus(response, 'publishLabbook', 'jobKey', successCall, failureCall, id);
+          const footerData = {
+            result: response,
+            type: 'publishLabbook',
+            key: 'jobKey',
+            footerCallback,
+            successCall,
+            failureCall,
+            id,
+          };
+          FooterUtils.getJobStatus(footerData);
         }
       },
     },

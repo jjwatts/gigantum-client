@@ -244,10 +244,9 @@ class TestLabBookRemoteOperations(object):
     @responses.activate
     def test_list_remote_labbooks_modified(self, fixture_working_dir, snapshot):
         """test list labbooks"""
-        """test list labbooks"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&page=1&order_by=modified_on&sort=desc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&order_by=modified_on&sort=desc',
                       json=list(reversed(DUMMY_DATA)), status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=10&page=1&order_by=modified_on&sort=asc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=10&order_by=modified_on&sort=asc',
                       json=DUMMY_DATA, status=200)
 
         list_query = """
@@ -306,9 +305,9 @@ class TestLabBookRemoteOperations(object):
     @responses.activate
     def test_list_remote_labbooks_created(self, fixture_working_dir, snapshot):
         """test list labbooks"""
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&page=1&order_by=created_on&sort=desc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&order_by=created_on&sort=desc',
                       json=DUMMY_DATA, status=200)
-        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=2&page=1&order_by=created_on&sort=asc',
+        responses.add(responses.GET, 'https://api.gigantum.com/read/projects?version=2&first=10&order_by=created_on&sort=asc',
                       json=list(reversed(DUMMY_DATA)), status=200)
 
         list_query = """

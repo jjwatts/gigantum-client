@@ -1,80 +1,22 @@
-import React from 'react';
 import { DragSource } from 'react-dnd';
-import uuidv4 from 'uuid/v4';
 // store
 import store from 'JS/redux/store';
-// config
-import config from 'JS/config';
 // utilities
 import FileBrowserMutations from './FileBrowserMutations';
-import CreateFiles from './CreateFiles';
-
-
-/**
-* @param {Array:[Object]} files
-* @param {String} promptType
-*
-* @return {number} totalFiles
-*/
-const checkFileSize = (files, promptType) => {
-  const tenMB = 10 * 1000 * 1000;
-  const oneHundredMB = 100 * 1000 * 1000;
-  const fiveHundredMB = oneHundredMB * 5;
-  const fiveGigs = oneHundredMB * 50;
-  const fileSizePrompt = [];
-  const fileSizeNotAllowed = [];
-
-  function filesRecursionCount(file) {
-    if (Array.isArray(file)) {
-      file.forEach((nestedFile) => {
-        filesRecursionCount(nestedFile);
-      });
-    } else if (file.file && Array.isArray(file.file) && (file.file.length > 0)) {
-      file.file.forEach((nestedFile) => {
-        filesRecursionCount(nestedFile);
-      });
-    } else {
-      const extension = file.name ? file.name.replace(/.*\./, '') : file.entry.fullPath.replace(/.*\./, '');
-      if ((config.fileBrowser.excludedFiles.indexOf(extension) < 0) && ((file.entry && file.entry.isFile) || (typeof file.type === 'string'))) {
-        if (promptType === 'code') {
-          if (file.size > oneHundredMB) {
-            fileSizeNotAllowed.push(file);
-          }
-
-          if ((file.size > tenMB) && (file.size < oneHundredMB)) {
-            fileSizePrompt.push(file);
-          }
-        } else if ((promptType === 'output') || (promptType === 'input')) {
-          if (file.size > fiveHundredMB) {
-            fileSizeNotAllowed.push(file);
-          }
-
-          if ((file.size > oneHundredMB) && (file.size < fiveHundredMB)) {
-            fileSizePrompt.push(file);
-          }
-        } else if (file.size > fiveGigs) {
-          fileSizeNotAllowed.push(file);
-        }
-      }
-    }
-  }
-  filesRecursionCount(files);
-  return { fileSizeNotAllowed, fileSizePrompt };
-};
+import prepareUpload from './PrepareUpload';
 
 const dragSource = {
 
   canDrag(props) {
     // You can disallow drag based on props
-    return true;
+    return !props.lockFileBrowser;
   },
 
   isDragging(props, monitor) {
     return monitor.getItem().key === props.key;
   },
 
-  beginDrag(props, monitor) {
-
+  beginDrag(props) {
     return {
       isDragging: true,
       fileData: props.fileData,
@@ -83,7 +25,7 @@ const dragSource = {
     };
   },
 
-  endDrag(props, monitor, component) {
+  endDrag(props, monitor) {
     if (!monitor.didDrop()) {
       return;
     }
@@ -91,6 +33,7 @@ const dragSource = {
     const dropResult = monitor.getDropResult();
     const fileNameParts = props.fileData.edge.node.key.split('/');
     const fileName = fileNameParts[fileNameParts.length - 1];
+
     if (dropResult.fileData && !((props.section === 'data') && !dropResult.isLocal)) {
       const pathArray = dropResult.fileData.edge.node.key.split('/');
       // remove filename or empty string
@@ -125,6 +68,7 @@ const dragSource = {
           };
 
           searchChildren(currentHead);
+
           const moveLabbookFileData = {
             newKey,
             edge: props.fileData.edge,
@@ -133,15 +77,14 @@ const dragSource = {
 
           if (props.mutations) {
             if (props.section !== 'data') {
-              props.mutations.moveLabbookFile(moveLabbookFileData, (response) => {});
+              props.mutations.moveLabbookFile(moveLabbookFileData, () => {});
             } else {
-              props.mutations.moveDatasetFile(moveLabbookFileData, (response) => {});
+              props.mutations.moveDatasetFile(moveLabbookFileData, () => {});
             }
           } else {
             const {
               parentId,
               connection,
-              favoriteConnection,
               section,
             } = props;
             const { owner, labbookName } = store.getState().routes;
@@ -151,7 +94,6 @@ const dragSource = {
               labbookName,
               parentId,
               connection,
-              favoriteConnection,
               section,
             };
 
@@ -176,44 +118,20 @@ function dragCollect(connect, monitor) {
   };
 }
 
-const uploadDirContent = (dndItem, props, mutationData, fileSizeData) => {
-  let path;
-  dndItem.dirContent.then((fileList) => {
-    if (fileList.length) {
-      const key = props.fileData ? props.fileData.edge.node.key : props.fileKey ? props.fileKey : '';
-      path = key === '' ? '' : key.substr(0, key.lastIndexOf('/') || key.length);
-
-      CreateFiles.createFiles(fileList.flat(), `${path}/`, mutationData, props, fileSizeData);
-    } else if (dndItem.files && dndItem.files.length) {
-      // handle dragged files
-      const key = props.newKey || props.fileKey;
-      path = key.substr(0, key.lastIndexOf('/') || key.length);
-      const item = monitor.getItem();
-
-      if (item && item.files && props.browserProps.createFiles) {
-        CreateFiles.createFiles(item.files, `${path}/`, mutationData, props, fileSizeData);
-      }
-      newPath = null;
-      fileKey = null;
-    }
-  });
-};
-
 const targetSource = {
   canDrop(props, monitor) {
     const item = monitor.getItem();
     const { uploading } = store.getState().fileBrowser;
     const mouseoverAllowed = !uploading && (!(props.section === 'data' && !item.isLocal) || (!item.fileData));
-    return monitor.isOver({ shallow: true }) && mouseoverAllowed;
+    return monitor.isOver({ shallow: true }) && mouseoverAllowed && !props.lockFileBrowser;
   },
-  drop(props, monitor, component, comp) {
+  drop(props, monitor, component) {
     // TODO: clean up this code, some of this logic is being duplicated. make better use of functions
     const dndItem = monitor.getItem();
+    const { section } = props.section ? props : props.mutationData;
     const promptType = props.section ? props.section : ((props.mutationData) && (props.mutationData.section)) ? props.mutationData.section : '';
     let newPath;
     let fileKey;
-    let path;
-    let files;
     // non root folder drop
     if (dndItem && props.fileData) {
       if (!dndItem.dirContent) {
@@ -225,20 +143,13 @@ const targetSource = {
         newPath = newKey + fileName;
         fileKey = props.fileKey;
       } else {
-        // check if user needs to be prompted to accept some files in upload
-        const fileSizeData = checkFileSize(dndItem.files, promptType);
-        if (fileSizeData.fileSizePrompt.length === 0) {
-          uploadDirContent(dndItem, props, props.mutationData, fileSizeData);
-        } else {
-          props.codeDirUpload(dndItem, props, props.mutationData, uploadDirContent, fileSizeData);
-        }
+        prepareUpload(dndItem, props, monitor, props.mutationData, component)
       }
     } else {
       // root folder upload
       const {
         parentId,
         connection,
-        favoriteConnection,
         section,
       } = props;
       const { owner, labbookName } = store.getState().routes;
@@ -248,26 +159,15 @@ const targetSource = {
         labbookName,
         parentId,
         connection,
-        favoriteConnection,
         section,
       };
       // uploads to root directory
       const item = monitor.getItem();
       // check to see if it is an upload
       if (item.files) {
-        // check to see if user needs to be prompted for upload
-        const fileSizeData = checkFileSize(item.files, promptType);
-        if (fileSizeData.fileSizePrompt.length === 0) {
-          if (dndItem.dirContent) {
-            uploadDirContent(dndItem, props, mutationData, fileSizeData);
-          } else {
-            CreateFiles.createFiles(item.files, '', component.state.mutationData, props, fileSizeData);
-          }
-        } else if (dndItem.dirContent) {
-          component._codeDirUpload(dndItem, props, mutationData, uploadDirContent, fileSizeData);
-        } else {
-          component._codeFileUpload(item.files, props, component.state.mutationData, CreateFiles.createFiles, fileSizeData);
-        }
+
+        prepareUpload(item, props, monitor, component.state.mutationData, component);
+
       } else { // else it's a move
         const dropResult = monitor.getDropResult();
         const currentKey = item.fileData.edge.node.key;
@@ -315,7 +215,6 @@ const targetSource = {
             const {
               parentId,
               connection,
-              favoriteConnection,
               section,
             } = props;
             const { owner, labbookName } = store.getState().routes;
@@ -325,7 +224,6 @@ const targetSource = {
               labbookName,
               parentId,
               connection,
-              favoriteConnection,
               section,
             };
 
@@ -413,7 +311,6 @@ const Connectors = {
   dragCollect,
   targetSource,
   targetCollect,
-  checkFileSize,
 };
 
 export default Connectors;

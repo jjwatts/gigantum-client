@@ -85,7 +85,6 @@
 }
 
 .PackageCount {
-  width: 50%;
   @include flex(flex-start, row);
   white-space: nowrap;
 

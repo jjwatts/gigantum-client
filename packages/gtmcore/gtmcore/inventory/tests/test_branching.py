@@ -284,7 +284,7 @@ class TestBranching(object):
 
         behind = bm.get_commits_behind()
         ahead = bm.get_commits_ahead()
-        assert ahead == 4
+        assert ahead == 2
         assert behind == 0
 
     def test_get_commits_with_remote_changes(self, mock_config_file,
@@ -302,12 +302,11 @@ class TestBranching(object):
         remote_bm.workon_branch("testing-branch")
         FileOperations.makedir(remote_lb, 'code/xyzdir', create_activity_record=True)
 
-
         bm.fetch()
         behind = bm.get_commits_behind()
         ahead = bm.get_commits_ahead()
         assert ahead == 0
-        assert behind == 2
+        assert behind == 1
 
     def test_count_commits_behind_remote_when_no_change(self, mock_config_file, remote_labbook_repo,
                                                         mock_labbook_lfs_disabled):

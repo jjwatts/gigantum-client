@@ -27,6 +27,12 @@
             transform: translate(-50%, 0);
         }
     }
+    &--auto {
+      &:hover::after{
+        text-align: center;
+        width: auto;
+      }
+    }
     &--visible::after,
     &:hover::after{
       z-index: index($elements, popup);
@@ -115,3 +121,40 @@
       transform: translate(-50%, 0)
     }
   }
+
+.InfoTooltip {
+  &:before {
+    content: '';
+    @include triangle('up', 8px, $slateBlue);
+    position: absolute;
+    right: 100px;
+    top: -8px;
+  }
+  box-shadow: 0 0px 12px 0 rgba(0,0,0,.30);
+  user-select: none;
+  @include animation('slide-down-fade-in forwards .25s');
+  position: absolute;
+  font-size: 14px;
+  background: $slateBlue;
+  color: white;
+  padding: 15px;
+  width: 250px;
+  top: 25px;
+  right: -100px;
+  word-break: break-word;
+  z-index: index($elements, popup);
+
+  a {
+    text-decoration: underline;
+  }
+  &.summary {
+    &:before {
+      right: 9px;
+    }
+    right: -10px;
+  }
+  &.apt {
+    top: 42px;
+    right: 87px;
+  }
+}

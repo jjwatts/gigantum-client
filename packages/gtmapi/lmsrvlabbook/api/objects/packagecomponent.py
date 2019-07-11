@@ -1,25 +1,7 @@
-
-# Copyright (c) 2018 FlashX, LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+from typing import Optional
 import graphene
 from gtmcore.logging import LMLogger
+from lmsrvlabbook.dataloader.package import PackageDataloader
 
 logger = LMLogger.get_logger()
 
@@ -39,11 +21,8 @@ class PackageComponentInput(graphene.InputObjectType):
 
 class PackageComponent(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
     """A type that represents a Package Manager based Environment Component"""
-    # The loaded yaml data
-    _component_data = None
-
-    # The version dataloader used to coalesce conda commands
-    _version_dataloader = None
+    # The dataloader used to get package metadata
+    _dataloader: Optional[PackageDataloader] = None
 
     # The Component schema version
     schema = graphene.Int()
@@ -55,10 +34,16 @@ class PackageComponent(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
     package = graphene.String(required=True)
 
     # The current version of the package
-    version = graphene.String(required=True)
+    version = graphene.String()
 
     # The latest available version of the package
     latest_version = graphene.String()
+
+    # The package's description
+    description = graphene.String()
+
+    # A URL for access the package's docs
+    docs_url = graphene.String()
 
     # Flag indicating if the component is in the Base
     from_base = graphene.Boolean()
@@ -72,28 +57,74 @@ class PackageComponent(graphene.ObjectType, interfaces=(graphene.relay.Node,)):
         # Parse the key
         manager, package, version = id.split("&")
 
+        if version == 'INVALID':
+            version = None
+
         return PackageComponent(id=f"{manager}&{package}&{version}",
                                 manager=manager, package=package, version=version)
 
     def resolve_id(self, info):
         """Resolve the unique Node id for this object"""
-        if not self.manager or not self.package or self.version is None:
-            raise ValueError("Resolving a PackageComponent ID requires manager, package and version to be set")
+        if not self.manager or not self.package:
+            raise ValueError("Resolving a PackageComponent ID requires manager and package to be set")
 
-        return f"{self.manager}&{self.package}&{self.version}"
+        if self.version is None:
+            version_key = 'INVALID'
+        else:
+            version_key = self.version
+
+        return f"{self.manager}&{self.package}&{version_key}"
 
     def resolve_latest_version(self, info):
         """Resolve the latest_version field"""
         if self.latest_version is not None:
             return self.latest_version
 
-        if not self._version_dataloader:
-            # No dataloader is available, so load manually
-            logger.warning("Cannot query for latest version of {self.package} - no labbook context")
+        if self.version is None:
+            # Package name is invalid, so can't resolve any further info
+            return None
+
+        if not self._dataloader:
+            # No dataloader is available
+            logger.warning(f"Cannot query for latest version of {self.package}. A labbook context is required")
+            return None
+
+        # If you get here, load via dataloader (which has labbook context)
+        return self._dataloader.load(f"{self.manager}&{self.package}").then(lambda metadata: metadata.latest_version)
+
+    def resolve_description(self, info):
+        """Resolve the description field"""
+        if self.description is not None:
+            return self.description
+
+        if self.version is None:
+            # Package name is invalid, so can't resolve any further info
+            return None
+
+        if not self._dataloader:
+            # No dataloader is available
+            logger.warning(f"Cannot query for description of {self.package}. A labbook context is required")
+            return None
+
+        # If you get here, load via dataloader (which has labbook context)
+        return self._dataloader.load(f"{self.manager}&{self.package}").then(lambda metadata: metadata.description)
+
+    def resolve_docs_url(self, info):
+        """Resolve the docs_url field"""
+        if self.docs_url is not None:
+            return self.docs_url
+
+        if self.version is None:
+            # Package name is invalid, so can't resolve any further info
+            return None
+
+        if not self._dataloader:
+            # No dataloader is available
+            logger.warning(f"Cannot query for docs_urln of {self.package}. A labbook context is required")
             return None
 
         # If you get here, load via version dataloader (which has labbook context)
-        return self._version_dataloader.load(f"{self.manager}&{self.package}")
+        return self._dataloader.load(f"{self.manager}&{self.package}").then(lambda metadata: metadata.docs_url)
 
     def resolve_from_base(self, info):
         """Resolve the from_base field"""

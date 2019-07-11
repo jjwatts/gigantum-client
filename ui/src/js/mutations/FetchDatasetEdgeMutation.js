@@ -3,7 +3,7 @@ import {
   graphql,
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
-
+import { setErrorMessage } from 'JS/redux/actions/footer';
 
 const mutation = graphql`
 mutation FetchDatasetEdgeMutation($input: FetchDatasetEdgeInput!, $first: Int!, $cursor: String, $overviewSkip: Boolean!, $activitySkip: Boolean!, $dataSkip: Boolean!, $datasetSkip: Boolean!){
@@ -51,6 +51,7 @@ export default function FetchDatasetEdgeMutation(
     variables,
     onCompleted: (response, error) => {
       if (error) {
+        setErrorMessage('An error occurred while refetching data', error);
         console.log(error);
       }
       callback(error);

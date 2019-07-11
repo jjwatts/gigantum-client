@@ -2,7 +2,7 @@
 
 .Base *{
   text-align: left;
-
+  font-size: 15px;
   font-weight: 100;
 }
 
@@ -15,35 +15,40 @@
 }
 
 .Base__image{
-  min-width: 70px;
-  margin: 0 10px 0 0;
+  min-width: 35px;
+  margin: 20px 20px 0 0;
 }
 
 
 .Base__imageContainer{
-  width: 250px;
-  margin: 0 20px 0 0;
-
+  max-width: 35%;
   @include flex(space-between, row);
 }
 
 .Base__paragraph{
    word-break: normal;
 
-   font-size: 14px;
+
    font-weight: 400;
  }
 
+.Base__revision{
+  word-break: normal;
+  margin: 0;
+  font-weight: 400;
+}
+
 .Base__name{
   word-break: break-word;
-
-  font-weight: 400;
+  margin-bottom: 10px;
+  font-size: 19px;
+  font-weight: 600;
 }
 
 .Base__title{
   flex: 1;
 
-  width: 160px;
+  max-width: 800px;
 }
 
 .Base__cardText{
@@ -62,15 +67,45 @@
     font-weight: 800;
   }
   li {
-    font-size: 14px;
+
     font-weight: 100;
   }
 }
 
 .Base__languages{
-  width: 50%;
+  padding: 0 30px;
 }
 
 .Base__tools{
-  width: 50%;
+  padding: 0 30px;
+}
+
+.Btn__base{
+  padding-left: 25px;
+  color: $azure;
+  border-radius: 13px;
+  &--change {
+    background: $lightGrey url('~Images/icons/cogwheel.svg') no-repeat left 5px center;
+    background-size: 20px;
+    margin-bottom: 12px;
+    &:disabled, &:disabled:hover {
+      background: $lightGrey url('~Images/icons/cogwheel-disabled.svg') no-repeat left 5px center;
+      background-size: 20px;
+      color: $romanSilver;
+    }
+  }
+  &--update {
+    background: $lightGrey url('~Images/icons/update-azure.svg') no-repeat left 5px center;
+    background-size: 20px;
+    margin-bottom: 12px;
+    &:disabled, &:disabled:hover {
+      background: $lightGrey url('~Images/icons/update-version.svg') no-repeat left 5px center;
+      background-size: 20px;
+      color: $romanSilver;
+    }
+  }
+  &--loading {
+    background: $lightGrey url('~Images/loaders/status-spinner.svg') no-repeat left 4px center !important;
+    background-size: 16px !important;
+  }
 }

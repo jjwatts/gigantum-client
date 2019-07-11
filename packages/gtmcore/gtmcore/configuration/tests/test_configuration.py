@@ -183,3 +183,16 @@ class TestConfiguration(object):
         configuration = Configuration()
         with pytest.raises(ValueError):
             configuration.get_remote_configuration("asdfasdf.asdfasdf.com")
+
+    def test_get_upload_directory(self):
+        """Test get upload directory"""
+        configuration = Configuration()
+        assert configuration.upload_dir == os.path.join(configuration.app_workdir, '.labmanager', 'upload')
+
+    def test_download_cpu_limit(self):
+        configuration = Configuration()
+        assert configuration.download_cpu_limit > 0
+
+    def test_upload_cpu_limit(self):
+        configuration = Configuration()
+        assert configuration.upload_cpu_limit > 0

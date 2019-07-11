@@ -3,8 +3,6 @@ import {
   graphql,
 } from 'react-relay';
 import environment from 'JS/createRelayEnvironment';
-// utils
-import FooterUtils from 'Components/common/footer/FooterUtils';
 
 const mutation = graphql`
   mutation ImportDatasetMutation($input: ImportDatasetInput!){
@@ -18,12 +16,12 @@ const mutation = graphql`
 let tempID = 0;
 
 export default function ImportDatasetMutation(
-  blob,
   chunk,
   accessToken,
+  idToken,
   callback,
 ) {
-  const uploadables = [blob, accessToken];
+  const uploadables = [chunk.blob, accessToken, idToken];
 
   const variables = {
     input: {
@@ -48,10 +46,6 @@ export default function ImportDatasetMutation(
       onCompleted: (response, error) => {
         if (error) {
           console.log(error);
-        }
-
-        if (response.importDataset.importJobKey) {
-          FooterUtils.getJobStatus(response, 'importDataset', 'importJobKey');
         }
 
         callback(response, error);

@@ -19,42 +19,69 @@ export default class ForceSync extends Component {
   *  @return {}
   */
   _forceSync(method) {
+    const { props } = this;
     const id = uuidv4;
     const { owner, labbookName } = store.getState().routes;
-    if (this.props.sectionType === 'labbook') {
-      setMultiInfoMessage(id, 'Syncing Project with Gigantum cloud ...', false, false);
+    if (props.sectionType === 'labbook') {
+      const footerMessageData = {
+        id,
+        message: 'Syncing Project with Gigantum cloud ...',
+        isLast: false,
+        error: false,
+      };
+      setMultiInfoMessage(footerMessageData);
 
       SyncLabbookMutation(
         owner,
         labbookName,
         method,
-        this.props.pullOnly,
+        props.pullOnly,
         () => {},
         () => {},
         (error) => {
           if (error) {
-            setMultiInfoMessage(id, `Could not 'force' sync ${labbookName}`, true, true, error);
+            const messageData = {
+              id,
+              message: `Could not 'force' sync ${labbookName}`,
+              isLast: true,
+              error: true,
+              messageBody: error,
+            };
+            setMultiInfoMessage(messageData);
           }
         },
       );
     } else {
-      setMultiInfoMessage(id, 'Syncing Dataset with Gigantum cloud ...', false, false);
+      const footerMessageData = {
+        id,
+        message: 'Syncing Dataset with Gigantum cloud ...',
+        isLast: false,
+        error: false,
+      };
+      setMultiInfoMessage(footerMessageData);
 
       SyncDatasetMutation(
         owner,
         labbookName,
         method,
-        this.props.pullOnly,
+        props.pullOnly,
         () => {},
         () => {},
         (error) => {
           if (error) {
-            setMultiInfoMessage(id, `Could not 'force' sync ${labbookName}`, true, true, error);
+            const messageData = {
+              id,
+              message: `Could not 'force' sync ${labbookName}`,
+              isLast: true,
+              error: true,
+              messageBody: error,
+            };
+            setMultiInfoMessage(messageData);
           }
         },
       );
     }
-    this.props.toggleSyncModal();
+    props.toggleSyncModal();
   }
 
   render() {

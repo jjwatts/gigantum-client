@@ -1,30 +1,40 @@
 import graphene
-from lmsrvlabbook.api.mutations import (CreateLabbook, BuildImage, StartContainer,
-                                        AddPackageComponents, CreateUserNote, StopContainer,
-                                        ImportLabbook, DeleteLabbook, ImportRemoteDataset,
-                                        ImportRemoteLabbook, AddLabbookRemote,
-                                        ExportLabbook, AddLabbookFile, MoveLabbookFile, DeleteLabbookFiles,
-                                        MakeLabbookDirectory, RemoveUserIdentity,
-                                        AddLabbookFavorite, RemoveLabbookFavorite, UpdateLabbookFavorite,
-                                        AddLabbookCollaborator,
-                                        DeleteLabbookCollaborator, SyncLabbook, PublishLabbook, PublishDataset,
-                                        RemovePackageComponents,
-                                        StartDevTool, SetLabbookDescription, CreateExperimentalBranch,
-                                        DeleteExperimentalBranch, MigrateLabbookSchema,
-                                        MergeFromBranch, WorkonBranch, WriteLabbookReadme, AddCustomDocker, 
-                                        RemoveCustomDocker, DeleteRemoteLabbook,
-                                        CompleteBatchUploadTransaction, SetVisibility, FetchLabbookEdge,
-                                        CreateDataset, DeleteDataset, AddDatasetFile, CompleteDatasetUploadTransaction,
-                                        DeleteDatasetFiles, MoveDatasetFile, MakeDatasetDirectory,
-                                        FetchDatasetEdge, SetDatasetVisibility, SyncDataset,
-                                        AddDatasetCollaborator, DeleteDatasetCollaborator, DownloadDatasetFiles,
-                                        ModifyDatasetLink, WriteDatasetReadme, SetDatasetDescription,
-                                        ResetBranchToRemote, CancelBuild)
 
-from lmsrvlabbook.api.mutations import (ImportDataset, ExportDataset)
+from lmsrvlabbook.api.mutations.labbook import (CreateLabbook, DeleteLabbook,
+                                                ChangeLabbookBase,
+                                                SetLabbookDescription,
+                                                MakeLabbookDirectory,
+                                                AddLabbookFile, MoveLabbookFile, DeleteLabbookFiles,
+                                                WriteLabbookReadme, CompleteBatchUploadTransaction, FetchLabbookEdge)
+from lmsrvlabbook.api.mutations.migrations import MigrateLabbookSchema
+from lmsrvlabbook.api.mutations.environment import (BuildImage, StartContainer, StopContainer, CancelBuild)
+from lmsrvlabbook.api.mutations.container import StartDevTool
+from lmsrvlabbook.api.mutations.note import CreateUserNote
+from lmsrvlabbook.api.mutations.branching import (CreateExperimentalBranch, DeleteExperimentalBranch,
+                                                  MergeFromBranch, WorkonBranch, ResetBranchToRemote)
+from lmsrvlabbook.api.mutations.environmentcomponent import (AddPackageComponents,
+                                                             RemovePackageComponents,
+                                                             AddCustomDocker, RemoveCustomDocker)
+from lmsrvlabbook.api.mutations.user import RemoveUserIdentity
+from lmsrvlabbook.api.mutations.labbooksharing import (SyncLabbook, PublishLabbook, SetVisibility,
+                                                       AddLabbookRemote, ImportRemoteLabbook, ImportLabbook,
+                                                       ExportLabbook, AddLabbookCollaborator, DeleteLabbookCollaborator,
+                                                       DeleteRemoteLabbook)
 
-# TODO - Group related mutations into classes, that will each have a corresponding
-# test file.
+from lmsrvlabbook.api.mutations.secrets import (InsertSecretsEntry, RemoveSecretsEntry,
+                                                UploadSecretsFile, DeleteSecretsFile)
+from lmsrvlabbook.api.mutations.bundledapp import SetBundledApp, RemoveBundledApp
+
+# Dataset Mutations
+from lmsrvlabbook.api.mutations.dataset import (CreateDataset, DeleteDataset, FetchDatasetEdge, ModifyDatasetLink,
+                                                SetDatasetDescription, WriteDatasetReadme, UpdateUnmanagedDataset,
+                                                VerifyDataset, ConfigureDataset)
+from lmsrvlabbook.api.mutations.datasetfiles import (AddDatasetFile, CompleteDatasetUploadTransaction,
+                                                     DownloadDatasetFiles, DeleteDatasetFiles, MoveDatasetFile,
+                                                     MakeDatasetDirectory)
+from lmsrvlabbook.api.mutations.datasetsharing import (PublishDataset, SyncDataset, ImportRemoteDataset,
+                                                       SetDatasetVisibility, AddDatasetCollaborator,
+                                                       DeleteDatasetCollaborator, ImportDataset, ExportDataset)
 
 
 class BranchMutations(object):
@@ -43,6 +53,20 @@ class BranchMutations(object):
 
     # Work on a given feature branch (perform a git checkout).
     workon_experimental_branch = WorkonBranch.Field()
+
+
+class LabbookSecretsMutations(graphene.ObjectType):
+    # Create an entry for a secrets file, but not actually upload it
+    insert_secrets_entry = InsertSecretsEntry.Field()
+
+    # Remove an entry from the secrets registry
+    remove_secrets_entry = RemoveSecretsEntry.Field()
+
+    # Actually upload the secret file for the local user
+    upload_secrets_file = UploadSecretsFile.Field()
+
+    # Remove a secrets file for the local user.
+    delete_secrets_file = DeleteSecretsFile.Field()
 
 
 class LabbookEnvironmentMutations(graphene.ObjectType):
@@ -73,6 +97,15 @@ class LabbookEnvironmentMutations(graphene.ObjectType):
 
     # Delete the arbitrary docker snippet.
     remove_custom_docker = RemoveCustomDocker.Field()
+
+    # Change the base image in a labbook
+    change_labbook_base = ChangeLabbookBase.Field()
+
+    # Set a bundled app configuration for a Labbook
+    set_bundled_app = SetBundledApp.Field()
+
+    # Delete a bundled app configuration
+    remove_bundled_app = RemoveBundledApp.Field()
 
 
 class LabbookSharingMutations(graphene.ObjectType):
@@ -110,7 +143,8 @@ class LabbookSharingMutations(graphene.ObjectType):
 
 
 class LabbookMutations(BranchMutations, LabbookSharingMutations,
-                       LabbookEnvironmentMutations, graphene.ObjectType):
+                       LabbookEnvironmentMutations, LabbookSecretsMutations,
+                       graphene.ObjectType):
     """Entry point for all graphql mutations"""
 
     # Import a Dataset from the Gitlab repository
@@ -157,15 +191,6 @@ class LabbookMutations(BranchMutations, LabbookSharingMutations,
     # Remove a locally stored user identity (no-op for non-local installations)
     remove_user_identity = RemoveUserIdentity.Field()
 
-    # Add a favorite file or dir in a labbook subdirectory (code, input, output)
-    add_favorite = AddLabbookFavorite.Field()
-
-    # Update a favorite file or dir in a labbook subdirectory (code, input, output)
-    update_favorite = UpdateLabbookFavorite.Field()
-
-    # Remove a favorite file or dir in a labbook subdirectory (code, input, output)
-    remove_favorite = RemoveLabbookFavorite.Field()
-
     # Adds a dataset collaborator
     add_dataset_collaborator = AddDatasetCollaborator.Field()
     delete_dataset_collaborator = DeleteDatasetCollaborator.Field()
@@ -178,6 +203,15 @@ class LabbookMutations(BranchMutations, LabbookSharingMutations,
 
     # Create a new dataset on the file system.
     create_dataset = CreateDataset.Field()
+
+    # Configure a dataset storage backend
+    configure_dataset = ConfigureDataset.Field()
+
+    # Update the manifest of an unmanaged dataset
+    update_unmanaged_dataset = UpdateUnmanagedDataset.Field()
+
+    # Verify the contents of a dataset via hashing
+    verify_dataset = VerifyDataset.Field()
 
     # Delete a dataset
     delete_dataset = DeleteDataset.Field()

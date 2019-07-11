@@ -17,6 +17,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from enum import Enum
 from datetime import datetime
 from typing import (Any, Callable, cast, Dict, List, Optional, Tuple)
 import signal
@@ -27,7 +28,6 @@ import redis
 import rq
 import rq_scheduler
 
-import gtmcore.dispatcher.jobs
 from gtmcore.logging import LMLogger
 from gtmcore.exceptions import GigantumException
 
@@ -99,25 +99,45 @@ class JobStatus(object):
             return None
 
 
+class GigantumQueues(Enum):
+    # Represents the default queue for all non-intense jobs. This queue may be bursted.
+    default_queue = "gigantum-default-queue"
+
+    # Represents the queue for Docker build tasks. This queue is most strictly controlled.
+    # (i.e., just one or a few workers for it)
+    build_queue = "gigantum-build-queue"
+
+    # Queue for anything interacting with the remote. Not the most computationally/IO-intense
+    # operations, but still should be capped out.
+    publish_queue = "gigantum-publish-queue"
+
+
+JOB_QUEUE_MAP = {
+    # Docker builds are the most intense operations, so it has its own queue
+    "build_labbook_image": GigantumQueues.build_queue,
+
+    # The publish queue is for anything interacting with the Git remote
+    # it is less intense than a Docker build, bit still should be limited
+    "download_dataset_files": GigantumQueues.publish_queue,
+    "import_labbook_from_remote": GigantumQueues.publish_queue,
+    "sync_repository": GigantumQueues.publish_queue,
+    "publish_repository": GigantumQueues.publish_queue
+}
+
+
 class Dispatcher(object):
     """Class to serve as an interface to the background job processing service.
     """
 
-    DEFAULT_JOB_QUEUE: str = 'labmanager_jobs'
-
-    def __init__(self, queue_name: str = DEFAULT_JOB_QUEUE) -> None:
+    def __init__(self) -> None:
         self._redis_conn = redis.Redis()
-        self._job_queue = rq.Queue(queue_name, connection=self._redis_conn)
-        self._scheduler = rq_scheduler.Scheduler(queue_name=queue_name, connection=self._redis_conn)
+        self._scheduler = rq_scheduler.Scheduler(queue_name=GigantumQueues.default_queue.value,
+                                                 connection=self._redis_conn)
 
-    def __str__(self) -> str:
-        return "<Dispatcher: queue={}>".format(self._job_queue)
-
-    @staticmethod
-    def _is_job_in_registry(method_reference: Callable) -> bool:
-        """Return True if `method_reference` in the set of acceptable background jobs. """
-        job_list = [getattr(gtmcore.dispatcher.jobs, n) for n in dir(gtmcore.dispatcher.jobs)]
-        return any([method_reference == n for n in job_list])
+    def _get_queue(self, method_name: str) -> rq.Queue:
+        # Return the appropriate Queue instance for the given method.
+        queue_name = JOB_QUEUE_MAP.get(method_name) or GigantumQueues.default_queue
+        return rq.Queue(queue_name.value, connection=self._redis_conn)
 
     @property
     def all_jobs(self) -> List[JobStatus]:
@@ -196,7 +216,7 @@ class Dispatcher(object):
 
         # Encode job_id as byes from regular string, strip off the "rq:job" prefix.
         enc_job_id = job_key.key_str.split(':')[-1].encode()
-        
+
         if enc_job_id in self._scheduler:
             logger.info("Job (encoded id=`{}`) found in scheduler, cancelling".format(enc_job_id))
             self._scheduler.cancel(enc_job_id)
@@ -223,11 +243,6 @@ class Dispatcher(object):
         Returns:
             str: unique key of dispatched task
         """
-        # Only allowed and certified methods may be dispatched to the background.
-        # These methods are in the jobs.py package.
-        if not Dispatcher._is_job_in_registry(method_reference):
-            raise ValueError("Method `{}` not in available registry".format(method_reference.__name__))
-
         job_args = args or tuple()
         job_kwargs = kwargs or {}
         rq_job_ref = self._scheduler.schedule(scheduled_time=scheduled_time or datetime.utcnow(),
@@ -254,7 +269,7 @@ class Dispatcher(object):
             args(list): Arguments to method_reference
             kwargs(dict): Keyword Argument to method_reference
             metadata(dict): Optional dict of metadata
-            persist(bool): Never timeout if True, otherwise abort after 5 minutes.
+            persist(bool): Never timeout if True, otherwise abort after 2 hours.
             dependent_job(JobKey): The JobKey of the job this task depends on.
 
         Returns:
@@ -263,11 +278,6 @@ class Dispatcher(object):
 
         if not callable(method_reference):
             raise ValueError("method_reference must be callable")
-
-        # Only allowed and certified methods may be dispatched to the background.
-        # These methods are in the jobs.py package.
-        if not Dispatcher._is_job_in_registry(method_reference):
-            raise ValueError("Method {} not in available registry".format(method_reference.__name__))
 
         if not args:
             args = ()
@@ -284,13 +294,15 @@ class Dispatcher(object):
         else:
             timeout = '2h'
 
+        queue = self._get_queue(method_reference.__name__)
         logger.info(
-            f"Dispatching {'persistent' if persist else 'ephemeral'} task `{method_reference.__name__}` to queue")
+            f"Dispatching {'persistent' if persist else 'ephemeral'} "
+            f"task `{method_reference.__name__}` to queue {queue}")
 
         try:
             dep_job_str = dependent_job.key_str.split(':')[-1] if dependent_job else None
-            rq_job_ref = self._job_queue.enqueue(method_reference, args=args, kwargs=kwargs, timeout=timeout,
-                                                 depends_on=dep_job_str, meta=metadata)
+            rq_job_ref = queue.enqueue(method_reference, args=args, kwargs=kwargs, timeout=timeout,
+                                       depends_on=dep_job_str, meta=metadata)
         except Exception as e:
             logger.error("Cannot enqueue job `{}`: {}".format(method_reference.__name__, e))
             raise
@@ -298,7 +310,7 @@ class Dispatcher(object):
         rq_job_key_str = rq_job_ref.key.decode()
         logger.info(
             "Dispatched job `{}` to queue '{}', job={}".format(method_reference.__name__,
-                                                               self._job_queue.name,
+                                                               queue.name,
                                                                rq_job_key_str))
         try:
             assert rq_job_key_str
@@ -310,7 +322,7 @@ class Dispatcher(object):
         return jk
 
     def abort_task(self, job_key: JobKey) -> None:
-        """ Terminate an actively-running task.
+        """ Terminate an actively-running task. This does NOT kill the worker.
 
         Note: Only certain tasks (ones that write pid to metadata) are
         cancellable.

@@ -7,7 +7,7 @@ import flask
 
 from gtmcore.inventory.inventory import InventoryManager
 from gtmcore.logging import LMLogger
-from gtmcore.dispatcher import Dispatcher, jobs
+from gtmcore.dispatcher import Dispatcher, dataset_jobs
 
 from lmsrvcore.auth.user import get_logged_in_username, get_logged_in_author
 from lmsrvcore.api.mutations import ChunkUploadMutation, ChunkUploadInput
@@ -99,31 +99,41 @@ class CompleteDatasetUploadTransaction(graphene.relay.ClientIDMutation):
         cancel = graphene.Boolean()
         rollback = graphene.Boolean()
 
-    success = graphene.Boolean()
+    background_job_key = graphene.String()
 
     @classmethod
-    def mutate_and_get_payload(cls, root, info, owner, dataset_name,
-                               transaction_id, cancel=False, rollback=False,
-                               client_mutation_id=None):
-        username = get_logged_in_username()
-        ds = InventoryManager().load_dataset(username, owner, dataset_name,
-                                             author=get_logged_in_author())
-        with ds.lock():
-            if cancel and rollback:
-                logger.warning(f"Cancelled tx {transaction_id}, doing git reset")
-                # TODO: Add ability to reset
-            else:
-                logger.info(f"Done batch upload {transaction_id}, cancelled={cancel}")
-                if cancel:
-                    logger.warning("Sweeping aborted batch upload.")
+    def mutate_and_get_payload(cls, root, info, owner, dataset_name, transaction_id,
+                               cancel=False, rollback=False, client_mutation_id=None):
+        logged_in_username = get_logged_in_username()
+        logged_in_author = get_logged_in_author()
+        ds = InventoryManager().load_dataset(logged_in_username, owner, dataset_name,
+                                             author=logged_in_author)
+        if cancel and rollback:
+            # TODO: Add ability to reset
+            raise ValueError("Currently cannot rollback a canceled upload.")
+            # logger.warning(f"Cancelled tx {transaction_id}, doing git reset")
+        else:
+            logger.info(f"Done batch upload {transaction_id}, cancelled={cancel}")
+            if cancel:
+                logger.warning("Sweeping aborted batch upload.")
 
-                m = "Cancelled upload `{transaction_id}`. " if cancel else ''
+            d = Dispatcher()
+            job_kwargs = {
+                'logged_in_username': logged_in_username,
+                'logged_in_email': logged_in_author.email,
+                'dataset_owner': owner,
+                'dataset_name': dataset_name,
+                'dispatcher': Dispatcher
+            }
 
-                # Sweep up and process all files added during upload
-                manifest = Manifest(ds, username)
-                manifest.sweep_all_changes(upload=True, extra_msg=m)
+            # Gen unique keys for tracking jobs
+            metadata = {'dataset': f"{logged_in_username}|{owner}|{dataset_name}",
+                        'method': 'complete_dataset_upload_transaction'}
 
-        return CompleteDatasetUploadTransaction(success=True)
+            res = d.dispatch_task(dataset_jobs.complete_dataset_upload_transaction, kwargs=job_kwargs,
+                                  metadata=metadata)
+
+        return CompleteDatasetUploadTransaction(background_job_key=res.key_str)
 
 
 class DownloadDatasetFiles(graphene.relay.ClientIDMutation):
@@ -142,17 +152,6 @@ class DownloadDatasetFiles(graphene.relay.ClientIDMutation):
                                all_keys=None, keys=None, client_mutation_id=None):
         logged_in_username = get_logged_in_username()
 
-        lb = None
-        im = InventoryManager()
-        if labbook_name:
-            # This is a linked dataset, load repo from the Project
-            lb = im.load_labbook(logged_in_username, labbook_owner, labbook_name)
-            dataset_dir = os.path.join(lb.root_dir, '.gigantum', 'datasets', dataset_owner, dataset_name)
-            ds = im.load_dataset_from_directory(dataset_dir)
-        else:
-            # this is a normal dataset. Load repo from working dir
-            ds = im.load_dataset(logged_in_username, dataset_owner, dataset_name)
-
         d = Dispatcher()
         dl_kwargs = {
             'logged_in_username': logged_in_username,
@@ -167,7 +166,7 @@ class DownloadDatasetFiles(graphene.relay.ClientIDMutation):
         }
 
         # Gen unique keys for tracking jobs
-        lb_key = f"{logged_in_username}|{labbook_owner}|{labbook_name}" if lb else None
+        lb_key = f"{logged_in_username}|{labbook_owner}|{labbook_name}" if labbook_owner else None
         ds_key = f"{logged_in_username}|{dataset_owner}|{dataset_name}"
         if lb_key:
             ds_key = f"{lb_key}|LINKED|{ds_key}"
@@ -176,7 +175,7 @@ class DownloadDatasetFiles(graphene.relay.ClientIDMutation):
                     'labbook': lb_key,
                     'method': 'download_dataset_files'}
 
-        res = d.dispatch_task(jobs.download_dataset_files, kwargs=dl_kwargs, metadata=metadata)
+        res = d.dispatch_task(dataset_jobs.download_dataset_files, kwargs=dl_kwargs, metadata=metadata, persist=True)
 
         return DownloadDatasetFiles(background_job_key=res.key_str)
 
@@ -230,7 +229,6 @@ class MoveDatasetFile(graphene.ClientIDMutation):
                                           name=dataset_name,
                                           key=edge_dict['key'],
                                           is_dir=edge_dict['is_dir'],
-                                          is_favorite=edge_dict['is_favorite'],
                                           modified_at=edge_dict['modified_at'],
                                           is_local=edge_dict['is_local'],
                                           size=str(edge_dict['size'])))

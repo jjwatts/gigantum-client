@@ -2,7 +2,12 @@
 import JobStatus from 'JS/utils/JobStatus';
 import AnsiUp from 'ansi_up';
 // store
-import { setMultiInfoMessage, setErrorMessage } from 'JS/redux/actions/footer';
+import {
+  setMultiInfoMessage,
+  setErrorMessage,
+  setUploadMessageUpdate,
+  setUploadMessageRemove,
+} from 'JS/redux/actions/footer';
 // mutations
 import FetchLabbookEdgeMutation from 'Mutations/FetchLabbookEdgeMutation';
 import FetchDatasetEdgeMutation from 'Mutations/FetchDatasetEdgeMutation';
@@ -11,13 +16,61 @@ import FetchLabbookDatasetFilesMutation from 'Mutations/FetchLabbookDatasetFiles
 
 const ansiUp = new AnsiUp();
 
+const hideModal = () => {
+  document.getElementById('modal__cover').classList.add('hidden');
+  document.getElementById('loader').classList.add('hidden');
+};
+
+const messageParser = (response) => {
+  let fullMessage = (response.data.jobStatus.jobMetadata.indexOf('feedback') > -1) ? JSON.parse(response.data.jobStatus.jobMetadata).feedback : '';
+  fullMessage = fullMessage.lastIndexOf('\n') === (fullMessage.length - 1)
+    ? fullMessage.slice(0, fullMessage.length - 1)
+    : fullMessage;
+
+  const html = ansiUp.ansi_to_html(fullMessage);
+
+  const lastIndex = (fullMessage.lastIndexOf('\n') > -1)
+    ? fullMessage.lastIndexOf('\n')
+    : 0;
+
+  let message = fullMessage.slice(lastIndex, fullMessage.length);
+
+  if (message.indexOf('[0m') > 0) {
+    const res = [];
+    let index = 0;
+
+    while (fullMessage.indexOf('\n', index + 1) > 0) {
+      index = fullMessage.indexOf('\n', index + 1);
+      res.push(index);
+    }
+
+    message = fullMessage.slice(res[res.length - 2], res[res.length - 1]);
+  }
+  return {
+    html,
+    message,
+  };
+};
+
 const FooterUtils = {
   /**
    *  @param {number}
    *  iterate value of index within the bounds of the array size
    *  @return {}
    */
-  getJobStatus: (result, type, key, successCall, failureCall, id) => {
+  getJobStatus: (footerData) => {
+
+    const {
+      result,
+      type,
+      key,
+      footerCallback,
+      callback,
+      successCall,
+      failureCall,
+      id,
+      hideFooter,
+    } = footerData;
     /**
       *  @param {}
       *  refetches job status
@@ -35,158 +88,91 @@ const FooterUtils = {
       *  @return {}
       */
     const fetchStatus = () => {
+
       const resultType = result[type];
       const resultKey = resultType ? resultType[key] : false;
+      const mutations = {
+        FetchLabbookEdgeMutation,
+        FetchDatasetEdgeMutation,
+        FetchDatasetFilesMutation,
+        FetchLabbookDatasetFilesMutation,
+      };
 
       if (resultKey) {
         JobStatus.updateFooterStatus(result[type][key]).then((response) => {
           if (response.data
               && response.data.jobStatus
               && response.data.jobStatus.jobMetadata) {
-            let fullMessage = (response.data.jobStatus.jobMetadata.indexOf('feedback') > -1) ? JSON.parse(response.data.jobStatus.jobMetadata).feedback : '';
-            fullMessage = fullMessage.lastIndexOf('\n') === (fullMessage.length - 1)
-              ? fullMessage.slice(0, fullMessage.length - 1)
-              : fullMessage;
 
-            let html = ansiUp.ansi_to_html(fullMessage);
-
-            const lastIndex = (fullMessage.lastIndexOf('\n') > -1)
-              ? fullMessage.lastIndexOf('\n')
-              : 0;
-
-            let message = fullMessage.slice(lastIndex, fullMessage.length);
-
-            if (message.indexOf('[0m') > 0) {
-              const res = [];
-              let index = 0;
-
-              while (fullMessage.indexOf('\n', index + 1) > 0) {
-                index = fullMessage.indexOf('\n', index + 1);
-                res.push(index);
-              }
-
-              message = fullMessage.slice(res[res.length - 2], res[res.length - 1]);
-            }
-
-            if (response.data.jobStatus.status === 'started') {
+            const responseId = id || response.data.jobStatus.id;
+            const { html, message } = messageParser(response);
+            // executes while job status is still running, refetches until status is finished or failed
+            if (response.data.jobStatus.status === 'started' || response.data.jobStatus.status === 'queued') {
               if (html.length) {
-                const repsonseId = id || response.data.jobStatus.id;
-                setMultiInfoMessage(repsonseId, message, false, false, [{ message: html }]);
+                const messageData = {
+                  id: responseId,
+                  message,
+                  isLast: false,
+                  error: false,
+                  messageBody: [{ message: html }],
+                  messageListOpen: !hideFooter,
+                  buildProgress: type === 'buildImage',
+                };
+                setMultiInfoMessage(messageData);
               }
               refetch();
+            // executes when job status has completed
+            // TODO handle configure dataset callback
             } else if (response.data.jobStatus.status === 'finished') {
-              const repsonseId = id || response.data.jobStatus.id;
-              setMultiInfoMessage(repsonseId, message, true, null, [{ message: html }]);
+              const messageData = {
+                id: responseId,
+                message,
+                isLast: true,
+                error: null,
+                messageBody: [{ message: html }],
+                buildProgress: type === 'buildImage',
+              };
 
-              document.getElementById('modal__cover').classList.add('hidden');
-              document.getElementById('loader').classList.add('hidden');
+              setMultiInfoMessage(messageData);
+              hideModal();
 
-              if ((type === 'syncLabbook') || (type === 'publishLabbook') || (type === 'publishDataset') || (type === 'syncDataset')) {
-                const section = type.indexOf('Dataset') > -1 ? 'dataset' : 'labbook';
-                const metaDataArr = JSON.parse(response.data.jobStatus.jobMetadata)[section].split('|');
-                const owner = metaDataArr[1];
-                const labbookName = metaDataArr[2];
-                successCall(owner, labbookName);
-
-                section === 'labbook'
-                  ? FetchLabbookEdgeMutation(
-                    owner,
-                    labbookName,
-                    (error) => {
-                      if (error) {
-                        console.error(error);
-                      }
-                    },
-                  )
-                  : FetchDatasetEdgeMutation(
-                    owner,
-                    labbookName,
-                    (error) => {
-                      if (error) {
-                        console.error(error);
-                      }
-                    },
-                  );
-              } else if (type === 'downloadDatasetFiles') {
-                const successKeys = JSON.parse(response.data.jobStatus.jobMetadata).success_keys;
-                const metaDataArr = JSON.parse(response.data.jobStatus.jobMetadata).dataset.split('|');
-                const isLabbookSection = metaDataArr[3] === 'LINKED';
-                if (!isLabbookSection) {
-                  const owner = metaDataArr[1];
-                  const labbookName = metaDataArr[2];
-                  FetchDatasetFilesMutation(
-                    owner,
-                    labbookName,
-                    () => {
-                      successCall();
-                    },
-                  );
-                } else {
-                  const owner = metaDataArr[1];
-                  const labbookName = metaDataArr[2];
-                  FetchLabbookDatasetFilesMutation(
-                    owner,
-                    labbookName,
-                    () => {
-                      successCall();
-                    },
-                  );
-                }
-              } else if (type === 'importRemoteLabbook') {
-                successCall();
+              if (footerCallback && footerCallback.finished) {
+                const callbackData = {
+                  response,
+                  successCall,
+                  mutations,
+                };
+                footerCallback.finished(callbackData);
+              } else if (callback) {
+                callback(response);
               }
+            // executes when job status has failed
             } else if (response.data.jobStatus.status === 'failed') {
-              const { method } = JSON.parse(response.data.jobStatus.jobMetadata);
               let reportedFailureMessage = response.data.jobStatus.failureMessage;
               let errorMessage = response.data.jobStatus.failureMessage;
+              hideModal();
 
-              document.getElementById('modal__cover').classList.add('hidden');
-              document.getElementById('loader').classList.add('hidden');
-              if (method === 'build_image') {
-                if (reportedFailureMessage.indexOf('terminated unexpectedly') > -1) {
-                  errorMessage = 'Build Canceled.';
-                } else {
-                  errorMessage = 'Project failed to build: Check for and remove invalid dependencies and try again.';
-                }
+              if (footerCallback && footerCallback.failed) {
+                const callbackData = {
+                  response,
+                  failureCall,
+                  mutations,
+                };
+                ({ errorMessage, reportedFailureMessage } = footerCallback.failed(callbackData));
+              } else if (callback) {
+                callback(response);
               }
-              if ((type === 'syncLabbook') || (type === 'publishLabbook') || (type === 'syncDataset') || (type === 'publishDataset')) {
-                failureCall(response.data.jobStatus.failureMessage);
-              }
-              if (type === 'downloadDatasetFiles') {
-                const successKeys = JSON.parse(response.data.jobStatus.jobMetadata).success_keys;
-                const failureKeys = JSON.parse(response.data.jobStatus.jobMetadata).failure_keys;
-                const totalAmount = successKeys.length + failureKeys.length;
-                const metaDataArr = JSON.parse(response.data.jobStatus.jobMetadata).dataset.split('|');
-                const isLabbookSection = metaDataArr[3] === 'LINKED';
-                if (!isLabbookSection) {
-                  const owner = metaDataArr[1];
-                  const labbookName = metaDataArr[2];
-                  FetchDatasetFilesMutation(
-                    owner,
-                    labbookName,
-                    () => {
-                      failureCall(response.data.jobStatus.failureMessage);
-                    },
-                  );
-                } else {
-                  const owner = metaDataArr[1];
-                  const labbookName = metaDataArr[2];
-                  FetchDatasetFilesMutation(
-                    owner,
-                    labbookName,
-                    () => {
-                      failureCall(response.data.jobStatus.failureMessage);
-                    },
-                  );
-                }
-                errorMessage = `Failed to download ${failureKeys.length} of ${totalAmount} Files.`;
-                reportedFailureMessage = 'Failed to download the following Files:';
-                failureKeys.forEach(failedKey => reportedFailureMessage = `${reportedFailureMessage}\n${failedKey}`);
-              } else if (type === 'importRemoteLabbook') {
-                failureCall();
-              }
-              html += `\n<span style="color:rgb(255,85,85)">${reportedFailureMessage}</span>`;
-              setMultiInfoMessage(id || response.data.jobStatus.id, errorMessage, true, true, [{ message: html }]);
+
+              const errorHTML = `${html}\n<span style="color:rgb(255,85,85)">${reportedFailureMessage}</span>`;
+              const messageData = {
+                id: responseId,
+                message: errorMessage,
+                isLast: true,
+                error: true,
+                messageBody: [{ message: errorHTML }],
+                buildProgress: type === 'buildImage',
+              };
+              setMultiInfoMessage(messageData);
             } else {
               // refetch status data not ready
               refetch();
@@ -203,6 +189,72 @@ const FooterUtils = {
 
     // trigger fetch
     fetchStatus();
+  },
+  /**
+    *  @param {object} mutationResponse
+    *  @param {function} refetch
+    *  fetches job status for background message
+    *  updates footer with a message
+    *  @return {}
+    */
+  datasetUploadStatus: (mutationResponse, finishedCallback) => {
+    const {
+      completeDatasetUploadTransaction,
+    } = mutationResponse;
+    /**
+      *  @param {}
+      *  fetches job status for background message
+      *  updates footer with a message
+      *  @return {}
+      */
+    const fetchStatus = (data) => {
+      const {
+        backgroundJobKey,
+      } = data;
+
+      if (backgroundJobKey) {
+        JobStatus.updateFooterStatus(backgroundJobKey).then((response) => {
+          const { jobStatus } = response.data;
+          const metaData = JSON.parse(jobStatus.jobMetadata);
+
+          if (jobStatus.status === 'started' || jobStatus.status === 'queued') {
+            setTimeout(() => {
+              fetchStatus({ backgroundJobKey });
+
+              if (metaData.feedback === undefined) {
+                setUploadMessageUpdate(
+                  'Please wait while contents are analyzed.',
+                  1,
+                  0,
+                );
+              } else {
+                setUploadMessageUpdate(
+                  metaData.feedback,
+                  1,
+                  parseFloat(metaData.percent_complete),
+                );
+              }
+            }, 1000);
+          } else if ((jobStatus.status === 'finished') || (jobStatus.status === 'failed')) {
+            finishedCallback();
+
+            setUploadMessageUpdate(
+              metaData.feedback,
+              1,
+              parseFloat(metaData.percent_complete),
+            );
+
+            setTimeout(() => {
+              setUploadMessageRemove(metaData.feedback);
+            }, 2000);
+          }
+        });
+      }
+    };
+
+    const data = { backgroundJobKey: completeDatasetUploadTransaction.backgroundJobKey };
+    // trigger fetch
+    fetchStatus(data);
   },
 };
 
