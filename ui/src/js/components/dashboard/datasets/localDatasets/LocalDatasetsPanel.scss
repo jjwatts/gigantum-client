@@ -37,11 +37,15 @@
 
   &--owner{
     color: $jet;
-    font-size: 12px;
-    height: 14px;
-    margin: 2px;
+    font-size: 15px;
+    margin: 2px 0 10px 0;
+  }
 
-    line-height: 14px;
+  &--metadata{
+    color: $jet;
+    font-size: 10px;
+    line-height: 1.5;
+    margin: 0;
   }
 
   &--description{
@@ -211,6 +215,8 @@
   text-overflow: ellipsis;
   word-break: break-all;
   overflow: hidden;
-  line-height: 30px;
   width: 250px;
+  font-size: 19px;
+  color: $azure;
+  margin: 10px 0;
 }

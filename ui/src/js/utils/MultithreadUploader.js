@@ -472,6 +472,7 @@ export default class MultithreadUploader {
         // setFinishedUploading();
       }
     } else if (connection === 'Secrets_secretsFileMapping') {
+      callback();
       setTimeout(() => {
         setUploadMessageRemove('Completed Upload', null, 100);
       }, 1000);

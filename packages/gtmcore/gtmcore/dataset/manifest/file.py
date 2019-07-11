@@ -79,7 +79,12 @@ class ManifestFileCache(object):
         Returns:
             redis.StrictRedis
         """
-        return f"DATASET-MANIFEST-CACHE|{self._current_checkout_id}"
+        key = f"DATASET-MANIFEST-CACHE|{self._current_checkout_id}"
+
+        if self.dataset.linked_to():
+            key = f"{key}|{self.dataset.linked_to()}"
+
+        return key
 
     def _load_legacy_manifest(self) -> OrderedDict:
         """Method to load the manifest file
@@ -168,6 +173,18 @@ class ManifestFileCache(object):
                 self.redis_client.expire(self.manifest_cache_key, 3600)
 
         return manifest_data
+
+    def evict(self) -> None:
+        """Method to remove an entry from the cache (used when needing to reload files that may still be under the
+        same checkout context, e.g. a local linked dataset)
+
+        Returns:
+            None
+        """
+        if self.redis_client.exists(self.manifest_cache_key):
+            self.redis_client.delete(self.manifest_cache_key)
+
+        self._manifest = OrderedDict()
 
     def persist(self) -> None:
         """Method to persist changes to the manifest to the cache and any associated manifest file

@@ -64,6 +64,8 @@ button {
     background: transparent;
     color: $jet;
     box-shadow: none !important;
+    margin: 0px;
+    padding: 0px;
   }
   &--inverted {
     background: transparent;
@@ -205,6 +207,7 @@ button {
     width: 25px;
     height: 25px;
     background-size: 18px !important;
+    background-color: $lightGrey !important;
   }
 
   &--background-left {
@@ -226,7 +229,16 @@ button {
     height: 22.4px;
     pointer-events: none;
     font-size: 15px;
-    padding-right: 15px;
+  }
+
+  &--fake-content {
+    @include flex(center, row);
+
+    .Icon--add {
+      width: 20px;
+      height: 20px;
+      background-size: 12px;
+    }
   }
 
   &--columns {
@@ -407,13 +419,13 @@ button {
     background-size: 21px !important;
 
     &:focus {
-      background: $azure url(~Images/icons/rename-white.svg) no-repeat center center;
+      background: $azure url(~Images/icons/rename-azure.svg) no-repeat center center;
       background-size: 21px !important;
 
     }
 
     &:hover {
-      background: $azure url(~Images/icons/rename-white.svg) no-repeat center center;
+      background: $azure url(~Images/icons/rename-azure.svg) no-repeat center center;
       background-size: 21px !important;
 
     }
@@ -426,24 +438,30 @@ button {
  }
 
  &__addFolder {
-  background: url(~Images/icons/folder-add-new-azure.svg) no-repeat left 4px top 2px;
-  background-size: 18px;
+  background: url(~Images/icons/new-folder-active.svg) no-repeat center center;
+  background-size: 28px !important;
 
   &:focus {
-    background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat left 4px top 2px;
-    background-size: 18px;
+    background: $azure url(~Images/icons/new-folder-active.svg) no-repeat center center;
+    background-size: 28px !important;
 
   }
 
     &:hover {
-      background: $azure url(~Images/icons/folder-add-new-hover.svg) no-repeat left 4px top 2px;
-      background-size: 18px;
+      background: $azure url(~Images/icons/new-folder-active.svg) no-repeat center center;
+      background-size: 28px !important;
    }
 
    &:disabled {
-     background: transparent url(~Images/icons/folder-add-new.svg) no-repeat left 4px top 2px !important;
-     background-size: 18px;
+     background: transparent url(~Images/icons/folder-add-new-silver.svg) no-repeat left 1px top -1px !important;
+     background-size: 24px !important;
    }
+ }
+
+ &__add {
+   background: $azure url(~Images/icons/add-white.svg) no-repeat calc(100% - 50px) center;
+   background-size: 12px;
+   padding: 7px 20px 7px 10px;
  }
 
  &__check {
@@ -530,6 +548,10 @@ button {
 
  &__upArrow-white {
   background: url(~Images/icons/update-white.svg) no-repeat center center;
+  background-size: 22px;
+ }
+ &__download-white {
+  background: url(~Images/icons/download-arrow-white.svg) no-repeat center center;
   background-size: 22px;
  }
 

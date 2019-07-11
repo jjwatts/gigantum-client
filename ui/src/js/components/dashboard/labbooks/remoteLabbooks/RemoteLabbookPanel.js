@@ -226,7 +226,7 @@ export default class RemoteLabbookPanel extends Component {
    return (
      <div
        key={edge.node.name}
-       className="Card Card--300 column-4-span-3 flex flex--column justify--space-between"
+       className="Card Card--225 column-4-span-3 flex flex--column justify--space-between"
      >
        <div className="RemoteLabbooks__row RemoteLabbooks__row--icon">
          {

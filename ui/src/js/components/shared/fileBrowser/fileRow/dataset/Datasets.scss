@@ -1,0 +1,11 @@
+@import '~Styles/_imports.scss';
+
+.DatasetsBrowser {
+  background: $lightGrey;
+  min-height: 50px;
+  padding: 12px 30px;
+  margin-bottom: 20px;
+  &__header{
+    margin-bottom: 15px;
+  }
+}
