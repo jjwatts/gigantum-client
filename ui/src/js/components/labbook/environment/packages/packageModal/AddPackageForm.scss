@@ -19,6 +19,7 @@
   input {
     background: $white;
     width: 290px;
+    padding: 0 10px !important;
   }
 }
 
@@ -30,6 +31,7 @@
   &--active {
     input {
       background: $white;
+      padding: 0 10px !important;
     }
   }
 }
