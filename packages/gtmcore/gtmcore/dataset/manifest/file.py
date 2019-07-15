@@ -42,7 +42,7 @@ class ManifestFileCache(object):
     """Class to provide a caching layer on top of a collection of Dataset manifest files
 
     Note: The checkout context of the underlying dataset CANNOT change while this class is instantiated. If it does,
-    you need to reload the Dataset instance and reload the Manifest instance.
+    you need to reload the Dataset instance and reload the Manifest instance, or run Manifest.force_reload().
 
     """
     def __init__(self, dataset: 'Dataset', logged_in_username: Optional[str] = None) -> None:
@@ -175,8 +175,9 @@ class ManifestFileCache(object):
         return manifest_data
 
     def evict(self) -> None:
-        """Method to remove an entry from the cache (used when needing to reload files that may still be under the
-        same checkout context, e.g. a local linked dataset)
+        """Method to remove an entry from the manifest data cache (stored in redis db 1)
+        (used when needing to reload files that may still be under the same checkout context, e.g. a local
+        linked dataset)
 
         Returns:
             None

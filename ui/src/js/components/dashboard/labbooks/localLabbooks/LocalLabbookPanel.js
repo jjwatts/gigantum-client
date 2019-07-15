@@ -183,6 +183,14 @@ export default class LocalLabbookPanel extends Component {
       >
 
         <div className="LocalLabbooks__row--icons">
+          { !(props.visibility === 'local')
+            && (
+            <div
+              data-tooltip={`${props.visibility}`}
+              className={`Tooltip-Listing LocalLabbookPanel__${props.visibility} Tooltip-data Tooltip-data--small`}
+            />
+            )
+          }
 
           <div className="LocalLabbooks__containerStatus">
 
@@ -235,11 +243,6 @@ export default class LocalLabbookPanel extends Component {
             {' '}
             {Moment(edge.node.modifiedOnUtc).fromNow()}
           </p>
-          <p className="LocalLabbooks__paragraph LocalLabbooks__paragraph--metadata">
-            <span className="bold">Current Branch:</span>
-            {' '}
-            {edge.node.activeBranchName}
-          </p>
 
           <p className="LocalLabbooks__paragraph LocalLabbooks__paragraph--description">
             {
@@ -260,15 +263,6 @@ export default class LocalLabbookPanel extends Component {
           </p>
 
         </div>
-
-        { !(props.visibility === 'local')
-          && (
-          <div
-            data-tooltip={`${props.visibility}`}
-            className={`Tooltip-Listing LocalLabbookPanel__${props.visibility} Tooltip-data Tooltip-data--small`}
-          />
-          )
-        }
       </Link>
     );
   }

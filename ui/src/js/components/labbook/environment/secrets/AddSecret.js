@@ -11,6 +11,7 @@ export default class AddSecret extends Component {
     file: null,
     path: '~/',
     error: null,
+    showError: false,
   }
 
   /**
@@ -31,17 +32,22 @@ export default class AddSecret extends Component {
       component: this,
     };
 
+
     const callback = (response, error) => {
       if (response && response.insertSecretsEntry) {
         const newEdges = response.insertSecretsEntry.environment.secretsFileMapping.edges;
         const edge = newEdges.filter(({ node }) => node.filename === file.name)[0];
         uploadData.id = edge.node.id;
         props.secretsMutations.uploadSecret(uploadData);
+
         this.setState({
           file: null,
           error: null,
           path: '~/',
+          showError: false,
         });
+
+        document.getElementById('secret_path').value = '~/';
       }
       if (error) {
         this.setState({ error: error[0].message });
@@ -57,17 +63,23 @@ export default class AddSecret extends Component {
   */
   _setFile(files) {
     const file = (files && files[0]) ? files[0] : null;
-    const newState = {
-      file,
-      error: null,
-    };
-    if (files === null) {
-      newState.path = '~/';
-      document.getElementById('secret_path').value = '~/';
+    const oneMB = 1 * 1000 * 1000;
+
+    if (file && (file.size < oneMB)) {
+      this.setState({
+        file,
+        error: null,
+        showError: false,
+      });
+      // need to reset value
+      document.getElementById('add_secret').value = '';
+    } else {
+      this.setState({
+        error: 'File size is too large, files must be less than 1 MB.',
+        showError: true,
+        path: '~/',
+      });
     }
-    this.setState(newState);
-    // need to reset value
-    document.getElementById('add_secret').value = '';
   }
 
   /**
@@ -76,6 +88,17 @@ export default class AddSecret extends Component {
   */
   _updatePath(evt) {
     this.setState({ path: evt.target.value });
+  }
+
+  _cancel() {
+    this.setState({
+      error: '',
+      showError: false,
+      file: null,
+      path: '~/',
+    });
+    document.getElementById('add_secret').value = '';
+    document.getElementById('secret_path').value = '~/';
   }
 
   render() {
@@ -133,7 +156,7 @@ export default class AddSecret extends Component {
             />
           </div>
         </div>
-        { state.file
+        { (state.file || state.showError)
           && (
           <div className="AddSecret__actions flex justify--right">
             { state.error
@@ -142,12 +165,12 @@ export default class AddSecret extends Component {
             <button
               type="button"
               className="Btn Btn--flat AddSecrets__btn"
-              onClick={() => this._setFile(null)}
+              onClick={() => this._cancel()}
             >
               Cancel
             </button>
             <button
-              disabled={state.file === null}
+              disabled={(state.file === null) || state.showError}
               type="button"
               className="Btn"
               onClick={() => this._uploadFile()}

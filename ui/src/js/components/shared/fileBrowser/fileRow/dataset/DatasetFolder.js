@@ -197,6 +197,7 @@ class Folder extends Component {
               mutations={props.mutations}
               addFolderVisible={this._addFolderVisible}
               folder
+              section={props.section}
               renameEditMode={this._renameEditMode}
               fullEdge={props.fileData}
               isLocal={isLocal}

@@ -39,6 +39,17 @@ export default class LocalDatasetPanel extends Component {
         key={`local${edge.node.name}`}
         className="Card Card--225 Card--text column-4-span-3 flex flex--column justify--space-between"
       >
+        <div className="LocalDatasets__row--icons">
+          { !(props.visibility === 'local')
+            && (
+            <div
+              data-tooltip={`${props.visibility}`}
+              className={`Tooltip LocalDatasetPanel__${props.visibility} Tooltip-data Tooltip-data--small`}
+            />
+            )
+          }
+          <div className="LocalDatasets__dataset-icon" />
+        </div>
         <div className="LocalDatasets__row--text">
           <div>
             <h5
@@ -89,14 +100,6 @@ export default class LocalDatasetPanel extends Component {
           </p>
 
         </div>
-        { !(props.visibility === 'local')
-          && (
-          <div
-            data-tooltip={`${props.visibility}`}
-            className={`Tooltip LocalDatasetPanel__${props.visibility} Tooltip-data Tooltip-data--small`}
-          />
-          )
-        }
       </Link>
     );
   }

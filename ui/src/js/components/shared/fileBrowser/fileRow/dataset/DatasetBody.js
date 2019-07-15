@@ -116,7 +116,7 @@ export default class Datasets extends Component {
           >
             Modified
           </button>
-          <div className="FileBrowser__header--menu flex flex--row justify--center">
+          <div className="FileBrowser__header--menu flex flex--row justify--left">
             Actions
           </div>
         </div>

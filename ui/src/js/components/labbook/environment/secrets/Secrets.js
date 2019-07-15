@@ -31,7 +31,7 @@ class Secrets extends Component {
           Sensitive Files are stored locally and copied into your Project container at runtime. They are not uploaded when syncing.
           {' '}
           <a
-            href="https://docs.gigantum.com/docs/"
+            href="https://docs.gigantum.com/docs/managing-secrets"
             rel="noopener noreferrer"
             target="_blank"
           >

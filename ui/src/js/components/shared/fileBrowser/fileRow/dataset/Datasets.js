@@ -1,5 +1,6 @@
 // vendor
 import React, { PureComponent } from 'react';
+import classNames from 'classnames';
 // components
 import DatasetCard from './DatasetCard';
 // assets
@@ -8,11 +9,23 @@ import './Datasets.scss';
 export default class Datasets extends PureComponent {
   render() {
     const { props } = this;
+    const headerCSS = classNames({
+      'DatasetsBrowser__header flex justify--space-between': true,
+      'DatasetsBrowser__header--empty': props.linkedDatasets.length === 0,
+    });
 
     return (
       <div className="DatasetsBrowser">
-        <div className="DatasetsBrowser__header flex justify--space-between">
-          <h4 className="margin--0">Datasets</h4>
+        <div className={headerCSS}>
+          <h4 className="margin--0 regular">Datasets</h4>
+          {
+            (props.linkedDatasets.length === 0)
+            && (
+              <div className="DatasetsBrowser__empty">
+                No datasets are linked.
+              </div>
+            )
+          }
           <button
             className="Btn Btn__FileBrowserAction Btn__FileBrowserAction--link"
             type="button"
@@ -22,14 +35,6 @@ export default class Datasets extends PureComponent {
             Link Dataset
           </button>
         </div>
-        {
-          (props.linkedDatasets.length === 0)
-          && (
-            <div>
-              There are no Datasets linked to this project.
-            </div>
-          )
-        }
         {
           props.linkedDatasets.map(dataset => (
             <DatasetCard
@@ -43,6 +48,7 @@ export default class Datasets extends PureComponent {
               name={props.name}
               mutationData={props.mutationData}
               mutations={props.mutations}
+              section={props.section}
             />
           ))
         }

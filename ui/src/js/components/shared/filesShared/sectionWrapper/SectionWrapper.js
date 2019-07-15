@@ -92,7 +92,10 @@ export default class SectionWrapper extends Component {
       return (
 
         <div className="SectionWrapper">
-          <hr className="column-1-span-12" />
+          {
+            (props.section === 'input')
+            && <h4 className="margin-bottom--0 regular">Datasets and Files</h4>
+          }
           <div className="grid">
             <div className="SectionWrapper__file-browser column-1-span-12">
               <Browser

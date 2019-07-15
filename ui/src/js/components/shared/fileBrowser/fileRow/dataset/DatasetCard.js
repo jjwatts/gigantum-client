@@ -127,7 +127,7 @@ export default class DatasetCard extends Component {
     const onDiskFormatted = config.humanFileSize(onDiskBytes);
     const toDownloadBytes = props.dataset.overview.totalBytes - props.dataset.overview.localBytes;
     const toDownloadFormatted = config.humanFileSize(toDownloadBytes);
-
+    const downloadAllText = props.isLocal ? 'Downloaded' : 'Download All';
     const chevronCSS = classNames({
       DatasetCard__chevron: true,
       'DatasetCard__chevron--expanded': state.expanded,
@@ -153,9 +153,14 @@ export default class DatasetCard extends Component {
 
     });
     const downloadCSS = classNames({
-      'Btn Btn__FileBrowserAction Btn__FileBrowserAction--download': true,
+      'Btn Btn__FileBrowserAction': true,
+      'Btn__FileBrowserAction--downloaded Tooltip-data': props.isLocal,
+      'Btn__FileBrowserAction--download': !props.isLocal,
       'Btn__FileBrowserAction--loading': state.downloadPending,
-      'Tooltip-data': props.isLocal,
+    });
+    const progressCSS = classNames({
+      'flex flex--column flex-1 DatasetCard__progress': true,
+      'DatasetCard__progress--downloaded': toDownloadBytes === 0,
     });
 
     return (
@@ -181,7 +186,7 @@ export default class DatasetCard extends Component {
               </div>
             </div>
           </div>
-          <div className="flex flex--column flex-1">
+          <div className={progressCSS}>
             <progress
               value={onDiskBytes}
               max={props.dataset.overview.totalBytes}
@@ -191,10 +196,15 @@ export default class DatasetCard extends Component {
                 <div className="DatasetCard__onDisk--primary">{onDiskFormatted}</div>
                 <div className="DatasetCard__onDisk--secondary">on disk</div>
               </div>
-              <div className="DatasetCard__toDownload flex flex--column">
-                <div className="DatasetCard__toDownload--primary">{toDownloadFormatted}</div>
-                <div className="DatasetCard__toDownload--secondary">to download</div>
-              </div>
+              {
+                (toDownloadBytes !== 0)
+                && (
+                  <div className="DatasetCard__toDownload flex flex--column">
+                    <div className="DatasetCard__toDownload--primary">{toDownloadFormatted}</div>
+                    <div className="DatasetCard__toDownload--secondary">to download</div>
+                  </div>
+                )
+              }
             </div>
           </div>
           <div className="flex flex--column justify--space-between align-items--end flex-1">
@@ -231,7 +241,7 @@ export default class DatasetCard extends Component {
               onClick={() => this._downloadDataset()}
               disabled={downloadDisabled}
             >
-              Download All
+              {downloadAllText}
             </button>
           </div>
         </div>
@@ -244,6 +254,7 @@ export default class DatasetCard extends Component {
             checkLocal={props.checkLocal}
             downloadPending={state.downloadPending}
             mutations={props.mutations}
+            section={props.section}
           />
           )
         }

@@ -11,7 +11,7 @@
             appearance: none;
     border: none;
     background-color: transparent;
-    height: 5px;
+    height: 3px;
 
     /* Progress bar value for IE10+ */
     color: $azure;
@@ -54,6 +54,24 @@
     top: 35px;
     position: absolute;
     @include triangle('down', 7px, $azure);
+  }
+}
+
+.DatasetCard__progress {
+  padding: 13px 10% 0 10%;
+  &--downloaded {
+    .flex {
+      justify-content: center;
+    }
+    .DatasetCard__onDisk {
+      margin-top: 4px;
+      flex-direction: row;
+      color: $mineShaft;
+      align-items: flex-end;
+    }
+    .DatasetCard__onDisk--primary {
+      margin-right: 3px;
+    }
   }
 }
 

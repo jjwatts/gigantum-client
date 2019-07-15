@@ -13,7 +13,7 @@
                 appearance: none;
         border: none;
         background-color: transparent;
-        height: 5px;
+        height: 3px;
 
         /* Progress bar value for IE10+ */
         color: $azure;
@@ -38,6 +38,10 @@
         background-color: $lightGrey;
         border-radius: 20px;
       }
+}
+
+.Summary__disk-size {
+  padding: 13px 10% 0 10%;
 }
 
 .Summary__subheader{

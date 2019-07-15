@@ -278,7 +278,6 @@ export default createPaginationContainer(
             name
             description
             owner
-            activeBranchName
             creationDateUtc
             modifiedOnUtc
           }

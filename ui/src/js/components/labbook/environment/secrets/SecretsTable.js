@@ -129,7 +129,10 @@ export default class SecretsTable extends Component {
                         />
                       )
                     }
-                    {node.filename}
+
+                    <div className="SecretsTable__name">
+                      {node.filename}
+                    </div>
                     {
                       isEditing
                       && (

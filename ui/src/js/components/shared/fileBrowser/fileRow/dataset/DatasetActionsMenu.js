@@ -188,6 +188,7 @@ export default class DatasetActionsMenu extends Component {
       'Btn__FileBrowserAction--download': !isLocal,
       'Btn__FileBrowserAction--downloaded': isLocal,
       'Btn__FileBrowserAction--loading': isLoading,
+      'Btn--first': props.section === 'input',
     });
 
     return (

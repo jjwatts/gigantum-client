@@ -95,7 +95,8 @@ class FileBrowser extends Component {
     const previousCount = state.count;
     const count = props.files.edges.length;
     const childrenState = state.isFetching ? state.childrenState : {};
-
+    const selectedFiles = [];
+    let selectedCount = 0;
 
     const files = props.files.edges;
 
@@ -159,21 +160,32 @@ class FileBrowser extends Component {
     };
     processChildState(files);
 
-    if (props.linkedDatasets) {
-      props.linkedDatasets.forEach(
-        dataset => processChildState(
-          dataset.allFiles.edges,
-          dataset.name,
-        ),
-      );
-    }
+    Object.keys(childrenState).forEach((key) => {
+      if (childrenState[key].isSelected) {
+        selectedFiles.push(key);
+      }
+      let isCurrentSelected = false;
+      selectedFiles.forEach((selectedFileKey) => {
+        if (key.startsWith(selectedFileKey)) {
+          isCurrentSelected = true;
+        }
+      });
+      if (isCurrentSelected) {
+        selectedCount += 1;
+      }
+    });
+
+    let multiSelect = (selectedCount === count) ? 'all' : 'partial';
+    multiSelect = selectedCount === 0 ? 'none' : multiSelect;
 
     return {
       ...state,
       childrenState,
       isRefetching: false,
+      selectedCount,
       search: count === previousCount ? state.search : '',
       count,
+      multiSelect,
     };
   }
 
@@ -300,9 +312,9 @@ class FileBrowser extends Component {
     */
   @boundMethod
   _updateChildState(key, isSelected, isIncomplete, isExpanded, isAddingFolder) {
+    const { state } = this;
     let isChildSelected = false;
     let count = 0;
-    let selectedCount = 0;
     const { childrenState } = this.state;
     childrenState[key].isSelected = isSelected;
     childrenState[key].isIncomplete = isIncomplete;
@@ -313,15 +325,12 @@ class FileBrowser extends Component {
       if (childrenState[key]) {
         if (childrenState[key].isSelected) {
           isChildSelected = true;
-          selectedCount++;
         }
         count++;
       }
     }
 
-    const multiSelect = !isChildSelected ? 'none' : (selectedCount === count) ? 'all' : 'partial';
-
-    this.setState({ childrenState, multiSelect });
+    this.setState({ childrenState });
   }
 
   /**
@@ -459,19 +468,9 @@ class FileBrowser extends Component {
   */
   _selectFiles() {
     const { state } = this;
-    let count = 0;
-    let selectedCount = 0;
+    const count = Object.keys(state.childrenState).length;
 
-    Object.keys(state.childrenState).forEach((key) => {
-      if (this.state.childrenState[key]) {
-        if (this.state.childrenState[key].isSelected) {
-          selectedCount += 1;
-        }
-        count += 1;
-      }
-    });
-
-    let multiSelect = (count === selectedCount) ? 'none' : 'all';
+    let multiSelect = (count === state.selectedCount) ? 'none' : 'all';
     const { childrenState } = this.state;
     let isSelectedCount = 0;
     Object.keys(state.childrenState).forEach((key) => {
@@ -532,16 +531,14 @@ class FileBrowser extends Component {
   _checkChildState() {
     const { state } = this;
     let isSelected = false;
-    let selectedCount = 0;
 
     Object.keys(state.childrenState).forEach((key) => {
       if (state.childrenState[key].isSelected) {
-        selectedCount += 1;
         isSelected = true;
       }
     });
 
-    return { isSelected, selectedCount };
+    return { isSelected };
   }
 
   /**
@@ -757,7 +754,7 @@ class FileBrowser extends Component {
     const { props, state } = this;
     const { files, mutationData } = state;
     const { isOver, canDrop } = props;
-    const { isSelected, selectedCount } = this._checkChildState();
+    const { isSelected } = this._checkChildState();
     const allFilesLocal = checkLocalAll(files);
     const uploadPromptText = this._getFilePromptText();
     // TODO move this to a function
@@ -815,8 +812,8 @@ class FileBrowser extends Component {
     });
     const downloadAllCSS = classNames({
       'Btn__FileBrowserAction Btn--action': true,
-      'Btn__FileBrowserAction--download': !state.downloadingAll,
-      'Btn__FileBrowserAction--downloading': state.downloadingAll,
+      'Btn__FileBrowserAction--download Btn__FileBrowserAction--download--data ': !state.downloadingAll,
+      'Btn__FileBrowserAction--loading Btn__FileBrowserAction--downloading': state.downloadingAll,
       'Tooltip-data Tooltip-data--small': allFilesLocal,
     });
     const updateCSS = classNames({
@@ -837,17 +834,20 @@ class FileBrowser extends Component {
         {
           (props.section === 'input')
           && (
-            <Datasets
-              linkedDatasets={props.linkedDatasets}
-              files={state.files}
-              showLinkModal={this._showLinkModal}
-              isLocked={props.isLocked}
-              checkLocal={checkLocalIndividual}
-              owner={props.owner}
-              name={props.name}
-              mutationData={mutationData}
-              mutations={state.mutations}
-            />
+            <div>
+              <Datasets
+                linkedDatasets={props.linkedDatasets}
+                files={state.files}
+                showLinkModal={this._showLinkModal}
+                isLocked={props.isLocked}
+                checkLocal={checkLocalIndividual}
+                owner={props.owner}
+                name={props.name}
+                mutationData={mutationData}
+                mutations={state.mutations}
+                section={props.section}
+              />
+            </div>
           )
         }
         { state.showLinkModal
@@ -902,7 +902,7 @@ class FileBrowser extends Component {
              />
              )
          }
-        <h4 className="margin--0">Files</h4>
+        <h4 className="margin--0 regular">Files</h4>
         <div className="FileBrowser__tools flex justify--space-between">
 
           <div className="FileBrowser__search flex-1">
@@ -917,7 +917,7 @@ class FileBrowser extends Component {
           {
             !readOnly
             && (
-              <div className="flex">
+              <div className="flex justify--right FileBrowser__Primary-actions">
                 <button
                   className="Btn Btn--action Btn__FileBrowserAction Btn__FileBrowserAction--newFolder"
                   data-click-id="addFolder"
@@ -945,7 +945,7 @@ class FileBrowser extends Component {
                   && (
                   <button
                     className={downloadAllCSS}
-                    disabled={allFilesLocal}
+                    disabled={allFilesLocal || state.downloadingAll}
                     onClick={() => this._handleDownloadAll(allFilesLocal)}
                     data-tooltip="No files to download"
                     type="button"
@@ -1022,7 +1022,7 @@ class FileBrowser extends Component {
           && (
         <div className="FileBrowser__toolbar flex align-items--center justify--space-between">
           <div className="FileBrowser__toolbar-text">
-            {`${selectedCount} files selected`}
+            {`${state.selectedCount} files selected`}
           </div>
           <div>
             {
@@ -1102,7 +1102,7 @@ class FileBrowser extends Component {
           >
             Modified
           </button>
-          <div className="FileBrowser__header--menu flex flex--row justify--right">
+          <div className="FileBrowser__header--menu flex flex--row justify--left">
             Actions
           </div>
         </div>

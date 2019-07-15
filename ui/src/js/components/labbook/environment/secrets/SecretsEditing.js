@@ -1,5 +1,7 @@
 // vendor
 import React from 'react';
+// Assets
+import './SecretsEditing.scss';
 
 export default ({
   node,
@@ -8,7 +10,7 @@ export default ({
   replaceFile,
   editSecret,
 }) => (
-  <div className="flex">
+  <div className="SecretsEditing flex">
     <label
       htmlFor="update_secret"
       className="SecretsTable__label"
